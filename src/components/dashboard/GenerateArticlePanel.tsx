@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import {
   AUDIENCE_LABELS,
@@ -89,6 +90,7 @@ export function GenerateArticlePanel({
         setResult({ post: data.post });
         void loadPublished();
         onGenerated?.();
+        notifyChecklistUpdate();
       }
     } catch {
       setError("Network error — try again");

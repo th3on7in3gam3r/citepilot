@@ -24,7 +24,7 @@ async function fetchText(
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "CitePilot-Audit/1.0 (+https://citepilot.com)",
+        "User-Agent": "CitePilot-Audit/1.0 (+https://getcitepilot.com)",
         Accept: "text/html,application/xhtml+xml,text/plain,*/*",
       },
       redirect: "follow",

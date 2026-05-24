@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { signUpWithEmail } from "./actions";
 
 export default function SignUpPage() {
@@ -19,7 +20,21 @@ export default function SignUpPage() {
         Your profile is stored in your Neon database via Neon Auth.
       </p>
 
-      <form action={formAction} className="mt-6 space-y-4">
+      <div className="mt-6">
+        <Suspense fallback={null}>
+          <GoogleSignInButton label="Sign up with Google" />
+        </Suspense>
+      </div>
+
+      <div className="my-6 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs font-medium uppercase tracking-wide text-muted">
+          or email
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <form action={formAction} className="space-y-4">
         <label className="block text-sm font-semibold text-ink">
           Name
           <input

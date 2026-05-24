@@ -3,8 +3,8 @@ export const site = {
   tagline: "Get cited in AI answers — then prove it moved.",
   description:
     "Track brand citations across ChatGPT, Perplexity, and Google AI. Prioritize fixes, publish what matters, and measure citation lift week over week.",
-  url: "https://citepilot.ai",
-  supportEmail: "hello@citepilot.ai",
+  url: "https://getcitepilot.com",
+  supportEmail: "hello@getcitepilot.com",
 } as const;
 
 export const nav = {

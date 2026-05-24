@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import {
   DashboardPageHeader,
@@ -52,8 +53,12 @@ export function DashboardOverview() {
           "Engage buyer threads on Hacker News or Stack Overflow",
         ];
 
+  const showWelcome = searchParams.get("welcome") === "1";
+
   return (
     <>
+      <GettingStartedChecklist workspace={workspace} welcome={showWelcome} />
+
       <DashboardPageHeader
         title="Overview"
         description={

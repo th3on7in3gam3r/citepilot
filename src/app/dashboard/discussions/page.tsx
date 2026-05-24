@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import type { DiscussionThread } from "@/lib/api-types";
+import { markGettingStartedStep } from "@/lib/getting-started";
 import { productFeatures } from "@/lib/features";
 
 const feature = productFeatures.find((f) => f.id === "discussions")!;
@@ -19,6 +21,11 @@ export default function DiscussionsPage() {
   const { workspace, ready } = useWorkspaceContext();
   const [threads, setThreads] = useState<DiscussionThread[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    markGettingStartedStep("visitedDiscussions");
+    notifyChecklistUpdate();
+  }, []);
 
   useEffect(() => {
     if (!workspace) return;

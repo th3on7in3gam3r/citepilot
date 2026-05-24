@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { markGettingStartedStep } from "@/lib/getting-started";
 
 type QueuePost = {
   slug: string;
@@ -86,6 +88,8 @@ export function ArticleQueuePanel({
           ? `Published “${data.title}” to Webflow — ${data.liveUrl}`
           : `Published “${data.title}” to Webflow`,
       );
+      markGettingStartedStep("publishedWebflow");
+      notifyChecklistUpdate();
     } catch {
       setError("Network error — try again");
     } finally {

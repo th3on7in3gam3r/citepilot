@@ -25,8 +25,10 @@
    | `STACKEXCHANGE_KEY` | Discussions (Stack Overflow) |
    | `SERPER_API_KEY` or `TAVILY_API_KEY` | Discussions web search |
 
-4. Deploy → attach domain (`getcitepilot.com` or similar).
-5. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
+4. Deploy → attach custom domain **`getcitepilot.com`** (production URL; `citepilot.ai` is not used).
+5. Neon Console → Auth → **Trusted domains**: include every origin users visit (`https://getcitepilot.com`, `https://www.getcitepilot.com`, `https://citepilot.vercel.app` with **no** trailing slash, `http://localhost:3000`). Must match the branch used by `NEON_AUTH_BASE_URL`.
+6. Set `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` on Vercel once the domain is live.
+7. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
 
 ## Smoke test after deploy
 

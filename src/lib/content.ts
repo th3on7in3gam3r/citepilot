@@ -148,7 +148,7 @@ export const pricingTiers = [
       "Priority support",
     ],
     cta: "Contact us",
-    href: `mailto:hello@citepilot.ai`,
+    href: `mailto:hello@getcitepilot.com`,
     highlighted: false,
   },
 ] as const;

@@ -69,7 +69,7 @@ export default function ContentPage() {
 
       <Panel title="CitePilot editorial mix (site blog)" className="mt-6">
         <p className="mb-4 text-sm text-muted">
-          Template cadence for citepilot.com — 3–5 posts/week across GEO, SEO,
+          Template cadence for getcitepilot.com — 3–5 posts/week across GEO, SEO,
           technical, local, paid, and agency pillars. Use the generator above to
           publish directly to the blog.
         </p>

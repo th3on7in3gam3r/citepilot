@@ -1,6 +1,6 @@
 # CitePilot content strategy
 
-Editorial system for citepilot.com — distinct from the in-app **product** (citation tracking SaaS).
+Editorial system for getcitepilot.com — distinct from the in-app **product** (citation tracking SaaS).
 
 ## Implemented in codebase
 
