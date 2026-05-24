@@ -147,8 +147,8 @@ export const pricingTiers = [
       "Bulk prompt import",
       "Priority support",
     ],
-    cta: "Contact us",
-    href: `mailto:hello@getcitepilot.com`,
+    cta: "Subscribe to Fleet",
+    href: "/pricing",
     highlighted: false,
   },
 ] as const;

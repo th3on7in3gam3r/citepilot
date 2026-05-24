@@ -10,6 +10,9 @@ type BillingStatus = {
   plan: string;
   status: string;
   isPilot: boolean;
+  isFleet: boolean;
+  isPaid: boolean;
+  planLabel: string;
   currentPeriodEnd: string | null;
   hasCustomer: boolean;
 };
@@ -30,7 +33,7 @@ export function BillingPlanPanel() {
     void load();
     const params = new URLSearchParams(window.location.search);
     if (params.get("billing") === "success") {
-      setMessage("Pilot subscription active — thank you!");
+      setMessage("Subscription active — thank you!");
       window.history.replaceState({}, "", "/dashboard/settings");
     }
   }, [load]);
@@ -50,7 +53,6 @@ export function BillingPlanPanel() {
     }
   }
 
-  const planLabel = billing?.isPilot ? "Pilot" : "Free (Audit)";
   const renews = billing?.currentPeriodEnd
     ? new Date(billing.currentPeriodEnd).toLocaleDateString()
     : null;
@@ -65,16 +67,23 @@ export function BillingPlanPanel() {
 
       <p className="text-sm text-muted">
         Current plan:{" "}
-        <strong className="text-ink">{planLabel}</strong>
-        {billing?.isPilot && billing.status === "trialing" && (
+        <strong className="text-ink">{billing?.planLabel ?? "Free (Audit)"}</strong>
+        {billing?.isPaid && billing.status === "trialing" && (
           <span className="text-muted"> (trial)</span>
         )}
-        {renews && billing?.isPilot && (
+        {renews && billing?.isPaid && (
           <span className="mt-1 block text-xs">
             Renews {renews} · status: {billing.status}
           </span>
         )}
       </p>
+
+      {billing?.isFleet && (
+        <p className="mt-2 text-xs text-emerald-800">
+          Fleet includes unlimited workspaces, 500 backlink credits, and all Pilot
+          features.
+        </p>
+      )}
 
       {!billing?.configured && (
         <p className="mt-3 text-xs text-amber-700">
@@ -83,19 +92,30 @@ export function BillingPlanPanel() {
       )}
 
       <div className="mt-4 flex flex-wrap gap-3">
-        {billing?.isPilot ? (
-          <button
-            type="button"
-            disabled={portalLoading || !billing.hasCustomer}
-            onClick={() => void openPortal()}
-            className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-ink/90 disabled:opacity-60"
-          >
-            {portalLoading ? "Opening…" : "Manage subscription"}
-          </button>
+        {billing?.isPaid ? (
+          billing.hasCustomer ? (
+            <button
+              type="button"
+              disabled={portalLoading}
+              onClick={() => void openPortal()}
+              className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-ink/90 disabled:opacity-60"
+            >
+              {portalLoading ? "Opening…" : "Manage subscription"}
+            </button>
+          ) : (
+            <span className="text-xs text-muted">
+              Plan active (admin grant) — no Stripe subscription on file.
+            </span>
+          )
         ) : (
-          <PilotCheckoutButton signedIn className="max-w-xs">
-            Upgrade to Pilot — $79/mo
-          </PilotCheckoutButton>
+          <>
+            <PilotCheckoutButton signedIn className="max-w-xs" plan="pilot">
+              Upgrade to Pilot — $79/mo
+            </PilotCheckoutButton>
+            <PilotCheckoutButton signedIn className="max-w-xs" plan="fleet" variant="primary">
+              Upgrade to Fleet — $249/mo
+            </PilotCheckoutButton>
+          </>
         )}
         <Link
           href="/pricing"
@@ -105,10 +125,10 @@ export function BillingPlanPanel() {
         </Link>
       </div>
 
-      {!billing?.isPilot && (
+      {!billing?.isPaid && (
         <p className="mt-4 text-xs text-muted">
-          Pilot unlocks article generation, Webflow publish, and ongoing monitoring.
-          Free tier includes the citation audit.
+          Pilot unlocks article generation, Webflow publish, and monitoring. Fleet
+          adds unlimited client workspaces and 500 backlink credits.
         </p>
       )}
     </Panel>

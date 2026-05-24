@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import type { BillingPlan } from "@/lib/billing/types";
 
 type Props = {
+  plan?: Extract<BillingPlan, "pilot" | "fleet">;
   variant?: "accent" | "primary" | "dark";
   className?: string;
   children: React.ReactNode;
@@ -10,6 +12,7 @@ type Props = {
 };
 
 export function PilotCheckoutButton({
+  plan = "pilot",
   variant = "dark",
   className = "",
   children,
@@ -29,7 +32,9 @@ export function PilotCheckoutButton({
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({ plan }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !data.url) {

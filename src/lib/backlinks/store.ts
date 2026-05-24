@@ -16,6 +16,8 @@ import type {
 } from "@/lib/backlinks/types";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { getLatestAuditForWorkspace } from "@/lib/audit/run-audit";
+import { getBillingByUserId, creditsForPlan } from "@/lib/billing/store";
+import { isPaidPlan } from "@/lib/billing/types";
 import { userHasPilotAccess } from "@/lib/billing/access";
 
 type ProfileRow = {
@@ -76,6 +78,14 @@ function mapSource(row: SourceRow): BacklinkSource {
 }
 
 async function creditsForUser(userId: string | null): Promise<number> {
+  if (!userId) return DEFAULT_CREDITS_FREE;
+  const billing = await getBillingByUserId(userId);
+  if (billing && isPaidPlan(billing)) {
+    return creditsForPlan(
+      billing.plan,
+      billing.status === "active" || billing.status === "trialing",
+    );
+  }
   const pilot = await userHasPilotAccess(userId);
   return pilot ? DEFAULT_CREDITS_PILOT : DEFAULT_CREDITS_FREE;
 }
@@ -90,10 +100,23 @@ export async function ensureNetworkRow(input: {
     `SELECT * FROM backlink_network WHERE workspace_id = ?`,
     [input.workspaceId],
   );
-  if (existing) return existing;
-
   const now = new Date().toISOString();
   const credits = await creditsForUser(input.userId);
+
+  if (existing) {
+    if (credits > existing.credits_total) {
+      await dbRun(
+        `UPDATE backlink_network SET credits_total = ?, updated_at = ? WHERE workspace_id = ?`,
+        [credits, now, input.workspaceId],
+      );
+      return (await dbGet<NetworkRow>(
+        `SELECT * FROM backlink_network WHERE workspace_id = ?`,
+        [input.workspaceId],
+      ))!;
+    }
+    return existing;
+  }
+
   await dbRun(
     `INSERT INTO backlink_network
      (workspace_id, user_id, domain, business_type, credits_total, credits_used, opted_in, opted_in_at, updated_at)

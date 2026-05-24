@@ -14,6 +14,10 @@ export function stripePilotPriceId(): string | null {
   return process.env.STRIPE_PILOT_PRICE_ID?.trim() || null;
 }
 
+export function stripeFleetPriceId(): string | null {
+  return process.env.STRIPE_FLEET_PRICE_ID?.trim() || null;
+}
+
 export function isStripeConfigured(): boolean {
   return Boolean(stripeSecretKey() && stripePilotPriceId());
 }
@@ -26,7 +30,13 @@ export function stripeEnvStatus(): { ok: boolean; detail: string } {
   if (missing.length) {
     return { ok: false, detail: `Missing ${missing.join(", ")}` };
   }
-  return { ok: true, detail: "Checkout + Pilot price configured" };
+  const fleet = stripeFleetPriceId();
+  return {
+    ok: true,
+    detail: fleet
+      ? "Checkout + Pilot & Fleet prices configured"
+      : "Checkout + Pilot price configured (add STRIPE_FLEET_PRICE_ID for Fleet)",
+  };
 }
 
 export function appBaseUrl(): string {

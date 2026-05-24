@@ -25,8 +25,16 @@ export function PricingTierActions({
 
   if (tierName === "Pilot") {
     return (
-      <PilotCheckoutButton variant={variant} className="w-full" signedIn={signedIn}>
+      <PilotCheckoutButton variant={variant} className="w-full" signedIn={signedIn} plan="pilot">
         {signedIn ? "Subscribe to Pilot" : "Sign in to subscribe"}
+      </PilotCheckoutButton>
+    );
+  }
+
+  if (tierName === "Fleet") {
+    return (
+      <PilotCheckoutButton variant={variant} className="w-full" signedIn={signedIn} plan="fleet">
+        {signedIn ? "Subscribe to Fleet" : "Sign in to subscribe"}
       </PilotCheckoutButton>
     );
   }

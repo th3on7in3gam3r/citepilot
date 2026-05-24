@@ -17,10 +17,30 @@ export type BillingAccount = {
   updatedAt: string;
 };
 
-export function isPaidPlan(account: BillingAccount | null): boolean {
+const activeStatuses: BillingStatus[] = ["active", "trialing"];
+
+export function isActiveBillingStatus(status: BillingStatus): boolean {
+  return activeStatuses.includes(status);
+}
+
+export function isPilotPlan(account: BillingAccount | null): boolean {
   if (!account) return false;
-  return (
-    account.plan === "pilot" &&
-    (account.status === "active" || account.status === "trialing")
-  );
+  return account.plan === "pilot" && isActiveBillingStatus(account.status);
+}
+
+export function isFleetPlan(account: BillingAccount | null): boolean {
+  if (!account) return false;
+  return account.plan === "fleet" && isActiveBillingStatus(account.status);
+}
+
+/** Pilot or Fleet with an active subscription (includes manual admin grants). */
+export function isPaidPlan(account: BillingAccount | null): boolean {
+  return isPilotPlan(account) || isFleetPlan(account);
+}
+
+export function planDisplayName(plan: BillingPlan, active: boolean): string {
+  if (!active) return "Free (Audit)";
+  if (plan === "fleet") return "Fleet";
+  if (plan === "pilot") return "Pilot";
+  return "Free (Audit)";
 }

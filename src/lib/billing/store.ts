@@ -85,3 +85,43 @@ export async function upsertBillingAccount(input: {
   const account = await getBillingByUserId(input.userId);
   return account!;
 }
+
+export const FLEET_BACKLINK_CREDITS = 500;
+export const PILOT_BACKLINK_CREDITS = 100;
+export const FREE_BACKLINK_CREDITS = 25;
+
+export function creditsForPlan(plan: BillingPlan, active: boolean): number {
+  if (!active) return FREE_BACKLINK_CREDITS;
+  if (plan === "fleet") return FLEET_BACKLINK_CREDITS;
+  if (plan === "pilot") return PILOT_BACKLINK_CREDITS;
+  return FREE_BACKLINK_CREDITS;
+}
+
+/** Manual plan grant (admin) — no Stripe subscription required. */
+export async function grantBillingPlan(input: {
+  userId: string;
+  plan: BillingPlan;
+  status?: BillingStatus;
+  currentPeriodEnd?: string | null;
+}): Promise<BillingAccount> {
+  const account = await upsertBillingAccount({
+    userId: input.userId,
+    plan: input.plan,
+    status: input.status ?? "active",
+    currentPeriodEnd:
+      input.currentPeriodEnd ??
+      new Date(Date.now() + 365 * 86400000).toISOString(),
+  });
+
+  const credits = creditsForPlan(
+    account.plan,
+    account.status === "active" || account.status === "trialing",
+  );
+  await dbRun(
+    `UPDATE backlink_network SET credits_total = ?, updated_at = ?
+     WHERE user_id = ?`,
+    [credits, new Date().toISOString(), input.userId],
+  );
+
+  return account;
+}
