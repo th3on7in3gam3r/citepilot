@@ -2,14 +2,26 @@ export type WorkspacePreferences = {
   weeklyDigest: boolean;
   auditCompleteEmail: boolean;
   discussionAlerts: boolean;
+  scoreDropAlerts: boolean;
   monitoringEmail: string;
+  whiteLabel: {
+    agencyName: string;
+    logoUrl: string;
+    hidePoweredBy: boolean;
+  };
 };
 
 export const defaultWorkspacePreferences: WorkspacePreferences = {
   weeklyDigest: true,
   auditCompleteEmail: true,
   discussionAlerts: false,
+  scoreDropAlerts: true,
   monitoringEmail: "",
+  whiteLabel: {
+    agencyName: "",
+    logoUrl: "",
+    hidePoweredBy: false,
+  },
 };
 
 export function parsePreferences(raw: string | null | undefined): WorkspacePreferences {
@@ -25,6 +37,12 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
         parsed.discussionAlerts ??
         parsed.redditAlerts ??
         defaultWorkspacePreferences.discussionAlerts,
+      scoreDropAlerts:
+        parsed.scoreDropAlerts ?? defaultWorkspacePreferences.scoreDropAlerts,
+      whiteLabel: {
+        ...defaultWorkspacePreferences.whiteLabel,
+        ...(parsed.whiteLabel ?? {}),
+      },
     };
   } catch {
     return { ...defaultWorkspacePreferences };
@@ -35,5 +53,11 @@ export function mergePreferences(
   current: WorkspacePreferences,
   patch: Partial<WorkspacePreferences>,
 ): WorkspacePreferences {
-  return { ...current, ...patch };
+  return {
+    ...current,
+    ...patch,
+    whiteLabel: patch.whiteLabel
+      ? { ...current.whiteLabel, ...patch.whiteLabel }
+      : current.whiteLabel,
+  };
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
+import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { productFeatures } from "@/lib/features";
 
@@ -91,6 +92,7 @@ export default function GeoAuditPage() {
           </div>
         </Panel>
       )}
+      <ShareAuditPanel />
     </>
   );
 }

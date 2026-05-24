@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
+import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { domainSeed } from "@/lib/dashboard";
@@ -18,7 +19,6 @@ const sentimentStyle = {
 
 export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot }) {
   const [tab, setTab] = useState<Tab>("llms");
-  const seed = domainSeed(workspace.domain);
   const rows = useMemo(
     () => promptRowsForWorkspace(workspace),
     [workspace],
@@ -44,7 +44,7 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
       {tab === "llms" ? (
         <LLMPanel workspace={workspace} rows={rows} />
       ) : (
-        <GooglePanel seed={seed} workspace={workspace} />
+        <GoogleAnalyticsPanel workspace={workspace} />
       )}
       {!workspace.hasRealAudit && (
         <p className="mt-4 text-center text-xs text-muted">
@@ -171,66 +171,3 @@ function PromptTable({ rows }: { rows: PromptRow[] }) {
   );
 }
 
-function GooglePanel({
-  seed,
-  workspace,
-}: {
-  seed: number;
-  workspace: WorkspaceSnapshot;
-}) {
-  const metrics = [
-    { label: "Organic clicks", value: "90", delta: "+12" },
-    { label: "Impressions", value: "111,321", delta: "+1,233" },
-    { label: "Avg. position", value: "7.2", delta: "+0.9" },
-  ];
-
-  return (
-    <>
-      <Panel title="Organic performance" className="mt-6">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {metrics.map((m) => (
-            <div
-              key={m.label}
-              className="rounded-xl border border-border bg-surface px-4 py-4"
-            >
-              <p className="text-xs text-muted">{m.label}</p>
-              <p className="font-display mt-1 text-2xl font-bold text-ink">{m.value}</p>
-              <p className="mt-1 text-xs font-semibold text-mint">{m.delta}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-6">
-          <CitationVolumeChart
-            seed={seed}
-            compact
-            citationScore={workspace.citationScore}
-            hasRealAudit={workspace.hasRealAudit}
-          />
-        </div>
-      </Panel>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <MiniStat label="Domain rating" value={String(workspace.domainRating)} delta="+3" />
-        <MiniStat label="Referring domains" value="345" delta="+121" />
-        <MiniStat label="Backlinks" value={String(workspace.sourceCount)} delta="+55" />
-      </div>
-    </>
-  );
-}
-
-function MiniStat({
-  label,
-  value,
-  delta,
-}: {
-  label: string;
-  value: string;
-  delta: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold text-ink">{label}</p>
-      <p className="font-display mt-2 text-3xl font-bold text-ink">{value}</p>
-      <p className="mt-1 text-xs font-semibold text-mint">{delta}</p>
-    </div>
-  );
-}

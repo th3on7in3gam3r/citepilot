@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AdminDedupeButton } from "@/components/admin/AdminDedupeButton";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import {
   getAdminStats,
@@ -79,6 +80,16 @@ export default async function AdminPage() {
             </div>
           ))}
         </div>
+
+        <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <h2 className="font-display text-lg font-bold text-ink">Maintenance</h2>
+          <p className="mt-2 text-sm text-muted">
+            One-time cleanup when the same domain was saved twice for one user.
+          </p>
+          <div className="mt-4">
+            <AdminDedupeButton />
+          </div>
+        </section>
 
         <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
           <h2 className="font-display text-lg font-bold text-ink">

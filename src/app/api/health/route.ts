@@ -3,6 +3,8 @@ import { isNeonAuthEnabled } from "@/lib/auth/server";
 import { ensureDb, isPostgres, postgresEnvVar } from "@/lib/db";
 import { webflowEnvStatus } from "@/lib/webflow/config";
 import { stripeEnvStatus } from "@/lib/stripe/config";
+import { isEmailConfigured } from "@/lib/email/config";
+import { isGscConfigured } from "@/lib/gsc/config";
 
 export const runtime = "nodejs";
 
@@ -63,6 +65,24 @@ export async function GET() {
       const env = stripeEnvStatus();
       return { ok: env.ok, detail: env.detail };
     })(),
+    resend: {
+      ok: isEmailConfigured(),
+      detail: isEmailConfigured()
+        ? "Weekly digest + audit alerts enabled"
+        : "Set RESEND_API_KEY and EMAIL_FROM",
+    },
+    googleSearchConsole: {
+      ok: isGscConfigured(),
+      detail: isGscConfigured()
+        ? "OAuth ready for Analytics → Google tab"
+        : "Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET",
+    },
+    cron: {
+      ok: hasKey("CRON_SECRET"),
+      detail: hasKey("CRON_SECRET")
+        ? "Weekly digest cron protected"
+        : "Set CRON_SECRET for /api/cron/weekly-digest",
+    },
   };
 
   try {

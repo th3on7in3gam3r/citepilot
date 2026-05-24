@@ -131,4 +131,24 @@ CREATE TABLE IF NOT EXISTS backlink_placements (
 
 CREATE INDEX IF NOT EXISTS idx_backlink_placements_requester ON backlink_placements(requester_workspace_id);
 CREATE INDEX IF NOT EXISTS idx_backlink_placements_partner ON backlink_placements(partner_workspace_id);
+
+CREATE TABLE IF NOT EXISTS audit_shares (
+  token TEXT PRIMARY KEY,
+  audit_id TEXT NOT NULL REFERENCES audit_runs(id),
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  created_at TEXT NOT NULL,
+  expires_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_shares_workspace ON audit_shares(workspace_id);
+
+CREATE TABLE IF NOT EXISTS gsc_connections (
+  workspace_id TEXT PRIMARY KEY REFERENCES workspaces(id),
+  user_id TEXT NOT NULL,
+  site_url TEXT NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT,
+  expires_at TEXT,
+  updated_at TEXT NOT NULL
+);
 `;

@@ -5,7 +5,7 @@ import type {
   SiteSignals,
 } from "@/lib/api-types";
 import { platforms } from "@/lib/content";
-import { dbGet, dbRun } from "@/lib/db";
+import { dbAll, dbGet, dbRun } from "@/lib/db";
 import {
   analyzeSite,
   brandFromDomain,
@@ -225,6 +225,19 @@ export async function getLatestAuditForWorkspace(
   );
   if (!row) return null;
   return rowToAudit(row);
+}
+
+export async function getPreviousAuditScore(
+  workspaceId: string,
+  currentAuditId: string,
+): Promise<number | null> {
+  const rows = await dbAll<{ id: string; score: number }>(
+    `SELECT id, score FROM audit_runs WHERE workspace_id = ? ORDER BY created_at DESC LIMIT 2`,
+    [workspaceId],
+  );
+  if (rows.length < 2) return null;
+  const previous = rows.find((r) => r.id !== currentAuditId) ?? rows[1];
+  return previous ? Number(previous.score) : null;
 }
 
 function rowToAudit(row: Record<string, string | number | null>): AuditPayload {

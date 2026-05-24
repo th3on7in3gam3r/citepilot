@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiUser, requireApiUserId } from "@/lib/auth/api";
-import { getSessionUserId } from "@/lib/auth/server";
+import { getSessionUser, getSessionUserId } from "@/lib/auth/server";
 import { runCitationAudit } from "@/lib/audit/run-audit";
+import { sendAuditCompleteEmail } from "@/lib/email/notifications";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
@@ -50,6 +51,15 @@ export async function POST(request: Request) {
       workspaceId: body.workspaceId ?? null,
       competitors,
     });
+
+    if (body.workspaceId) {
+      const sessionUser = await getSessionUser(request);
+      void sendAuditCompleteEmail({
+        workspaceId: body.workspaceId,
+        audit,
+        userEmail: sessionUser?.email,
+      }).catch((err) => console.error("Audit email failed", err));
+    }
 
     return NextResponse.json(audit);
   } catch (error) {

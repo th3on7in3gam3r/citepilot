@@ -54,6 +54,14 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   const [error, setError] = useState<string | null>(null);
 
   const [deleting, setDeleting] = useState(false);
+  const [isFleet, setIsFleet] = useState(false);
+
+  useEffect(() => {
+    void fetch("/api/billing/status", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { isFleet?: boolean } | null) => setIsFleet(Boolean(d?.isFleet)))
+      .catch(() => setIsFleet(false));
+  }, []);
 
   useEffect(() => {
     setDomain(workspace.domain);
@@ -391,6 +399,11 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   hint: "Notify when a re-scan finishes",
                 },
                 {
+                  key: "scoreDropAlerts" as const,
+                  label: "Citation score drop alerts",
+                  hint: "Email when score falls 5+ points after a re-scan",
+                },
+                {
                   key: "discussionAlerts" as const,
                   label: "Discussion opportunity alerts",
                   hint: "HN & Stack Overflow threads in your niche",
@@ -430,6 +443,73 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </ul>
         </Panel>
 
+        {isFleet && (
+          <Panel title="White-label reports">
+            <p className="mb-4 text-sm text-muted">
+              Fleet — branding on shareable audit links from GEO Audit.
+            </p>
+            <label className="block text-sm font-semibold text-ink">
+              Agency name
+              <input
+                type="text"
+                value={preferences.whiteLabel.agencyName}
+                onChange={(e) =>
+                  setPreferences((p) => ({
+                    ...p,
+                    whiteLabel: { ...p.whiteLabel, agencyName: e.target.value },
+                  }))
+                }
+                placeholder="Your agency"
+                className={inputClass}
+              />
+            </label>
+            <label className="mt-5 block text-sm font-semibold text-ink">
+              Logo URL
+              <input
+                type="url"
+                value={preferences.whiteLabel.logoUrl}
+                onChange={(e) =>
+                  setPreferences((p) => ({
+                    ...p,
+                    whiteLabel: { ...p.whiteLabel, logoUrl: e.target.value },
+                  }))
+                }
+                placeholder="https://…/logo.png"
+                className={inputClass}
+              />
+            </label>
+            <label className="mt-5 flex items-center justify-between gap-4 rounded-xl bg-surface px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-ink">Hide “Powered by CitePilot”</p>
+                <p className="text-xs text-muted">On public audit share pages</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={preferences.whiteLabel.hidePoweredBy}
+                onClick={() =>
+                  setPreferences((p) => ({
+                    ...p,
+                    whiteLabel: {
+                      ...p.whiteLabel,
+                      hidePoweredBy: !p.whiteLabel.hidePoweredBy,
+                    },
+                  }))
+                }
+                className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+                  preferences.whiteLabel.hidePoweredBy ? "bg-accent" : "bg-border"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
+                    preferences.whiteLabel.hidePoweredBy ? "left-[22px]" : "left-0.5"
+                  }`}
+                />
+              </button>
+            </label>
+          </Panel>
+        )}
+
         <Panel title="Workspace actions">
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button
@@ -454,7 +534,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               Open audit tool
             </Link>
             <Link
-              href="/start"
+              href="/start?full=1"
               className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-medium text-muted hover:text-ink"
             >
               Re-run full setup
