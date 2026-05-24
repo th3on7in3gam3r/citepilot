@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import {
+  dedupeBlogPostsBySlug,
   listBlogPostsForUser,
   listGeneratedPosts,
   listWorkspacePosts,
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
-    posts: rows.map((r) => ({
+    posts: dedupeBlogPostsBySlug(rows).map((r) => ({
       slug: r.slug,
       title: r.title,
       description: r.description,
@@ -49,6 +50,13 @@ export async function GET(request: Request) {
       readingMinutes: r.reading_minutes,
       workspaceId: r.workspace_id,
       url: `/blog/${r.slug}`,
+      webflow: r.webflow_published_at
+        ? {
+            publishedAt: r.webflow_published_at,
+            liveUrl: r.webflow_live_url,
+            itemId: r.webflow_item_id,
+          }
+        : null,
     })),
   });
 }

@@ -58,7 +58,10 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   markdown TEXT NOT NULL,
   reading_minutes INTEGER NOT NULL,
   workspace_id TEXT REFERENCES workspaces(id),
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  webflow_item_id TEXT,
+  webflow_published_at TEXT,
+  webflow_live_url TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_workspace ON audit_runs(workspace_id);

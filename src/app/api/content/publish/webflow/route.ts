@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
-import { getGeneratedPostBySlug } from "@/lib/blog/store";
+import { getGeneratedPostBySlug, markBlogPostWebflowPublish } from "@/lib/blog/store";
 import { WebflowApiError, publishPostToWebflow } from "@/lib/webflow/client";
 import { formatWebflowError } from "@/lib/webflow/errors";
 import { isWebflowConfigured } from "@/lib/webflow/config";
@@ -51,17 +51,26 @@ export async function POST(request: Request) {
       }
     }
 
-    const result = await publishPostToWebflow({
-      title: row.title,
-      slug: row.slug,
-      markdown: row.markdown,
-      description: row.description,
+    const result = await publishPostToWebflow(
+      {
+        title: row.title,
+        slug: row.slug,
+        markdown: row.markdown,
+        description: row.description,
+      },
+      row.webflow_item_id,
+    );
+
+    await markBlogPostWebflowPublish(row.slug, {
+      itemId: result.itemId,
+      liveUrl: result.liveUrl,
     });
 
     return NextResponse.json({
       ok: true,
       slug: row.slug,
       title: row.title,
+      alreadyPublished: Boolean(row.webflow_published_at),
       ...result,
     });
   } catch (error) {

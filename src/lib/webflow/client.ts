@@ -128,6 +128,7 @@ export async function getWebflowConnectionStatus(): Promise<{
 
 export async function publishPostToWebflow(
   input: WebflowPublishInput,
+  existingItemId?: string | null,
 ): Promise<WebflowPublishResult> {
   const config = getWebflowConfig();
   if (!config) {
@@ -145,19 +146,37 @@ export async function publishPostToWebflow(
     [fields.body]: html,
   };
 
-  const created = await webflowFetch<{ id: string }>(
-    config,
-    `/collections/${config.collectionId}/items`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        isArchived: false,
-        isDraft: false,
-        fieldData,
-      }),
-    },
-  );
-  const itemId = created.id;
+  let itemId: string;
+
+  if (existingItemId) {
+    await webflowFetch<{ id: string }>(
+      config,
+      `/collections/${config.collectionId}/items/${existingItemId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          isArchived: false,
+          isDraft: false,
+          fieldData,
+        }),
+      },
+    );
+    itemId = existingItemId;
+  } else {
+    const created = await webflowFetch<{ id: string }>(
+      config,
+      `/collections/${config.collectionId}/items`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          isArchived: false,
+          isDraft: false,
+          fieldData,
+        }),
+      },
+    );
+    itemId = created.id;
+  }
 
   try {
     await publishWebflowItems(config, [itemId]);

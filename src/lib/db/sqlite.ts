@@ -79,6 +79,9 @@ function initSchema(db: Database.Database): void {
       reading_minutes INTEGER NOT NULL,
       workspace_id TEXT,
       created_at TEXT NOT NULL,
+      webflow_item_id TEXT,
+      webflow_published_at TEXT,
+      webflow_live_url TEXT,
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     );
 
@@ -108,6 +111,19 @@ function migrateSchema(db: Database.Database): void {
   }
   if (!columns.some((c) => c.name === "user_id")) {
     db.exec(`ALTER TABLE workspaces ADD COLUMN user_id TEXT`);
+  }
+
+  const blogCols = db
+    .prepare(`PRAGMA table_info(blog_posts)`)
+    .all() as { name: string }[];
+  if (!blogCols.some((c) => c.name === "webflow_item_id")) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN webflow_item_id TEXT`);
+  }
+  if (!blogCols.some((c) => c.name === "webflow_published_at")) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN webflow_published_at TEXT`);
+  }
+  if (!blogCols.some((c) => c.name === "webflow_live_url")) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN webflow_live_url TEXT`);
   }
 }
 

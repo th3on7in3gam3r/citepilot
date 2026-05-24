@@ -22,6 +22,9 @@ export type BlogPostRow = {
   reading_minutes: number;
   workspace_id: string | null;
   created_at: string;
+  webflow_item_id: string | null;
+  webflow_published_at: string | null;
+  webflow_live_url: string | null;
 };
 
 export type SaveBlogPostInput = {
@@ -137,6 +140,9 @@ export async function saveGeneratedPost(
     reading_minutes: input.readingMinutes,
     workspace_id: input.workspaceId ?? null,
     created_at: now,
+    webflow_item_id: null,
+    webflow_published_at: null,
+    webflow_live_url: null,
   };
 
   await dbRun(
@@ -163,6 +169,49 @@ export async function saveGeneratedPost(
   );
 
   return row;
+}
+
+export type WebflowPublishMeta = {
+  itemId: string;
+  liveUrl?: string;
+};
+
+export async function markBlogPostWebflowPublish(
+  slug: string,
+  meta: WebflowPublishMeta,
+): Promise<void> {
+  const now = new Date().toISOString();
+  await dbRun(
+    `UPDATE blog_posts SET
+      webflow_item_id = ?,
+      webflow_published_at = ?,
+      webflow_live_url = ?
+     WHERE slug = ?`,
+    [meta.itemId, now, meta.liveUrl ?? null, slug],
+  );
+}
+
+/** Keep one row per slug — prefer Webflow-published, then newest. */
+export function dedupeBlogPostsBySlug(rows: BlogPostRow[]): BlogPostRow[] {
+  const bySlug = new Map<string, BlogPostRow>();
+  for (const row of rows) {
+    const existing = bySlug.get(row.slug);
+    if (!existing) {
+      bySlug.set(row.slug, row);
+      continue;
+    }
+    const rowHasWebflow = Boolean(row.webflow_published_at);
+    const existingHasWebflow = Boolean(existing.webflow_published_at);
+    const prefer =
+      (rowHasWebflow && !existingHasWebflow) ||
+      new Date(row.published_at).getTime() >
+        new Date(existing.published_at).getTime();
+    if (prefer) bySlug.set(row.slug, row);
+  }
+  return [...bySlug.values()].sort(
+    (a, b) =>
+      new Date(b.published_at).getTime() - new Date(a.published_at).getTime(),
+  );
 }
 
 export function rowToBlogPost(row: BlogPostRow): BlogPost {

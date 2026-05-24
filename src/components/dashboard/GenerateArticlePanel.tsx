@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import {
@@ -14,13 +14,6 @@ import type {
   ContentType,
   EditorialPillarId,
 } from "@/lib/content-strategy";
-
-type GeneratedPostSummary = {
-  slug: string;
-  title: string;
-  publishedAt: string;
-  url: string;
-};
 
 type GenerateResult = {
   post: { slug: string; title: string; url: string };
@@ -41,18 +34,6 @@ export function GenerateArticlePanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResult | null>(null);
-  const [published, setPublished] = useState<GeneratedPostSummary[]>([]);
-
-  const loadPublished = useCallback(async () => {
-    const res = await fetch("/api/blog/posts");
-    if (!res.ok) return;
-    const data = (await res.json()) as { posts: GeneratedPostSummary[] };
-    setPublished(data.posts);
-  }, []);
-
-  useEffect(() => {
-    void loadPublished();
-  }, [loadPublished]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -88,7 +69,6 @@ export function GenerateArticlePanel({
       }
       if (data.post) {
         setResult({ post: data.post });
-        void loadPublished();
         onGenerated?.();
         notifyChecklistUpdate();
       }
@@ -103,7 +83,8 @@ export function GenerateArticlePanel({
     <Panel title="Generate article" className="mt-6">
       <p className="mb-4 text-sm text-muted">
         Draft a CitePilot-style post with OpenAI and publish it to the public blog
-        automatically. Generation takes 30–90 seconds.
+        automatically. Generation takes 30–90 seconds. New posts appear in the
+        article queue below.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -221,28 +202,6 @@ export function GenerateArticlePanel({
           {loading ? "Generating & publishing…" : "Generate & publish to blog"}
         </button>
       </form>
-
-      {published.length > 0 && (
-        <div className="mt-8 border-t border-border pt-6">
-          <p className="text-sm font-semibold text-ink">Published from dashboard</p>
-          <ul className="mt-3 divide-y divide-border text-sm">
-            {published.map((p) => (
-              <li key={p.slug} className="flex items-center justify-between gap-4 py-2">
-                <Link
-                  href={p.url}
-                  className="font-medium text-accent hover:underline"
-                  target="_blank"
-                >
-                  {p.title}
-                </Link>
-                <span className="shrink-0 text-xs text-muted">
-                  {new Date(p.publishedAt).toLocaleDateString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </Panel>
   );
 }

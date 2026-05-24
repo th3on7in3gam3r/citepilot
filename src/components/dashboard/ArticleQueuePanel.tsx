@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { markGettingStartedStep } from "@/lib/getting-started";
@@ -12,6 +12,11 @@ type QueuePost = {
   description: string;
   publishedAt: string;
   url: string;
+  webflow: {
+    publishedAt: string;
+    liveUrl: string | null;
+    itemId: string | null;
+  } | null;
 };
 
 type WebflowStatus = {
@@ -22,6 +27,29 @@ type WebflowStatus = {
   detail?: string;
 };
 
+type QueueFilter = "all" | "draft" | "webflow";
+
+function StatusBadge({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: "blog" | "webflow" | "draft";
+}) {
+  const styles = {
+    blog: "bg-sky-50 text-sky-800",
+    webflow: "bg-emerald-50 text-emerald-800",
+    draft: "bg-surface text-muted",
+  };
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${styles[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
 export function ArticleQueuePanel({
   workspaceId,
   refreshKey = 0,
@@ -31,6 +59,7 @@ export function ArticleQueuePanel({
 }) {
   const [posts, setPosts] = useState<QueuePost[]>([]);
   const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
+  const [filter, setFilter] = useState<QueueFilter>("all");
   const [publishingSlug, setPublishingSlug] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +92,22 @@ export function ArticleQueuePanel({
     void load();
   }, [load, refreshKey]);
 
-  async function publishToWebflow(slug: string) {
+  const counts = useMemo(() => {
+    const webflowCount = posts.filter((p) => p.webflow).length;
+    return {
+      all: posts.length,
+      webflow: webflowCount,
+      draft: posts.length - webflowCount,
+    };
+  }, [posts]);
+
+  const filtered = useMemo(() => {
+    if (filter === "webflow") return posts.filter((p) => p.webflow);
+    if (filter === "draft") return posts.filter((p) => !p.webflow);
+    return posts;
+  }, [posts, filter]);
+
+  async function publishToWebflow(slug: string, isUpdate: boolean) {
     setPublishingSlug(slug);
     setMessage(null);
     setError(null);
@@ -72,6 +116,7 @@ export function ArticleQueuePanel({
       const res = await fetch("/api/content/publish/webflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ slug }),
       });
       const data = (await res.json()) as {
@@ -84,12 +129,17 @@ export function ArticleQueuePanel({
         return;
       }
       setMessage(
-        data.liveUrl
-          ? `Published “${data.title}” to Webflow — ${data.liveUrl}`
-          : `Published “${data.title}” to Webflow`,
+        isUpdate
+          ? data.liveUrl
+            ? `Updated “${data.title}” on Webflow — ${data.liveUrl}`
+            : `Updated “${data.title}” on Webflow`
+          : data.liveUrl
+            ? `Published “${data.title}” to Webflow — ${data.liveUrl}`
+            : `Published “${data.title}” to Webflow`,
       );
       markGettingStartedStep("publishedWebflow");
       notifyChecklistUpdate();
+      await load();
     } catch {
       setError("Network error — try again");
     } finally {
@@ -104,77 +154,65 @@ export function ArticleQueuePanel({
   return (
     <Panel title="Article queue" className="mt-6">
       <p className="mb-4 text-sm text-muted">
-        Generated articles for this workspace. Publish to the CitePilot blog with
-        the generator above, then push live to your Webflow CMS collection.
+        Generated drafts appear here after you use the generator. Push once to
+        Webflow — republish updates the same CMS item (no duplicates).
       </p>
 
       {webflow && !webflowConfigured && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           <p className="font-semibold">Webflow not configured</p>
           <p className="mt-1 text-amber-900">
-            Add your three Webflow values to{" "}
-            <code className="rounded bg-white/80 px-1.5 py-0.5 text-xs">.env.local</code>{" "}
-            (project root), save the file, then restart{" "}
-            <code className="rounded bg-white/80 px-1.5 py-0.5 text-xs">npm run dev</code>.
+            Set <code className="text-xs">WEBFLOW_*</code> in Vercel env vars
+            (or <code className="text-xs">.env.local</code> locally), then redeploy.
           </p>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-amber-900">
-            <li>
-              <code>WEBFLOW_API_KEY</code> — Webflow → Account → Integrations → API
-              access token
-            </li>
-            <li>
-              <code>WEBFLOW_SITE_ID</code> — your CitePilot site ID
-            </li>
-            <li>
-              <code>WEBFLOW_COLLECTION_ID</code> — Blog Posts collection ID
-            </li>
-          </ul>
         </div>
       )}
 
       {webflow && webflowConfigured && !webflowConnected && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           <p className="font-semibold">
-            {scopeError ? "Webflow API token needs more permissions" : "Webflow API check failed"}
+            {scopeError ? "Webflow token needs cms:write" : "Webflow API check failed"}
           </p>
-          {scopeError ? (
-            <p className="mt-1 text-amber-900">
-              Create a new token on your <strong>CitePilot site</strong> (not workspace
-              account): Site settings → Integrations → API access → Generate token.
-              Enable <strong>cms:write</strong> (required), plus{" "}
-              <strong>sites:publish</strong> to push the live site. Paste into{" "}
-              <code className="text-xs">WEBFLOW_API_KEY</code>, save, restart{" "}
-              <code className="text-xs">npm run dev</code>.
-            </p>
-          ) : (
-            <p className="mt-1 text-amber-900">
-              Env vars are set — you can try Publish below. If it fails, verify your
-              site and collection IDs.
-            </p>
-          )}
           {webflow.detail && (
             <p className="mt-2 text-xs text-amber-800">{webflow.detail}</p>
           )}
         </div>
       )}
 
-      {webflow && (
+      {webflow && webflowConnected && (
         <p className="mb-4 text-xs text-muted">
           Webflow:{" "}
-          {webflowConnected ? (
-            <span className="font-medium text-emerald-700">
-              Connected
-              {webflow.siteName ? ` · ${webflow.siteName}` : ""}
-              {webflow.collectionName ? ` · ${webflow.collectionName}` : ""}
-            </span>
-          ) : webflowConfigured ? (
-            <span className="font-medium text-amber-700">
-              Configured — {scopeError ? "token missing scopes" : "API check failed"}
-            </span>
-          ) : (
-            <span className="font-medium text-muted">Not configured</span>
-          )}
+          <span className="font-medium text-emerald-700">
+            Connected
+            {webflow.siteName ? ` · ${webflow.siteName}` : ""}
+            {webflow.collectionName ? ` · ${webflow.collectionName}` : ""}
+          </span>
         </p>
+      )}
+
+      {posts.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {(
+            [
+              ["all", `All (${counts.all})`],
+              ["draft", `Not on Webflow (${counts.draft})`],
+              ["webflow", `Live on Webflow (${counts.webflow})`],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFilter(key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                filter === key
+                  ? "bg-ink text-white"
+                  : "bg-surface text-muted hover:text-ink"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       )}
 
       {loadError && (
@@ -198,45 +236,81 @@ export function ArticleQueuePanel({
         <p className="text-sm text-muted">
           No articles yet — use Generate article above to create your first post.
         </p>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-muted">
+          No articles match this filter.
+        </p>
       ) : (
         <ul className="divide-y divide-border">
-          {posts.map((post) => (
-            <li
-              key={post.slug}
-              className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <Link
-                  href={post.url}
-                  className="font-medium text-accent hover:underline"
-                  target="_blank"
-                >
-                  {post.title}
-                </Link>
-                <p className="mt-1 line-clamp-2 text-sm text-muted">
-                  {post.description}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <span className="text-xs text-muted">
-                  {new Date(post.publishedAt).toLocaleDateString()}
-                </span>
-                <button
-                  type="button"
-                  disabled={!webflowConfigured || publishingSlug === post.slug}
-                  onClick={() => void publishToWebflow(post.slug)}
-                  className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-50"
-                  title={
-                    webflowConfigured
-                      ? "Publish to Webflow CMS"
-                      : "Add WEBFLOW_* keys to .env.local"
-                  }
-                >
-                  {publishingSlug === post.slug ? "Publishing…" : "Publish to Webflow"}
-                </button>
-              </div>
-            </li>
-          ))}
+          {filtered.map((post) => {
+            const onWebflow = Boolean(post.webflow);
+            return (
+              <li
+                key={post.slug}
+                className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={post.url}
+                      className="font-medium text-accent hover:underline"
+                      target="_blank"
+                    >
+                      {post.title}
+                    </Link>
+                    <StatusBadge tone="blog">CitePilot blog</StatusBadge>
+                    {onWebflow ? (
+                      <StatusBadge tone="webflow">Live on Webflow</StatusBadge>
+                    ) : (
+                      <StatusBadge tone="draft">Webflow pending</StatusBadge>
+                    )}
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted">
+                    {post.description}
+                  </p>
+                  <p className="mt-2 text-xs text-muted">
+                    Draft {new Date(post.publishedAt).toLocaleDateString()}
+                    {onWebflow && post.webflow?.publishedAt
+                      ? ` · Webflow ${new Date(post.webflow.publishedAt).toLocaleDateString()}`
+                      : ""}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  {onWebflow && post.webflow?.liveUrl && (
+                    <a
+                      href={post.webflow.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-border px-3 py-2 text-xs font-semibold text-ink hover:bg-surface"
+                    >
+                      View live →
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    disabled={!webflowConfigured || publishingSlug === post.slug}
+                    onClick={() => void publishToWebflow(post.slug, onWebflow)}
+                    className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    title={
+                      webflowConfigured
+                        ? onWebflow
+                          ? "Update existing Webflow CMS item"
+                          : "Publish to Webflow CMS"
+                        : "Webflow not configured"
+                    }
+                  >
+                    {publishingSlug === post.slug
+                      ? onWebflow
+                        ? "Updating…"
+                        : "Publishing…"
+                      : onWebflow
+                        ? "Sync to Webflow"
+                        : "Publish to Webflow"}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </Panel>
