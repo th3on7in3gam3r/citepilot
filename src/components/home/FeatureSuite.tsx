@@ -1,0 +1,44 @@
+import Link from "next/link";
+import { Section } from "@/components/ui/Section";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { productFeatures } from "@/lib/features";
+
+export function FeatureSuite() {
+  return (
+    <Section id="features" className="bg-cream">
+      <SectionHeading
+        eyebrow="Product"
+        title="A powerful suite of features — all in one place."
+        description="Citation-first GEO: content, authority, technical audits, and LLM tracking in a single workspace."
+        align="center"
+      />
+      <div className="mt-14 grid gap-6 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
+        {productFeatures.map((f) => (
+          <article
+            key={f.id}
+            className="rounded-2xl border border-border bg-white p-8 transition hover:border-accent/40 hover:shadow-md"
+          >
+            <h3 className="font-display text-lg font-bold text-ink">{f.title}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{f.description}</p>
+            {f.dashboardHref && (
+              <Link
+                href={f.dashboardHref}
+                className="mt-5 inline-block text-sm font-semibold text-accent hover:text-accent-deep"
+              >
+                Open in dashboard →
+              </Link>
+            )}
+          </article>
+        ))}
+      </div>
+      <div className="mt-12 text-center">
+        <Link
+          href="/#get-started"
+          className="inline-flex rounded-full border-2 border-accent/30 bg-white px-8 py-3.5 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/5"
+        >
+          Get started →
+        </Link>
+      </div>
+    </Section>
+  );
+}

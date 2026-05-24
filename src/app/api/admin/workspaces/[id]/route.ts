@@ -1,0 +1,20 @@
+import { NextResponse } from "next/server";
+import { adminDeleteWorkspace } from "@/lib/server/workspace";
+
+export const runtime = "nodejs";
+
+type Params = { params: Promise<{ id: string }> };
+
+export async function DELETE(_request: Request, { params }: Params) {
+  try {
+    const { id } = await params;
+    const ok = await adminDeleteWorkspace(id);
+    if (!ok) {
+      return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/admin/workspaces/[id]", error);
+    return NextResponse.json({ error: "Failed to delete workspace" }, { status: 500 });
+  }
+}

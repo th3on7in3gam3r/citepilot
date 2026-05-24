@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CitePilot
 
-## Getting Started
+**Get cited in AI answers — then prove it moved.**
 
-First, run the development server:
+Citation-first GEO: monitor money prompts, prioritize fixes, measure citation lift.
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Home: http://localhost:3000
+- Audit: http://localhost:3000/audit
+- Pricing: http://localhost:3000/pricing
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Backend (wired)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Data layer: **SQLite** locally (`.data/citepilot.db`) or **Neon Postgres** when `DATABASE_URL` is set (Vercel production).
 
-## Learn More
+| Route | Purpose |
+|-------|---------|
+| `POST /api/workspaces` | Save onboarding → workspace |
+| `GET /api/workspaces/[id]` | Load workspace + latest audit |
+| `POST /api/audit` | Run real GEO audit (site fetch + prompt analysis) |
+| `GET /api/audit/[id]` | Fetch stored audit |
+| `POST /api/waitlist` | Join Pilot waitlist |
+| `GET /api/discussions?q=` | HN + Stack Overflow + web (Serper/Tavily) |
+| `GET /api/health` | DB + env key checklist (no secrets exposed) |
+| `GET /api/admin/stats` | Admin metrics |
 
-To learn more about Next.js, take a look at the following resources:
+**Admin console** (separate from user dashboard): `/admin` — sign in at `/admin/login` when `ADMIN_SECRET` is set. Without it, admin runs in dev mode with a warning banner.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copy `.env.example` → `.env.local`. Key vars: `OPENAI_API_KEY`, `NEON_URL` or `DATABASE_URL`, `NEON_AUTH_BASE_URL` + `NEON_AUTH_COOKIE_SECRET`, `ADMIN_SECRET`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Dashboard status
 
-## Deploy on Vercel
+| Module | Wired to real data |
+|--------|-------------------|
+| Overview | Audit scores, platforms, gaps, chart |
+| Settings | Full edit/save, notifications, delete workspace, re-audit |
+| GEO Audit | Live site signals + gaps from audit |
+| Analytics | Prompt table from audit when available |
+| Content | Calendar/drafts from gaps + buyer question |
+| Backlinks | Domain rating from audit; network from competitors |
+| Discussions | HN + Stack Overflow + Serper/Tavily web search |
+| Admin (`/admin`) | Workspaces, audits, waitlist (`ADMIN_SECRET` in prod) |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Auth:** [Neon Auth](https://neon.com/docs/auth/overview) at `/auth/sign-in` — users stored in your Neon project (no Supabase). **Not yet:** Stripe billing, GSC metrics, CMS publish, email digests.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Structure
+
+```
+src/
+  app/                 # Routes
+  components/
+    home/              # Landing sections + mockups
+    audit/             # Audit form
+    layout/            # Header, footer
+    ui/                # ProductCTA, Container, Logo, …
+  hooks/               # Scroll + step observers
+  lib/
+    site.ts            # Brand, nav
+    content.ts         # Copy, pricing, FAQ
+    brands.ts          # Scroll marquee brands
+reference/
+  saved-page.html      # Original HTML export (reference only)
+```
+
+See [AUDIT.md](./AUDIT.md) for cleanup notes and what to build next.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run start` | Run production build |
