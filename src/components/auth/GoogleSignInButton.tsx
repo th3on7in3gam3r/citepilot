@@ -38,13 +38,12 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
 
     const from = searchParams.get("from") ?? searchParams.get("redirect") ?? "/dashboard";
     const path = from.startsWith("/") ? from : "/dashboard";
-    const callbackURL = `${window.location.origin}${path}`;
 
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL,
-        errorCallbackURL: `${window.location.origin}/auth/sign-in?error=google`,
+        callbackURL: path,
+        errorCallbackURL: "/auth/sign-in?error=google",
       });
     } catch (err) {
       console.error("Google sign-in", err);

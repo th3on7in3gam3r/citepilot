@@ -14,8 +14,11 @@ const dashboardAuthMiddleware =
     ? auth.middleware({ loginUrl: "/auth/sign-in" })
     : null;
 
+const OAUTH_VERIFIER_PARAM = "neon_auth_session_verifier";
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
 
   const adminSecret = process.env.ADMIN_SECRET;
   if (adminSecret) {
@@ -39,8 +42,21 @@ export async function middleware(request: NextRequest) {
 
   if (
     dashboardAuthMiddleware &&
-    (pathname === "/dashboard" || pathname.startsWith("/dashboard/"))
+    (hasOAuthVerifier ||
+      pathname === "/dashboard" ||
+      pathname.startsWith("/dashboard/"))
   ) {
+    // OAuth verifier must not land on sign-in — exchange only runs on protected routes.
+    if (
+      hasOAuthVerifier &&
+      (pathname.startsWith("/auth/sign-in") || pathname.startsWith("/auth/sign-up"))
+    ) {
+      const dashboard = new URL("/dashboard", request.url);
+      request.nextUrl.searchParams.forEach((value, key) => {
+        dashboard.searchParams.set(key, value);
+      });
+      return NextResponse.redirect(dashboard);
+    }
     return dashboardAuthMiddleware(request);
   }
 
@@ -53,5 +69,7 @@ export const config = {
     "/api/admin/:path*",
     "/dashboard",
     "/dashboard/:path*",
+    "/auth/sign-in",
+    "/auth/sign-up",
   ],
 };

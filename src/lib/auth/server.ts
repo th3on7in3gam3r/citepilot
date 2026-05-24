@@ -12,6 +12,8 @@ function createAuth() {
     baseUrl: process.env.NEON_AUTH_BASE_URL!,
     cookies: {
       secret: process.env.NEON_AUTH_COOKIE_SECRET!,
+      // OAuth returns via cross-site redirect; strict cookies break session exchange.
+      sameSite: "lax",
     },
   });
 }
