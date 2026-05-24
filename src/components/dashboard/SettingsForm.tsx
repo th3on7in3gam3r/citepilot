@@ -29,9 +29,10 @@ const inputClass =
 type SettingsFormProps = {
   workspace: WorkspaceSnapshot;
   onSaved: () => void;
+  onDeleted?: () => void;
 };
 
-export function SettingsForm({ workspace, onSaved }: SettingsFormProps) {
+export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProps) {
   const router = useRouter();
   const workspaceId = workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId();
 
@@ -161,7 +162,8 @@ export function SettingsForm({ workspace, onSaved }: SettingsFormProps) {
       setError("Failed to delete workspace.");
       return;
     }
-    router.push("/start");
+    await onDeleted?.();
+    router.push("/dashboard");
   }
 
   const busy = saving || auditing || deleting;

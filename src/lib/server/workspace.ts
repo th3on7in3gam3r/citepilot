@@ -262,7 +262,7 @@ export async function listRecentWorkspaces(
 
 export async function listWorkspacesForUser(
   userId: string,
-  limit = 20,
+  limit = 100,
 ): Promise<WorkspacePayload[]> {
   const rows = await dbAll<WorkspaceRow>(
     `SELECT * FROM workspaces
@@ -277,6 +277,14 @@ export async function listWorkspacesForUser(
       return rowToPayload(row, latestAudit);
     }),
   );
+}
+
+export async function countWorkspacesForUser(userId: string): Promise<number> {
+  const row = await dbGet<{ c: number | string }>(
+    `SELECT COUNT(*) as c FROM workspaces WHERE user_id = ?`,
+    [userId],
+  );
+  return Number(row?.c ?? 0);
 }
 
 export async function getAdminStats(): Promise<{

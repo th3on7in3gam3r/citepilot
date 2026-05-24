@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import type { OnboardingAnswers } from "@/lib/onboarding";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import {
+  getWorkspaceLimitsForUser,
+} from "@/lib/billing/limits-server";
+import {
+  workspaceLimitUpgradeError,
+} from "@/lib/billing/limits";
 import { WORKSPACE_COOKIE } from "@/lib/constants";
 import {
   createWorkspace,
+  enrichSnapshotWithBacklinks,
   listRecentWorkspaces,
   listWorkspacesForUser,
   toSnapshot,
@@ -17,15 +24,34 @@ export async function GET(request: Request) {
     if (user instanceof NextResponse) return user;
     const userId = apiUserId(user);
 
+    const limits = await getWorkspaceLimitsForUser(userId);
+
     const workspaces = userId
       ? await listWorkspacesForUser(userId)
       : await listRecentWorkspaces(10);
 
+    const snapshots = await Promise.all(
+      workspaces.map(async (workspace) => {
+        const snapshot = await enrichSnapshotWithBacklinks(
+          toSnapshot(workspace),
+          workspace.id,
+        );
+        return {
+          id: workspace.id,
+          domain: workspace.domain,
+          businessType: workspace.businessType,
+          buyerQuestion: workspace.buyerQuestion,
+          updatedAt: workspace.updatedAt,
+          citationScore: snapshot.citationScore,
+          hasRealAudit: snapshot.hasRealAudit,
+          workspace: snapshot,
+        };
+      }),
+    );
+
     return NextResponse.json({
-      workspaces: workspaces.map((workspace) => ({
-        id: workspace.id,
-        workspace: toSnapshot(workspace),
-      })),
+      workspaces: snapshots,
+      limits,
     });
   } catch (error) {
     console.error("GET /api/workspaces", error);
@@ -42,17 +68,33 @@ export async function POST(request: Request) {
     if (user instanceof NextResponse) return user;
     const userId = apiUserId(user);
 
+    const limits = await getWorkspaceLimitsForUser(userId);
+    if (userId && !limits.canCreate) {
+      return NextResponse.json(
+        {
+          error: workspaceLimitUpgradeError(limits),
+          code: "WORKSPACE_LIMIT",
+          limits,
+        },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as OnboardingAnswers;
     if (!body.domain?.trim()) {
       return NextResponse.json({ error: "Domain is required" }, { status: 400 });
     }
 
     const workspace = await createWorkspace(body, userId);
-    const snapshot = toSnapshot(workspace);
+    const snapshot = await enrichSnapshotWithBacklinks(
+      toSnapshot(workspace),
+      workspace.id,
+    );
 
     const response = NextResponse.json({
       id: workspace.id,
       workspace: snapshot,
+      limits: await getWorkspaceLimitsForUser(userId),
     });
 
     response.cookies.set(WORKSPACE_COOKIE, workspace.id, {

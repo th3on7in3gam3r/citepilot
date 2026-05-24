@@ -4,11 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { createContext, useContext } from "react";
 
-type WorkspaceContextValue = {
-  workspace: WorkspaceSnapshot | null;
-  ready: boolean;
-  refresh: () => Promise<void>;
-};
+type WorkspaceContextValue = ReturnType<typeof useWorkspace>;
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
@@ -26,3 +22,5 @@ export function useWorkspaceContext(): WorkspaceContextValue {
   }
   return ctx;
 }
+
+export type { WorkspaceSnapshot };

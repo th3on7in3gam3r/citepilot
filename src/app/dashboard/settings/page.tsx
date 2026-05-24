@@ -39,6 +39,7 @@ export default function SettingsPage() {
         workspaceId: workspace.workspaceId ?? workspace.id,
       }}
       onSaved={refresh}
+      onDeleted={refresh}
     />
   );
 }

@@ -47,7 +47,7 @@ Copy `.env.example` → `.env.local`. Key vars: `OPENAI_API_KEY`, `NEON_URL` or 
 | Discussions | HN + Stack Overflow + Serper/Tavily web search |
 | Admin (`/admin`) | Workspaces, audits, waitlist (`ADMIN_SECRET` in prod) |
 
-**Auth:** [Neon Auth](https://neon.com/docs/auth/overview) at `/auth/sign-in` — users stored in your Neon project (no Supabase). **Not yet:** Stripe billing, GSC metrics, CMS publish, email digests.
+**Auth:** [Neon Auth](https://neon.com/docs/auth/overview) at `/auth/sign-in` — users stored in your Neon project (no Supabase). **Billing:** Pilot/Fleet plans with workspace limits (Free 1 · Pilot 3 · Fleet unlimited). **Not yet:** Stripe webhook (domain), GSC metrics, email digests.
 
 ## Structure
 

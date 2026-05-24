@@ -3,6 +3,7 @@ import type {
   WorkspaceSnapshotResponse,
   WorkspaceUpdateInput,
 } from "@/lib/api-types";
+import type { WorkspaceLimits } from "@/lib/billing/limits";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { OnboardingAnswers } from "@/lib/onboarding";
 import { ONBOARDING_STORAGE_KEY } from "@/lib/onboarding";
@@ -52,19 +53,75 @@ export async function fetchWorkspace(
   return data.workspace;
 }
 
+export type WorkspaceListResponse = {
+  workspaces: {
+    id: string;
+    domain: string;
+    businessType: string;
+    buyerQuestion: string;
+    updatedAt: string;
+    citationScore: number;
+    hasRealAudit: boolean;
+    workspace: WorkspaceSnapshotResponse;
+  }[];
+  limits: WorkspaceLimits;
+};
+
+export async function fetchWorkspacesList(): Promise<WorkspaceListResponse | null> {
+  const res = await fetch("/api/workspaces", fetchOpts);
+  if (res.status === 401) return null;
+  if (!res.ok) return null;
+  return res.json() as Promise<WorkspaceListResponse>;
+}
+
 export async function fetchDefaultWorkspace(): Promise<{
   id: string;
   workspace: WorkspaceSnapshotResponse;
 } | null> {
-  const res = await fetch("/api/workspaces", fetchOpts);
-  if (res.status === 401) return null;
-  if (!res.ok) return null;
-  const data = (await res.json()) as {
-    workspaces: { id: string; workspace: WorkspaceSnapshotResponse }[];
-  };
-  const first = data.workspaces[0];
+  const list = await fetchWorkspacesList();
+  const first = list?.workspaces[0];
   if (!first) return null;
-  return first;
+  return { id: first.id, workspace: first.workspace };
+}
+
+export async function createClientWorkspace(input: {
+  domain: string;
+  buyerQuestion: string;
+  description?: string;
+  businessType?: string;
+}): Promise<{
+  id?: string;
+  workspace?: WorkspaceSnapshotResponse;
+  limits?: WorkspaceLimits;
+  error?: string;
+}> {
+  const res = await fetch("/api/workspaces", {
+    ...fetchOpts,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      domain: input.domain,
+      buyerQuestion: input.buyerQuestion,
+      description: input.description ?? "",
+      businessType: input.businessType ?? "agency-client",
+      audiences: [],
+      competitors: [],
+      referral: "",
+    }),
+  });
+  const data = (await res.json()) as {
+    id?: string;
+    workspace?: WorkspaceSnapshotResponse;
+    limits?: WorkspaceLimits;
+    error?: string;
+  };
+  if (!res.ok) {
+    return { error: data.error ?? "Could not create workspace" };
+  }
+  if (data.id) {
+    localStorage.setItem(WORKSPACE_STORAGE_KEY, data.id);
+  }
+  return data;
 }
 
 export async function updateWorkspace(
@@ -89,8 +146,14 @@ export async function deleteWorkspace(id: string): Promise<boolean> {
     method: "DELETE",
   });
   if (res.ok) {
-    localStorage.removeItem(WORKSPACE_STORAGE_KEY);
-    sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    const list = await fetchWorkspacesList();
+    const next = list?.workspaces.find((w) => w.id !== id);
+    if (next) {
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, next.id);
+    } else {
+      localStorage.removeItem(WORKSPACE_STORAGE_KEY);
+      sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    }
   }
   return res.ok;
 }
