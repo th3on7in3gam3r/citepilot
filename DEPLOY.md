@@ -23,7 +23,8 @@
    | `NEON_AUTH_COOKIE_SECRET` | `openssl rand -base64 32` (32+ characters) |
    | `ADMIN_SECRET` | Protects `/admin` and `/api/admin/*` |
    | `STACKEXCHANGE_KEY` | Discussions (Stack Overflow) |
-   | `SERPER_API_KEY` or `TAVILY_API_KEY` | Discussions web search |
+   | `SERPER_API_KEY` or `TAVILY_API_KEY` | Discussions + backlink discovery |
+   | `OPEN_PAGERANK_API_KEY` | Optional — third-party domain authority on Backlinks |
 
 4. Deploy → attach custom domain **`getcitepilot.com`** (production URL; `citepilot.ai` is not used).
 5. Neon Console → Auth → **Trusted domains**: include every origin users visit (`https://getcitepilot.com`, `https://www.getcitepilot.com`, `https://citepilot.vercel.app` with **no** trailing slash, `http://localhost:3000`). Must match the branch used by `NEON_AUTH_BASE_URL`.

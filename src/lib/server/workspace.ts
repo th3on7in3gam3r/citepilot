@@ -9,6 +9,7 @@ import type {
   WorkspaceUpdateInput,
 } from "@/lib/api-types";
 import { buildWorkspaceSnapshot, domainSeed } from "@/lib/dashboard";
+import { getBacklinkMetricsForWorkspace } from "@/lib/backlinks/store";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { getLatestAuditForWorkspace } from "@/lib/audit/run-audit";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
@@ -118,6 +119,26 @@ export function toSnapshot(
     promptResults: audit.promptResults,
     platformPresence: audit.platforms,
   };
+}
+
+export async function enrichSnapshotWithBacklinks(
+  snapshot: WorkspaceSnapshotResponse,
+  workspaceId: string,
+): Promise<WorkspaceSnapshotResponse> {
+  const metrics = await getBacklinkMetricsForWorkspace(workspaceId);
+  if (!metrics) return snapshot;
+  return {
+    ...snapshot,
+    domainRating: metrics.domainRating,
+    sourceCount: metrics.sourceCount,
+  };
+}
+
+export async function toSnapshotAsync(
+  payload: WorkspacePayload,
+): Promise<WorkspaceSnapshotResponse> {
+  const snapshot = toSnapshot(payload);
+  return enrichSnapshotWithBacklinks(snapshot, payload.id);
 }
 
 export async function createWorkspace(

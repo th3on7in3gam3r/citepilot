@@ -43,7 +43,7 @@ Copy `.env.example` → `.env.local`. Key vars: `OPENAI_API_KEY`, `NEON_URL` or 
 | GEO Audit | Live site signals + gaps from audit |
 | Analytics | Prompt table from audit when available |
 | Content | Calendar/drafts from gaps + buyer question |
-| Backlinks | Domain rating from audit; network from competitors |
+| Backlinks | Serper/Tavily discovery, Open PageRank, network placements + credits |
 | Discussions | HN + Stack Overflow + Serper/Tavily web search |
 | Admin (`/admin`) | Workspaces, audits, waitlist (`ADMIN_SECRET` in prod) |
 

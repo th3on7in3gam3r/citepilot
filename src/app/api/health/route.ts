@@ -19,6 +19,7 @@ export async function GET() {
     stackexchange: { ok: hasKey("STACKEXCHANGE_KEY") },
     serper: { ok: hasKey("SERPER_API_KEY") },
     tavily: { ok: hasKey("TAVILY_API_KEY") },
+    openPageRank: { ok: hasKey("OPEN_PAGERANK_API_KEY") },
     admin: {
       ok: hasKey("ADMIN_SECRET"),
       detail: hasKey("ADMIN_SECRET")

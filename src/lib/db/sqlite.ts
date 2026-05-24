@@ -97,6 +97,63 @@ function initSchema(db: Database.Database): void {
       current_period_end TEXT,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS backlink_profiles (
+      workspace_id TEXT PRIMARY KEY,
+      domain TEXT NOT NULL,
+      domain_rating INTEGER NOT NULL DEFAULT 0,
+      open_pagerank REAL,
+      referring_count INTEGER NOT NULL DEFAULT 0,
+      discovered_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS backlink_sources (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      url TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      source_domain TEXT NOT NULL,
+      discovery_source TEXT NOT NULL,
+      discovered_at TEXT NOT NULL,
+      UNIQUE(workspace_id, url),
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_backlink_sources_workspace ON backlink_sources(workspace_id);
+
+    CREATE TABLE IF NOT EXISTS backlink_network (
+      workspace_id TEXT PRIMARY KEY,
+      user_id TEXT,
+      domain TEXT NOT NULL,
+      business_type TEXT,
+      credits_total INTEGER NOT NULL DEFAULT 100,
+      credits_used INTEGER NOT NULL DEFAULT 0,
+      opted_in INTEGER NOT NULL DEFAULT 0,
+      opted_in_at TEXT,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_backlink_network_opted ON backlink_network(opted_in);
+
+    CREATE TABLE IF NOT EXISTS backlink_placements (
+      id TEXT PRIMARY KEY,
+      requester_workspace_id TEXT NOT NULL,
+      partner_workspace_id TEXT,
+      target_url TEXT NOT NULL,
+      anchor_text TEXT NOT NULL,
+      context_note TEXT,
+      status TEXT NOT NULL,
+      credits_cost INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (requester_workspace_id) REFERENCES workspaces(id),
+      FOREIGN KEY (partner_workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_backlink_placements_requester ON backlink_placements(requester_workspace_id);
+    CREATE INDEX IF NOT EXISTS idx_backlink_placements_partner ON backlink_placements(partner_workspace_id);
   `);
 }
 
@@ -125,6 +182,65 @@ function migrateSchema(db: Database.Database): void {
   if (!blogCols.some((c) => c.name === "webflow_live_url")) {
     db.exec(`ALTER TABLE blog_posts ADD COLUMN webflow_live_url TEXT`);
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS backlink_profiles (
+      workspace_id TEXT PRIMARY KEY,
+      domain TEXT NOT NULL,
+      domain_rating INTEGER NOT NULL DEFAULT 0,
+      open_pagerank REAL,
+      referring_count INTEGER NOT NULL DEFAULT 0,
+      discovered_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS backlink_sources (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      url TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      source_domain TEXT NOT NULL,
+      discovery_source TEXT NOT NULL,
+      discovered_at TEXT NOT NULL,
+      UNIQUE(workspace_id, url),
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_backlink_sources_workspace ON backlink_sources(workspace_id);
+
+    CREATE TABLE IF NOT EXISTS backlink_network (
+      workspace_id TEXT PRIMARY KEY,
+      user_id TEXT,
+      domain TEXT NOT NULL,
+      business_type TEXT,
+      credits_total INTEGER NOT NULL DEFAULT 100,
+      credits_used INTEGER NOT NULL DEFAULT 0,
+      opted_in INTEGER NOT NULL DEFAULT 0,
+      opted_in_at TEXT,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_backlink_network_opted ON backlink_network(opted_in);
+
+    CREATE TABLE IF NOT EXISTS backlink_placements (
+      id TEXT PRIMARY KEY,
+      requester_workspace_id TEXT NOT NULL,
+      partner_workspace_id TEXT,
+      target_url TEXT NOT NULL,
+      anchor_text TEXT NOT NULL,
+      context_note TEXT,
+      status TEXT NOT NULL,
+      credits_cost INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (requester_workspace_id) REFERENCES workspaces(id),
+      FOREIGN KEY (partner_workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_backlink_placements_requester ON backlink_placements(requester_workspace_id);
+    CREATE INDEX IF NOT EXISTS idx_backlink_placements_partner ON backlink_placements(partner_workspace_id);
+  `);
 }
 
 export function getDb(): Database.Database {

@@ -3,6 +3,7 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { WORKSPACE_COOKIE } from "@/lib/constants";
 import {
   deleteWorkspace,
+  enrichSnapshotWithBacklinks,
   getWorkspaceById,
   toSnapshot,
 } from "@/lib/server/workspace";
@@ -23,9 +24,14 @@ export async function GET(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }
 
+    const snapshot = await enrichSnapshotWithBacklinks(
+      toSnapshot(workspace),
+      workspace.id,
+    );
+
     return NextResponse.json({
       id: workspace.id,
-      workspace: toSnapshot(workspace),
+      workspace: snapshot,
       raw: workspace,
     });
   } catch (error) {
@@ -50,9 +56,13 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }
+    const snapshot = await enrichSnapshotWithBacklinks(
+      toSnapshot(workspace),
+      workspace.id,
+    );
     return NextResponse.json({
       id: workspace.id,
-      workspace: toSnapshot(workspace),
+      workspace: snapshot,
     });
   } catch (error) {
     console.error("PATCH /api/workspaces/[id]", error);
