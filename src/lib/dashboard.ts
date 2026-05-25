@@ -10,7 +10,15 @@ export type DashboardNavItem = {
   label: string;
   href: string;
   description: string;
-  icon: "overview" | "analytics" | "content" | "backlinks" | "audit" | "discussions" | "settings";
+  icon:
+    | "overview"
+    | "analytics"
+    | "content"
+    | "backlinks"
+    | "audit"
+    | "discussions"
+    | "settings"
+    | "help";
   section?: "main" | "footer";
 };
 
@@ -69,6 +77,14 @@ export const dashboardNav: DashboardNavItem[] = [
     href: "/dashboard/settings",
     description: "Workspace, prompts, and notifications",
     icon: "settings",
+    section: "footer",
+  },
+  {
+    id: "help",
+    label: "Help",
+    href: "/dashboard/help",
+    description: "Guides, docs, and support",
+    icon: "help",
     section: "footer",
   },
 ];
