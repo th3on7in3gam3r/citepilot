@@ -483,7 +483,7 @@ function CompetitorBenchmarkPanel({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 space-y-3">
         {rankedBrands.map((brand) => {
           const leading = brand.deltaVsYou > 0;
           const trailing = brand.deltaVsYou < 0;
@@ -523,93 +523,94 @@ function CompetitorBenchmarkPanel({
                     : "bg-gradient-to-b from-white/70 to-transparent"
                 }`}
               />
-              <div className="flex items-start justify-between gap-3">
-                <div>
+              <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1.4fr)_120px_120px_minmax(0,1.1fr)_auto] lg:items-center">
+                <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-ink">{brand.brand}</p>
+                    <p className="truncate font-semibold text-ink">{brand.brand}</p>
                     {isYou && (
                       <span className="rounded-full bg-ink px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
                         You
                       </span>
                     )}
+                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                      {benchmarkRankLabel(rank)}
+                    </span>
                   </div>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted">
-                    {benchmarkRankLabel(rank)}
-                  </p>
-                </div>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${benchmarkDeltaTone(
-                    brand.deltaVsYou,
-                  )}`}
-                >
-                  {brand.deltaVsYou > 0
-                    ? `+${brand.deltaVsYou} vs you`
-                    : brand.deltaVsYou < 0
-                      ? `${brand.deltaVsYou} vs you`
-                      : "Benchmark"}
-                </span>
-              </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
+                        <span>Visibility strength</span>
+                        <span>{brand.avgVisibility}/100</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-white">
+                        <div
+                          className={`h-full rounded-full ${
+                            isYou ? "bg-gradient-to-r from-[#7b93f0] to-accent" : "bg-ink/75"
+                          }`}
+                          style={{ width: benchmarkBarWidth(brand.avgVisibility) }}
+                        />
+                      </div>
+                    </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                    <div>
+                      <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
+                        <span>Prompt share</span>
+                        <span>{promptShare}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-white">
+                        <div
+                          className={`h-full rounded-full ${
+                            isYou ? "bg-gradient-to-r from-mint to-glow" : "bg-ink/50"
+                          }`}
+                          style={{ width: benchmarkBarWidth(promptShare) }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/80 bg-white/80 px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                     Avg visibility
                   </p>
                   <p className="mt-1 font-display text-3xl font-bold text-ink">
                     {brand.avgVisibility}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+
+                <div className="rounded-xl border border-border/80 bg-white/80 px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                     Prompts led
                   </p>
                   <p className="mt-1 font-display text-3xl font-bold text-ink">
                     {brand.promptsLed}
                   </p>
                 </div>
-              </div>
 
-              <div className="mt-5 space-y-3">
-                <div>
-                  <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
-                    <span>Visibility strength</span>
-                    <span>{brand.avgVisibility}/100</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white">
-                    <div
-                      className={`h-full rounded-full ${
-                        isYou ? "bg-gradient-to-r from-[#7b93f0] to-accent" : "bg-ink/75"
-                      }`}
-                      style={{ width: benchmarkBarWidth(brand.avgVisibility) }}
-                    />
-                  </div>
+                <div className="flex flex-wrap gap-2 lg:justify-center">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${positionTone}`}
+                  >
+                    {positionLabel}
+                  </span>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${benchmarkDeltaTone(
+                      brand.deltaVsYou,
+                    )}`}
+                  >
+                    {brand.deltaVsYou > 0
+                      ? `+${brand.deltaVsYou} vs you`
+                      : brand.deltaVsYou < 0
+                        ? `${brand.deltaVsYou} vs you`
+                        : "Benchmark"}
+                  </span>
                 </div>
 
-                <div>
-                  <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
-                    <span>Prompt share</span>
-                    <span>{promptShare}%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white">
-                    <div
-                      className={`h-full rounded-full ${
-                        isYou ? "bg-gradient-to-r from-mint to-glow" : "bg-ink/50"
-                      }`}
-                      style={{ width: benchmarkBarWidth(promptShare) }}
-                    />
-                  </div>
+                <div className="text-left lg:text-right">
+                  <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    {promptShare}% prompt share
+                  </span>
                 </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${positionTone}`}
-                >
-                  {positionLabel}
-                </span>
-                <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
-                  {promptShare}% prompt share
-                </span>
               </div>
             </div>
           );
