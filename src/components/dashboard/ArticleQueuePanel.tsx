@@ -4,7 +4,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import type { CmsProvider } from "@/lib/cms/types";
 import { markGettingStartedStep } from "@/lib/getting-started";
+
+type QueuePublication = {
+  provider: CmsProvider;
+  publishedAt: string;
+  liveUrl: string | null;
+  remoteId: string;
+};
 
 type QueuePost = {
   slug: string;
@@ -12,6 +20,7 @@ type QueuePost = {
   description: string;
   publishedAt: string;
   url: string;
+  publications: QueuePublication[];
   webflow: {
     publishedAt: string;
     liveUrl: string | null;
@@ -27,18 +36,34 @@ type WebflowStatus = {
   detail?: string;
 };
 
-type QueueFilter = "all" | "draft" | "webflow";
+type CmsProviderStatus = {
+  provider: CmsProvider;
+  configured: boolean;
+  connected: boolean;
+  displayName?: string;
+  siteUrl?: string;
+  detail?: string;
+};
+
+type QueueFilter = "all" | "draft" | "webflow" | CmsProvider;
+
+const providerLabels: Record<CmsProvider, string> = {
+  wordpress: "WordPress",
+  ghost: "Ghost",
+  shopify: "Shopify",
+  framer: "Framer",
+};
 
 function StatusBadge({
   children,
   tone,
 }: {
   children: React.ReactNode;
-  tone: "blog" | "webflow" | "draft";
+  tone: "blog" | "live" | "draft";
 }) {
   const styles = {
     blog: "bg-sky-50 text-sky-800",
-    webflow: "bg-emerald-50 text-emerald-800",
+    live: "bg-emerald-50 text-emerald-800",
     draft: "bg-surface text-muted",
   };
   return (
@@ -59,19 +84,26 @@ export function ArticleQueuePanel({
 }) {
   const [posts, setPosts] = useState<QueuePost[]>([]);
   const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
+  const [providers, setProviders] = useState<CmsProviderStatus[]>([]);
   const [filter, setFilter] = useState<QueueFilter>("all");
-  const [publishingSlug, setPublishingSlug] = useState<string | null>(null);
+  const [publishingKey, setPublishingKey] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoadError(null);
-    const [postsRes, webflowRes] = await Promise.all([
-      fetch(`/api/blog/posts?workspaceId=${encodeURIComponent(workspaceId)}`, {
+    const [postsRes, webflowRes, cmsRes] = await Promise.all([
+      fetch(
+        `/api/blog/posts?workspaceId=${encodeURIComponent(workspaceId)}&scope=workspace`,
+        {
+          credentials: "include",
+        },
+      ),
+      fetch("/api/content/webflow/status"),
+      fetch(`/api/content/cms?workspaceId=${encodeURIComponent(workspaceId)}`, {
         credentials: "include",
       }),
-      fetch("/api/content/webflow/status"),
     ]);
 
     if (postsRes.ok) {
@@ -86,39 +118,106 @@ export function ArticleQueuePanel({
     if (webflowRes.ok) {
       setWebflow((await webflowRes.json()) as WebflowStatus);
     }
+
+    if (cmsRes.ok) {
+      const data = (await cmsRes.json()) as { providers?: CmsProviderStatus[] };
+      setProviders(data.providers ?? []);
+    } else {
+      setProviders([]);
+    }
   }, [workspaceId]);
 
   useEffect(() => {
     void load();
   }, [load, refreshKey]);
 
+  const webflowConfigured = Boolean(webflow?.configured);
+  const webflowConnected = Boolean(webflow?.configured && webflow.connected);
   const counts = useMemo(() => {
-    const webflowCount = posts.filter((p) => p.webflow).length;
-    return {
+    const next: Record<QueueFilter, number> = {
       all: posts.length,
-      webflow: webflowCount,
-      draft: posts.length - webflowCount,
+      draft: posts.filter((post) => !post.webflow && post.publications.length === 0).length,
+      webflow: posts.filter((post) => post.webflow).length,
+      wordpress: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "wordpress"),
+      ).length,
+      ghost: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "ghost"),
+      ).length,
+      shopify: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "shopify"),
+      ).length,
+      framer: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "framer"),
+      ).length,
+    };
+    return {
+      ...next,
     };
   }, [posts]);
 
+  const connectedProviders = useMemo(() => {
+    const next: Array<{ id: QueueFilter; label: string }> = [];
+    if (webflowConnected) {
+      next.push({ id: "webflow", label: "Webflow" });
+    }
+    for (const provider of providers) {
+      if (provider.connected) {
+        next.push({
+          id: provider.provider,
+          label: providerLabels[provider.provider],
+        });
+      }
+    }
+    return next;
+  }, [providers, webflowConnected]);
+
+  useEffect(() => {
+    const allowed = new Set<QueueFilter>([
+      "all",
+      "draft",
+      ...connectedProviders.map((item) => item.id),
+    ]);
+    if (!allowed.has(filter)) {
+      setFilter("all");
+    }
+  }, [connectedProviders, filter]);
+
   const filtered = useMemo(() => {
-    if (filter === "webflow") return posts.filter((p) => p.webflow);
-    if (filter === "draft") return posts.filter((p) => !p.webflow);
+    if (filter === "draft") {
+      return posts.filter((post) => !post.webflow && post.publications.length === 0);
+    }
+    if (filter === "webflow") return posts.filter((post) => post.webflow);
+    if (filter !== "all") {
+      return posts.filter((post) =>
+        post.publications.some((item) => item.provider === filter),
+      );
+    }
     return posts;
   }, [posts, filter]);
 
-  async function publishToWebflow(slug: string, isUpdate: boolean) {
-    setPublishingSlug(slug);
+  async function publishToProvider(
+    provider: CmsProvider | "webflow",
+    slug: string,
+    isUpdate: boolean,
+  ) {
+    const label = provider === "webflow" ? "Webflow" : providerLabels[provider];
+    setPublishingKey(`${provider}:${slug}`);
     setMessage(null);
     setError(null);
 
     try {
-      const res = await fetch("/api/content/publish/webflow", {
+      const res = await fetch(
+        provider === "webflow"
+          ? "/api/content/publish/webflow"
+          : `/api/content/publish/${provider}`,
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ slug }),
-      });
+      },
+      );
       const data = (await res.json()) as {
         error?: string;
         liveUrl?: string;
@@ -131,31 +230,51 @@ export function ArticleQueuePanel({
       setMessage(
         isUpdate
           ? data.liveUrl
-            ? `Updated “${data.title}” on Webflow — ${data.liveUrl}`
-            : `Updated “${data.title}” on Webflow`
+            ? `Updated “${data.title}” on ${label} — ${data.liveUrl}`
+            : `Updated “${data.title}” on ${label}`
           : data.liveUrl
-            ? `Published “${data.title}” to Webflow — ${data.liveUrl}`
-            : `Published “${data.title}” to Webflow`,
+            ? `Published “${data.title}” to ${label} — ${data.liveUrl}`
+            : `Published “${data.title}” to ${label}`,
       );
-      markGettingStartedStep("publishedWebflow");
-      notifyChecklistUpdate();
+      if (provider === "webflow") {
+        markGettingStartedStep("publishedWebflow");
+        notifyChecklistUpdate();
+      }
       await load();
     } catch {
       setError("Network error — try again");
     } finally {
-      setPublishingSlug(null);
+      setPublishingKey(null);
     }
   }
 
-  const webflowConfigured = Boolean(webflow?.configured);
-  const webflowConnected = Boolean(webflow?.configured && webflow.connected);
   const scopeError = webflow?.detail?.includes("scopes");
+
+  function publicationFor(post: QueuePost, provider: CmsProvider) {
+    return post.publications.find((item) => item.provider === provider) ?? null;
+  }
+
+  function publicationDate(post: QueuePost): string {
+    const labels: string[] = [];
+    if (post.webflow?.publishedAt) {
+      labels.push(`Webflow ${new Date(post.webflow.publishedAt).toLocaleDateString()}`);
+    }
+    for (const publication of post.publications) {
+      labels.push(
+        `${providerLabels[publication.provider]} ${new Date(
+          publication.publishedAt,
+        ).toLocaleDateString()}`,
+      );
+    }
+    return labels.join(" · ");
+  }
 
   return (
     <Panel title="Article queue" className="mt-6">
       <p className="mb-4 text-sm text-muted">
-        Generated drafts appear here after you use the generator. Push once to
-        Webflow — republish updates the same CMS item (no duplicates).
+        Generated drafts appear here after you use the generator. Push once to any
+        connected CMS, then re-publish updates the same remote item instead of
+        creating duplicates.
       </p>
 
       {webflow && !webflowConfigured && (
@@ -190,21 +309,37 @@ export function ArticleQueuePanel({
         </p>
       )}
 
+      {providers.some((provider) => provider.connected) && (
+        <p className="mb-4 text-xs text-muted">
+          Extra CMS:{" "}
+          <span className="font-medium text-emerald-700">
+            {providers
+              .filter((provider) => provider.connected)
+              .map((provider) => providerLabels[provider.provider])
+              .join(", ")}
+          </span>
+        </p>
+      )}
+
       {posts.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {(
-            [
-              ["all", `All (${counts.all})`],
-              ["draft", `Not on Webflow (${counts.draft})`],
-              ["webflow", `Live on Webflow (${counts.webflow})`],
-            ] as const
-          ).map(([key, label]) => (
+          {[
+            { id: "all" as const, label: `All (${counts.all})` },
+            {
+              id: "draft" as const,
+              label: `Not on a CMS (${counts.draft})`,
+            },
+            ...connectedProviders.map((provider) => ({
+              id: provider.id,
+              label: `Live on ${provider.label} (${counts[provider.id]})`,
+            })),
+          ].map(({ id, label }) => (
             <button
-              key={key}
+              key={id}
               type="button"
-              onClick={() => setFilter(key)}
+              onClick={() => setFilter(id)}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                filter === key
+                filter === id
                   ? "bg-ink text-white"
                   : "bg-surface text-muted hover:text-ink"
               }`}
@@ -259,10 +394,14 @@ export function ArticleQueuePanel({
                       {post.title}
                     </Link>
                     <StatusBadge tone="blog">CitePilot blog</StatusBadge>
-                    {onWebflow ? (
-                      <StatusBadge tone="webflow">Live on Webflow</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="draft">Webflow pending</StatusBadge>
+                    {onWebflow && <StatusBadge tone="live">Live on Webflow</StatusBadge>}
+                    {post.publications.map((publication) => (
+                      <StatusBadge key={publication.provider} tone="live">
+                        Live on {providerLabels[publication.provider]}
+                      </StatusBadge>
+                    ))}
+                    {!onWebflow && post.publications.length === 0 && (
+                      <StatusBadge tone="draft">CMS pending</StatusBadge>
                     )}
                   </div>
                   <p className="mt-1 line-clamp-2 text-sm text-muted">
@@ -270,9 +409,7 @@ export function ArticleQueuePanel({
                   </p>
                   <p className="mt-2 text-xs text-muted">
                     Draft {new Date(post.publishedAt).toLocaleDateString()}
-                    {onWebflow && post.webflow?.publishedAt
-                      ? ` · Webflow ${new Date(post.webflow.publishedAt).toLocaleDateString()}`
-                      : ""}
+                    {publicationDate(post) ? ` · ${publicationDate(post)}` : ""}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -286,27 +423,75 @@ export function ArticleQueuePanel({
                       View live →
                     </a>
                   )}
-                  <button
-                    type="button"
-                    disabled={!webflowConfigured || publishingSlug === post.slug}
-                    onClick={() => void publishToWebflow(post.slug, onWebflow)}
-                    className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-50"
-                    title={
-                      webflowConfigured
-                        ? onWebflow
+                  {post.publications.map(
+                    (publication) =>
+                      publication.liveUrl && (
+                        <a
+                          key={`${publication.provider}-view`}
+                          href={publication.liveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-full border border-border px-3 py-2 text-xs font-semibold text-ink hover:bg-surface"
+                        >
+                          View {providerLabels[publication.provider]} →
+                        </a>
+                      ),
+                  )}
+                  {webflowConfigured && (
+                    <button
+                      type="button"
+                      disabled={publishingKey === `webflow:${post.slug}`}
+                      onClick={() => void publishToProvider("webflow", post.slug, onWebflow)}
+                      className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-50"
+                      title={
+                        onWebflow
                           ? "Update existing Webflow CMS item"
                           : "Publish to Webflow CMS"
-                        : "Webflow not configured"
-                    }
-                  >
-                    {publishingSlug === post.slug
-                      ? onWebflow
-                        ? "Updating…"
-                        : "Publishing…"
-                      : onWebflow
-                        ? "Sync to Webflow"
-                        : "Publish to Webflow"}
-                  </button>
+                      }
+                    >
+                      {publishingKey === `webflow:${post.slug}`
+                        ? onWebflow
+                          ? "Updating…"
+                          : "Publishing…"
+                        : onWebflow
+                          ? "Sync to Webflow"
+                          : "Publish to Webflow"}
+                    </button>
+                  )}
+                  {providers
+                    .filter((provider) => provider.connected)
+                    .map((provider) => {
+                      const publication = publicationFor(post, provider.provider);
+                      const busy = publishingKey === `${provider.provider}:${post.slug}`;
+                      return (
+                        <button
+                          key={provider.provider}
+                          type="button"
+                          disabled={busy}
+                          onClick={() =>
+                            void publishToProvider(
+                              provider.provider,
+                              post.slug,
+                              Boolean(publication),
+                            )
+                          }
+                          className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+                          title={
+                            publication
+                              ? `Update existing ${providerLabels[provider.provider]} item`
+                              : `Publish to ${providerLabels[provider.provider]}`
+                          }
+                        >
+                          {busy
+                            ? publication
+                              ? "Updating…"
+                              : "Publishing…"
+                            : publication
+                              ? `Sync to ${providerLabels[provider.provider]}`
+                              : `Publish to ${providerLabels[provider.provider]}`}
+                        </button>
+                      );
+                    })}
                 </div>
               </li>
             );

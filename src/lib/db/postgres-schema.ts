@@ -151,4 +151,35 @@ CREATE TABLE IF NOT EXISTS gsc_connections (
   expires_at TEXT,
   updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS cms_connections (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  provider TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  site_url TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'connected',
+  credentials_encrypted TEXT NOT NULL,
+  remote_defaults TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(workspace_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cms_connections_workspace ON cms_connections(workspace_id);
+
+CREATE TABLE IF NOT EXISTS cms_publications (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  provider TEXT NOT NULL,
+  post_slug TEXT NOT NULL,
+  remote_id TEXT NOT NULL,
+  remote_url TEXT,
+  published_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(workspace_id, provider, post_slug)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cms_publications_workspace ON cms_publications(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_cms_publications_slug ON cms_publications(post_slug);
 `;

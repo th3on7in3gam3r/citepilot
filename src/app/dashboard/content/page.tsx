@@ -1,37 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
+import { CmsConnectionsPanel } from "@/components/dashboard/CmsConnectionsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { GenerateArticlePanel } from "@/components/dashboard/GenerateArticlePanel";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { buildContentCalendar } from "@/lib/dashboard-data";
 import { buildWeeklyEditorialMix } from "@/lib/content-strategy";
-import { cmsPlatforms, productFeatures } from "@/lib/features";
+import { productFeatures } from "@/lib/features";
 
 const contentFeature = productFeatures.find((f) => f.id === "content")!;
 const strategyFeature = productFeatures.find((f) => f.id === "strategy")!;
 const publishFeature = productFeatures.find((f) => f.id === "publishing")!;
 
-type WebflowStatus = {
-  configured: boolean;
-  connected: boolean;
-  siteName?: string;
-  collectionName?: string;
-  detail?: string;
-};
-
 export default function ContentPage() {
   const { workspace, ready } = useWorkspaceContext();
-  const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
   const [queueRefreshKey, setQueueRefreshKey] = useState(0);
-
-  useEffect(() => {
-    void fetch("/api/content/webflow/status")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setWebflow(data as WebflowStatus | null));
-  }, []);
 
   if (!ready || !workspace) return null;
 
@@ -114,53 +100,10 @@ export default function ContentPage() {
 
       <ArticleQueuePanel workspaceId={workspaceId} refreshKey={queueRefreshKey} />
 
-      <Panel title="CMS connections" className="mt-6">
-        <p className="mb-3 text-sm text-muted">
-          Push generated articles from CitePilot to your marketing site CMS.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {cmsPlatforms.map((cms) => {
-            const isWebflow = cms.id === "webflow";
-            const connected =
-              isWebflow && webflow?.configured && webflow?.connected;
-            const pending =
-              isWebflow && webflow?.configured && !webflow.connected;
-            const comingSoon = !cms.available;
-            return (
-              <span
-                key={cms.id}
-                className={`rounded-full border px-4 py-2 text-sm font-medium ${
-                  connected
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : pending
-                      ? "border-amber-200 bg-amber-50 text-amber-800"
-                      : comingSoon
-                        ? "border-border bg-surface text-muted"
-                        : "border-border bg-surface text-ink opacity-60"
-                }`}
-                title={
-                  comingSoon
-                    ? `${cms.name} publish — coming soon`
-                    : isWebflow && webflow?.detail
-                      ? webflow.detail
-                      : connected
-                        ? `${webflow?.siteName ?? "Site"} · ${webflow?.collectionName ?? "Blog Posts"}`
-                        : undefined
-                }
-              >
-                {cms.name}
-                {connected
-                  ? " · connected"
-                  : pending
-                    ? " · fix token scopes"
-                    : comingSoon
-                      ? " · coming soon"
-                      : ""}
-              </span>
-            );
-          })}
-        </div>
-      </Panel>
+      <CmsConnectionsPanel
+        workspaceId={workspaceId}
+        onChanged={() => setQueueRefreshKey((value) => value + 1)}
+      />
     </>
   );
 }

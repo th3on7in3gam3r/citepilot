@@ -25,7 +25,7 @@ export const productFeatures: ProductFeature[] = [
     id: "publishing",
     title: "Automated Publishing",
     description:
-      "Publish to Webflow CMS from your article queue. WordPress, Shopify, and more coming soon.",
+      "Publish from your article queue to Webflow, WordPress, Ghost, Shopify, or Framer.",
     dashboardHref: "/dashboard/content",
   },
   {
@@ -67,10 +67,10 @@ export type CmsPlatform = {
 
 export const cmsPlatforms: CmsPlatform[] = [
   { id: "webflow", name: "Webflow", available: true },
-  { id: "wordpress", name: "WordPress", available: false },
-  { id: "shopify", name: "Shopify", available: false },
-  { id: "ghost", name: "Ghost", available: false },
-  { id: "framer", name: "Framer", available: false },
+  { id: "wordpress", name: "WordPress", available: true },
+  { id: "shopify", name: "Shopify", available: true },
+  { id: "ghost", name: "Ghost", available: true },
+  { id: "framer", name: "Framer", available: true },
 ];
 
 export const llmModels = [

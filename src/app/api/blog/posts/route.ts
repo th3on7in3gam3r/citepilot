@@ -6,6 +6,7 @@ import {
   listGeneratedPosts,
   listWorkspacePosts,
 } from "@/lib/blog/store";
+import { listCmsPublicationsForPosts } from "@/lib/cms/store";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
@@ -38,8 +39,22 @@ export async function GET(request: Request) {
     rows = await listGeneratedPosts();
   }
 
+  const deduped = dedupeBlogPostsBySlug(rows);
+  const publications = workspaceId
+    ? await listCmsPublicationsForPosts(
+        workspaceId,
+        deduped.map((row) => row.slug),
+      )
+    : [];
+  const publicationsBySlug = new Map<string, typeof publications>();
+  for (const publication of publications) {
+    const next = publicationsBySlug.get(publication.postSlug) ?? [];
+    next.push(publication);
+    publicationsBySlug.set(publication.postSlug, next);
+  }
+
   return NextResponse.json({
-    posts: dedupeBlogPostsBySlug(rows).map((r) => ({
+    posts: deduped.map((r) => ({
       slug: r.slug,
       title: r.title,
       description: r.description,
@@ -57,6 +72,12 @@ export async function GET(request: Request) {
             itemId: r.webflow_item_id,
           }
         : null,
+      publications: (publicationsBySlug.get(r.slug) ?? []).map((item) => ({
+        provider: item.provider,
+        publishedAt: item.publishedAt,
+        liveUrl: item.remoteUrl,
+        remoteId: item.remoteId,
+      })),
     })),
   });
 }
