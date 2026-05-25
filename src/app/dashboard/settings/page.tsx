@@ -4,7 +4,7 @@ import { SettingsForm } from "@/components/dashboard/SettingsForm";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 export default function SettingsPage() {
-  const { workspace, ready, refresh } = useWorkspaceContext();
+  const { workspace, ready, refresh, applyWorkspace } = useWorkspaceContext();
 
   if (!ready) {
     return (
@@ -38,7 +38,15 @@ export default function SettingsPage() {
         ...workspace,
         workspaceId: workspace.workspaceId ?? workspace.id,
       }}
-      onSaved={refresh}
+      onSaved={(updated) => {
+        const id =
+          updated?.id ?? workspace?.workspaceId ?? workspace?.id ?? undefined;
+        if (updated && id) {
+          applyWorkspace(updated, id);
+        } else {
+          void refresh();
+        }
+      }}
       onDeleted={refresh}
     />
   );

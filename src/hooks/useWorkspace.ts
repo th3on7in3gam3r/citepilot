@@ -5,6 +5,7 @@ import {
   buildWorkspaceSnapshot,
   type WorkspaceSnapshot,
 } from "@/lib/dashboard";
+import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
 import {
   clearStoredWorkspaceId,
   createClientWorkspace as apiCreateClientWorkspace,
@@ -100,6 +101,14 @@ export function useWorkspace() {
     await loadActiveWorkspace();
   }, [loadActiveWorkspace, loadList]);
 
+  const applyWorkspace = useCallback(
+    (data: WorkspaceSnapshotResponse, id: string) => {
+      storeWorkspaceId(id);
+      setWorkspace(normalizeSnapshot(data, id));
+    },
+    [],
+  );
+
   const switchWorkspace = useCallback(
     async (id: string) => {
       storeWorkspaceId(id);
@@ -143,6 +152,7 @@ export function useWorkspace() {
     limits,
     ready,
     refresh,
+    applyWorkspace,
     switchWorkspace,
     createClientWorkspace,
   };

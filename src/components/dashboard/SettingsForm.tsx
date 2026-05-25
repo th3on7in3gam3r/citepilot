@@ -12,6 +12,7 @@ import {
   updateWorkspace,
 } from "@/lib/client/api";
 import { useRouter } from "next/navigation";
+import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import {
   businessTypes,
@@ -28,7 +29,7 @@ const inputClass =
 
 type SettingsFormProps = {
   workspace: WorkspaceSnapshot;
-  onSaved: () => void;
+  onSaved: (updated?: WorkspaceSnapshotResponse) => void;
   onDeleted?: () => void;
 };
 
@@ -49,6 +50,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   );
 
   const [saving, setSaving] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
   const [auditing, setAuditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +102,41 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     };
   }
 
+  async function savePreferences(
+    next: WorkspacePreferences,
+    toast = "Preferences saved.",
+  ): Promise<boolean> {
+    if (!workspaceId) {
+      setError("No workspace found. Complete onboarding first.");
+      return false;
+    }
+
+    setSavingPrefs(true);
+    setError(null);
+
+    try {
+      const updated = await updateWorkspace(workspaceId, {
+        ...buildAnswers(),
+        preferences: next,
+      });
+
+      if (!updated) {
+        setError("Failed to save preferences.");
+        return false;
+      }
+
+      setPreferences(updated.preferences ?? next);
+      onSaved(updated);
+      setMessage(toast);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      return false;
+    } finally {
+      setSavingPrefs(false);
+    }
+  }
+
   async function persist(andAudit: boolean) {
     if (!workspaceId) {
       setError("No workspace found. Complete onboarding first.");
@@ -130,8 +167,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         return;
       }
 
+      setPreferences(updated.preferences ?? preferences);
       sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
-      onSaved();
+      onSaved(updated);
       setMessage("Settings saved.");
 
       if (andAudit) {
@@ -142,7 +180,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           prompts: [answers.buyerQuestion],
           workspaceId,
         });
-        onSaved();
+        onSaved(updated);
         setMessage("Settings saved and audit complete.");
       }
     } catch (err) {
@@ -174,7 +212,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     router.push("/dashboard");
   }
 
-  const busy = saving || auditing || deleting;
+  const busy = saving || savingPrefs || auditing || deleting;
   const lastUpdated = workspace.updatedAt
     ? new Date(workspace.updatedAt).toLocaleString()
     : null;
@@ -422,12 +460,15 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   type="button"
                   role="switch"
                   aria-checked={preferences[item.key]}
-                  onClick={() =>
-                    setPreferences((p) => ({
-                      ...p,
-                      [item.key]: !p[item.key],
-                    }))
-                  }
+                  disabled={busy}
+                  onClick={() => {
+                    const next = {
+                      ...preferences,
+                      [item.key]: !preferences[item.key],
+                    };
+                    setPreferences(next);
+                    void savePreferences(next);
+                  }}
                   className={`relative h-7 w-12 shrink-0 rounded-full transition ${
                     preferences[item.key] ? "bg-accent" : "bg-border"
                   }`}
@@ -446,7 +487,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         {isFleet && (
           <Panel title="White-label reports">
             <p className="mb-4 text-sm text-muted">
-              Fleet — branding on shareable audit links from GEO Audit.
+              Fleet — branding on shareable audit links from GEO Audit. Toggles
+              save automatically.
             </p>
             <label className="block text-sm font-semibold text-ink">
               Agency name
@@ -487,15 +529,23 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                 type="button"
                 role="switch"
                 aria-checked={preferences.whiteLabel.hidePoweredBy}
-                onClick={() =>
-                  setPreferences((p) => ({
-                    ...p,
+                disabled={busy}
+                onClick={() => {
+                  const next = {
+                    ...preferences,
                     whiteLabel: {
-                      ...p.whiteLabel,
-                      hidePoweredBy: !p.whiteLabel.hidePoweredBy,
+                      ...preferences.whiteLabel,
+                      hidePoweredBy: !preferences.whiteLabel.hidePoweredBy,
                     },
-                  }))
-                }
+                  };
+                  setPreferences(next);
+                  void savePreferences(
+                    next,
+                    next.whiteLabel.hidePoweredBy
+                      ? "White-label saved — share links will hide CitePilot branding."
+                      : "White-label saved — CitePilot credit will show on share links.",
+                  );
+                }}
                 className={`relative h-7 w-12 shrink-0 rounded-full transition ${
                   preferences.whiteLabel.hidePoweredBy ? "bg-accent" : "bg-border"
                 }`}
