@@ -75,7 +75,7 @@ export function CitationVolumeChart({
 
   return (
     <div
-      className={`rounded-2xl border border-border bg-white ${
+      className={`overflow-hidden rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] ${
         compact ? "p-4" : "p-6 md:p-8"
       }`}
     >
@@ -90,7 +90,7 @@ export function CitationVolumeChart({
           </p>
         </div>
         {!compact && (
-          <div className="mt-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent sm:mt-0">
+          <div className="mt-2 rounded-full border border-accent/10 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent sm:mt-0">
             {hasRealAudit ? "From your latest audit" : "Projected · run audit for live baseline"}
           </div>
         )}
@@ -192,7 +192,7 @@ export function CitationVolumeChart({
 
             {!compact && lastProjected && (
               <foreignObject x={calloutX} y={calloutY} width={240} height={44}>
-                <div className="rounded-lg bg-accent px-3 py-2 text-center text-xs font-semibold text-white shadow-md">
+                <div className="rounded-lg bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-3 py-2 text-center text-xs font-semibold text-white shadow-[0_12px_28px_rgba(107,140,255,0.25)]">
                   Fixing gaps lifts visibility by {liftPct}%
                 </div>
               </foreignObject>
@@ -220,8 +220,11 @@ export function CitationVolumeChart({
         </div>
 
         {!compact && (
-          <aside className="flex flex-col rounded-xl border border-border bg-surface/60 p-4">
-            <p className="text-xs leading-relaxed text-muted">
+          <aside className="flex flex-col rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+              Visibility simulator
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-muted">
               Move the slider to see how closing citation gaps boosts AI visibility.
             </p>
             <div className="mt-4">

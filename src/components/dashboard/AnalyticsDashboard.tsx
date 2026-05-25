@@ -31,6 +31,49 @@ const confidenceStyle: Record<CorrelationInsight["confidence"], string> = {
   Directional: "bg-sky-50 text-sky-800",
 };
 
+function benchmarkBarWidth(value: number) {
+  return `${Math.max(8, Math.min(100, value))}%`;
+}
+
+function benchmarkRankLabel(rank: number) {
+  if (rank === 1) return "Leader";
+  if (rank === 2) return "Challenger";
+  return `Rank #${rank}`;
+}
+
+function benchmarkDeltaTone(delta: number) {
+  if (delta > 0) return "bg-red-50 text-red-700";
+  if (delta < 0) return "bg-emerald-50 text-emerald-700";
+  return "bg-surface text-muted";
+}
+
+function benchmarkPromptState(prompt: BenchmarkPromptRow, yourBrand: string) {
+  if (prompt.leader === yourBrand) {
+    return {
+      label: "Defend lead",
+      tone: "bg-emerald-50 text-emerald-700",
+      rail: "from-emerald-400 via-mint to-glow",
+      summary: "You already lead here. Protect it with freshness and stronger proof assets.",
+    };
+  }
+
+  if (prompt.gapToLeader <= 6) {
+    return {
+      label: "Quick flip",
+      tone: "bg-sky-50 text-sky-800",
+      rail: "from-[#7b93f0] via-accent to-glow",
+      summary: "This is close enough to flip with sharper comparisons and answer formatting.",
+    };
+  }
+
+  return {
+    label: "Attack prompt",
+    tone: "bg-amber-50 text-amber-800",
+    rail: "from-amber-300 via-orange-300 to-amber-500",
+    summary: "Treat this as a larger competitive gap that needs dedicated comparison content.",
+  };
+}
+
 export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot }) {
   const [tab, setTab] = useState<Tab>("llms");
   const rows = useMemo(
@@ -48,19 +91,32 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
 
   return (
     <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="inline-flex rounded-full border border-border bg-white p-1">
+      <div className="overflow-hidden rounded-2xl border border-border bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.06))] p-4 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+              Analytics workspace
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              Switch between AI visibility intelligence and Google Search Console
+              performance for <span className="font-semibold text-ink">{workspace.domain}</span>.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:items-end">
+            <div className="inline-flex rounded-full border border-white/80 bg-white/90 p-1 shadow-sm">
           <TabButton active={tab === "google"} onClick={() => setTab("google")}>
             Google
           </TabButton>
           <TabButton active={tab === "llms"} onClick={() => setTab("llms")}>
             LLMs
           </TabButton>
+            </div>
+            <select className="rounded-full border border-border bg-white px-4 py-2 text-sm text-muted shadow-sm">
+              <option>Last 30 days</option>
+              <option>Last 90 days</option>
+            </select>
+          </div>
         </div>
-        <select className="rounded-full border border-border bg-white px-4 py-2 text-sm text-muted">
-          <option>Last 30 days</option>
-          <option>Last 90 days</option>
-        </select>
       </div>
 
       {tab === "llms" ? (
@@ -97,7 +153,9 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-        active ? "bg-ink text-white" : "text-muted hover:text-ink"
+        active
+          ? "bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent text-white shadow-[0_8px_20px_rgba(107,140,255,0.28)]"
+          : "text-muted hover:text-ink"
       }`}
     >
       {children}
@@ -122,16 +180,43 @@ function LLMPanel({
   return (
     <>
       <Panel title="Brand presence" className="mt-6">
-        <div className="mb-6 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-border bg-surface px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Visibility score
-            </p>
-            <p className="font-display mt-1 text-3xl font-bold text-ink">
-              {workspace.visibilityScore}%
-            </p>
+        <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.1),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                Presence overview
+              </p>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+                Prompt-level visibility for your tracked AI surfaces. Use this section to
+                see where your brand is already present, how those prompts feel, and
+                which buyer questions still need a stronger answer footprint.
+              </p>
+            </div>
+            <div className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+              Buyer question: {workspace.buyerQuestion}
+            </div>
           </div>
-          <PromptsCard workspace={workspace} />
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                Visibility score
+              </p>
+              <div className="mt-2 flex items-end justify-between gap-4">
+                <p className="font-display text-4xl font-bold text-ink">
+                  {workspace.visibilityScore}%
+                </p>
+                <span className="rounded-full bg-ink px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
+                  {workspace.hasRealAudit ? "Live signal" : "Projected"}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-muted">
+                Combined view across prompt coverage, citation evidence, and current AI
+                visibility strength.
+              </p>
+            </div>
+            <PromptsCard workspace={workspace} />
+          </div>
         </div>
         <PromptTable rows={rows} />
       </Panel>
@@ -159,19 +244,20 @@ function CorrelationInsightsPanel({
 }) {
   return (
     <Panel title="Correlation insights" className="mt-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="max-w-3xl text-sm leading-relaxed text-muted">
-            Directional insights inferred from your latest prompt leadership, AI
-            platform coverage, and technical audit signals. These are not strict
-            causal claims, but they do highlight which fixes most likely explain or
-            unlock visibility changes.
-          </p>
-        </div>
+      <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+          Directional analysis
+        </p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+          Directional insights inferred from your latest prompt leadership, AI
+          platform coverage, and technical audit signals. These are not strict
+          causal claims, but they do highlight which fixes most likely explain or
+          unlock visibility changes.
+        </p>
       </div>
 
       {insights.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-border bg-surface/60 px-5 py-5">
+        <div className="mt-6 rounded-2xl border border-dashed border-border bg-[linear-gradient(135deg,rgba(123,147,240,0.06),rgba(255,255,255,0.98))] px-5 py-5">
           <p className="text-sm font-semibold text-ink">
             Run a fresh audit to unlock directional correlation insights.
           </p>
@@ -185,8 +271,9 @@ function CorrelationInsightsPanel({
           {insights.map((insight) => (
             <div
               key={insight.id}
-              className="rounded-xl border border-border bg-surface px-5 py-4"
+              className="relative overflow-hidden rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(244,247,251,0.9))] px-5 py-4"
             >
+              <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#7b93f0] via-accent to-glow" />
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <span
                   className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${confidenceStyle[insight.confidence]}`}
@@ -240,18 +327,39 @@ function CompetitorBenchmarkPanel({
   if (workspace.competitors.length === 0) {
     return (
       <Panel title="Competitor benchmark" className="mt-6">
-        <div className="rounded-xl border border-dashed border-border bg-surface/60 px-5 py-5">
-          <p className="text-sm font-semibold text-ink">
-            Add competitors to unlock side-by-side benchmarking.
-          </p>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-            CitePilot can compare your tracked prompts against up to three competitors
-            so you can see where you lead, where they lead, and which comparison
-            prompts to prioritize next.
-          </p>
+        <div className="overflow-hidden rounded-2xl border border-dashed border-border bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96),rgba(34,211,238,0.08))] px-5 py-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                Comparative Intelligence
+              </p>
+              <p className="mt-2 text-sm font-semibold text-ink">
+                Add competitors to unlock side-by-side benchmarking.
+              </p>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+                CitePilot compares your tracked prompts against up to three competitors
+                so you can see who leads, where the biggest visibility gaps sit, and
+                which comparison prompts deserve the next push.
+              </p>
+            </div>
+            <div className="grid gap-2 text-xs text-muted sm:grid-cols-3">
+              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+                <p className="font-semibold text-ink">Prompt leaders</p>
+                <p className="mt-1">See who wins each tracked buyer question.</p>
+              </div>
+              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+                <p className="font-semibold text-ink">Gap sizing</p>
+                <p className="mt-1">Spot where a few points could flip the outcome.</p>
+              </div>
+              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+                <p className="font-semibold text-ink">Executive-ready</p>
+                <p className="mt-1">A cleaner competitive view for clients and teams.</p>
+              </div>
+            </div>
+          </div>
           <Link
             href="/dashboard/settings"
-            className="mt-4 inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
+            className="mt-5 inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
           >
             Add competitors in Settings
           </Link>
@@ -264,57 +372,171 @@ function CompetitorBenchmarkPanel({
     .filter((prompt) => prompt.gapToLeader > 0)
     .sort((a, b) => b.gapToLeader - a.gapToLeader)[0];
   const yourBrand = brands[0]?.brand ?? workspace.domain;
+  const rankedBrands = [...brands].sort((a, b) => {
+    if (b.avgVisibility !== a.avgVisibility) return b.avgVisibility - a.avgVisibility;
+    return b.promptsLed - a.promptsLed;
+  });
+  const rankMap = new Map(rankedBrands.map((brand, index) => [brand.brand, index + 1]));
+  const yourRank = rankMap.get(yourBrand) ?? 1;
+  const leaderBrand = rankedBrands[0] ?? brands[0];
+  const yourAverage = brands.find((brand) => brand.brand === yourBrand)?.avgVisibility ?? 0;
+  const leaderGap = Math.max(0, (leaderBrand?.avgVisibility ?? yourAverage) - yourAverage);
+  const promptsWon = prompts.filter((prompt) => prompt.leader === yourBrand).length;
+  const promptsBehind = prompts.filter((prompt) => prompt.leader !== yourBrand).length;
+  const averageCatchupGap = promptsBehind
+    ? Math.round(
+        prompts
+          .filter((prompt) => prompt.gapToLeader > 0)
+          .reduce((sum, prompt) => sum + prompt.gapToLeader, 0) / promptsBehind,
+      )
+    : 0;
+  const strongestPrompt = prompts
+    .filter((prompt) => prompt.leader === yourBrand)
+    .sort((a, b) => b.yourScore - a.yourScore)[0];
+  const summaryHeadline =
+    leaderBrand?.brand === yourBrand
+      ? "You currently lead the competitive benchmark."
+      : `${leaderBrand?.brand} currently leads the comparative benchmark.`;
 
   return (
     <Panel title="Competitor benchmark" className="mt-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm leading-relaxed text-muted">
-            Side-by-side prompt benchmarking for your domain and up to three tracked
-            competitors. This first pass uses your current prompt leadership and
-            visibility signals to estimate where each brand is winning.
-          </p>
-        </div>
-        {topGap && (
-          <div className="rounded-full bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-800">
-            Biggest gap: {topGap.leader} leads by {topGap.gapToLeader} pts
+      <div className="relative overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.12),rgba(255,255,255,0.98),rgba(34,211,238,0.1))] p-5">
+        <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-accent/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-12 h-28 w-28 translate-y-8 rounded-full bg-glow/15 blur-3xl" />
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+              Competitive Snapshot
+            </p>
+            <p className="mt-2 max-w-3xl text-base font-semibold text-ink">
+              {summaryHeadline}
+            </p>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+              Side-by-side prompt benchmarking for your domain and up to three tracked
+              competitors. This view packages prompt leadership, visibility deltas, and
+              likely swing opportunities into a cleaner executive-ready scorecard.
+            </p>
           </div>
-        )}
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+              {prompts.length} tracked prompt{prompts.length === 1 ? "" : "s"}
+            </span>
+            <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+              {brands.length} brands compared
+            </span>
+            {topGap && (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800 shadow-sm">
+                Biggest swing: {topGap.gapToLeader} pts
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Your standing
+            </p>
+            <div className="mt-2 flex items-end justify-between gap-4">
+              <p className="font-display text-4xl font-bold text-ink">#{yourRank}</p>
+              <span className="rounded-full bg-ink px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
+                {benchmarkRankLabel(yourRank)}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-muted">
+              {leaderGap > 0
+                ? `${leaderGap} visibility points behind ${leaderBrand?.brand}.`
+                : "You currently set the benchmark across tracked prompts."}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Prompt split
+            </p>
+            <div className="mt-2 flex items-end justify-between gap-4">
+              <p className="font-display text-4xl font-bold text-ink">{promptsWon}</p>
+              <span className="text-sm font-semibold text-muted">
+                / {prompts.length} won
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-muted">
+              {promptsBehind > 0
+                ? `${promptsBehind} prompt${promptsBehind === 1 ? "" : "s"} still led by competitors.`
+                : "You lead every tracked benchmark prompt right now."}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Priority opportunity
+            </p>
+            <p className="mt-2 font-semibold text-ink">
+              {topGap?.prompt ?? strongestPrompt?.prompt ?? workspace.buyerQuestion}
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              {topGap
+                ? `Average catch-up need is ${averageCatchupGap || topGap.gapToLeader} points across prompts you do not currently lead.`
+                : "Your strongest prompt can be reused as the template for adjacent comparison coverage."}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {brands.map((brand) => {
+        {rankedBrands.map((brand) => {
           const leading = brand.deltaVsYou > 0;
           const trailing = brand.deltaVsYou < 0;
+          const isYou = brand.brand === yourBrand;
+          const rank = rankMap.get(brand.brand) ?? 1;
+          const promptShare = prompts.length
+            ? Math.round((brand.promptsLed / prompts.length) * 100)
+            : 0;
+
           return (
             <div
               key={brand.brand}
-              className="rounded-xl border border-border bg-surface px-5 py-4"
+              className={`relative overflow-hidden rounded-2xl border px-5 py-4 shadow-sm transition ${
+                isYou
+                  ? "border-[#cbd6ff] bg-[linear-gradient(180deg,rgba(123,147,240,0.1),rgba(255,255,255,0.96))]"
+                  : "border-border bg-surface/70"
+              }`}
             >
+              <div
+                className={`pointer-events-none absolute inset-x-0 top-0 h-10 ${
+                  isYou
+                    ? "bg-gradient-to-b from-accent/10 to-transparent"
+                    : "bg-gradient-to-b from-white/70 to-transparent"
+                }`}
+              />
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-                    {brand.brand === yourBrand ? "Your brand" : "Competitor"}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-ink">{brand.brand}</p>
+                    {isYou && (
+                      <span className="rounded-full bg-ink px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                        You
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                    {benchmarkRankLabel(rank)}
                   </p>
-                  <p className="mt-1 font-semibold text-ink">{brand.brand}</p>
                 </div>
                 <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                    leading
-                      ? "bg-red-50 text-red-700"
-                      : trailing
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-surface text-muted"
-                  }`}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${benchmarkDeltaTone(
+                    brand.deltaVsYou,
+                  )}`}
                 >
                   {brand.deltaVsYou > 0
                     ? `+${brand.deltaVsYou} vs you`
                     : brand.deltaVsYou < 0
                       ? `${brand.deltaVsYou} vs you`
-                      : "Baseline"}
+                      : "Benchmark"}
                 </span>
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted">
                     Avg visibility
@@ -332,65 +554,168 @@ function CompetitorBenchmarkPanel({
                   </p>
                 </div>
               </div>
+
+              <div className="mt-5 space-y-3">
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
+                    <span>Visibility strength</span>
+                    <span>{brand.avgVisibility}/100</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white">
+                    <div
+                      className={`h-full rounded-full ${
+                        isYou ? "bg-gradient-to-r from-[#7b93f0] to-accent" : "bg-ink/75"
+                      }`}
+                      style={{ width: benchmarkBarWidth(brand.avgVisibility) }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
+                    <span>Prompt share</span>
+                    <span>{promptShare}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white">
+                    <div
+                      className={`h-full rounded-full ${
+                        isYou ? "bg-gradient-to-r from-mint to-glow" : "bg-ink/50"
+                      }`}
+                      style={{ width: benchmarkBarWidth(promptShare) }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-4 text-xs leading-relaxed text-muted">
+                {isYou
+                  ? "Your benchmark card highlights how often you currently win tracked buyer prompts."
+                  : leading
+                    ? "Currently outperforming your brand on average visibility."
+                    : trailing
+                      ? "Currently trailing your brand on average visibility."
+                      : "Running level with your current benchmark average."}
+              </p>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-border text-xs font-semibold uppercase tracking-wider text-muted">
-              <th className="pb-3 pr-4">Prompt</th>
-              {brands.map((brand) => (
-                <th key={brand.brand} className="pb-3 pr-4">
-                  {brand.brand}
-                </th>
-              ))}
-              <th className="pb-3 pr-4">Leader</th>
-              <th className="pb-3">Gap</th>
-            </tr>
-          </thead>
-          <tbody>
-            {prompts.map((prompt) => (
-              <tr
-                key={prompt.prompt}
-                className="border-b border-border align-top last:border-0"
-              >
-                <td className="max-w-xs py-4 pr-4 font-medium text-ink">
-                  {prompt.prompt}
-                </td>
-                {brands.map((brand) => {
-                  const score =
-                    prompt.scores.find((item) => item.brand === brand.brand)?.score ?? 0;
-                  const isLeader = prompt.leader === brand.brand;
-                  const isYou = brand.brand === yourBrand;
+      <div className="mt-6 space-y-3">
+        {prompts.map((prompt) => {
+          const sortedScores = [...prompt.scores].sort((a, b) => b.score - a.score);
+          const youScore =
+            prompt.scores.find((item) => item.brand === yourBrand)?.score ?? prompt.yourScore;
+          const yourPromptRank =
+            sortedScores.findIndex((item) => item.brand === yourBrand) + 1 || 1;
+          const leaderScore = sortedScores[0]?.score ?? youScore;
+          const state = benchmarkPromptState(prompt, yourBrand);
+
+          return (
+            <div
+              key={prompt.prompt}
+              className="relative overflow-hidden rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(244,247,251,0.9))] px-5 py-4"
+            >
+              <div className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${state.rail}`} />
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-ink">{prompt.prompt}</p>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${state.tone}`}
+                    >
+                      {state.label}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">
+                    {prompt.leader === yourBrand
+                      ? `You lead this prompt with a score of ${youScore}.`
+                      : `${prompt.leader} leads this prompt by ${prompt.gapToLeader} points.`}
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">{state.summary}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink">
+                    Your rank #{yourPromptRank}
+                  </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${
+                      prompt.gapToLeader > 0
+                        ? "bg-amber-50 text-amber-800"
+                        : "bg-emerald-50 text-emerald-700"
+                    }`}
+                  >
+                    {prompt.gapToLeader > 0
+                      ? `${prompt.gapToLeader} pts to flip`
+                        : "You already lead"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 xl:grid-cols-4">
+                {sortedScores.map((score) => {
+                  const isLeader = score.brand === prompt.leader;
+                  const isYou = score.brand === yourBrand;
+
                   return (
-                    <td key={brand.brand} className="py-4 pr-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-ink">{score}</span>
-                        {isLeader && (
-                          <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                            Lead
-                          </span>
-                        )}
-                        {isYou && !isLeader && score > 0 && (
-                          <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
-                            You
-                          </span>
-                        )}
+                    <div
+                      key={score.brand}
+                      className={`rounded-xl border px-4 py-3 transition ${
+                        isLeader
+                          ? "border-[#cbd6ff] bg-white shadow-sm"
+                          : isYou
+                            ? "border-mint/25 bg-white/85"
+                            : "border-border/80 bg-white/75"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-ink">{score.brand}</p>
+                          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                            {isLeader
+                              ? "Prompt leader"
+                              : isYou
+                                ? `Rank #${yourPromptRank}`
+                                : `${Math.max(0, leaderScore - score.score)} pts off lead`}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-display text-2xl font-bold text-ink">
+                            {score.score}
+                          </p>
+                          {(isLeader || isYou) && (
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                isLeader
+                                  ? "bg-ink text-white"
+                                  : "bg-surface text-muted"
+                              }`}
+                            >
+                              {isLeader ? "Lead" : "You"}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </td>
+
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface">
+                        <div
+                          className={`h-full rounded-full ${
+                            isLeader
+                              ? "bg-gradient-to-r from-[#7b93f0] to-accent"
+                              : isYou
+                                ? "bg-gradient-to-r from-mint to-glow"
+                                : "bg-ink/50"
+                          }`}
+                          style={{ width: benchmarkBarWidth(score.score) }}
+                        />
+                      </div>
+                    </div>
                   );
                 })}
-                <td className="py-4 pr-4 text-muted">{prompt.leader}</td>
-                <td className="py-4 text-muted">
-                  {prompt.gapToLeader > 0 ? `${prompt.gapToLeader} pts` : "Leading"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </Panel>
   );
@@ -398,12 +723,20 @@ function CompetitorBenchmarkPanel({
 
 function PromptsCard({ workspace }: { workspace: WorkspaceSnapshot }) {
   return (
-    <div className="rounded-xl border border-border bg-surface px-5 py-4">
+    <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted">
         Prompts tracked
       </p>
-      <p className="font-display mt-1 text-3xl font-bold text-ink">
+      <div className="mt-2 flex items-end justify-between gap-4">
+        <p className="font-display text-4xl font-bold text-ink">
         {workspace.promptsTracked}/5
+        </p>
+        <span className="rounded-full bg-mint/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-mint">
+          Money prompts
+        </span>
+      </div>
+      <p className="mt-2 text-sm text-muted">
+        Track high-intent buyer questions, not generic topic coverage.
       </p>
     </div>
   );
@@ -411,46 +744,71 @@ function PromptsCard({ workspace }: { workspace: WorkspaceSnapshot }) {
 
 function PromptTable({ rows }: { rows: PromptRow[] }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-sm">
-        <thead>
-          <tr className="border-b border-border text-xs font-semibold uppercase tracking-wider text-muted">
-            <th className="pb-3 pr-4">Prompts</th>
-            <th className="pb-3 pr-4">Visibility</th>
-            <th className="pb-3 pr-4">Visible in</th>
-            <th className="pb-3 pr-4">Sentiment</th>
-            <th className="pb-3">Leader</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.prompt} className="border-b border-border last:border-0">
-              <td className="max-w-xs py-4 pr-4 font-medium text-ink">{row.prompt}</td>
-              <td className="py-4 pr-4">{row.visibility}%</td>
-              <td className="py-4 pr-4">
-                <div className="flex gap-1">
-                  {row.models.map((m) => (
-                    <span
-                      key={m}
-                      className="rounded-md bg-surface px-1.5 py-0.5 text-xs font-bold text-muted"
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className="py-4 pr-4">
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${sentimentStyle[row.sentiment]}`}
-                >
-                  {row.sentiment}
-                </span>
-              </td>
-              <td className="py-4 text-muted">{row.leader}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="mt-6 space-y-3">
+      {rows.map((row) => (
+        <div
+          key={row.prompt}
+          className="rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.96))] px-5 py-4 shadow-sm"
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="font-semibold text-ink">{row.prompt}</p>
+              <p className="mt-1 text-sm text-muted">
+                {row.leader === "You"
+                  ? "Your brand currently leads this tracked prompt."
+                  : `${row.leader} currently leads this tracked prompt.`}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+                Visibility {row.visibility}%
+              </span>
+              <span
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${sentimentStyle[row.sentiment]}`}
+              >
+                {row.sentiment}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 lg:grid-cols-[1.3fr_0.9fr_0.8fr]">
+            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Visible in
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {row.models.map((m) => (
+                  <span
+                    key={m}
+                    className="rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-muted"
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Prompt leader
+              </p>
+              <p className="mt-2 font-semibold text-ink">{row.leader}</p>
+            </div>
+
+            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Strength
+              </p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#7b93f0] via-accent to-glow"
+                  style={{ width: `${Math.max(8, Math.min(100, row.visibility))}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
