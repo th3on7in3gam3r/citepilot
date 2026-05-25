@@ -4,28 +4,24 @@ import { ADMIN_COOKIE } from "@/lib/constants";
 import { auth, isNeonAuthEnabled } from "@/lib/auth/server";
 
 function isAdminApiPublic(pathname: string): boolean {
-  return (
-    pathname === "/api/admin/login" || pathname === "/api/admin/logout"
-  );
+  return pathname === "/api/admin/login" || pathname === "/api/admin/logout";
 }
 
-const dashboardAuthMiddleware =
+const dashboardAuthProxy =
   isNeonAuthEnabled() && auth
     ? auth.middleware({ loginUrl: "/auth/sign-in" })
     : null;
 
 const OAUTH_VERIFIER_PARAM = "neon_auth_session_verifier";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
 
   const adminSecret = process.env.ADMIN_SECRET;
   if (adminSecret) {
-    const isAdminPage =
-      pathname.startsWith("/admin") && pathname !== "/admin/login";
-    const isAdminApi =
-      pathname.startsWith("/api/admin") && !isAdminApiPublic(pathname);
+    const isAdminPage = pathname.startsWith("/admin") && pathname !== "/admin/login";
+    const isAdminApi = pathname.startsWith("/api/admin") && !isAdminApiPublic(pathname);
 
     if (isAdminPage || isAdminApi) {
       const token = request.cookies.get(ADMIN_COOKIE)?.value;
@@ -41,12 +37,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (
-    dashboardAuthMiddleware &&
-    (hasOAuthVerifier ||
-      pathname === "/dashboard" ||
-      pathname.startsWith("/dashboard/"))
+    dashboardAuthProxy &&
+    (hasOAuthVerifier || pathname === "/dashboard" || pathname.startsWith("/dashboard/"))
   ) {
-    // OAuth verifier must not land on sign-in — exchange only runs on protected routes.
+    // OAuth verifier must not land on sign-in; exchange only runs on protected routes.
     if (
       hasOAuthVerifier &&
       (pathname.startsWith("/auth/sign-in") || pathname.startsWith("/auth/sign-up"))
@@ -57,7 +51,7 @@ export async function middleware(request: NextRequest) {
       });
       return NextResponse.redirect(dashboard);
     }
-    return dashboardAuthMiddleware(request);
+    return dashboardAuthProxy(request);
   }
 
   return NextResponse.next();
