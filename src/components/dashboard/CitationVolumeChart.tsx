@@ -96,11 +96,7 @@ export function CitationVolumeChart({
         )}
       </div>
 
-      <div
-        className={`mt-6 grid items-start gap-6 ${
-          compact ? "" : "lg:grid-cols-[minmax(0,1fr)_240px]"
-        }`}
-      >
+      <div className="mt-6 space-y-6">
         <div className="relative">
           <svg
             viewBox={`0 0 ${W} ${H}`}
@@ -224,21 +220,25 @@ export function CitationVolumeChart({
         </div>
 
         {!compact && (
-          <aside className="self-start rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
-              Visibility simulator
-            </p>
-            <p className="mt-2 text-xs leading-relaxed text-muted">
-              Move the slider to see how closing citation gaps boosts AI visibility.
-            </p>
-            <div className="mt-4">
-              <ChartSlider level={level} onChange={setLevel} />
-            </div>
-            <div className="mt-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-                Tracked surfaces
-              </p>
-              <ul className="mt-3 grid grid-cols-2 gap-2">
+          <aside className="rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
+            <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)_180px] lg:items-start">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                  Visibility simulator
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-muted">
+                  Move the slider to see how closing citation gaps boosts AI visibility.
+                </p>
+                <div className="mt-4">
+                  <ChartSlider level={level} onChange={setLevel} />
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                  Tracked surfaces
+                </p>
+                <ul className="mt-3 grid grid-cols-2 gap-2 xl:grid-cols-4">
                 {PLATFORM_REACH.map((p) => (
                   <li
                     key={p.id}
@@ -251,14 +251,18 @@ export function CitationVolumeChart({
                     <p className="mt-1 leading-relaxed text-muted">{p.audience}</p>
                   </li>
                 ))}
-              </ul>
+                </ul>
+              </div>
+
+              <div className="lg:flex lg:h-full lg:items-end">
+                <Link
+                  href="/dashboard/geo-audit"
+                  className="block w-full rounded-full border border-border bg-white py-2.5 text-center text-xs font-semibold text-ink transition hover:border-accent/40 hover:bg-accent/5"
+                >
+                  View action plan
+                </Link>
+              </div>
             </div>
-            <Link
-              href="/dashboard/geo-audit"
-              className="mt-4 block w-full rounded-full border border-border bg-white py-2.5 text-center text-xs font-semibold text-ink transition hover:border-accent/40 hover:bg-accent/5"
-            >
-              View action plan
-            </Link>
           </aside>
         )}
       </div>
