@@ -4,7 +4,7 @@ export function ArticleBody({ post }: { post: BlogPost }) {
   return (
     <article className="prose-citepilot mx-auto max-w-3xl">
       <p className="rounded-xl border border-accent/30 bg-accent/5 px-5 py-4 text-sm leading-relaxed text-ink">
-        <strong className="text-accent">TL;DR — </strong>
+        <strong className="text-accent">Quick Summary — </strong>
         {post.tldr}
       </p>
 

@@ -48,7 +48,7 @@ export function buildArticleBrief(input: ArticleBriefInput): ArticleBrief {
     metaDescription: `Learn ${kw} with practical steps for Google and AI engines. ${CONTENT_TYPE_LABELS[input.contentType]}.`,
     outline: [
       {
-        heading: "TL;DR",
+        heading: "Quick Summary",
         bullets: [
           "2–3 sentence extractable summary for AI engines",
           "State who this is for and the outcome",

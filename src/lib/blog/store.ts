@@ -73,7 +73,7 @@ export function parseMarkdownMeta(markdown: string): {
     ?.trim();
   const title = markdown.match(/^#\s+(.+)$/m)?.[1]?.trim();
   const tldrMatch = markdown.match(
-    /(?:^|\n)(?:\*\*)?TL;DR(?:\*\*)?[:\s—-]+\s*([\s\S]+?)(?=\n\n|\n#)/i,
+    /(?:^|\n)(?:#{1,6}\s+)?(?:\*\*)?(?:TL;DR|Quick Summary)(?:\*\*)?[:\s—-]+\s*([\s\S]+?)(?=\n\n|\n#)/i,
   );
   const tldr = tldrMatch?.[1]?.replace(/\*\*/g, "").trim();
   return { seoTitle, description, title, tldr };

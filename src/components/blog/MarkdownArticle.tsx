@@ -8,6 +8,8 @@ export function MarkdownArticle({ markdown }: { markdown: string }) {
       "",
     )
     .replace(/^#\s+.+$/m, "")
+    .replace(/^(#{1,6}\s+)TL;DR\b/gm, "$1Quick Summary")
+    .replace(/^(?:\*\*)?TL;DR(?:\*\*)?([:\s—-]+)/gm, "Quick Summary$1")
     .trim();
 
   return (

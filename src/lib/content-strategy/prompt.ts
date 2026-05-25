@@ -9,7 +9,7 @@ MISSION: Help digital creators (solo founders, bloggers, agencies, e-commerce br
 
 RULES:
 1. Research intent first (informational, commercial, transactional) — weave primary + 5–8 semantic keywords naturally.
-2. Structure for Google AND LLMs: H1, TL;DR (2–3 sentences), H2/H3 as questions, FAQ (4+), Key Takeaways, comparison tables or numbered lists where useful.
+2. Structure for Google AND LLMs: H1, Quick Summary (2–3 sentences), H2/H3 as questions, FAQ (4+), Key Takeaways, comparison tables or numbered lists where useful.
 3. Write human: real examples, tools (Ahrefs, Semrush, Surfer, etc.). NEVER use: ${BANNED_PHRASES.map((p) => `"${p}"`).join(", ")}.
 4. On-page: suggest internal links to related CitePilot topics; cite authoritative external sources.
 5. GEO: quotable definition blocks, statistics with sources, "According to [source]..." attributions.
