@@ -101,7 +101,8 @@ export function CitationDashboardMock({
               {[
                 { name: "ChatGPT", on: true },
                 { name: "Perplexity", on: true },
-                { name: "Google AI", on: false },
+                { name: "Grok", on: true },
+                { name: "DeepSeek", on: false },
               ].map((p) => (
                 <div
                   key={p.name}
@@ -122,7 +123,8 @@ export function CitationDashboardMock({
             {[
               { name: "ChatGPT", on: true },
               { name: "Perplexity", on: true },
-              { name: "Google AI", on: false },
+              { name: "Grok", on: true },
+              { name: "DeepSeek", on: false },
             ].map((p) => (
               <span
                 key={p.name}

@@ -16,7 +16,7 @@ const steps = [
     eyebrow: "01 · Scan and analyze",
     title: "Scan your prompts",
     description:
-      "Our engine maps citation presence across ChatGPT, Perplexity, Gemini, and Google AI — with precision for each money prompt.",
+      "Our engine maps citation presence across ChatGPT, Perplexity, Gemini, Google AI, Grok, and DeepSeek — with precision for each money prompt.",
     Mock: ScanMock,
   },
   {

@@ -50,7 +50,7 @@ export const stepMeta: StepMeta[] = [
     stepLabel: "Step 5",
     title: "Your top buyer question",
     subtitle:
-      "A real question people ask ChatGPT or Perplexity when they're ready to buy — we'll track if you're cited.",
+      "A real question people ask ChatGPT, Perplexity, or Grok when they're ready to buy — we'll track if you're cited.",
   },
 ];
 

@@ -115,7 +115,7 @@ export function buildWorkspaceSnapshot(
     "yourbrand.com";
   const hash = domainSeed(domain);
   const promptsTracked = 1 + (answers.buyerQuestion ? 4 : 0);
-  const citedPlatforms = 2 + (hash % 3);
+  const citedPlatforms = Math.min(PLATFORMS.length, 2 + (hash % 3));
 
   return {
     domain,
@@ -127,7 +127,7 @@ export function buildWorkspaceSnapshot(
       answers.buyerQuestion || "best tool for [your category]",
     citationScore: Math.min(92, 48 + (hash % 40)),
     citedPlatforms,
-    totalPlatforms: 6,
+    totalPlatforms: PLATFORMS.length,
     promptsTracked,
     contentDrafts: 3,
     sourceCount: 12 + (hash % 8),
@@ -150,8 +150,10 @@ export function buildWorkspaceSnapshot(
 export const PLATFORMS = [
   "ChatGPT",
   "Perplexity",
-  "Google AI",
+  "Google AI Overviews",
   "Gemini",
   "Copilot",
   "Claude",
+  "Grok",
+  "DeepSeek",
 ] as const;

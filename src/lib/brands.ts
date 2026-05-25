@@ -10,6 +10,8 @@ export const scrollBrands: Brand[] = [
   { id: "perplexity", name: "Perplexity", short: "PPLX", color: "#20b8cd" },
   { id: "google", name: "Google AI", short: "G", color: "#4285f4" },
   { id: "anthropic", name: "Claude", short: "C", color: "#d97757" },
+  { id: "xai", name: "Grok", short: "GX", color: "#d4d4d8" },
+  { id: "deepseek", name: "DeepSeek", short: "DS", color: "#4f46e5" },
   { id: "hubspot", name: "HubSpot", short: "HS", color: "#ff7a59" },
   { id: "semrush", name: "Semrush", short: "SR", color: "#ff642d" },
   { id: "webflow", name: "Webflow", short: "WF", color: "#146ef5" },

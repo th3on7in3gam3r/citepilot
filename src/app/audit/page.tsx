@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Free Citation Audit",
   description:
-    "See where your brand is cited across ChatGPT, Perplexity, Google AI, and more — in about 60 seconds.",
+    "See where your brand is cited across ChatGPT, Perplexity, Google AI, Grok, DeepSeek, and more — in about 60 seconds.",
 };
 
 function AuditFormFallback() {

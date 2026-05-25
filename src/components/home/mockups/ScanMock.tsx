@@ -15,7 +15,7 @@ export function ScanMock() {
               </svg>
             </div>
             <p className="text-sm font-medium">Scanning AI surfaces…</p>
-            <p className="mt-2 text-xs text-white/50">6 platforms · 3 prompts</p>
+            <p className="mt-2 text-xs text-white/50">8 platforms · 3 prompts</p>
           </div>
           <div className="absolute bottom-4 left-4 right-4 rounded-xl bg-black/50 px-3 py-2 backdrop-blur">
             <p className="text-xs text-white/60">Citation gap detected</p>

@@ -23,6 +23,10 @@ export const PLATFORM_REACH: PlatformReach[] = [
   { id: "perplexity", name: "Perplexity", flag: "🔍", audience: "15M+ monthly users" },
   { id: "google", name: "Google AI", flag: "🌐", audience: "1B+ search users" },
   { id: "gemini", name: "Gemini", flag: "✨", audience: "350M+ users" },
+  { id: "claude", name: "Claude", flag: "🧠", audience: "AI assistant + workspace users" },
+  { id: "copilot", name: "Copilot", flag: "💼", audience: "Windows + Microsoft 365 users" },
+  { id: "grok", name: "Grok", flag: "⚡", audience: "X + assistant answer seekers" },
+  { id: "deepseek", name: "DeepSeek", flag: "🌊", audience: "Technical AI users" },
 ];
 
 export function buildCitationSeries(

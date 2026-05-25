@@ -134,7 +134,7 @@ export function HeroProductBanner() {
       </div>
 
       <p className="mt-4 text-center text-[11px] font-medium tracking-wide text-white/30 sm:text-xs">
-        ChatGPT · Perplexity · Gemini · Google AI Overviews
+        ChatGPT · Perplexity · Gemini · Grok · DeepSeek · Google AI Overviews
       </p>
     </div>
   );

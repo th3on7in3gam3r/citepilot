@@ -3,7 +3,7 @@ export const pillars = [
     id: "monitor",
     title: "Monitor money prompts",
     description:
-      "Track the 10–50 questions buyers actually ask AI — not vanity keywords. See where you're cited, ignored, or losing to competitors on ChatGPT, Perplexity, and Google AI Overviews.",
+      "Track the 10–50 questions buyers actually ask AI — not vanity keywords. See where you're cited, ignored, or losing to competitors across ChatGPT, Perplexity, Google AI Overviews, Grok, and more.",
     icon: "radar",
   },
   {
@@ -78,6 +78,8 @@ export const platforms = [
   "Gemini",
   "Claude",
   "Copilot",
+  "Grok",
+  "DeepSeek",
 ] as const;
 
 export const faq = [
@@ -111,7 +113,7 @@ export const pricingTiers = [
     description: "One-time citation snapshot for your domain.",
     features: [
       "Up to 10 money prompts",
-      "6 AI platform scan",
+      "8 AI platform scan",
       "Gap summary & competitor mentions",
       "Shareable report link",
     ],

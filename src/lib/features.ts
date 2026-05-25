@@ -53,7 +53,7 @@ export const productFeatures: ProductFeature[] = [
     id: "llm-tracking",
     title: "LLM Visibility Tracking",
     description:
-      "Tracks brand mentions across ChatGPT, Perplexity, and AI search tools. Measures citation growth and visibility trends over time.",
+      "Tracks brand mentions across ChatGPT, Perplexity, Grok, DeepSeek, and other AI answer surfaces. Measures citation growth and visibility trends over time.",
     dashboardHref: "/dashboard/analytics",
   },
 ];
@@ -78,6 +78,8 @@ export const llmModels = [
   { id: "claude", label: "Claude", short: "Cl" },
   { id: "perplexity", label: "Perplexity", short: "Px" },
   { id: "gemini", label: "Gemini", short: "Ge" },
+  { id: "grok", label: "Grok", short: "Gr" },
+  { id: "deepseek", label: "DeepSeek", short: "Ds" },
 ] as const;
 
 export type PromptRow = {

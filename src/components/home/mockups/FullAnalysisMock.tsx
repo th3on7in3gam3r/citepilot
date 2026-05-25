@@ -39,12 +39,12 @@ export function FullAnalysisMock() {
         </div>
       </div>
       <div className="hidden border-t border-border bg-white p-4 md:block">
-        <div className="flex gap-2">
-          {["ChatGPT", "Perplexity", "Gemini", "Google AI"].map((p, i) => (
+        <div className="flex flex-wrap gap-2">
+          {["ChatGPT", "Perplexity", "Gemini", "Google AI", "Grok", "DeepSeek"].map((p, i) => (
             <span
               key={p}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                i < 3 ? "bg-mint/10 text-mint" : "bg-surface text-muted"
+                i < 4 ? "bg-mint/10 text-mint" : "bg-surface text-muted"
               }`}
             >
               {p}

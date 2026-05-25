@@ -24,8 +24,8 @@ export function Hero() {
           </h1>
 
           <p className="mx-auto mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-white/60 sm:mt-5 sm:max-w-2xl sm:text-lg">
-            Track where ChatGPT, Perplexity, and Google AI mention your brand —
-            per money prompt, with proof of citation lift.
+            Track where ChatGPT, Perplexity, Google AI, Grok, and DeepSeek mention
+            your brand — per money prompt, with proof of citation lift.
           </p>
         </header>
 

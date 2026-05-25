@@ -45,7 +45,7 @@ export const EDITORIAL_PILLARS: {
   {
     id: "geo",
     title: "GEO & LLM Citations",
-    description: "Getting cited by ChatGPT, Perplexity, Gemini, and Claude.",
+    description: "Getting cited by ChatGPT, Perplexity, Gemini, Claude, Grok, and DeepSeek.",
   },
   {
     id: "technical-seo",

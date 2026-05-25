@@ -2,7 +2,7 @@ export const site = {
   name: "CitePilot",
   tagline: "Get cited in AI answers — then prove it moved.",
   description:
-    "Track brand citations across ChatGPT, Perplexity, and Google AI. Prioritize fixes, publish what matters, and measure citation lift week over week.",
+    "Track brand citations across ChatGPT, Perplexity, Google AI Overviews, Grok, DeepSeek, and other AI answer surfaces. Prioritize fixes, publish what matters, and measure citation lift week over week.",
   url: "https://getcitepilot.com",
   supportEmail: "hello@getcitepilot.com",
   studio: {
