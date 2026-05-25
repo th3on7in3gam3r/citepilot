@@ -4,24 +4,41 @@ import Link from "next/link";
 import { nav, site } from "@/lib/site";
 
 export function Footer() {
+  const year = new Date().getFullYear();
+
   return (
     <footer className="mt-auto border-t border-border bg-ink text-white">
-      <Container className="py-16 md:py-20">
-        <div className="grid gap-12 md:grid-cols-3 md:gap-10">
-          <div>
+      <Container className="py-14 md:py-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          <div className="lg:col-span-5">
             <Logo light />
-            <p className="mt-5 max-w-xs text-sm leading-relaxed text-white/60">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
               {site.description}
             </p>
+            <p className="mt-6 text-sm text-white/50">
+              A{" "}
+              <a
+                href={site.studio.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-white/80 underline decoration-white/25 underline-offset-4 transition hover:text-accent hover:decoration-accent"
+              >
+                {site.studio.name}
+              </a>{" "}
+              brand
+            </p>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-white">Product</p>
-            <ul className="mt-4 space-y-3">
+
+          <div className="lg:col-span-3 lg:col-start-7">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
+              Product
+            </p>
+            <ul className="mt-4 space-y-2.5">
               {nav.main.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-white/60 transition hover:text-accent"
+                    className="text-sm text-white/65 transition hover:text-accent"
                   >
                     {link.label}
                   </Link>
@@ -30,38 +47,68 @@ export function Footer() {
               <li>
                 <Link
                   href="/audit"
-                  className="text-sm text-white/60 transition hover:text-accent"
+                  className="text-sm text-white/65 transition hover:text-accent"
                 >
                   Free citation audit
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/dashboard"
+                  className="text-sm text-white/65 transition hover:text-accent"
+                >
+                  Dashboard
+                </Link>
+              </li>
             </ul>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-white">Contact</p>
-            <p className="mt-4 text-sm text-white/60">
-              <a
-                href={`mailto:${site.supportEmail}`}
-                className="transition hover:text-accent"
-              >
-                {site.supportEmail}
-              </a>
+
+          <div className="lg:col-span-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
+              Contact
             </p>
+            <ul className="mt-4 space-y-2.5 text-sm text-white/65">
+              <li>
+                <a
+                  href={`mailto:${site.supportEmail}`}
+                  className="transition hover:text-accent"
+                >
+                  {site.supportEmail}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={site.studio.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition hover:text-accent"
+                >
+                  {site.studio.name}
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
-        <p className="mt-14 border-t border-white/10 pt-8 text-center text-sm text-white/40">
-          © {new Date().getFullYear()} {site.name}. Built for teams who care
-          about AI discovery.
-          <span className="mt-2 block">
-            <Link href="/terms" className="transition hover:text-white/70">
+
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-white/45">
+            © {year} {site.name}. Built for teams who care about AI discovery.
+          </p>
+          <nav
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/45"
+            aria-label="Legal"
+          >
+            <Link href="/terms" className="transition hover:text-white/80">
               Terms
             </Link>
-            <span className="mx-2">·</span>
-            <Link href="/privacy" className="transition hover:text-white/70">
+            <span className="text-white/20" aria-hidden>
+              ·
+            </span>
+            <Link href="/privacy" className="transition hover:text-white/80">
               Privacy
             </Link>
-          </span>
-        </p>
+          </nav>
+        </div>
       </Container>
     </footer>
   );
