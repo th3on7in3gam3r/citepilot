@@ -129,7 +129,7 @@ export const pricingTiers = [
       "Weekly prioritized action plan",
       "Citation delta tracking",
       "Email alerts on competitor moves",
-      "CMS publish (WordPress, Webflow)",
+      "Webflow CMS publish",
     ],
     cta: "Subscribe to Pilot",
     href: "/audit",

@@ -135,9 +135,14 @@ export async function updateWorkspace(
     body: JSON.stringify(updates),
   });
   if (res.status === 401) return null;
-  if (!res.ok) return null;
-  const data = (await res.json()) as { workspace: WorkspaceSnapshotResponse };
-  return data.workspace;
+  const data = (await res.json().catch(() => ({}))) as {
+    workspace?: WorkspaceSnapshotResponse;
+    error?: string;
+  };
+  if (!res.ok) {
+    throw new Error(data.error ?? `Could not save workspace (${res.status})`);
+  }
+  return data.workspace ?? null;
 }
 
 export async function deleteWorkspace(id: string): Promise<boolean> {

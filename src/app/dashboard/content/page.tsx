@@ -120,33 +120,42 @@ export default function ContentPage() {
         </p>
         <div className="flex flex-wrap gap-2">
           {cmsPlatforms.map((cms) => {
-            const isWebflow = cms === "Webflow";
-            const connected = isWebflow && webflow?.configured && webflow?.connected;
-            const pending = isWebflow && webflow?.configured && !webflow.connected;
+            const isWebflow = cms.id === "webflow";
+            const connected =
+              isWebflow && webflow?.configured && webflow?.connected;
+            const pending =
+              isWebflow && webflow?.configured && !webflow.connected;
+            const comingSoon = !cms.available;
             return (
               <span
-                key={cms}
+                key={cms.id}
                 className={`rounded-full border px-4 py-2 text-sm font-medium ${
                   connected
                     ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                     : pending
                       ? "border-amber-200 bg-amber-50 text-amber-800"
-                      : "border-border bg-surface text-ink opacity-60"
+                      : comingSoon
+                        ? "border-border bg-surface text-muted"
+                        : "border-border bg-surface text-ink opacity-60"
                 }`}
                 title={
-                  isWebflow && webflow?.detail
-                    ? webflow.detail
-                    : connected
-                      ? `${webflow?.siteName ?? "Site"} · ${webflow?.collectionName ?? "Blog Posts"}`
-                      : undefined
+                  comingSoon
+                    ? `${cms.name} publish — coming soon`
+                    : isWebflow && webflow?.detail
+                      ? webflow.detail
+                      : connected
+                        ? `${webflow?.siteName ?? "Site"} · ${webflow?.collectionName ?? "Blog Posts"}`
+                        : undefined
                 }
               >
-                {cms}
+                {cms.name}
                 {connected
                   ? " · connected"
-                  : isWebflow && webflow?.configured
+                  : pending
                     ? " · fix token scopes"
-                    : ""}
+                    : comingSoon
+                      ? " · coming soon"
+                      : ""}
               </span>
             );
           })}

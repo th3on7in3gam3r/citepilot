@@ -212,7 +212,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     router.push("/dashboard");
   }
 
-  const busy = saving || savingPrefs || auditing || deleting;
+  const busy = saving || auditing || deleting;
+  const togglesBusy = saving || savingPrefs || auditing || deleting;
   const lastUpdated = workspace.updatedAt
     ? new Date(workspace.updatedAt).toLocaleString()
     : null;
@@ -244,7 +245,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          persist(false);
+          void persist(false);
         }}
         className="space-y-6"
       >
@@ -460,7 +461,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   type="button"
                   role="switch"
                   aria-checked={preferences[item.key]}
-                  disabled={busy}
+                  disabled={togglesBusy}
                   onClick={() => {
                     const next = {
                       ...preferences,
@@ -487,8 +488,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         {isFleet && (
           <Panel title="White-label reports">
             <p className="mb-4 text-sm text-muted">
-              Fleet — branding on shareable audit links from GEO Audit. Toggles
-              save automatically.
+              Fleet — branding on shareable audit links from GEO Audit. The hide
+              branding toggle saves automatically; agency name and logo use Save
+              changes below.
             </p>
             <label className="block text-sm font-semibold text-ink">
               Agency name
@@ -529,7 +531,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                 type="button"
                 role="switch"
                 aria-checked={preferences.whiteLabel.hidePoweredBy}
-                disabled={busy}
+                disabled={togglesBusy}
                 onClick={() => {
                   const next = {
                     ...preferences,
@@ -561,6 +563,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         )}
 
         <Panel title="Workspace actions">
+          <p className="mb-4 text-sm text-muted">
+            Saves domain, profile, prompts, monitoring email, and white-label text
+            fields. Notification toggles save when you flip them.
+          </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button
               type="submit"

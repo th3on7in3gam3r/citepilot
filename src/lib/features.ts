@@ -25,7 +25,7 @@ export const productFeatures: ProductFeature[] = [
     id: "publishing",
     title: "Automated Publishing",
     description:
-      "Publishes directly to your CMS (WordPress, Webflow, Shopify, etc). No integration needed.",
+      "Publish to Webflow CMS from your article queue. WordPress, Shopify, and more coming soon.",
     dashboardHref: "/dashboard/content",
   },
   {
@@ -58,13 +58,20 @@ export const productFeatures: ProductFeature[] = [
   },
 ];
 
-export const cmsPlatforms = [
-  "WordPress",
-  "Webflow",
-  "Shopify",
-  "Ghost",
-  "Framer",
-] as const;
+export type CmsPlatform = {
+  id: string;
+  name: string;
+  /** Live publish integration in CitePilot */
+  available: boolean;
+};
+
+export const cmsPlatforms: CmsPlatform[] = [
+  { id: "webflow", name: "Webflow", available: true },
+  { id: "wordpress", name: "WordPress", available: false },
+  { id: "shopify", name: "Shopify", available: false },
+  { id: "ghost", name: "Ghost", available: false },
+  { id: "framer", name: "Framer", available: false },
+];
 
 export const llmModels = [
   { id: "chatgpt", label: "ChatGPT", short: "GPT" },
