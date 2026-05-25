@@ -11,6 +11,7 @@ export const BANNED_PHRASES = [
 ] as const;
 
 export const AUDIENCE_LABELS: Record<AudienceSegment, string> = {
+  "growth-marketing": "Growth / Marketing Team",
   "solo-founder": "Solo Founder / Blogger",
   agency: "Marketing Agency",
   ecommerce: "E-Commerce Brand",

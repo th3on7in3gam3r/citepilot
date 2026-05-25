@@ -1,4 +1,5 @@
 export type AudienceSegment =
+  | "growth-marketing"
   | "solo-founder"
   | "agency"
   | "ecommerce"
