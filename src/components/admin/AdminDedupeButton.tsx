@@ -26,6 +26,13 @@ export function AdminDedupeButton() {
         method: "POST",
         credentials: "include",
       });
+
+      if (res.status === 401) {
+        setError("Admin session expired. Please sign in again.");
+        router.push("/admin/login?from=/admin");
+        return;
+      }
+
       const data = (await res.json()) as {
         ok?: boolean;
         report?: { removed: number; kept: number };

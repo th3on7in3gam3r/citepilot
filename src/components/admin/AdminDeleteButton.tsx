@@ -41,6 +41,11 @@ export function AdminDeleteButton({
         method: "DELETE",
         credentials: "include",
       });
+      if (res.status === 401) {
+        setError("Admin session expired. Please sign in again.");
+        router.push("/admin/login?from=/admin");
+        return;
+      }
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         setError(body.error ?? "Delete failed");
