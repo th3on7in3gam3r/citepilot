@@ -21,6 +21,7 @@
    | `NEXT_PUBLIC_AUDIT_MODE` | `live` when OpenAI is set |
    | `NEON_AUTH_BASE_URL` | From Neon Console → Auth → Configuration |
    | `NEON_AUTH_COOKIE_SECRET` | `openssl rand -base64 32` (32+ characters) |
+   | `CMS_ENCRYPTION_KEY` | Encrypts saved workspace CMS credentials (set an explicit stable secret in production) |
    | `ADMIN_SECRET` | Protects `/admin` and `/api/admin/*` |
    | `STACKEXCHANGE_KEY` | Discussions (Stack Overflow) |
    | `SERPER_API_KEY` or `TAVILY_API_KEY` | Discussions + backlink discovery |
@@ -38,6 +39,18 @@
 9. **Vercel Cron** (in `vercel.json`): weekly digest Mondays 14:00 UTC — set `CRON_SECRET` on Vercel.
 10. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
 
+## CMS publishing setup
+
+1. Set `CMS_ENCRYPTION_KEY` on Vercel before connecting any workspace CMS.
+2. Redeploy after adding the env var so new serverless functions use the key.
+3. In production, open **Dashboard → Content** and connect one provider per workspace:
+   - `WordPress`: site URL, username, Application Password
+   - `Ghost`: site URL, Admin API key (`id:secret`)
+   - `Shopify`: shop domain, Admin access token with blog/article write access
+   - `Framer`: project URL, API key, collection ID, and target field IDs
+4. Publish one generated article, then publish it again to verify the second push updates the same remote item.
+5. Webflow remains env-based and still uses `WEBFLOW_*` variables.
+
 ## Smoke test after deploy
 
 See **[PRODUCTION.md](./PRODUCTION.md)** for the full checklist. Quick pass:
@@ -48,6 +61,7 @@ See **[PRODUCTION.md](./PRODUCTION.md)** for the full checklist. Quick pass:
 - [ ] `/dashboard/analytics` → Google tab connects GSC when configured
 - [ ] Settings → monitoring email + weekly digest toggles
 - [ ] `/dashboard/discussions` returns HN + SO threads
+- [ ] `/dashboard/content` connects at least one CMS provider and publishes a test article
 - [ ] `/admin/login` works with `ADMIN_SECRET`
 - [ ] `GET /api/health` returns `"ok": true` and `database.detail` mentions postgres
 

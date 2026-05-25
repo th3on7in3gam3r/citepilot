@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { cmsPlatforms } from "@/lib/features";
@@ -105,12 +106,14 @@ function Field({
   onChange,
   placeholder,
   type = "text",
+  help,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   type?: string;
+  help?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -122,6 +125,7 @@ function Field({
         placeholder={placeholder}
         className="w-full rounded-xl border border-border bg-white px-3 py-2.5 text-sm text-ink outline-none transition focus:border-accent"
       />
+      {help && <span className="mt-1.5 block text-xs leading-relaxed text-muted">{help}</span>}
     </label>
   );
 }
@@ -170,6 +174,9 @@ export function CmsConnectionsPanel({
   const providerMap = useMemo(
     () => new Map(providers.map((provider) => [provider.provider, provider])),
     [providers],
+  );
+  const hasConnectedProvider = Boolean(
+    (webflow?.configured && webflow.connected) || providers.some((provider) => provider.connected),
   );
 
   function updateForm<P extends CmsProvider>(
@@ -253,6 +260,51 @@ export function CmsConnectionsPanel({
         connection.
       </p>
 
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_0.95fr]">
+        <div className="rounded-2xl border border-border bg-surface/60 p-5">
+          <h3 className="font-display text-lg font-bold text-ink">New here?</h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            Connect a CMS only if this workspace already has a real site on
+            WordPress, Ghost, Shopify, Framer, or Webflow. If you do not have one of
+            those yet, skip this section for now and keep generating drafts inside
+            CitePilot.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Link
+              href="/help/cms-publishing"
+              className="rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
+            >
+              Read CMS publishing guide
+            </Link>
+            <span className="text-xs text-muted">
+              Credentials are saved per workspace and can be disconnected at any time.
+            </span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-surface/60 p-5">
+          <h3 className="font-display text-lg font-bold text-ink">What you need</h3>
+          <ul className="mt-3 space-y-2 text-sm leading-relaxed text-muted">
+            <li>
+              <span className="font-semibold text-ink">WordPress:</span> site URL,
+              username, Application Password
+            </li>
+            <li>
+              <span className="font-semibold text-ink">Ghost:</span> site URL, Admin
+              API key
+            </li>
+            <li>
+              <span className="font-semibold text-ink">Shopify:</span> shop domain,
+              Admin access token
+            </li>
+            <li>
+              <span className="font-semibold text-ink">Framer:</span> project URL, API
+              key, collection ID, field IDs
+            </li>
+          </ul>
+        </div>
+      </div>
+
       {message && (
         <p className="mt-4 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
           {message}
@@ -262,6 +314,13 @@ export function CmsConnectionsPanel({
         <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
+      )}
+
+      {!hasConnectedProvider && (
+        <div className="mt-4 rounded-2xl border border-dashed border-border bg-white px-4 py-4 text-sm text-muted">
+          No CMS connected yet. That is fine if you are still drafting content or do
+          not have a client site to publish into yet.
+        </div>
       )}
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -333,6 +392,7 @@ export function CmsConnectionsPanel({
           removing={removing === "wordpress"}
           onSave={() => void saveProvider("wordpress")}
           onRemove={() => void disconnectProvider("wordpress")}
+          note="Use this only if the workspace already has a WordPress site."
         >
           <div className="grid gap-3">
             <Field
@@ -340,12 +400,14 @@ export function CmsConnectionsPanel({
               value={forms.wordpress.siteUrl}
               onChange={(value) => updateForm("wordpress", "siteUrl", value)}
               placeholder="https://example.com"
+              help="Use the full root URL for the site where posts should publish."
             />
             <Field
               label="Username"
               value={forms.wordpress.username}
               onChange={(value) => updateForm("wordpress", "username", value)}
               placeholder="editor"
+              help="This should be the WordPress user tied to the Application Password."
             />
             <Field
               label="Application Password"
@@ -353,6 +415,7 @@ export function CmsConnectionsPanel({
               value={forms.wordpress.appPassword}
               onChange={(value) => updateForm("wordpress", "appPassword", value)}
               placeholder="xxxx xxxx xxxx xxxx"
+              help="Create this in WordPress under Users → Profile → Application Passwords."
             />
           </div>
         </ProviderCard>
@@ -364,6 +427,7 @@ export function CmsConnectionsPanel({
           removing={removing === "ghost"}
           onSave={() => void saveProvider("ghost")}
           onRemove={() => void disconnectProvider("ghost")}
+          note="Use this when the workspace blog is already hosted in Ghost."
         >
           <div className="grid gap-3">
             <Field
@@ -371,6 +435,7 @@ export function CmsConnectionsPanel({
               value={forms.ghost.siteUrl}
               onChange={(value) => updateForm("ghost", "siteUrl", value)}
               placeholder="https://blog.example.com"
+              help="Point this to the Ghost site that should receive the published post."
             />
             <Field
               label="Admin API key"
@@ -378,6 +443,7 @@ export function CmsConnectionsPanel({
               value={forms.ghost.adminApiKey}
               onChange={(value) => updateForm("ghost", "adminApiKey", value)}
               placeholder="id:secret"
+              help="Copy the Admin API key from Ghost Integrations exactly as shown."
             />
           </div>
         </ProviderCard>
@@ -389,6 +455,7 @@ export function CmsConnectionsPanel({
           removing={removing === "shopify"}
           onSave={() => void saveProvider("shopify")}
           onRemove={() => void disconnectProvider("shopify")}
+          note="Best for stores that already use Shopify's built-in blog."
         >
           <div className="grid gap-3">
             <Field
@@ -396,6 +463,7 @@ export function CmsConnectionsPanel({
               value={forms.shopify.shopDomain}
               onChange={(value) => updateForm("shopify", "shopDomain", value)}
               placeholder="store-name.myshopify.com"
+              help="Use the .myshopify.com admin domain for the store."
             />
             <Field
               label="Admin access token"
@@ -403,6 +471,7 @@ export function CmsConnectionsPanel({
               value={forms.shopify.accessToken}
               onChange={(value) => updateForm("shopify", "accessToken", value)}
               placeholder="shpat_..."
+              help="The token needs permission to create and update blog articles."
             />
           </div>
         </ProviderCard>
@@ -422,6 +491,7 @@ export function CmsConnectionsPanel({
               value={forms.framer.projectUrl}
               onChange={(value) => updateForm("framer", "projectUrl", value)}
               placeholder="https://framer.com/projects/..."
+              help="Use the Framer project that owns the CMS collection."
             />
             <Field
               label="API key"
@@ -429,12 +499,14 @@ export function CmsConnectionsPanel({
               value={forms.framer.apiKey}
               onChange={(value) => updateForm("framer", "apiKey", value)}
               placeholder="framer_..."
+              help="Generate this from the project's Site Settings in Framer."
             />
             <Field
               label="Collection ID"
               value={forms.framer.collectionId}
               onChange={(value) => updateForm("framer", "collectionId", value)}
               placeholder="collection id"
+              help="This is the collection that should receive published articles."
             />
             <div className="grid gap-3 md:grid-cols-2">
               <Field
@@ -442,12 +514,14 @@ export function CmsConnectionsPanel({
                 value={forms.framer.titleFieldId}
                 onChange={(value) => updateForm("framer", "titleFieldId", value)}
                 placeholder="title field"
+                help="Field ID where the article title should be written."
               />
               <Field
                 label="Body field ID"
                 value={forms.framer.bodyFieldId}
                 onChange={(value) => updateForm("framer", "bodyFieldId", value)}
                 placeholder="body field"
+                help="Formatted-text field ID for the article body."
               />
             </div>
             <Field
@@ -455,6 +529,7 @@ export function CmsConnectionsPanel({
               value={forms.framer.summaryFieldId}
               onChange={(value) => updateForm("framer", "summaryFieldId", value)}
               placeholder="summary field"
+              help="Optional short-text field for the article summary or excerpt."
             />
           </div>
         </ProviderCard>

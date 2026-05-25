@@ -60,6 +60,14 @@ export function Footer() {
                   Dashboard
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/help/cms-publishing"
+                  className="text-sm text-white/65 transition hover:text-accent"
+                >
+                  CMS publishing guide
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -27,6 +27,9 @@ Run after each deploy to [citepilot.vercel.app](https://citepilot.vercel.app) or
 - [ ] Discussions returns HN + Stack Overflow threads
 - [ ] Backlinks refresh (Serper/Tavily + optional Open PageRank)
 - [ ] Content → generate article (OpenAI)
+- [ ] Content → CMS connections show the expected providers for the workspace
+- [ ] Content → connect one CMS provider and save successfully
+- [ ] Content → publish a generated article to that CMS, then publish again to confirm it updates instead of duplicating
 - [ ] Settings: monitoring email + digest toggles save
 
 ## Email (Resend)
@@ -41,6 +44,14 @@ Run after each deploy to [citepilot.vercel.app](https://citepilot.vercel.app) or
 - [ ] `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` on Vercel
 - [ ] Connect from Analytics → Google; verify clicks/impressions after callback
 
+## CMS publishing
+
+- [ ] `CMS_ENCRYPTION_KEY` is set on Vercel before any workspace CMS connection is saved
+- [ ] WordPress / Ghost / Shopify / Framer credentials save from Dashboard → Content without server error
+- [ ] Published article shows a live CMS badge/link in the article queue
+- [ ] Re-publish updates the same remote CMS item instead of creating duplicates
+- [ ] Webflow still publishes with `WEBFLOW_*` env vars if enabled
+
 ## Admin ops
 
 - [ ] `/admin` → **Dedupe duplicate workspaces** (one-time cleanup for duplicate domains per user)
@@ -50,4 +61,4 @@ Run after each deploy to [citepilot.vercel.app](https://citepilot.vercel.app) or
 
 - Custom domain DNS fully propagated
 - Stripe live webhooks (Fleet checkout)
-- Webflow publish (needs site token)
+- CMS provider credentials connected for every live client workspace
