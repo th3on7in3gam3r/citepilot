@@ -56,6 +56,11 @@ export function BillingPlanPanel() {
   const renews = billing?.currentPeriodEnd
     ? new Date(billing.currentPeriodEnd).toLocaleDateString()
     : null;
+  const currentPlanSummary = billing?.isFleet
+    ? "Fleet includes unlimited client workspaces plus all Pilot features."
+    : billing?.isPilot
+      ? "Pilot includes up to 3 workspaces plus monitoring, article generation, CMS publish, and alerts."
+      : "Free includes 1 workspace and a citation audit. Upgrade for more client workspaces and paid workflow features.";
 
   return (
     <Panel title="Plan & billing">
@@ -77,6 +82,8 @@ export function BillingPlanPanel() {
           </span>
         )}
       </p>
+
+      <p className="mt-2 text-sm leading-relaxed text-muted">{currentPlanSummary}</p>
 
       {billing?.isFleet && (
         <p className="mt-2 text-xs text-emerald-800">
@@ -127,8 +134,9 @@ export function BillingPlanPanel() {
 
       {!billing?.isPaid && (
         <p className="mt-4 text-xs text-muted">
-          Pilot unlocks article generation, Webflow publish, and monitoring. Fleet
-          adds unlimited client workspaces and 500 backlink credits.
+          Pilot unlocks up to 3 workspaces, article generation, monitoring, email
+          alerts, and CMS publishing. Fleet adds unlimited client workspaces, API
+          access, white-label reporting, and 500 backlink credits.
         </p>
       )}
     </Panel>

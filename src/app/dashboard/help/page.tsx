@@ -25,12 +25,16 @@ const quickAnswers = [
     a: "No. CMS publishing is optional. You can still run audits, track prompts, and generate articles without connecting one.",
   },
   {
-    q: "Where are the docs today?",
-    a: "The current user-facing guide lives in the CMS publishing help page. More in-app guides can be added here over time.",
+    q: "How much can I use before I need to pay?",
+    a: "Free includes 1 workspace and a citation audit. Upgrade when you want more workspaces or paid features like monitoring, article generation, CMS publishing, and alerts.",
   },
   {
-    q: "What should I do if a feature looks confusing?",
-    a: "Open the help guide first, then contact support if you want hands-on setup help for your workspace.",
+    q: "What do I get when I upgrade?",
+    a: "Pilot gives you up to 3 workspaces plus monitoring, article generation, CMS publishing, and email alerts. Fleet adds unlimited client workspaces, white-label reporting, API access, bulk import, and priority support.",
+  },
+  {
+    q: "Where are the docs today?",
+    a: "The current user-facing guide lives in the CMS publishing help page. More in-app guides can be added here over time.",
   },
 ] as const;
 

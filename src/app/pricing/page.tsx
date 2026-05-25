@@ -21,9 +21,44 @@ export default function PricingPage() {
           <SectionHeading
             eyebrow="Pricing"
             title="Start free. Scale when citations move."
-            description="Audit is live today. Subscribe to Pilot for monitoring, content generation, and CMS publish."
+            description="Free includes 1 workspace and a citation audit. Upgrade to Pilot for 3 workspaces plus monitoring, content generation, and CMS publish, or Fleet for unlimited client workspaces."
             align="center"
           />
+
+          <section className="mx-auto mt-10 grid max-w-5xl gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                Free
+              </p>
+              <p className="mt-2 font-semibold text-ink">Start with 1 workspace</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Run a free citation audit with up to 10 money prompts, 8 AI platforms,
+                competitor mentions, and a shareable report link.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-accent/20 bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98))] p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                Pilot
+              </p>
+              <p className="mt-2 font-semibold text-ink">Upgrade for 3 workspaces</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Add monitoring, weekly action plans, article generation, CMS publishing,
+                and email alerts when competitor movement matters.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                Fleet
+              </p>
+              <p className="mt-2 font-semibold text-ink">Scale to unlimited clients</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Built for agencies that need unlimited workspaces, white-label reporting,
+                API access, bulk imports, and priority support.
+              </p>
+            </div>
+          </section>
 
           <div className="mt-14 grid gap-8 md:mt-16 lg:grid-cols-3 lg:gap-6">
             {pricingTiers.map((tier) => (
