@@ -70,8 +70,8 @@ export function CitationVolumeChart({
   }, [current, projected]);
 
   const lastProjected = projectedPts[projectedPts.length - 1];
-  const calloutX = lastProjected ? Math.min(lastProjected.x - 120, W - 260) : 0;
-  const calloutY = lastProjected ? lastProjected.y - 52 : 0;
+  const calloutX = lastProjected ? Math.min(lastProjected.x - 100, W - 230) : 0;
+  const calloutY = lastProjected ? lastProjected.y - 46 : 0;
 
   return (
     <div
@@ -96,7 +96,11 @@ export function CitationVolumeChart({
         )}
       </div>
 
-      <div className={`mt-6 grid gap-6 ${compact ? "" : "lg:grid-cols-[1fr_220px]"}`}>
+      <div
+        className={`mt-6 grid items-start gap-6 ${
+          compact ? "" : "lg:grid-cols-[minmax(0,1fr)_240px]"
+        }`}
+      >
         <div className="relative">
           <svg
             viewBox={`0 0 ${W} ${H}`}
@@ -191,8 +195,8 @@ export function CitationVolumeChart({
             )}
 
             {!compact && lastProjected && (
-              <foreignObject x={calloutX} y={calloutY} width={240} height={44}>
-                <div className="rounded-lg bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-3 py-2 text-center text-xs font-semibold text-white shadow-[0_12px_28px_rgba(107,140,255,0.25)]">
+              <foreignObject x={calloutX} y={calloutY} width={210} height={40}>
+                <div className="rounded-lg bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-3 py-2 text-center text-[11px] font-semibold text-white shadow-[0_12px_28px_rgba(107,140,255,0.25)]">
                   Fixing gaps lifts visibility by {liftPct}%
                 </div>
               </foreignObject>
@@ -220,7 +224,7 @@ export function CitationVolumeChart({
         </div>
 
         {!compact && (
-          <aside className="flex flex-col rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
+          <aside className="self-start rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
               Visibility simulator
             </p>
@@ -230,17 +234,25 @@ export function CitationVolumeChart({
             <div className="mt-4">
               <ChartSlider level={level} onChange={setLevel} />
             </div>
-            <ul className="mt-5 flex-1 space-y-3">
-              {PLATFORM_REACH.map((p) => (
-                <li key={p.id} className="flex items-start gap-2 text-xs">
-                  <span aria-hidden>{p.flag}</span>
-                  <div>
-                    <p className="font-semibold text-ink">{p.name}</p>
-                    <p className="text-muted">{p.audience}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                Tracked surfaces
+              </p>
+              <ul className="mt-3 grid grid-cols-2 gap-2">
+                {PLATFORM_REACH.map((p) => (
+                  <li
+                    key={p.id}
+                    className="rounded-xl border border-white/80 bg-white/90 px-3 py-2 text-[11px] shadow-sm"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span aria-hidden>{p.flag}</span>
+                      <p className="font-semibold text-ink">{p.name}</p>
+                    </div>
+                    <p className="mt-1 leading-relaxed text-muted">{p.audience}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <Link
               href="/dashboard/geo-audit"
               className="mt-4 block w-full rounded-full border border-border bg-white py-2.5 text-center text-xs font-semibold text-ink transition hover:border-accent/40 hover:bg-accent/5"

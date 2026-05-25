@@ -492,6 +492,20 @@ function CompetitorBenchmarkPanel({
           const promptShare = prompts.length
             ? Math.round((brand.promptsLed / prompts.length) * 100)
             : 0;
+          const positionLabel = isYou
+            ? "Your baseline"
+            : leading
+              ? "Ahead of you"
+              : trailing
+                ? "Behind you"
+                : "At parity";
+          const positionTone = isYou
+            ? "bg-ink text-white"
+            : leading
+              ? "bg-red-50 text-red-700"
+              : trailing
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-surface text-muted";
 
           return (
             <div
@@ -536,7 +550,7 @@ function CompetitorBenchmarkPanel({
                 </span>
               </div>
 
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted">
                     Avg visibility
@@ -587,15 +601,16 @@ function CompetitorBenchmarkPanel({
                 </div>
               </div>
 
-              <p className="mt-4 text-xs leading-relaxed text-muted">
-                {isYou
-                  ? "Your benchmark card highlights how often you currently win tracked buyer prompts."
-                  : leading
-                    ? "Currently outperforming your brand on average visibility."
-                    : trailing
-                      ? "Currently trailing your brand on average visibility."
-                      : "Running level with your current benchmark average."}
-              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${positionTone}`}
+                >
+                  {positionLabel}
+                </span>
+                <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                  {promptShare}% prompt share
+                </span>
+              </div>
             </div>
           );
         })}
@@ -614,7 +629,7 @@ function CompetitorBenchmarkPanel({
           return (
             <div
               key={prompt.prompt}
-              className="relative overflow-hidden rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(244,247,251,0.9))] px-5 py-4"
+              className="relative overflow-hidden rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.95))] px-5 py-4 shadow-sm"
             >
               <div className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${state.rail}`} />
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -632,7 +647,16 @@ function CompetitorBenchmarkPanel({
                       ? `You lead this prompt with a score of ${youScore}.`
                       : `${prompt.leader} leads this prompt by ${prompt.gapToLeader} points.`}
                   </p>
-                  <p className="mt-2 text-xs leading-relaxed text-muted">{state.summary}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                      {prompt.leader}
+                    </span>
+                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                      {prompt.gapToLeader > 0
+                        ? `${prompt.gapToLeader} pts behind`
+                        : "Current leader"}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink">
@@ -646,11 +670,13 @@ function CompetitorBenchmarkPanel({
                     }`}
                   >
                     {prompt.gapToLeader > 0
-                      ? `${prompt.gapToLeader} pts to flip`
+                        ? `${prompt.gapToLeader} pts to flip`
                         : "You already lead"}
                   </span>
                 </div>
               </div>
+
+              <p className="mt-3 text-xs leading-relaxed text-muted">{state.summary}</p>
 
               <div className="mt-4 grid gap-3 xl:grid-cols-4">
                 {sortedScores.map((score) => {
@@ -680,7 +706,7 @@ function CompetitorBenchmarkPanel({
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-display text-2xl font-bold text-ink">
+                          <p className="font-display text-[1.75rem] font-bold leading-none text-ink">
                             {score.score}
                           </p>
                           {(isLeader || isYou) && (
