@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
@@ -11,12 +11,11 @@ import {
   StatCard,
 } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { PLATFORMS, dashboardNav } from "@/lib/dashboard";
+import { PLATFORMS } from "@/lib/dashboard";
 import { platformRowsFromWorkspace } from "@/lib/dashboard-data";
 
 export function DashboardOverview() {
   const { workspace, ready, refresh } = useWorkspaceContext();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -142,24 +141,6 @@ export function DashboardOverview() {
           </ol>
         </Panel>
       </div>
-
-      <nav className="mt-8 grid grid-cols-2 gap-2 lg:hidden">
-        {dashboardNav
-          .filter((n) => n.id !== "overview")
-          .map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`rounded-xl border px-3 py-3 text-sm font-medium ${
-                pathname === item.href || pathname.startsWith(`${item.href}/`)
-                  ? "border-accent/40 bg-accent/5 text-accent"
-                  : "border-border bg-white text-ink"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-      </nav>
     </>
   );
 }
