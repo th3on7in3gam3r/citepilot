@@ -230,6 +230,7 @@ function LLMPanel({
           seed={domainSeed(workspace.domain)}
           citationScore={workspace.citationScore}
           hasRealAudit={workspace.hasRealAudit}
+          citationHistory={workspace.citationHistory}
         />
       </div>
       <CorrelationInsightsPanel insights={correlations} />

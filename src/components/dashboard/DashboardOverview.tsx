@@ -160,6 +160,7 @@ export function DashboardOverview() {
           compact
           citationScore={workspace.citationScore}
           hasRealAudit={workspace.hasRealAudit}
+          citationHistory={workspace.citationHistory}
         />
       </div>
 

@@ -28,6 +28,11 @@ export type PromptResult = {
   reason: string;
 };
 
+export type CitationHistoryPoint = {
+  recordedAt: string;
+  visibilityIndex: number;
+};
+
 export type AuditPayload = {
   id: string;
   domain: string;
@@ -83,6 +88,7 @@ export type WorkspaceSnapshotResponse = {
   hasRealAudit: boolean;
   promptResults: PromptResult[];
   platformPresence: PlatformPresence[];
+  citationHistory: CitationHistoryPoint[];
 };
 
 export type RedditThread = DiscussionThread;

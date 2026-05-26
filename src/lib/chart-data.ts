@@ -33,23 +33,52 @@ export function buildCitationSeries(
   seed: number,
   optimizationLevel: number,
 ): { current: ChartPoint[]; projected: ChartPoint[] } {
-  const base = 180 + (seed % 120);
+  const base = 28 + (seed % 18);
   const current = CHART_MONTHS.map((month, i) => ({
     month,
-    value: Math.round(base + i * 85 + ((seed + i * 17) % 60)),
+    value: Math.min(100, Math.round(base + i * 4 + ((seed + i * 17) % 7))),
   }));
 
-  const boost = optimizationLevel * 95;
+  const boost = 6 + optimizationLevel * 1.6;
   const projected = CHART_MONTHS.map((month, i) => ({
     month,
-    value: Math.round(current[i].value + boost + i * i * 28 + ((seed + i) % 40)),
+    value: Math.min(
+      100,
+      Math.round(current[i].value + boost + i * 1.5 + ((seed + i) % 3)),
+    ),
   }));
 
   return { current, projected };
 }
 
+export function buildProjectedCitationSeries(
+  current: ChartPoint[],
+  optimizationLevel: number,
+): ChartPoint[] {
+  const lastValue = current[current.length - 1]?.value ?? 40;
+  const firstValue = current[0]?.value ?? lastValue;
+  const trailingLift =
+    current.length > 1
+      ? Math.max(2, (lastValue - firstValue) / (current.length - 1))
+      : 3;
+
+  return current.map((point, i) => ({
+    ...point,
+    value: Math.min(
+      100,
+      Math.max(
+        point.value,
+        Math.round(point.value + optimizationLevel * 1.6 + i * trailingLift * 0.6),
+      ),
+    ),
+  }));
+}
+
 export function chartYMax(values: number[]): number {
-  const max = Math.max(...values);
+  const max = Math.max(...values, 0);
+  if (max <= 100) return Math.max(20, Math.ceil(max / 10) * 10);
+  if (max <= 250) return Math.ceil(max / 25) * 25;
+  if (max <= 1000) return Math.ceil(max / 100) * 100;
   return Math.ceil(max / 500) * 500 || 2500;
 }
 
@@ -62,9 +91,13 @@ export function toSvgPoints(
 ): { x: number; y: number }[] {
   const innerW = width - padding.left - padding.right;
   const innerH = height - padding.top - padding.bottom;
+  const denominator = Math.max(data.length - 1, 1);
 
   return data.map((d, i) => ({
-    x: padding.left + (i / (data.length - 1)) * innerW,
+    x:
+      data.length === 1
+        ? padding.left + innerW / 2
+        : padding.left + (i / denominator) * innerW,
     y: padding.top + innerH - (d.value / yMax) * innerH,
   }));
 }

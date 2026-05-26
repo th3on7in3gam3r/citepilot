@@ -1,5 +1,10 @@
 import type { OnboardingAnswers } from "@/lib/onboarding";
-import type { SiteSignals, PlatformPresence, PromptResult } from "@/lib/api-types";
+import type {
+  CitationHistoryPoint,
+  SiteSignals,
+  PlatformPresence,
+  PromptResult,
+} from "@/lib/api-types";
 import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
@@ -117,6 +122,7 @@ export type WorkspaceSnapshot = {
   id?: string;
   promptResults?: PromptResult[];
   platformPresence?: PlatformPresence[];
+  citationHistory?: CitationHistoryPoint[];
 };
 
 export function domainSeed(domain: string): number {
@@ -160,6 +166,7 @@ export function buildWorkspaceSnapshot(
     updatedAt: new Date().toISOString(),
     promptResults: [],
     platformPresence: [],
+    citationHistory: [],
   };
 }
 

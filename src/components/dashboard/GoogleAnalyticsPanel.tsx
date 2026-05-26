@@ -173,6 +173,7 @@ export function GoogleAnalyticsPanel({
             compact
             citationScore={workspace.citationScore}
             hasRealAudit={workspace.hasRealAudit}
+            citationHistory={workspace.citationHistory}
           />
         </div>
       </Panel>

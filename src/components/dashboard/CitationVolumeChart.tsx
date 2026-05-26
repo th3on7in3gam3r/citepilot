@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import type { CitationHistoryPoint } from "@/lib/api-types";
 import {
   CHART_MONTHS,
   PLATFORM_REACH,
   areaPath,
   buildCitationSeries,
+  buildProjectedCitationSeries,
   chartYMax,
   pointsToPath,
   toSvgPoints,
@@ -16,11 +18,28 @@ const W = 720;
 const H = 280;
 const PAD = { top: 24, right: 16, bottom: 36, left: 48 };
 
+function formatHistoryLabel(recordedAt: string, totalPoints: number): string {
+  const parsed = new Date(recordedAt);
+  if (Number.isNaN(parsed.getTime())) return "Audit";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: totalPoints <= 6 ? "numeric" : undefined,
+  }).format(parsed);
+}
+
+function toHistorySeries(points: CitationHistoryPoint[]) {
+  return points.map((point, index, all) => ({
+    month: formatHistoryLabel(point.recordedAt, all.length || index + 1),
+    value: Math.max(0, Math.min(100, Math.round(point.visibilityIndex))),
+  }));
+}
+
 type CitationVolumeChartProps = {
   seed: number;
   compact?: boolean;
   citationScore?: number;
   hasRealAudit?: boolean;
+  citationHistory?: CitationHistoryPoint[];
 };
 
 export function CitationVolumeChart({
@@ -28,13 +47,31 @@ export function CitationVolumeChart({
   compact = false,
   citationScore,
   hasRealAudit = false,
+  citationHistory = [],
 }: CitationVolumeChartProps) {
   const [level, setLevel] = useState(8);
 
-  const { current, projected } = useMemo(() => {
+  const { current, projected, labels, realHistoryPoints } = useMemo(() => {
+    if (citationHistory.length > 0) {
+      const current = toHistorySeries(citationHistory);
+      return {
+        current,
+        projected: buildProjectedCitationSeries(current, level),
+        labels: current.map((point) => point.month),
+        realHistoryPoints: citationHistory.length,
+      };
+    }
+
     const series = buildCitationSeries(seed, level);
-    if (citationScore === undefined) return series;
-    const anchor = citationScore * 12;
+    if (citationScore === undefined) {
+      return {
+        ...series,
+        labels: CHART_MONTHS,
+        realHistoryPoints: 0,
+      };
+    }
+
+    const anchor = Math.max(0, Math.min(100, Math.round(citationScore)));
     const adjusted = {
       ...series,
       current: series.current.map((point, i) =>
@@ -42,12 +79,23 @@ export function CitationVolumeChart({
           ? { ...point, value: anchor }
           : {
               ...point,
-              value: Math.round(anchor * (0.55 + (i / series.current.length) * 0.4)),
+              value: Math.max(
+                10,
+                Math.min(
+                  100,
+                  Math.round(anchor * (0.58 + (i / series.current.length) * 0.34)),
+                ),
+              ),
             },
       ),
     };
-    return adjusted;
-  }, [seed, level, citationScore]);
+    return {
+      ...adjusted,
+      projected: buildProjectedCitationSeries(adjusted.current, level),
+      labels: CHART_MONTHS,
+      realHistoryPoints: 0,
+    };
+  }, [citationHistory, seed, level, citationScore]);
 
   const yMax = useMemo(
     () => chartYMax([...current.map((d) => d.value), ...projected.map((d) => d.value)]),
@@ -72,6 +120,13 @@ export function CitationVolumeChart({
   const lastProjected = projectedPts[projectedPts.length - 1];
   const calloutX = lastProjected ? Math.min(lastProjected.x - 100, W - 230) : 0;
   const calloutY = lastProjected ? lastProjected.y - 46 : 0;
+  const chartBadge = !hasRealAudit
+    ? "Projected · run audit for live baseline"
+    : realHistoryPoints >= 2
+      ? `${realHistoryPoints} saved audits · real trend`
+      : realHistoryPoints === 1
+        ? "1 saved audit · run another for trend"
+        : "Latest audit loaded · history building";
 
   return (
     <div
@@ -91,7 +146,7 @@ export function CitationVolumeChart({
         </div>
         {!compact && (
           <div className="mt-2 rounded-full border border-accent/10 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent sm:mt-0">
-            {hasRealAudit ? "From your latest audit" : "Projected · run audit for live baseline"}
+            {chartBadge}
           </div>
         )}
       </div>
@@ -138,19 +193,21 @@ export function CitationVolumeChart({
               );
             })}
 
-            {CHART_MONTHS.map((month, i) => (
+            {labels.map((label, i) => (
               <text
-                key={month}
+                key={`${label}-${i}`}
                 x={currentPts[i]?.x ?? 0}
                 y={H - 10}
                 textAnchor="middle"
                 className="fill-muted text-[11px]"
               >
-                {month}
+                {label}
               </text>
             ))}
 
-            <path d={areaPath(currentPts, baselineY)} fill="url(#cite-area)" />
+            {currentPts.length > 1 && (
+              <path d={areaPath(currentPts, baselineY)} fill="url(#cite-area)" />
+            )}
             <path
               d={pointsToPath(currentPts)}
               fill="none"
@@ -201,7 +258,7 @@ export function CitationVolumeChart({
             <g transform={`translate(${PAD.left}, 12)`}>
               <line x1={0} y1={0} x2={20} y2={0} stroke="#f97316" strokeWidth={2.5} />
               <text x={28} y={4} className="fill-muted text-[11px]">
-                Current
+                {realHistoryPoints > 0 ? "Audit history" : "Current"}
               </text>
               <line
                 x1={90}
@@ -219,6 +276,13 @@ export function CitationVolumeChart({
           </svg>
         </div>
 
+        {realHistoryPoints === 1 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-xs leading-relaxed text-amber-900">
+            One audit is saved so far. Run another citation audit to unlock a true
+            historical trend line for this workspace.
+          </div>
+        )}
+
         {!compact && (
           <aside className="rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
             <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)_180px] lg:items-start">
@@ -227,7 +291,8 @@ export function CitationVolumeChart({
                   Visibility simulator
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-muted">
-                  Move the slider to see how closing citation gaps boosts AI visibility.
+                  Move the slider to model how closing citation gaps can lift your
+                  visibility score from the current baseline.
                 </p>
                 <div className="mt-4">
                   <ChartSlider level={level} onChange={setLevel} />
@@ -239,18 +304,18 @@ export function CitationVolumeChart({
                   Tracked surfaces
                 </p>
                 <ul className="mt-3 grid grid-cols-2 gap-2 xl:grid-cols-4">
-                {PLATFORM_REACH.map((p) => (
-                  <li
-                    key={p.id}
-                    className="rounded-xl border border-white/80 bg-white/90 px-3 py-2 text-[11px] shadow-sm"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span aria-hidden>{p.flag}</span>
-                      <p className="font-semibold text-ink">{p.name}</p>
-                    </div>
-                    <p className="mt-1 leading-relaxed text-muted">{p.audience}</p>
-                  </li>
-                ))}
+                  {PLATFORM_REACH.map((p) => (
+                    <li
+                      key={p.id}
+                      className="rounded-xl border border-white/80 bg-white/90 px-3 py-2 text-[11px] shadow-sm"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span aria-hidden>{p.flag}</span>
+                        <p className="font-semibold text-ink">{p.name}</p>
+                      </div>
+                      <p className="mt-1 leading-relaxed text-muted">{p.audience}</p>
+                    </li>
+                  ))}
                 </ul>
               </div>
 

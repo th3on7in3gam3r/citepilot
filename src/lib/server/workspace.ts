@@ -86,6 +86,7 @@ export function toSnapshot(
       hasRealAudit: false,
       promptResults: [],
       platformPresence: [],
+      citationHistory: [],
     };
   }
 
@@ -118,6 +119,7 @@ export function toSnapshot(
     hasRealAudit: true,
     promptResults: audit.promptResults,
     platformPresence: audit.platforms,
+    citationHistory: [],
   };
 }
 
@@ -125,12 +127,21 @@ export async function enrichSnapshotWithBacklinks(
   snapshot: WorkspaceSnapshotResponse,
   workspaceId: string,
 ): Promise<WorkspaceSnapshotResponse> {
-  const metrics = await getBacklinkMetricsForWorkspace(workspaceId);
-  if (!metrics) return snapshot;
+  const [metrics, citationHistory] = await Promise.all([
+    getBacklinkMetricsForWorkspace(workspaceId),
+    getCitationSnapshots(workspaceId),
+  ]);
+  if (!metrics) {
+    return {
+      ...snapshot,
+      citationHistory,
+    };
+  }
   return {
     ...snapshot,
     domainRating: metrics.domainRating,
     sourceCount: metrics.sourceCount,
+    citationHistory,
   };
 }
 

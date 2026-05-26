@@ -21,6 +21,7 @@ export function normalizeSnapshot(
     id: data.id,
     promptResults: data.promptResults ?? [],
     platformPresence: data.platformPresence ?? [],
+    citationHistory: data.citationHistory ?? [],
   };
 }
 
