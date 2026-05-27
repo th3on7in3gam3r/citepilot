@@ -119,13 +119,17 @@ export async function runAutopilotForWorkspace(input: {
     });
     emailSent = sendResult.ok;
     if (!sendResult.ok) {
-      await recordCronDispatch({
-        jobName: AUTOPILOT_JOB,
-        workspaceId: input.workspaceId,
-        periodKey,
-        status: "failed",
-        error: sendResult.error ?? "email failed",
-      });
+      try {
+        await recordCronDispatch({
+          jobName: AUTOPILOT_JOB,
+          workspaceId: input.workspaceId,
+          periodKey,
+          status: "failed",
+          error: sendResult.error ?? "email failed",
+        });
+      } catch (err) {
+        console.error("[autopilot] recordCronDispatch failed", err);
+      }
       return {
         ok: false,
         error: sendResult.error ?? "Autopilot email failed",
@@ -134,13 +138,17 @@ export async function runAutopilotForWorkspace(input: {
     }
   }
 
-  await recordCronDispatch({
-    jobName: AUTOPILOT_JOB,
-    workspaceId: input.workspaceId,
-    periodKey,
-    status: "sent",
-    error: `trigger=${input.trigger};insight=${insightGenerated};email=${emailSent}`,
-  });
+  try {
+    await recordCronDispatch({
+      jobName: AUTOPILOT_JOB,
+      workspaceId: input.workspaceId,
+      periodKey,
+      status: "sent",
+      error: `trigger=${input.trigger};insight=${insightGenerated};email=${emailSent}`,
+    });
+  } catch (err) {
+    console.error("[autopilot] recordCronDispatch failed", err);
+  }
 
   void trackServerEvent("autopilot_run", {
     distinctId: input.userId,

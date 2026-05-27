@@ -53,11 +53,21 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }
 
-    const rate = await checkHourlyRateLimit(
-      `autopilot-manual:${userId}`,
-      AUTOPILOT_MANUAL_LIMIT_PER_HOUR,
-    );
-    if (!rate.allowed) {
+    let rate:
+      | Awaited<ReturnType<typeof checkHourlyRateLimit>>
+      | null = null;
+    try {
+      rate = await checkHourlyRateLimit(
+        `autopilot-manual:${userId}`,
+        AUTOPILOT_MANUAL_LIMIT_PER_HOUR,
+      );
+    } catch (err) {
+      console.error("[autopilot] rate limit check failed", err);
+      // Fail open: bookkeeping should not crash a paid feature.
+      rate = null;
+    }
+
+    if (rate && !rate.allowed) {
       return NextResponse.json(
         {
           error: `Autopilot manual limit reached (${rate.limit}/hour). Try again after ${rate.resetAt}.`,
@@ -131,7 +141,7 @@ export async function POST(request: Request, { params }: Params) {
         emailSent: result.emailSent,
         skipped: result.skipped,
       },
-      { headers: rateLimitHeaders(rate) },
+      { headers: rate ? rateLimitHeaders(rate) : {} },
     );
   } catch (error) {
     captureServerException(error, {
