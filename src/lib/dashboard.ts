@@ -5,6 +5,7 @@ import type {
   PlatformPresence,
   PromptResult,
 } from "@/lib/api-types";
+import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
@@ -123,6 +124,9 @@ export type WorkspaceSnapshot = {
   promptResults?: PromptResult[];
   platformPresence?: PlatformPresence[];
   citationHistory?: CitationHistoryPoint[];
+  contentStrategy?: ContentCalendarItem[];
+  contentStrategyGeneratedAt?: string | null;
+  weeklyLiftAvailable?: boolean;
 };
 
 export function domainSeed(domain: string): number {
@@ -167,6 +171,9 @@ export function buildWorkspaceSnapshot(
     promptResults: [],
     platformPresence: [],
     citationHistory: [],
+    contentStrategy: [],
+    contentStrategyGeneratedAt: null,
+    weeklyLiftAvailable: false,
   };
 }
 

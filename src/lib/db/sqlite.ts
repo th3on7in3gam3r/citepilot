@@ -86,6 +86,14 @@ function initSchema(db: Database.Database): void {
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     );
 
+    CREATE TABLE IF NOT EXISTS workspace_content_strategies (
+      workspace_id TEXT PRIMARY KEY,
+      audit_id TEXT,
+      items TEXT NOT NULL,
+      generated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
     CREATE TABLE IF NOT EXISTS waitlist (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
@@ -317,6 +325,14 @@ function migrateSchema(db: Database.Database): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_audit_shares_workspace ON audit_shares(workspace_id);
+
+    CREATE TABLE IF NOT EXISTS workspace_content_strategies (
+      workspace_id TEXT PRIMARY KEY,
+      audit_id TEXT,
+      items TEXT NOT NULL,
+      generated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
 
     CREATE TABLE IF NOT EXISTS gsc_connections (
       workspace_id TEXT PRIMARY KEY,

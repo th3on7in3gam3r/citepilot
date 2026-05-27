@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
-import { domainSeed } from "@/lib/dashboard";
 import type { PromptRow } from "@/lib/features";
 import {
   buildCompetitorBenchmark,
@@ -14,6 +13,7 @@ import {
   promptRowsForWorkspace,
   type BenchmarkBrandRow,
   type BenchmarkPromptRow,
+  type CompetitorBenchmarkResult,
   type CorrelationInsight,
 } from "@/lib/dashboard-data";
 
@@ -31,8 +31,13 @@ const confidenceStyle: Record<CorrelationInsight["confidence"], string> = {
   Directional: "bg-sky-50 text-sky-800",
 };
 
-function benchmarkBarWidth(value: number) {
+function benchmarkBarWidth(value: number | null) {
+  if (value === null) return "0%";
   return `${Math.max(8, Math.min(100, value))}%`;
+}
+
+function formatScore(value: number | null) {
+  return value === null ? "—" : String(value);
 }
 
 function benchmarkRankLabel(rank: number) {
@@ -41,14 +46,15 @@ function benchmarkRankLabel(rank: number) {
   return `Rank #${rank}`;
 }
 
-function benchmarkDeltaTone(delta: number) {
+function benchmarkDeltaTone(delta: number | null) {
+  if (delta === null) return "bg-surface text-muted";
   if (delta > 0) return "bg-red-50 text-red-700";
   if (delta < 0) return "bg-emerald-50 text-emerald-700";
   return "bg-surface text-muted";
 }
 
 function benchmarkPromptState(prompt: BenchmarkPromptRow, yourBrand: string) {
-  if (prompt.leader === yourBrand) {
+  if (prompt.youCited || prompt.leader === yourBrand) {
     return {
       label: "Defend lead",
       tone: "bg-emerald-50 text-emerald-700",
@@ -57,7 +63,7 @@ function benchmarkPromptState(prompt: BenchmarkPromptRow, yourBrand: string) {
     };
   }
 
-  if (prompt.gapToLeader <= 6) {
+  if (prompt.gapToLeader !== null && prompt.gapToLeader <= 6) {
     return {
       label: "Quick flip",
       tone: "bg-sky-50 text-sky-800",
@@ -75,7 +81,29 @@ function benchmarkPromptState(prompt: BenchmarkPromptRow, yourBrand: string) {
 }
 
 export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot }) {
+  const workspaceId = workspace.workspaceId ?? workspace.id;
   const [tab, setTab] = useState<Tab>("llms");
+  const [gscConnected, setGscConnected] = useState(false);
+
+  const loadGscStatus = useCallback(async () => {
+    if (!workspaceId) return;
+    const res = await fetch(
+      `/api/gsc/metrics?workspaceId=${encodeURIComponent(workspaceId)}`,
+      { credentials: "include" },
+    );
+    if (!res.ok) return;
+    const data = (await res.json()) as {
+      metrics: { connected: boolean };
+    };
+    const connected = data.metrics.connected;
+    setGscConnected(connected);
+    if (connected) setTab("google");
+  }, [workspaceId]);
+
+  useEffect(() => {
+    void loadGscStatus();
+  }, [loadGscStatus]);
+
   const rows = useMemo(
     () => promptRowsForWorkspace(workspace),
     [workspace],
@@ -98,14 +126,16 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
               Analytics workspace
             </p>
             <p className="mt-1 text-sm text-muted">
-              Switch between AI visibility intelligence and Google Search Console
-              performance for <span className="font-semibold text-ink">{workspace.domain}</span>.
+              {gscConnected
+                ? "Search Console is connected — organic clicks lead this view. Switch to LLMs for citation audits and prompt coverage."
+                : "Switch between live organic performance (after GSC connect) and LLM citation intelligence for"}{" "}
+              <span className="font-semibold text-ink">{workspace.domain}</span>.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:items-end">
             <div className="inline-flex rounded-full border border-white/80 bg-white/90 p-1 shadow-sm">
           <TabButton active={tab === "google"} onClick={() => setTab("google")}>
-            Google
+            Google{gscConnected ? " · Live" : ""}
           </TabButton>
           <TabButton active={tab === "llms"} onClick={() => setTab("llms")}>
             LLMs
@@ -127,7 +157,10 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
           correlations={correlations}
         />
       ) : (
-        <GoogleAnalyticsPanel workspace={workspace} />
+        <GoogleAnalyticsPanel
+          workspace={workspace}
+          preferOrganicLead={gscConnected}
+        />
       )}
       {!workspace.hasRealAudit && (
         <p className="mt-4 text-center text-xs text-muted">
@@ -171,10 +204,7 @@ function LLMPanel({
 }: {
   workspace: WorkspaceSnapshot;
   rows: PromptRow[];
-  benchmark: {
-    brands: BenchmarkBrandRow[];
-    prompts: BenchmarkPromptRow[];
-  };
+  benchmark: CompetitorBenchmarkResult;
   correlations: CorrelationInsight[];
 }) {
   return (
@@ -218,16 +248,12 @@ function LLMPanel({
             <PromptsCard workspace={workspace} />
           </div>
         </div>
-        <PromptTable rows={rows} />
+        <PromptTable rows={rows} hasRealAudit={workspace.hasRealAudit} />
       </Panel>
-      <CompetitorBenchmarkPanel
-        workspace={workspace}
-        brands={benchmark.brands}
-        prompts={benchmark.prompts}
-      />
+      <CompetitorBenchmarkPanel workspace={workspace} benchmark={benchmark} />
       <div className="mt-6">
         <CitationVolumeChart
-          seed={domainSeed(workspace.domain)}
+          seed={0}
           citationScore={workspace.citationScore}
           hasRealAudit={workspace.hasRealAudit}
           citationHistory={workspace.citationHistory}
@@ -281,9 +307,11 @@ function CorrelationInsightsPanel({
                 >
                   {insight.confidence} confidence
                 </span>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink">
-                  Est. lift {insight.estimatedLift}
-                </span>
+                {insight.estimatedLift && (
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink">
+                    Est. lift {insight.estimatedLift}
+                  </span>
+                )}
               </div>
 
               <p className="mt-3 font-medium text-ink">{insight.title}</p>
@@ -318,13 +346,34 @@ function CorrelationInsightsPanel({
 
 function CompetitorBenchmarkPanel({
   workspace,
-  brands,
-  prompts,
+  benchmark,
 }: {
   workspace: WorkspaceSnapshot;
-  brands: BenchmarkBrandRow[];
-  prompts: BenchmarkPromptRow[];
+  benchmark: CompetitorBenchmarkResult;
 }) {
+  const { brands, prompts } = benchmark;
+  if (!benchmark.available) {
+    return (
+      <Panel title="Competitor benchmark" className="mt-6">
+        <div className="rounded-2xl border border-dashed border-border bg-surface/40 px-5 py-5">
+          <p className="text-sm font-semibold text-ink">Insufficient benchmark data</p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+            {benchmark.unavailableReason ??
+              "Add competitors and run a citation audit to unlock side-by-side prompt benchmarking."}
+          </p>
+          {!workspace.hasRealAudit && (
+            <Link
+              href="/audit"
+              className="mt-4 inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink"
+            >
+              Run citation audit
+            </Link>
+          )}
+        </div>
+      </Panel>
+    );
+  }
+
   if (workspace.competitors.length === 0) {
     return (
       <Panel title="Competitor benchmark" className="mt-6">
@@ -370,34 +419,36 @@ function CompetitorBenchmarkPanel({
   }
 
   const topGap = prompts
-    .filter((prompt) => prompt.gapToLeader > 0)
-    .sort((a, b) => b.gapToLeader - a.gapToLeader)[0];
-  const yourBrand = brands[0]?.brand ?? workspace.domain;
+    .filter((prompt) => !prompt.youCited)
+    .sort((a, b) => (a.yourScore ?? 0) - (b.yourScore ?? 0))[0];
+  const yourBrand = brands.find((b) => b.measured)?.brand ?? workspace.domain;
   const rankedBrands = [...brands].sort((a, b) => {
-    if (b.avgVisibility !== a.avgVisibility) return b.avgVisibility - a.avgVisibility;
+    const aScore = a.avgVisibility ?? -1;
+    const bScore = b.avgVisibility ?? -1;
+    if (bScore !== aScore) return bScore - aScore;
     return b.promptsLed - a.promptsLed;
   });
   const rankMap = new Map(rankedBrands.map((brand, index) => [brand.brand, index + 1]));
   const yourRank = rankMap.get(yourBrand) ?? 1;
   const leaderBrand = rankedBrands[0] ?? brands[0];
-  const yourAverage = brands.find((brand) => brand.brand === yourBrand)?.avgVisibility ?? 0;
-  const leaderGap = Math.max(0, (leaderBrand?.avgVisibility ?? yourAverage) - yourAverage);
+  const yourAverage =
+    brands.find((brand) => brand.brand === yourBrand)?.avgVisibility ?? null;
+  const leaderGap =
+    leaderBrand?.avgVisibility !== null &&
+    leaderBrand?.avgVisibility !== undefined &&
+    yourAverage !== null
+      ? Math.max(0, (leaderBrand.avgVisibility ?? 0) - yourAverage)
+      : null;
   const promptsWon = prompts.filter((prompt) => prompt.leader === yourBrand).length;
   const promptsBehind = prompts.filter((prompt) => prompt.leader !== yourBrand).length;
-  const averageCatchupGap = promptsBehind
-    ? Math.round(
-        prompts
-          .filter((prompt) => prompt.gapToLeader > 0)
-          .reduce((sum, prompt) => sum + prompt.gapToLeader, 0) / promptsBehind,
-      )
-    : 0;
+  const uncitedBehind = prompts.filter((prompt) => !prompt.youCited).length;
   const strongestPrompt = prompts
-    .filter((prompt) => prompt.leader === yourBrand)
-    .sort((a, b) => b.yourScore - a.yourScore)[0];
+    .filter((prompt) => prompt.youCited)
+    .sort((a, b) => (b.yourScore ?? 0) - (a.yourScore ?? 0))[0];
   const summaryHeadline =
-    leaderBrand?.brand === yourBrand
-      ? "You currently lead the competitive benchmark."
-      : `${leaderBrand?.brand} currently leads the comparative benchmark.`;
+    promptsWon === prompts.length
+      ? "You are cited on every audited prompt in this benchmark."
+      : `${promptsBehind} prompt${promptsBehind === 1 ? "" : "s"} still need citation coverage.`;
 
   return (
     <Panel title="Competitor benchmark" className="mt-6">
@@ -413,9 +464,8 @@ function CompetitorBenchmarkPanel({
               {summaryHeadline}
             </p>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-              Side-by-side prompt benchmarking for your domain and up to three tracked
-              competitors. This view packages prompt leadership, visibility deltas, and
-              likely swing opportunities into a cleaner executive-ready scorecard.
+              {benchmark.unavailableReason ??
+                "Your cite status per audited prompt is shown below. Competitor visibility scores require dedicated competitor scans."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -425,9 +475,9 @@ function CompetitorBenchmarkPanel({
             <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
               {brands.length} brands compared
             </span>
-            {topGap && (
+            {uncitedBehind > 0 && (
               <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800 shadow-sm">
-                Biggest swing: {topGap.gapToLeader} pts
+                {uncitedBehind} prompt{uncitedBehind === 1 ? "" : "s"} not citing you
               </span>
             )}
           </div>
@@ -445,9 +495,11 @@ function CompetitorBenchmarkPanel({
               </span>
             </div>
             <p className="mt-2 text-sm text-muted">
-              {leaderGap > 0
+              {leaderGap !== null && leaderGap > 0
                 ? `${leaderGap} visibility points behind ${leaderBrand?.brand}.`
-                : "You currently set the benchmark across tracked prompts."}
+                : promptsWon === prompts.length
+                  ? "You are cited on every audited prompt in this workspace."
+                  : "Competitor visibility scores are not measured yet — your audit cite status is shown per prompt."}
             </p>
           </div>
 
@@ -477,7 +529,7 @@ function CompetitorBenchmarkPanel({
             </p>
             <p className="mt-2 text-sm text-muted">
               {topGap
-                ? `Average catch-up need is ${averageCatchupGap || topGap.gapToLeader} points across prompts you do not currently lead.`
+                ? `Not cited on "${topGap.prompt}" — prioritize comparison and FAQ content for this buyer question.`
                 : "Your strongest prompt can be reused as the template for adjacent comparison coverage."}
             </p>
           </div>
@@ -486,8 +538,8 @@ function CompetitorBenchmarkPanel({
 
       <div className="mt-6 space-y-3">
         {rankedBrands.map((brand) => {
-          const leading = brand.deltaVsYou > 0;
-          const trailing = brand.deltaVsYou < 0;
+          const leading = (brand.deltaVsYou ?? 0) > 0;
+          const trailing = (brand.deltaVsYou ?? 0) < 0;
           const isYou = brand.brand === yourBrand;
           const rank = rankMap.get(brand.brand) ?? 1;
           const promptShare = prompts.length
@@ -541,7 +593,7 @@ function CompetitorBenchmarkPanel({
                     <div>
                       <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
                         <span>Visibility strength</span>
-                        <span>{brand.avgVisibility}/100</span>
+                        <span>{formatScore(brand.avgVisibility)}/100</span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-white">
                         <div
@@ -575,7 +627,7 @@ function CompetitorBenchmarkPanel({
                     Avg visibility
                   </p>
                   <p className="mt-1 font-display text-3xl font-bold text-ink">
-                    {brand.avgVisibility}
+                    {formatScore(brand.avgVisibility)}
                   </p>
                 </div>
 
@@ -599,11 +651,13 @@ function CompetitorBenchmarkPanel({
                       brand.deltaVsYou,
                     )}`}
                   >
-                    {brand.deltaVsYou > 0
-                      ? `+${brand.deltaVsYou} vs you`
-                      : brand.deltaVsYou < 0
-                        ? `${brand.deltaVsYou} vs you`
-                        : "Benchmark"}
+                    {brand.deltaVsYou === null
+                      ? "Not measured"
+                      : brand.deltaVsYou > 0
+                        ? `+${brand.deltaVsYou} vs you`
+                        : brand.deltaVsYou < 0
+                          ? `${brand.deltaVsYou} vs you`
+                          : "Benchmark"}
                   </span>
                 </div>
 
@@ -620,7 +674,9 @@ function CompetitorBenchmarkPanel({
 
       <div className="mt-6 space-y-3">
         {prompts.map((prompt) => {
-          const sortedScores = [...prompt.scores].sort((a, b) => b.score - a.score);
+          const sortedScores = [...prompt.scores].sort(
+            (a, b) => (b.score ?? -1) - (a.score ?? -1),
+          );
           const youScore =
             prompt.scores.find((item) => item.brand === yourBrand)?.score ?? prompt.yourScore;
           const yourPromptRank =
@@ -645,18 +701,16 @@ function CompetitorBenchmarkPanel({
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-muted">
-                    {prompt.leader === yourBrand
-                      ? `You lead this prompt with a score of ${youScore}.`
-                      : `${prompt.leader} leads this prompt by ${prompt.gapToLeader} points.`}
+                    {prompt.youCited
+                      ? `Your brand is cited on this prompt (${youScore ?? 0}% cite signal).`
+                      : `Not cited on this prompt — ${prompt.leader} is the inferred leader from audit settings.`}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {prompt.leader}
                     </span>
                     <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
-                      {prompt.gapToLeader > 0
-                        ? `${prompt.gapToLeader} pts behind`
-                        : "Current leader"}
+                      {prompt.youCited ? "Cited" : "Not cited"}
                     </span>
                   </div>
                 </div>
@@ -666,14 +720,12 @@ function CompetitorBenchmarkPanel({
                   </span>
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${
-                      prompt.gapToLeader > 0
-                        ? "bg-amber-50 text-amber-800"
-                        : "bg-emerald-50 text-emerald-700"
+                      prompt.youCited
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-800"
                     }`}
                   >
-                    {prompt.gapToLeader > 0
-                        ? `${prompt.gapToLeader} pts to flip`
-                        : "You already lead"}
+                    {prompt.youCited ? "Cited in audit" : "Needs coverage"}
                   </span>
                 </div>
               </div>
@@ -704,12 +756,14 @@ function CompetitorBenchmarkPanel({
                               ? "Prompt leader"
                               : isYou
                                 ? `Rank #${yourPromptRank}`
-                                : `${Math.max(0, leaderScore - score.score)} pts off lead`}
+                                : score.score === null
+                                  ? "Not measured"
+                                  : `${Math.max(0, (leaderScore ?? 0) - score.score)} pts off lead`}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-display text-[1.75rem] font-bold leading-none text-ink">
-                            {score.score}
+                            {formatScore(score.score)}
                           </p>
                           {(isLeader || isYou) && (
                             <span
@@ -770,7 +824,29 @@ function PromptsCard({ workspace }: { workspace: WorkspaceSnapshot }) {
   );
 }
 
-function PromptTable({ rows }: { rows: PromptRow[] }) {
+function PromptTable({
+  rows,
+  hasRealAudit,
+}: {
+  rows: PromptRow[];
+  hasRealAudit: boolean;
+}) {
+  if (hasRealAudit && rows.length === 0) {
+    return (
+      <p className="mt-6 text-sm text-muted">
+        No prompt results in the latest audit. Re-run a citation audit to refresh this table.
+      </p>
+    );
+  }
+
+  if (!hasRealAudit) {
+    return (
+      <p className="mt-6 text-sm text-muted">
+        Run a citation audit to populate prompt-level visibility from live or technical checks.
+      </p>
+    );
+  }
+
   return (
     <div className="mt-6 space-y-3">
       {rows.map((row) => (
@@ -789,7 +865,13 @@ function PromptTable({ rows }: { rows: PromptRow[] }) {
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
-                Visibility {row.visibility}%
+                {row.visibility === null
+                  ? "—"
+                  : row.fromAudit
+                    ? row.cited
+                      ? "Cited"
+                      : "Not cited"
+                    : `Visibility ${row.visibility}%`}
               </span>
               <span
                 className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${sentimentStyle[row.sentiment]}`}
@@ -830,7 +912,12 @@ function PromptTable({ rows }: { rows: PromptRow[] }) {
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-[#7b93f0] via-accent to-glow"
-                  style={{ width: `${Math.max(8, Math.min(100, row.visibility))}%` }}
+                  style={{
+                    width:
+                      row.visibility === null
+                        ? "0%"
+                        : `${Math.max(8, Math.min(100, row.visibility))}%`,
+                  }}
                 />
               </div>
             </div>

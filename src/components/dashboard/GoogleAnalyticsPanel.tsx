@@ -1,19 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GscMetrics } from "@/lib/gsc/client";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
-import { domainSeed } from "@/lib/dashboard";
+import { buildOrganicCitationBridge } from "@/lib/analytics/organic-citation-bridge";
 
 export function GoogleAnalyticsPanel({
   workspace,
+  preferOrganicLead = false,
 }: {
   workspace: WorkspaceSnapshot;
+  preferOrganicLead?: boolean;
 }) {
   const workspaceId = workspace.workspaceId ?? workspace.id;
-  const seed = domainSeed(workspace.domain);
   const [metrics, setMetrics] = useState<GscMetrics | null>(null);
   const [configured, setConfigured] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -66,6 +67,16 @@ export function GoogleAnalyticsPanel({
 
   const connected = metrics?.connected ?? false;
 
+  const bridge = useMemo(
+    () =>
+      buildOrganicCitationBridge({
+        citationHistory: workspace.citationHistory ?? [],
+        citationScore: workspace.citationScore,
+        gsc: metrics,
+      }),
+    [workspace.citationHistory, workspace.citationScore, metrics],
+  );
+
   return (
     <>
       {!configured && (
@@ -89,12 +100,12 @@ export function GoogleAnalyticsPanel({
           <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-ink">
-                Connect Google Search Console to unlock real clicks, impressions, and
-                ranking data for {workspace.domain}.
+                Connect Google Search Console for real clicks, impressions, and average
+                position for {workspace.domain}.
               </p>
               <p className="mt-1 text-sm text-muted">
-                This turns the Google tab into a live performance view instead of an
-                estimated placeholder.
+                Until GSC is connected, organic metrics show as unavailable — not
+                estimated placeholders.
               </p>
             </div>
             <button
@@ -112,7 +123,7 @@ export function GoogleAnalyticsPanel({
       {connected && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm">
           <span className="rounded-full bg-mint/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-mint">
-            Connected
+            Live organic data
           </span>
           <p className="text-sm text-muted">
             GSC property: <span className="font-semibold text-ink">{metrics?.siteUrl}</span>
@@ -127,24 +138,28 @@ export function GoogleAnalyticsPanel({
         </div>
       )}
 
-      <Panel title="Organic performance" className="mt-6">
+      <Panel
+        title={preferOrganicLead ? "Organic performance (Search Console)" : "Organic performance"}
+        className="mt-6"
+      >
         <div className="mb-6 overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
-                Organic snapshot
+                Real traffic layer
               </p>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-                Blend Search Console performance with CitePilot citation monitoring so
-                your team can see demand, ranking movement, and answer-surface visibility
-                in one place.
+                {connected
+                  ? "Clicks and impressions come directly from Google Search Console. Citation trends below use saved audit history from CitePilot."
+                  : "Connect Search Console to lead this tab with measured organic demand instead of unavailable metrics."}
               </p>
             </div>
             <div className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
-              {connected ? "Live Google data" : "Awaiting connection"}
+              {connected ? "Live Google data" : "Not connected"}
             </div>
           </div>
         </div>
+
         {loading ? (
           <p className="text-sm text-muted">Loading Search Console data…</p>
         ) : (
@@ -153,36 +168,66 @@ export function GoogleAnalyticsPanel({
               label="Organic clicks (28d)"
               value={connected ? String(metrics!.clicks) : "—"}
               delta={metrics?.clicksDelta ?? undefined}
+              unavailable={!connected}
             />
             <MetricCard
               label="Impressions"
-              value={
-                connected ? metrics!.impressions.toLocaleString() : "—"
-              }
+              value={connected ? metrics!.impressions.toLocaleString() : "—"}
               delta={metrics?.impressionsDelta ?? undefined}
+              unavailable={!connected}
             />
             <MetricCard
               label="Avg. position"
               value={connected ? metrics!.position.toFixed(1) : "—"}
+              unavailable={!connected}
             />
           </div>
         )}
-        <div className="mt-6">
-          <CitationVolumeChart
-            seed={seed}
-            compact
-            citationScore={workspace.citationScore}
-            hasRealAudit={workspace.hasRealAudit}
-            citationHistory={workspace.citationHistory}
-          />
+
+        <div className="mt-6 rounded-2xl border border-border bg-surface/50 px-5 py-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+            Citation vs organic
+          </p>
+          <p className="mt-2 font-semibold text-ink">{bridge.headline}</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">{bridge.summary}</p>
+          {bridge.evidence.length > 0 && (
+            <ul className="mt-3 space-y-1.5 text-sm text-muted">
+              {bridge.evidence.map((line) => (
+                <li key={line} className="flex gap-2">
+                  <span className="text-accent">•</span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+
+        {connected && (
+          <div className="mt-6">
+            <CitationVolumeChart
+              seed={0}
+              compact
+              citationScore={workspace.citationScore}
+              hasRealAudit={workspace.hasRealAudit}
+              citationHistory={workspace.citationHistory}
+            />
+          </div>
+        )}
       </Panel>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <MiniStat label="Domain rating" value={String(workspace.domainRating)} />
-        <MiniStat label="Referring pages" value={String(workspace.sourceCount)} />
-        <MiniStat label="Citation score" value={String(workspace.citationScore)} />
-      </div>
+      {connected && (
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <MiniStat label="Citation score" value={String(workspace.citationScore)} />
+          <MiniStat
+            label="Platforms cited"
+            value={`${workspace.citedPlatforms}/${workspace.totalPlatforms}`}
+          />
+          <MiniStat
+            label="Referring pages"
+            value={workspace.sourceCount > 0 ? String(workspace.sourceCount) : "—"}
+          />
+        </div>
+      )}
     </>
   );
 }
@@ -191,17 +236,23 @@ function MetricCard({
   label,
   value,
   delta,
+  unavailable = false,
 }: {
   label: string;
   value: string;
   delta?: string;
+  unavailable?: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.96))] px-4 py-4 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
       <p className="font-display mt-2 text-3xl font-bold text-ink">{value}</p>
-      {delta && (
-        <p className="mt-2 text-xs font-semibold text-mint">{delta} vs prior 28d</p>
+      {unavailable ? (
+        <p className="mt-2 text-xs text-muted">Connect GSC to measure</p>
+      ) : (
+        delta && (
+          <p className="mt-2 text-xs font-semibold text-mint">{delta} vs prior 28d</p>
+        )
       )}
     </div>
   );

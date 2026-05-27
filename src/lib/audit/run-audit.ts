@@ -18,6 +18,7 @@ import {
   normalizeDomain,
   promptOverlap,
 } from "@/lib/audit/site-analyzer";
+import { regenerateContentStrategyForAudit } from "@/lib/content-strategy/regenerate";
 
 function evaluatePrompts(
   prompts: string[],
@@ -159,6 +160,7 @@ async function persistAudit(
        VALUES (?, ?, ?, ?)`,
       [uuidv4(), audit.workspaceId, audit.score, audit.createdAt],
     );
+    await regenerateContentStrategyForAudit(audit.workspaceId, audit);
   }
 }
 

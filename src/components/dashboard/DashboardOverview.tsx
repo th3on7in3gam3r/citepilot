@@ -136,7 +136,13 @@ export function DashboardOverview() {
           label="Citation score"
           value={String(workspace.citationScore)}
           sub="/100"
-          trend={workspace.weeklyLift + " this week"}
+          trend={
+            workspace.weeklyLiftAvailable
+              ? `${workspace.weeklyLift} since prior audit`
+              : workspace.hasRealAudit
+                ? "Run another audit for trend"
+                : undefined
+          }
         />
         <StatCard
           label="Platforms cited"
@@ -149,8 +155,14 @@ export function DashboardOverview() {
         />
         <StatCard
           label="Community signals"
-          value={String(workspace.communityMentions)}
-          sub="mentions"
+          value={
+            workspace.communityMentions > 0
+              ? String(workspace.communityMentions)
+              : "—"
+          }
+          sub={
+            workspace.communityMentions > 0 ? "mentions" : "Check Discussions tab"
+          }
         />
       </div>
 

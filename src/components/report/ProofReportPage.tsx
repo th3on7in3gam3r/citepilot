@@ -96,7 +96,7 @@ function ProofReportInner() {
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
                 {workspace.hasRealAudit
                   ? `${workspace.domain} currently shows measurable citation visibility across tracked AI platforms, with the latest audit feeding this report.`
-                  : `${workspace.domain} is currently using projected prompt and platform data until a fresh audit is run, but the benchmark still highlights likely priority opportunities.`}
+                  : `${workspace.domain} needs a citation audit before this report can show measured prompt and platform results.`}
               </p>
             </div>
             <div className="rounded-xl bg-surface px-4 py-3 text-sm text-muted">
@@ -148,15 +148,14 @@ function ProofReportInner() {
           </div>
         </section>
 
-        {benchmark.brands.length > 0 && (
+        {benchmark.available && benchmark.brands.length > 0 && (
           <section className="mt-6 rounded-2xl border border-border bg-white p-6 shadow-sm print:shadow-none">
             <h2 className="font-display text-xl font-bold text-ink">
               Competitor benchmark
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-              Side-by-side prompt benchmarking against the tracked competitors for this
-              workspace. Use this section to show where your brand already leads and
-              where comparison content or technical fixes are likely needed next.
+              {benchmark.unavailableReason ??
+                "Your cite status per audited prompt is shown below. Competitor visibility scores require dedicated competitor scans."}
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -175,7 +174,7 @@ function ProofReportInner() {
                         Avg visibility
                       </p>
                       <p className="mt-1 font-display text-3xl font-bold text-ink">
-                        {brand.avgVisibility}
+                        {brand.avgVisibility ?? "—"}
                       </p>
                     </div>
                     <div>
@@ -213,12 +212,21 @@ function ProofReportInner() {
                       </td>
                       {benchmark.brands.map((brand) => (
                         <td key={brand.brand} className="py-4 pr-4 text-ink">
-                          {prompt.scores.find((score) => score.brand === brand.brand)?.score ?? 0}
+                          {(() => {
+                            const score = prompt.scores.find(
+                              (s) => s.brand === brand.brand,
+                            )?.score;
+                            return score === null || score === undefined ? "—" : score;
+                          })()}
                         </td>
                       ))}
                       <td className="py-4 pr-4 text-muted">{prompt.leader}</td>
                       <td className="py-4 text-muted">
-                        {prompt.gapToLeader > 0 ? `${prompt.gapToLeader} pts` : "Leading"}
+                        {prompt.youCited
+                          ? "Cited"
+                          : prompt.gapToLeader !== null && prompt.gapToLeader > 0
+                            ? `${prompt.gapToLeader} pts`
+                            : "Not cited"}
                       </td>
                     </tr>
                   ))}
@@ -233,8 +241,7 @@ function ProofReportInner() {
             Prompt-level proof
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Current tracked prompts, estimated visibility, and who appears to lead each
-            query today.
+            Audited prompts and cite status from your latest workspace audit.
           </p>
           <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">
@@ -250,7 +257,15 @@ function ProofReportInner() {
                 {rows.map((row) => (
                   <tr key={row.prompt} className="border-b border-border last:border-0">
                     <td className="max-w-xs py-4 pr-4 font-medium text-ink">{row.prompt}</td>
-                    <td className="py-4 pr-4 text-ink">{row.visibility}%</td>
+                    <td className="py-4 pr-4 text-ink">
+                      {row.fromAudit
+                        ? row.cited
+                          ? "Cited"
+                          : "Not cited"
+                        : row.visibility === null
+                          ? "—"
+                          : `${row.visibility}%`}
+                    </td>
                     <td className="py-4 pr-4">
                       <div className="flex flex-wrap gap-1">
                         {row.models.map((model) => (

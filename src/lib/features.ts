@@ -84,10 +84,13 @@ export const llmModels = [
 
 export type PromptRow = {
   prompt: string;
-  visibility: number;
+  /** Null when visibility has not been measured (no audit yet). */
+  visibility: number | null;
   models: string[];
   sentiment: "Positive" | "Neutral" | "Negative";
   leader: string;
+  cited?: boolean;
+  fromAudit?: boolean;
 };
 
 export function buildPromptRows(buyerQuestion: string, seed: number): PromptRow[] {

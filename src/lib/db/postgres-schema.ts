@@ -54,6 +54,13 @@ CREATE TABLE IF NOT EXISTS citation_snapshots (
   recorded_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS workspace_content_strategies (
+  workspace_id TEXT PRIMARY KEY REFERENCES workspaces(id),
+  audit_id TEXT,
+  items TEXT NOT NULL,
+  generated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS waitlist (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,

@@ -8,10 +8,11 @@ import type {
   WorkspaceSnapshotResponse,
   WorkspaceUpdateInput,
 } from "@/lib/api-types";
-import { buildWorkspaceSnapshot, domainSeed } from "@/lib/dashboard";
+import { buildWorkspaceSnapshot } from "@/lib/dashboard";
 import { getBacklinkMetricsForWorkspace } from "@/lib/backlinks/store";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { getLatestAuditForWorkspace } from "@/lib/audit/run-audit";
+import { getContentStrategy } from "@/lib/content-strategy/store";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
 import {
   defaultWorkspacePreferences,
@@ -87,17 +88,13 @@ export function toSnapshot(
       promptResults: [],
       platformPresence: [],
       citationHistory: [],
+      contentStrategy: [],
+      contentStrategyGeneratedAt: null,
+      weeklyLiftAvailable: false,
     };
   }
 
   const citedPlatforms = audit.platforms.filter((p) => p.present).length;
-  const hash = domainSeed(payload.domain);
-  const prevScore =
-    audit.score > 0 ? Math.max(0, audit.score - 8 - (hash % 6)) : base.citationScore;
-  const lift =
-    audit.score > prevScore
-      ? `+${(audit.score - prevScore).toFixed(1)}%`
-      : "+0%";
 
   return {
     ...base,
@@ -109,9 +106,10 @@ export function toSnapshot(
     totalPlatforms: audit.platforms.length,
     visibilityScore: audit.siteSignals.geoScore,
     domainRating: Math.min(99, Math.round(audit.siteSignals.geoScore * 0.7)),
-    weeklyLift: lift,
-    communityMentions: Math.max(1, citedPlatforms + (hash % 4)),
-    sourceCount: audit.siteSignals.sitemapFound ? 14 + (hash % 6) : 6 + (hash % 4),
+    weeklyLift: "—",
+    weeklyLiftAvailable: false,
+    communityMentions: 0,
+    sourceCount: 0,
     gaps: audit.gaps,
     auditId: audit.id,
     auditMode: audit.mode,
@@ -120,6 +118,8 @@ export function toSnapshot(
     promptResults: audit.promptResults,
     platformPresence: audit.platforms,
     citationHistory: [],
+    contentStrategy: [],
+    contentStrategyGeneratedAt: null,
   };
 }
 
@@ -127,21 +127,35 @@ export async function enrichSnapshotWithBacklinks(
   snapshot: WorkspaceSnapshotResponse,
   workspaceId: string,
 ): Promise<WorkspaceSnapshotResponse> {
-  const [metrics, citationHistory] = await Promise.all([
+  const [metrics, citationHistory, contentStrategy] = await Promise.all([
     getBacklinkMetricsForWorkspace(workspaceId),
     getCitationSnapshots(workspaceId),
+    getContentStrategy(workspaceId),
   ]);
-  if (!metrics) {
-    return {
-      ...snapshot,
-      citationHistory,
-    };
+
+  let weeklyLift = snapshot.weeklyLift;
+  let weeklyLiftAvailable = snapshot.weeklyLiftAvailable;
+  if (citationHistory.length >= 2) {
+    const previous = citationHistory[citationHistory.length - 2]!;
+    const latest = citationHistory[citationHistory.length - 1]!;
+    const delta = latest.visibilityIndex - previous.visibilityIndex;
+    weeklyLift =
+      delta === 0
+        ? "0 pts"
+        : `${delta > 0 ? "+" : ""}${delta} pts`;
+    weeklyLiftAvailable = true;
   }
+
   return {
     ...snapshot,
-    domainRating: metrics.domainRating,
-    sourceCount: metrics.sourceCount,
+    domainRating: metrics?.domainRating ?? snapshot.domainRating,
+    sourceCount: metrics?.sourceCount ?? snapshot.sourceCount,
     citationHistory,
+    contentStrategy: contentStrategy?.items ?? snapshot.contentStrategy,
+    contentStrategyGeneratedAt:
+      contentStrategy?.generatedAt ?? snapshot.contentStrategyGeneratedAt,
+    weeklyLift,
+    weeklyLiftAvailable,
   };
 }
 
@@ -389,6 +403,9 @@ export async function adminDeleteWorkspace(id: string): Promise<boolean> {
     id,
   ]);
   await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM workspace_content_strategies WHERE workspace_id = ?`, [
+    id,
+  ]);
   await dbRun(`DELETE FROM audit_runs WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM blog_posts WHERE workspace_id = ?`, [id]);
   const result = await dbRun(`DELETE FROM workspaces WHERE id = ?`, [id]);

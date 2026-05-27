@@ -8,6 +8,7 @@ import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { GenerateArticlePanel } from "@/components/dashboard/GenerateArticlePanel";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { buildContentCalendar } from "@/lib/dashboard-data";
+import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import { buildWeeklyEditorialMix } from "@/lib/content-strategy";
 import { productFeatures } from "@/lib/features";
 
@@ -24,7 +25,13 @@ export default function ContentPage() {
   const workspaceId = workspace.workspaceId ?? workspace.id;
   if (!workspaceId) return null;
 
-  const calendar = buildContentCalendar(workspace);
+  const persistedStrategy =
+    workspace.contentStrategy && workspace.contentStrategy.length > 0
+      ? workspace.contentStrategy
+      : null;
+  const calendar: ContentCalendarItem[] =
+    persistedStrategy ?? buildContentCalendar(workspace);
+  const strategyGeneratedAt = workspace.contentStrategyGeneratedAt;
   const editorialWeek = buildWeeklyEditorialMix();
 
   return (
@@ -79,6 +86,15 @@ export default function ContentPage() {
       </Panel>
 
       <Panel title="30-day content calendar" className="mt-6">
+        <p className="mb-4 text-sm text-muted">
+          {persistedStrategy
+            ? strategyGeneratedAt
+              ? `Saved plan from your latest audit · updated ${new Date(strategyGeneratedAt).toLocaleString()}`
+              : "Saved plan from your latest audit."
+            : workspace.hasRealAudit
+              ? "Run another citation audit to persist an updated 30-day plan for this workspace."
+              : "Run a citation audit to generate and save a workspace-specific 30-day plan."}
+        </p>
         <ul className="divide-y divide-border">
           {calendar.map((c) => (
             <li

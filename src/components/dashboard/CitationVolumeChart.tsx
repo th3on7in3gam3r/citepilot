@@ -51,7 +51,19 @@ export function CitationVolumeChart({
 }: CitationVolumeChartProps) {
   const [level, setLevel] = useState(8);
 
+  const insufficientHistory =
+    hasRealAudit && citationHistory.length === 0 && citationScore !== undefined;
+
   const { current, projected, labels, realHistoryPoints } = useMemo(() => {
+    if (insufficientHistory) {
+      return {
+        current: [],
+        projected: [],
+        labels: [] as string[],
+        realHistoryPoints: 0,
+      };
+    }
+
     if (citationHistory.length > 0) {
       const current = toHistorySeries(citationHistory);
       return {
@@ -63,39 +75,21 @@ export function CitationVolumeChart({
     }
 
     const series = buildCitationSeries(seed, level);
-    if (citationScore === undefined) {
+    if (citationScore === undefined || hasRealAudit) {
       return {
-        ...series,
-        labels: CHART_MONTHS,
+        current: [],
+        projected: [],
+        labels: [] as string[],
         realHistoryPoints: 0,
       };
     }
 
-    const anchor = Math.max(0, Math.min(100, Math.round(citationScore)));
-    const adjusted = {
-      ...series,
-      current: series.current.map((point, i) =>
-        i === series.current.length - 1
-          ? { ...point, value: anchor }
-          : {
-              ...point,
-              value: Math.max(
-                10,
-                Math.min(
-                  100,
-                  Math.round(anchor * (0.58 + (i / series.current.length) * 0.34)),
-                ),
-              ),
-            },
-      ),
-    };
     return {
-      ...adjusted,
-      projected: buildProjectedCitationSeries(adjusted.current, level),
+      ...series,
       labels: CHART_MONTHS,
       realHistoryPoints: 0,
     };
-  }, [citationHistory, seed, level, citationScore]);
+  }, [citationHistory, seed, level, citationScore, hasRealAudit, insufficientHistory]);
 
   const yMax = useMemo(
     () => chartYMax([...current.map((d) => d.value), ...projected.map((d) => d.value)]),
@@ -120,13 +114,42 @@ export function CitationVolumeChart({
   const lastProjected = projectedPts[projectedPts.length - 1];
   const calloutX = lastProjected ? Math.min(lastProjected.x - 100, W - 230) : 0;
   const calloutY = lastProjected ? lastProjected.y - 46 : 0;
-  const chartBadge = !hasRealAudit
-    ? "Projected · run audit for live baseline"
-    : realHistoryPoints >= 2
-      ? `${realHistoryPoints} saved audits · real trend`
-      : realHistoryPoints === 1
-        ? "1 saved audit · run another for trend"
-        : "Latest audit loaded · history building";
+  const chartBadge = insufficientHistory
+    ? "Insufficient history"
+    : !hasRealAudit
+      ? "Run audit for live data"
+      : realHistoryPoints >= 2
+        ? `${realHistoryPoints} saved audits · real trend`
+        : realHistoryPoints === 1
+          ? "1 saved audit · run another for trend"
+          : "Latest audit loaded · history building";
+
+  if (insufficientHistory || (!hasRealAudit && current.length === 0)) {
+    return (
+      <div
+        className={`overflow-hidden rounded-2xl border border-dashed border-border bg-surface/40 ${
+          compact ? "p-4" : "p-6 md:p-8"
+        }`}
+      >
+        <h2 className="font-display text-lg font-bold text-ink md:text-xl">
+          Citation visibility
+        </h2>
+        <p className="mt-2 max-w-xl text-sm text-muted">
+          {insufficientHistory
+            ? "Your latest audit is saved, but there is not enough history yet to chart a trend. Run another citation audit to unlock a real visibility line."
+            : "Run a citation audit to replace placeholder charts with measured visibility from your workspace."}
+        </p>
+        {!compact && (
+          <Link
+            href="/audit"
+            className="mt-4 inline-flex rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-5 py-2.5 text-sm font-semibold text-white"
+          >
+            Run citation audit
+          </Link>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

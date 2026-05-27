@@ -1,4 +1,5 @@
 import type { OnboardingAnswers } from "@/lib/onboarding";
+import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import type { WorkspacePreferences } from "@/lib/settings";
 
 export type SiteSignals = {
@@ -89,6 +90,9 @@ export type WorkspaceSnapshotResponse = {
   promptResults: PromptResult[];
   platformPresence: PlatformPresence[];
   citationHistory: CitationHistoryPoint[];
+  contentStrategy: ContentCalendarItem[];
+  contentStrategyGeneratedAt: string | null;
+  weeklyLiftAvailable: boolean;
 };
 
 export type RedditThread = DiscussionThread;

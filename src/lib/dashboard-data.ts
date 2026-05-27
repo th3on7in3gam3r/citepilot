@@ -5,17 +5,26 @@ import { buildPromptRows, type PromptRow } from "@/lib/features";
 
 export type BenchmarkBrandRow = {
   brand: string;
-  avgVisibility: number;
+  avgVisibility: number | null;
   promptsLed: number;
-  deltaVsYou: number;
+  deltaVsYou: number | null;
+  measured: boolean;
 };
 
 export type BenchmarkPromptRow = {
   prompt: string;
   leader: string;
-  yourScore: number;
-  gapToLeader: number;
-  scores: { brand: string; score: number }[];
+  yourScore: number | null;
+  gapToLeader: number | null;
+  youCited: boolean;
+  scores: { brand: string; score: number | null; measured: boolean }[];
+};
+
+export type CompetitorBenchmarkResult = {
+  available: boolean;
+  unavailableReason?: string;
+  brands: BenchmarkBrandRow[];
+  prompts: BenchmarkPromptRow[];
 };
 
 export type MoneyPromptIdea = {
@@ -37,7 +46,8 @@ export type CorrelationInsight = {
   id: string;
   title: string;
   summary: string;
-  estimatedLift: string;
+  /** Omitted when lift cannot be measured from stored data. */
+  estimatedLift?: string;
   confidence: "High" | "Medium" | "Directional";
   platforms: string[];
   evidence: string[];
@@ -47,6 +57,9 @@ export function promptRowsForWorkspace(workspace: WorkspaceSnapshot): PromptRow[
   if (workspace.promptResults?.length) {
     return workspace.promptResults.map((pr, i) => promptResultToRow(pr, i, workspace));
   }
+  if (!workspace.hasRealAudit) {
+    return [];
+  }
   return buildPromptRows(workspace.buyerQuestion, domainSeed(workspace.domain));
 }
 
@@ -54,52 +67,38 @@ function normalizeBrand(name: string): string {
   return name.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
 }
 
-function clampScore(value: number): number {
-  return Math.max(4, Math.min(99, Math.round(value)));
-}
-
-function promptBenchmarkScores(
+function promptBenchmarkFromAudit(
   workspace: WorkspaceSnapshot,
   row: PromptRow,
   competitors: string[],
-  index: number,
 ): BenchmarkPromptRow {
   const yourBrand = normalizeBrand(workspace.domain);
-  const yourScore = clampScore(row.visibility);
-  const promptSeed = domainSeed(`${workspace.domain}-${row.prompt}-${index}`);
-  const winningCompetitor =
+  const youCited = row.cited ?? row.leader === "You";
+  const yourScore = youCited ? 100 : 0;
+  const leader =
     row.leader === "You"
-      ? null
+      ? yourBrand
       : normalizeBrand(
-          row.leader === "Competitor" ? competitors[0] ?? "top competitor" : row.leader,
+          row.leader === "Competitor"
+            ? competitors[0] ?? "Competitor"
+            : row.leader,
         );
 
   const scores = [
-    {
-      brand: yourBrand,
-      score: yourScore,
-    },
-    ...competitors.map((competitor, competitorIndex) => {
-      const jitter = ((promptSeed + competitorIndex * 17) % 7) - 3;
-      const isWinner = winningCompetitor === competitor;
-      const base = row.leader === "You"
-        ? yourScore - 10 - competitorIndex * 4 + jitter
-        : isWinner
-          ? yourScore + 10 + jitter
-          : yourScore - 5 - competitorIndex * 4 + jitter;
-      return {
-        brand: competitor,
-        score: clampScore(base),
-      };
-    }),
-  ].sort((a, b) => b.score - a.score);
+    { brand: yourBrand, score: yourScore, measured: true },
+    ...competitors.map((competitor) => ({
+      brand: competitor,
+      score: null,
+      measured: false,
+    })),
+  ];
 
-  const leader = scores[0]?.brand ?? yourBrand;
   return {
     prompt: row.prompt,
     leader,
     yourScore,
-    gapToLeader: leader === yourBrand ? 0 : Math.max(0, (scores[0]?.score ?? yourScore) - yourScore),
+    youCited,
+    gapToLeader: youCited ? 0 : null,
     scores,
   };
 }
@@ -107,52 +106,79 @@ function promptBenchmarkScores(
 export function buildCompetitorBenchmark(
   workspace: WorkspaceSnapshot,
   rows: PromptRow[],
-): {
-  brands: BenchmarkBrandRow[];
-  prompts: BenchmarkPromptRow[];
-} {
+): CompetitorBenchmarkResult {
   const yourBrand = normalizeBrand(workspace.domain);
   const competitors = workspace.competitors
     .map(normalizeBrand)
     .filter(Boolean)
     .slice(0, 3);
 
-  if (competitors.length === 0) {
+  if (!workspace.hasRealAudit) {
     return {
+      available: false,
+      unavailableReason:
+        "Run a citation audit to unlock prompt-level benchmarking from live audit results.",
       brands: [],
       prompts: [],
     };
   }
 
-  const prompts = rows.map((row, index) =>
-    promptBenchmarkScores(workspace, row, competitors, index),
+  if (competitors.length === 0) {
+    return {
+      available: false,
+      unavailableReason:
+        "Add competitors in Settings to compare your audited prompts against tracked rivals.",
+      brands: [],
+      prompts: [],
+    };
+  }
+
+  const auditRows = rows.filter((row) => row.fromAudit);
+  if (auditRows.length === 0) {
+    return {
+      available: false,
+      unavailableReason:
+        "No audited prompts are available yet. Re-run a citation audit to refresh benchmark data.",
+      brands: [],
+      prompts: [],
+    };
+  }
+
+  const prompts = auditRows.map((row) =>
+    promptBenchmarkFromAudit(workspace, row, competitors),
   );
 
-  const brands = [yourBrand, ...competitors].map((brand) => {
-    const brandScores = prompts.map(
-      (prompt) => prompt.scores.find((score) => score.brand === brand)?.score ?? 0,
-    );
-    const promptsLed = prompts.filter((prompt) => prompt.leader === brand).length;
-    const avgVisibility =
-      brandScores.reduce((sum, score) => sum + score, 0) /
-      Math.max(1, brandScores.length);
-
-    return {
-      brand,
-      avgVisibility: clampScore(avgVisibility),
-      promptsLed,
-      deltaVsYou: 0,
-    };
-  });
-
+  const yourPromptsLed = prompts.filter((prompt) => prompt.youCited).length;
   const yourAverage =
-    brands.find((brand) => brand.brand === yourBrand)?.avgVisibility ?? workspace.visibilityScore;
+    prompts.length > 0
+      ? Math.round(
+          prompts.reduce((sum, prompt) => sum + (prompt.yourScore ?? 0), 0) /
+            prompts.length,
+        )
+      : null;
+
+  const brands: BenchmarkBrandRow[] = [
+    {
+      brand: yourBrand,
+      avgVisibility: yourAverage,
+      promptsLed: yourPromptsLed,
+      deltaVsYou: 0,
+      measured: true,
+    },
+    ...competitors.map((competitor) => ({
+      brand: competitor,
+      avgVisibility: null,
+      promptsLed: prompts.filter((prompt) => prompt.leader === competitor).length,
+      deltaVsYou: null,
+      measured: false,
+    })),
+  ];
 
   return {
-    brands: brands.map((brand) => ({
-      ...brand,
-      deltaVsYou: brand.avgVisibility - yourAverage,
-    })),
+    available: true,
+    unavailableReason:
+      "Competitor visibility scores require dedicated competitor scans. Your cite status per prompt is from your latest audit.",
+    brands,
     prompts,
   };
 }
@@ -230,11 +256,8 @@ export function buildDashboardAlerts(
   const alerts: DashboardAlertItem[] = [];
   const platformRows = platformRowsFromWorkspace(workspace, PLATFORMS);
   const missingPlatforms = platformRows.filter((platform) => !platform.cited);
-  const benchmark = buildCompetitorBenchmark(workspace, rows);
-  const gapPrompts = benchmark.prompts
-    .filter((prompt) => prompt.gapToLeader > 0)
-    .sort((a, b) => b.gapToLeader - a.gapToLeader);
-  const topGap = gapPrompts[0];
+  const uncitedPrompts = (workspace.promptResults ?? []).filter((pr) => !pr.cited);
+  const topUncited = uncitedPrompts[0];
   const daysSinceUpdate = Math.max(
     0,
     Math.floor(
@@ -262,14 +285,16 @@ export function buildDashboardAlerts(
     });
   }
 
-  if (topGap) {
+  if (workspace.hasRealAudit && uncitedPrompts.length > 0) {
     alerts.push({
-      id: "competitor-gap",
-      tone: topGap.gapToLeader >= 10 ? "critical" : "opportunity",
-      title: `${topGap.leader} is ahead on tracked comparison prompts`,
-      body: `A competitor currently leads ${gapPrompts.length} tracked prompt${gapPrompts.length === 1 ? "" : "s"}. Your biggest gap is ${topGap.gapToLeader} points on "${topGap.prompt}".`,
+      id: "prompt-coverage",
+      tone: uncitedPrompts.length >= 2 ? "critical" : "opportunity",
+      title: `${uncitedPrompts.length} audited prompt${uncitedPrompts.length === 1 ? "" : "s"} not citing your brand`,
+      body: topUncited
+        ? `Latest audit did not cite you on "${topUncited.prompt}". Strengthen answer pages and comparison content for these buyer questions.`
+        : "Your latest audit found prompts where your brand is not cited on live AI surfaces.",
       href: "/dashboard/analytics",
-      cta: "Review benchmark",
+      cta: "Review prompts",
     });
   }
 
@@ -287,12 +312,15 @@ export function buildDashboardAlerts(
     });
   }
 
-  if (workspace.communityMentions >= 4 && !workspace.preferences.discussionAlerts) {
+  if (
+    workspace.communityMentions > 0 &&
+    !workspace.preferences.discussionAlerts
+  ) {
     alerts.push({
       id: "discussion-alerts-off",
       tone: "info",
       title: "Discussion alerts are off",
-      body: `This workspace already has ${workspace.communityMentions} community signals, but discussion opportunity alerts are disabled in Settings.`,
+      body: `Discussion opportunity alerts are disabled in Settings while ${workspace.communityMentions} community signal${workspace.communityMentions === 1 ? "" : "s"} are available on the Discussions tab.`,
       href: "/dashboard/settings",
       cta: "Enable alerts",
     });
@@ -316,12 +344,12 @@ export function buildCorrelationInsights(
   workspace: WorkspaceSnapshot,
   rows: PromptRow[],
 ): CorrelationInsight[] {
+  if (!workspace.hasRealAudit) {
+    return [];
+  }
+
   const insights: CorrelationInsight[] = [];
-  const benchmark = buildCompetitorBenchmark(workspace, rows);
-  const gapPrompts = benchmark.prompts
-    .filter((prompt) => prompt.gapToLeader > 0)
-    .sort((a, b) => b.gapToLeader - a.gapToLeader);
-  const topGap = gapPrompts[0];
+  const uncitedCount = (workspace.promptResults ?? []).filter((pr) => !pr.cited).length;
   const platforms = platformRowsFromWorkspace(workspace, PLATFORMS);
   const missingPlatforms = platforms.filter((platform) => !platform.cited);
   const citedPlatforms = platforms.filter((platform) => platform.cited);
@@ -334,8 +362,7 @@ export function buildCorrelationInsights(
         title: "FAQ schema gap correlates with weaker answer inclusion",
         summary:
           "Pages without FAQ-style structured answers tend to lose visibility on buyer questions that need concise answer blocks.",
-        estimatedLift: "+6% to +12%",
-        confidence: workspace.hasRealAudit ? "High" : "Directional",
+        confidence: "High",
         platforms: ["Google AI Overviews", "ChatGPT", "Perplexity"],
         evidence: [
           "FAQ schema not detected on the audited page",
@@ -351,8 +378,7 @@ export function buildCorrelationInsights(
         title: "Entity structure likely limits citation trust",
         summary:
           "Weak or missing JSON-LD often correlates with lower entity confidence, especially when platforms are deciding whether to cite a brand directly.",
-        estimatedLift: "+4% to +9%",
-        confidence: workspace.hasRealAudit ? "High" : "Directional",
+        confidence: "High",
         platforms: ["ChatGPT", "Claude", "Grok"],
         evidence: [
           signals.hasJsonLd ? "JSON-LD detected" : "JSON-LD missing",
@@ -365,21 +391,21 @@ export function buildCorrelationInsights(
     }
   }
 
-  if (topGap) {
+  if (uncitedCount > 0) {
+    const uncited = workspace.promptResults?.filter((pr) => !pr.cited) ?? [];
     insights.push({
-      id: "comparison-gap",
-      title: "Comparison intent appears to be your biggest growth lever",
+      id: "uncited-prompts",
+      title: "Uncited buyer prompts are the clearest near-term lever",
       summary:
-        "The widest benchmark gap is on a tracked comparison-style prompt, which usually means the fastest lift comes from comparison pages, pricing clarity, and stronger answer formatting.",
-      estimatedLift: `+${Math.min(18, topGap.gapToLeader + 3)} pts on "${topGap.prompt}"`,
-      confidence: gapPrompts.length >= 2 ? "Medium" : "Directional",
+        "Your latest audit found prompts where your brand is not cited. Comparison pages, pricing clarity, and FAQ-style answer blocks are the usual fixes.",
+      confidence: uncitedCount >= 2 ? "High" : "Medium",
       platforms: citedPlatforms.slice(0, 3).map((platform) => platform.name),
       evidence: [
-        `${topGap.leader} currently leads this prompt by ${topGap.gapToLeader} points`,
-        `${gapPrompts.length} tracked prompts are still led by competitors`,
+        `${uncitedCount} of ${workspace.promptResults?.length ?? rows.length} audited prompts did not cite your brand`,
+        uncited[0] ? `Example: "${uncited[0].prompt}"` : "Review prompt results in Analytics",
         workspace.competitors[0]
-          ? `Top tracked competitor: ${workspace.competitors[0]}`
-          : "Competitor benchmarking enabled",
+          ? `Tracked competitor for content: ${workspace.competitors[0]}`
+          : "Add competitors in Settings for sharper content targets",
       ],
     });
   }
@@ -387,33 +413,33 @@ export function buildCorrelationInsights(
   if (missingPlatforms.length >= 2) {
     insights.push({
       id: "platform-coverage",
-      title: "Coverage gaps suggest content formatting is uneven across models",
+      title: "Several AI platforms still show no presence",
       summary:
-        "When several platforms still miss your brand entirely, the issue is often not just authority but answer structure, comparison intent coverage, and reusable citations.",
-      estimatedLift: `+${missingPlatforms.length * 2}% cross-platform coverage`,
-      confidence: "Directional",
+        "When multiple surfaces miss your brand, prioritize answer structure, entity markup, and comparison-intent pages—not only net-new blog volume.",
+      confidence: "Medium",
       platforms: missingPlatforms.slice(0, 3).map((platform) => platform.name),
       evidence: [
         `${missingPlatforms.length} platforms currently show no presence`,
-        `${workspace.citedPlatforms}/${workspace.totalPlatforms} platforms cited overall`,
-        `${workspace.sourceCount} referring pages and ${workspace.communityMentions} community signals tracked`,
+        `${workspace.citedPlatforms}/${workspace.totalPlatforms} platforms cited in the latest audit`,
+        workspace.auditMode === "live"
+          ? "Latest audit used live platform checks where API keys are configured"
+          : "Latest audit used technical signals — add API keys for live platform probes",
       ],
     });
   }
 
-  if (workspace.hasRealAudit && workspace.gaps.length <= 2 && workspace.visibilityScore >= 55) {
+  if (workspace.gaps.length <= 2 && workspace.visibilityScore >= 55) {
     insights.push({
       id: "stability-signal",
-      title: "Technical cleanup is already compounding into steadier visibility",
+      title: "Technical base is relatively strong — focus on prompt expansion",
       summary:
-        "This workspace is starting from a relatively stronger technical base, which usually means the next gains come from prompt expansion and competitive content, not only more fixes.",
-      estimatedLift: "+5% to +10% from prompt expansion",
+        "GEO signals are in decent shape. The next gains likely come from new comparison and FAQ content tied to audited buyer prompts.",
       confidence: "Medium",
       platforms: citedPlatforms.slice(0, 3).map((platform) => platform.name),
       evidence: [
-        `Visibility score is ${workspace.visibilityScore}%`,
-        `${workspace.gaps.length} priority gap${workspace.gaps.length === 1 ? "" : "s"} remain`,
-        `${workspace.promptsTracked} prompts already tracked`,
+        `GEO visibility score is ${workspace.visibilityScore}/100`,
+        `${workspace.gaps.length} priority gap${workspace.gaps.length === 1 ? "" : "s"} remain from the latest audit`,
+        `${workspace.promptResults?.length ?? 0} prompts in the latest audit`,
       ],
     });
   }
@@ -423,7 +449,7 @@ export function buildCorrelationInsights(
 
 function promptResultToRow(
   pr: PromptResult,
-  index: number,
+  _index: number,
   workspace: WorkspaceSnapshot,
 ): PromptRow {
   const citedModels = workspace.platformPresence
@@ -433,12 +459,12 @@ function promptResultToRow(
 
   return {
     prompt: pr.prompt,
-    visibility: pr.cited
-      ? Math.min(95, workspace.citationScore + 5 - index * 3)
-      : Math.max(8, workspace.visibilityScore - 15 - index * 5),
+    visibility: pr.cited ? 100 : 0,
     models: pr.cited ? citedModels : citedModels.slice(0, 1),
-    sentiment: pr.cited ? "Positive" : index % 2 === 0 ? "Neutral" : "Negative",
+    sentiment: pr.cited ? "Positive" : "Neutral",
     leader: pr.cited ? "You" : workspace.competitors[0] ?? "Competitor",
+    cited: pr.cited,
+    fromAudit: true,
   };
 }
 
