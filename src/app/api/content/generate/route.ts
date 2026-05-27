@@ -12,6 +12,7 @@ import type {
   EditorialPillarId,
   GeneratedArticleRequest,
 } from "@/lib/content-strategy";
+import { captureServerException } from "@/lib/observability/sentry";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -138,6 +139,7 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
       },
     });
   } catch (error) {
+    captureServerException(error, { route: "POST /api/content/generate" });
     console.error("POST /api/content/generate", error);
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });
   }

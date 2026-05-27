@@ -5,6 +5,9 @@ import Database from "better-sqlite3";
 const globalForDb = globalThis as unknown as { citepilotDb?: Database.Database };
 
 function dbPath(): string {
+  const testPath = process.env.CITEPILOT_TEST_DB_PATH?.trim();
+  if (testPath) return testPath;
+
   const dir = path.join(process.cwd(), ".data");
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });

@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { completeCopilot } from "@/lib/copilot/complete";
+import { captureServerException } from "@/lib/observability/sentry";
+import { COPILOT_RATE_LIMIT_PER_HOUR } from "@/lib/rate-limit/constants";
+import {
+  checkHourlyRateLimit,
+  rateLimitHeaders,
+} from "@/lib/rate-limit/hourly";
 import {
   buildExplainGapUserMessage,
   buildPrioritizeUserMessage,
@@ -33,6 +39,23 @@ export async function POST(request: Request) {
           code: "PILOT_REQUIRED",
         },
         { status: 402 },
+      );
+    }
+
+    const rate = await checkHourlyRateLimit(
+      `copilot:${userId}`,
+      COPILOT_RATE_LIMIT_PER_HOUR,
+    );
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          error: `CitePilot Insights limit reached (${rate.limit}/hour). Try again after ${rate.resetAt}.`,
+          code: "RATE_LIMIT",
+        },
+        {
+          status: 429,
+          headers: rateLimitHeaders(rate),
+        },
       );
     }
 
@@ -101,12 +124,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: 503 });
     }
 
-    return NextResponse.json({
-      kind,
-      text: result.text,
-      workspaceId,
-    });
+    return NextResponse.json(
+      {
+        kind,
+        text: result.text,
+        workspaceId,
+      },
+      { headers: rateLimitHeaders(rate) },
+    );
   } catch (error) {
+    captureServerException(error, { route: "POST /api/copilot" });
     console.error("POST /api/copilot", error);
     return NextResponse.json(
       { error: "Insight generation failed" },

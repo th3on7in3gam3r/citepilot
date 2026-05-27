@@ -34,6 +34,7 @@
    | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional — Plausible domain for funnel events |
    | `NEXT_PUBLIC_POSTHOG_KEY` | Optional — PostHog project API key |
    | `NEXT_PUBLIC_POSTHOG_HOST` | Optional — PostHog ingest host (default `https://us.i.posthog.com`) |
+   | `SENTRY_DSN` | Optional — error monitoring (audits, webhooks, OpenAI) |
 
 4. Deploy → attach custom domain **`getcitepilot.com`** (production URL; `citepilot.ai` is not used).
 5. Neon Console → Auth → **Trusted domains**: include every origin users visit (`https://getcitepilot.com`, `https://www.getcitepilot.com`, `https://citepilot.vercel.app` with **no** trailing slash, `http://localhost:3000`). Must match the branch used by `NEON_AUTH_BASE_URL`.

@@ -8,11 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke:production": "node scripts/smoke-production.mjs"
   },
   "dependencies": {
     "@neondatabase/auth": "^0.4.1-beta",
     "@neondatabase/serverless": "^1.1.0",
+    "@sentry/nextjs": "^10.54.0",
     "better-sqlite3": "^12.10.0",
     "framer-api": "^0.1.10",
     "next": "16.2.6",

@@ -13,6 +13,7 @@ import {
 import { getBillingByUserId } from "@/lib/billing/store";
 import { runCitationAudit } from "@/lib/audit/run-audit";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
+import { captureServerException } from "@/lib/observability/sentry";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
     }
     return response;
   } catch (error) {
+    captureServerException(error, { route: "POST /api/audit" });
     console.error("POST /api/audit", error);
     return NextResponse.json({ error: "Audit failed" }, { status: 500 });
   }

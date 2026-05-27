@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { upsertBillingAccount } from "@/lib/billing/store";
 import { stripeWebhookSecret } from "@/lib/stripe/config";
+import { captureServerException } from "@/lib/observability/sentry";
 import { getStripe, mapSubscriptionToBilling } from "@/lib/stripe/server";
 
 export const runtime = "nodejs";
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, secret);
   } catch (error) {
+    captureServerException(error, { route: "POST /api/billing/webhook", phase: "verify" });
     console.error("Stripe webhook signature verification failed", error);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
@@ -74,6 +76,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
+    captureServerException(error, {
+      route: "POST /api/billing/webhook",
+      eventType: event.type,
+    });
     console.error("Stripe webhook handler", event.type, error);
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }

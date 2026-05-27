@@ -2,6 +2,15 @@
 
 Run after each deploy to [citepilot.vercel.app](https://citepilot.vercel.app) or **getcitepilot.com**.
 
+## Automated checks (no login)
+
+```bash
+npm run smoke:production
+# or: node scripts/smoke-production.mjs https://getcitepilot.com
+```
+
+Covers `/api/health`, marketing pages, cron auth gates, and copilot auth. Manual steps below still required for Stripe, CMS, GSC, and email.
+
 ## Health & auth
 
 - [ ] `GET /api/health` → `"ok": true`, `database.detail` mentions postgres
@@ -59,6 +68,11 @@ Run after each deploy to [citepilot.vercel.app](https://citepilot.vercel.app) or
 
 - [ ] `/admin` → **Dedupe duplicate workspaces** (one-time cleanup for duplicate domains per user)
 - [ ] Stripe billing portal from Settings (when Stripe live)
+
+## Observability
+
+- [ ] `SENTRY_DSN` (or `NEXT_PUBLIC_SENTRY_DSN`) on Vercel — API failures surface in Sentry
+- [ ] CitePilot Insights: Pilot user can run **Prioritize** / **Explain gap**; 21st request in an hour returns 429
 
 ## Not blocking smoke pass
 
