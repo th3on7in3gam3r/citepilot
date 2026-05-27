@@ -176,7 +176,10 @@ export async function runAudit(input: {
     body: JSON.stringify(input),
   });
   if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    const err = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      code?: string;
+    };
     throw new Error(err.error ?? "Audit failed");
   }
   return res.json() as Promise<AuditPayload>;

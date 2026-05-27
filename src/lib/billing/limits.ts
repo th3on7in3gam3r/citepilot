@@ -8,6 +8,12 @@ export type WorkspaceLimits = {
 export const WORKSPACE_LIMIT_FREE = 1;
 export const WORKSPACE_LIMIT_PILOT = 3;
 
+/** Max buyer prompts per audit / monitoring run */
+export const PROMPT_LIMIT_FREE = 10;
+export const PROMPT_LIMIT_PILOT = 25;
+/** Fleet — no cap */
+export const PROMPT_LIMIT_FLEET = null;
+
 export function workspaceLimitMessage(limits: WorkspaceLimits): string {
   if (limits.plan === "fleet") {
     return "Fleet includes unlimited client workspaces.";

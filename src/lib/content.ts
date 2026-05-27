@@ -100,8 +100,8 @@ export const faq = [
     a: "Yes. Run a citation snapshot on your domain with no credit card. Paid plans add ongoing monitoring, weekly plans, and publishing integrations.",
   },
   {
-    q: "When will full monitoring launch?",
-    a: "Audit is free today. Pilot ($79/mo) adds monitoring, article generation, and CMS publish — subscribe from Pricing or Settings.",
+    q: "How does ongoing monitoring work?",
+    a: "Pilot and Fleet re-scan your monitored prompts on a weekly schedule, store citation history for trend charts, and email digests or score-drop alerts when configured in Settings.",
   },
 ] as const;
 

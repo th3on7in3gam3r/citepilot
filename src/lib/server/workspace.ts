@@ -384,6 +384,9 @@ export async function adminDeleteWorkspace(id: string): Promise<boolean> {
   );
   if (!row) return false;
 
+  await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [
+    id,
+  ]);
   await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM audit_runs WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM blog_posts WHERE workspace_id = ?`, [id]);

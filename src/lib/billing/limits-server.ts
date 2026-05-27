@@ -1,13 +1,40 @@
 import { getBillingByUserId } from "@/lib/billing/store";
-import { isFleetPlan, isPilotPlan } from "@/lib/billing/types";
+import {
+  isFleetPlan,
+  isPilotPlan,
+  type BillingPlan,
+} from "@/lib/billing/types";
 import {
   WORKSPACE_LIMIT_FREE,
   WORKSPACE_LIMIT_PILOT,
   type WorkspaceLimits,
 } from "@/lib/billing/limits";
+import {
+  buildPromptLimits,
+  type PromptLimits,
+} from "@/lib/billing/prompt-limits";
 import { countWorkspacesForUser } from "@/lib/server/workspace";
 
-export type { WorkspaceLimits };
+export type { WorkspaceLimits, PromptLimits };
+
+export function planForUser(
+  billing: Awaited<ReturnType<typeof getBillingByUserId>>,
+): BillingPlan {
+  if (isFleetPlan(billing)) return "fleet";
+  if (isPilotPlan(billing)) return "pilot";
+  return "free";
+}
+
+export async function getPromptLimitsForUser(
+  userId: string | null,
+  promptCount = 0,
+): Promise<PromptLimits> {
+  if (!userId) {
+    return buildPromptLimits("free", promptCount);
+  }
+  const billing = await getBillingByUserId(userId);
+  return buildPromptLimits(planForUser(billing), promptCount);
+}
 
 export async function getWorkspaceLimitsForUser(
   userId: string | null,

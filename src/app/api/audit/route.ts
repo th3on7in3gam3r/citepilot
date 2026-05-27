@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { requireApiUser, requireApiUserId } from "@/lib/auth/api";
 import { getSessionUser, getSessionUserId } from "@/lib/auth/server";
+import {
+  applyPromptLimit,
+  promptLimitUpgradeError,
+  promptMaxForPlan,
+} from "@/lib/billing/prompt-limits";
+import {
+  getPromptLimitsForUser,
+  planForUser,
+} from "@/lib/billing/limits-server";
+import { getBillingByUserId } from "@/lib/billing/store";
 import { runCitationAudit } from "@/lib/audit/run-audit";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   try {
@@ -21,9 +31,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Domain is required" }, { status: 400 });
     }
 
-    const prompts =
+    const rawPrompts =
       body.prompts?.map((p) => p.trim()).filter(Boolean) ?? [];
-    if (prompts.length === 0) {
+    if (rawPrompts.length === 0) {
       return NextResponse.json(
         { error: "At least one prompt is required" },
         { status: 400 },
@@ -45,11 +55,30 @@ export async function POST(request: Request) {
       competitors = ws.competitors;
     }
 
+    const billing = userId ? await getBillingByUserId(userId) : null;
+    const plan = planForUser(billing);
+    const maxPrompts = promptMaxForPlan(plan);
+    if (maxPrompts !== null && rawPrompts.length > maxPrompts) {
+      const limits = await getPromptLimitsForUser(userId, rawPrompts.length);
+      return NextResponse.json(
+        {
+          error: promptLimitUpgradeError(limits),
+          code: "PROMPT_LIMIT",
+          limits,
+          allowed: maxPrompts,
+        },
+        { status: 403 },
+      );
+    }
+    const { prompts, trimmed } = applyPromptLimit(rawPrompts, plan);
+
     const audit = await runCitationAudit({
       domain,
       prompts,
       workspaceId: body.workspaceId ?? null,
       competitors,
+      plan,
+      trigger: "manual",
     });
 
     if (body.workspaceId) {
@@ -61,7 +90,15 @@ export async function POST(request: Request) {
       }).catch((err) => console.error("Audit email failed", err));
     }
 
-    return NextResponse.json(audit);
+    const response = NextResponse.json({
+      ...audit,
+      promptLimit: await getPromptLimitsForUser(userId, prompts.length),
+      promptsTrimmed: trimmed,
+    });
+    if (trimmed) {
+      response.headers.set("X-CitePilot-Prompts-Trimmed", "1");
+    }
+    return response;
   } catch (error) {
     console.error("POST /api/audit", error);
     return NextResponse.json({ error: "Audit failed" }, { status: 500 });

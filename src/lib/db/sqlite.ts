@@ -42,9 +42,27 @@ function initSchema(db: Database.Database): void {
       site_signals TEXT NOT NULL,
       prompt_results TEXT NOT NULL,
       mode TEXT NOT NULL,
+      trigger TEXT NOT NULL DEFAULT 'manual',
       created_at TEXT NOT NULL,
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     );
+
+    CREATE TABLE IF NOT EXISTS platform_citation_checks (
+      id TEXT PRIMARY KEY,
+      audit_id TEXT NOT NULL,
+      workspace_id TEXT,
+      platform TEXT NOT NULL,
+      prompt_index INTEGER NOT NULL,
+      prompt TEXT NOT NULL,
+      cited INTEGER NOT NULL,
+      check_mode TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (audit_id) REFERENCES audit_runs(id),
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_platform_checks_audit ON platform_citation_checks(audit_id);
+    CREATE INDEX IF NOT EXISTS idx_platform_checks_workspace ON platform_citation_checks(workspace_id);
 
     CREATE TABLE IF NOT EXISTS citation_snapshots (
       id TEXT PRIMARY KEY,
@@ -329,7 +347,33 @@ function migrateSchema(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_cms_publications_workspace ON cms_publications(workspace_id);
     CREATE INDEX IF NOT EXISTS idx_cms_publications_slug ON cms_publications(post_slug);
+
+    CREATE TABLE IF NOT EXISTS platform_citation_checks (
+      id TEXT PRIMARY KEY,
+      audit_id TEXT NOT NULL,
+      workspace_id TEXT,
+      platform TEXT NOT NULL,
+      prompt_index INTEGER NOT NULL,
+      prompt TEXT NOT NULL,
+      cited INTEGER NOT NULL,
+      check_mode TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (audit_id) REFERENCES audit_runs(id),
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_platform_checks_audit ON platform_citation_checks(audit_id);
+    CREATE INDEX IF NOT EXISTS idx_platform_checks_workspace ON platform_citation_checks(workspace_id);
   `);
+
+  const auditCols = db
+    .prepare(`PRAGMA table_info(audit_runs)`)
+    .all() as { name: string }[];
+  if (!auditCols.some((c) => c.name === "trigger")) {
+    db.exec(
+      `ALTER TABLE audit_runs ADD COLUMN trigger TEXT NOT NULL DEFAULT 'manual'`,
+    );
+  }
 }
 
 export function getDb(): Database.Database {

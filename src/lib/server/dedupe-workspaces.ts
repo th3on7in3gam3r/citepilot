@@ -50,6 +50,9 @@ export async function dedupeAllWorkspaces(): Promise<DedupeReport> {
     const removedIds: string[] = [];
 
     for (const dup of dupes) {
+      await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [
+        dup.id,
+      ]);
       await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [
         dup.id,
       ]);

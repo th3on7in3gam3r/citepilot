@@ -18,6 +18,7 @@ export async function GET() {
   const checks: Record<string, Check> = {
     database: { ok: false },
     openai: { ok: hasKey("OPENAI_API_KEY") },
+    perplexity: { ok: hasKey("PERPLEXITY_API_KEY") },
     stackexchange: { ok: hasKey("STACKEXCHANGE_KEY") },
     serper: { ok: hasKey("SERPER_API_KEY") },
     tavily: { ok: hasKey("TAVILY_API_KEY") },

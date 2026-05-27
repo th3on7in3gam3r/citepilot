@@ -4,6 +4,8 @@ export type WorkspacePreferences = {
   discussionAlerts: boolean;
   scoreDropAlerts: boolean;
   monitoringEmail: string;
+  /** Paid monitoring — one prompt per line; falls back to buyer question when empty */
+  monitoredPrompts: string[];
   whiteLabel: {
     agencyName: string;
     logoUrl: string;
@@ -17,6 +19,7 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
   discussionAlerts: false,
   scoreDropAlerts: true,
   monitoringEmail: "",
+  monitoredPrompts: [],
   whiteLabel: {
     agencyName: "",
     logoUrl: "",
@@ -39,6 +42,9 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
         defaultWorkspacePreferences.discussionAlerts,
       scoreDropAlerts:
         parsed.scoreDropAlerts ?? defaultWorkspacePreferences.scoreDropAlerts,
+      monitoredPrompts: Array.isArray(parsed.monitoredPrompts)
+        ? parsed.monitoredPrompts.filter((p): p is string => typeof p === "string")
+        : defaultWorkspacePreferences.monitoredPrompts,
       whiteLabel: {
         ...defaultWorkspacePreferences.whiteLabel,
         ...(parsed.whiteLabel ?? {}),
@@ -56,6 +62,7 @@ export function mergePreferences(
   return {
     ...current,
     ...patch,
+    monitoredPrompts: patch.monitoredPrompts ?? current.monitoredPrompts,
     whiteLabel: patch.whiteLabel
       ? { ...current.whiteLabel, ...patch.whiteLabel }
       : current.whiteLabel,

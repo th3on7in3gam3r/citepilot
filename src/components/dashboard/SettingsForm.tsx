@@ -19,6 +19,8 @@ import {
   ONBOARDING_STORAGE_KEY,
   type OnboardingAnswers,
 } from "@/lib/onboarding";
+import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
+import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
@@ -57,6 +59,20 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
   const [deleting, setDeleting] = useState(false);
   const [isFleet, setIsFleet] = useState(false);
+  const [promptLimitMax, setPromptLimitMax] = useState<number | null>(
+    PROMPT_LIMIT_FREE,
+  );
+  const [monitoredPromptsText, setMonitoredPromptsText] = useState("");
+
+  useEffect(() => {
+    void fetch("/api/billing/limits", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (d: { prompts?: { max: number | null } } | null) =>
+          setPromptLimitMax(d?.prompts?.max ?? PROMPT_LIMIT_FREE),
+      )
+      .catch(() => setPromptLimitMax(PROMPT_LIMIT_FREE));
+  }, []);
 
   useEffect(() => {
     void fetch("/api/billing/status", { credentials: "include" })
@@ -73,7 +89,26 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     setAudiences(workspace.audiences);
     setCompetitors(workspace.competitors);
     setPreferences(workspace.preferences ?? defaultWorkspacePreferences);
+    setMonitoredPromptsText(
+      (workspace.preferences?.monitoredPrompts ?? []).join("\n"),
+    );
   }, [workspace]);
+
+  function parseMonitoredPrompts(): string[] {
+    return monitoredPromptsText
+      .split("\n")
+      .map((p) => p.trim())
+      .filter(Boolean);
+  }
+
+  function preferencesWithMonitoredPrompts(
+    base: WorkspacePreferences = preferences,
+  ): WorkspacePreferences {
+    return {
+      ...base,
+      monitoredPrompts: parseMonitoredPrompts(),
+    };
+  }
 
   function addTag(
     value: string,
@@ -157,9 +192,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
     try {
       const answers = buildAnswers();
+      const prefs = preferencesWithMonitoredPrompts();
       const updated = await updateWorkspace(workspaceId, {
         ...answers,
-        preferences,
+        preferences: prefs,
       });
 
       if (!updated) {
@@ -167,17 +203,31 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         return;
       }
 
-      setPreferences(updated.preferences ?? preferences);
+      setPreferences(updated.preferences ?? prefs);
       sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
       onSaved(updated);
       setMessage("Settings saved.");
 
       if (andAudit) {
+        const promptList = promptsFromPreferences(prefs, answers.buyerQuestion);
+        if (promptList.length === 0) {
+          setError("Add at least one monitored prompt or buyer question.");
+          return;
+        }
+        if (
+          promptLimitMax !== null &&
+          promptList.length > promptLimitMax
+        ) {
+          setError(
+            `Your plan allows up to ${promptLimitMax} prompts per audit. Remove ${promptList.length - promptLimitMax} prompt(s) or upgrade.`,
+          );
+          return;
+        }
         setAuditing(true);
         setMessage("Settings saved. Running citation audit…");
         await runAudit({
           domain: answers.domain,
-          prompts: [answers.buyerQuestion],
+          prompts: promptList,
           workspaceId,
         });
         onSaved(updated);
@@ -305,6 +355,23 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             />
           </label>
 
+          <label className="mt-5 block text-sm font-semibold text-ink">
+            Monitored prompts
+            <span className="mt-1 block text-xs font-normal text-muted">
+              One per line — used for audits and weekly re-scans.{" "}
+              {promptLimitMax === null
+                ? "Fleet: unlimited prompts."
+                : `Your plan: up to ${promptLimitMax} prompts.`}
+            </span>
+            <textarea
+              rows={6}
+              value={monitoredPromptsText}
+              onChange={(e) => setMonitoredPromptsText(e.target.value)}
+              placeholder={`${buyerQuestion || "best tool for [category]"}\nalternatives to [competitor]`}
+              className={inputClass}
+            />
+          </label>
+
           <div className="mt-5">
             <p className="text-sm font-semibold text-ink">Target audiences</p>
             <p className="text-xs text-muted">Up to 2 segments</p>
@@ -407,7 +474,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
         <Panel title="Notifications">
           <p className="mb-4 text-sm text-muted">
-            Pilot monitoring — emails send when you add a monitoring address.
+            Pilot and Fleet workspaces re-scan monitored prompts weekly (Mondays)
+            and can email digests or score-drop alerts when an address is set.
           </p>
           <label className="block text-sm font-semibold text-ink">
             Monitoring email

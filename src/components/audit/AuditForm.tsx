@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductCTAButton } from "@/components/ui/ProductCTA";
 import type { AuditPayload } from "@/lib/api-types";
+import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 import { getStoredWorkspaceId, joinWaitlist, runAudit } from "@/lib/client/api";
 import { ONBOARDING_STORAGE_KEY, type OnboardingAnswers } from "@/lib/onboarding";
 
@@ -18,6 +19,19 @@ export function AuditForm() {
   const [result, setResult] = useState<AuditPayload | null>(null);
   const [waitlistEmail, setWaitlistEmail] = useState("");
   const [waitlistSent, setWaitlistSent] = useState(false);
+  const [promptLimitMax, setPromptLimitMax] = useState<number | null>(
+    PROMPT_LIMIT_FREE,
+  );
+
+  useEffect(() => {
+    void fetch("/api/billing/limits", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (d: { prompts?: { max: number | null } } | null) =>
+          setPromptLimitMax(d?.prompts?.max ?? PROMPT_LIMIT_FREE),
+      )
+      .catch(() => setPromptLimitMax(PROMPT_LIMIT_FREE));
+  }, []);
 
   useEffect(() => {
     const fromUrl = searchParams.get("domain");
@@ -50,6 +64,13 @@ export function AuditForm() {
       .split("\n")
       .map((p) => p.trim())
       .filter(Boolean);
+
+    if (promptLimitMax !== null && promptList.length > promptLimitMax) {
+      setError(
+        `Free tier allows up to ${promptLimitMax} prompts per audit. Remove ${promptList.length - promptLimitMax} line(s) or upgrade to Pilot.`,
+      );
+      return;
+    }
 
     try {
       const audit = await runAudit({
@@ -93,7 +114,10 @@ export function AuditForm() {
         <label className="mt-6 block text-sm font-semibold text-ink">
           Buyer questions
           <span className="mt-1 block text-xs font-normal text-muted">
-            One per line — real questions buyers ask AI
+            One per line — real questions buyers ask AI.{" "}
+            {promptLimitMax === null
+              ? "Unlimited on Fleet."
+              : `Up to ${promptLimitMax} prompts on your plan.`}
           </span>
           <textarea
             required

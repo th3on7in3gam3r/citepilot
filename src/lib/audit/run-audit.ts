@@ -4,7 +4,12 @@ import type {
   PromptResult,
   SiteSignals,
 } from "@/lib/api-types";
-import { platforms } from "@/lib/content";
+import type { BillingPlan } from "@/lib/billing/types";
+import { persistPlatformChecks } from "@/lib/audit/platform-checks-store";
+import {
+  liveChecksByPromptIndex,
+  runPlatformMonitoring,
+} from "@/lib/audit/platform-probes";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import {
   analyzeSite,
@@ -13,67 +18,6 @@ import {
   normalizeDomain,
   promptOverlap,
 } from "@/lib/audit/site-analyzer";
-
-async function checkLiveCitation(
-  prompt: string,
-  domain: string,
-  brand: string,
-): Promise<boolean> {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return false;
-
-  try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Answer the user question helpfully. Mention specific products, tools, and brands when relevant.",
-          },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 450,
-        temperature: 0.4,
-      }),
-    });
-    if (!res.ok) return false;
-    const data = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const text = (data.choices?.[0]?.message?.content ?? "").toLowerCase();
-    const domainClean = domain.replace(/^www\./, "").toLowerCase();
-    return (
-      text.includes(domainClean) ||
-      text.includes(brand.toLowerCase()) ||
-      text.includes(domainClean.split(".")[0] ?? "")
-    );
-  } catch {
-    return false;
-  }
-}
-
-function buildPlatformPresence(
-  geoScore: number,
-  citedRatio: number,
-  seed: number,
-): AuditPayload["platforms"] {
-  return platforms.map((name, i) => {
-    const variance = ((seed + i * 13) % 25) - 12;
-    const share = Math.max(
-      0,
-      Math.min(95, Math.round(geoScore * 0.35 + citedRatio * 55 + variance)),
-    );
-    const present = share >= 28;
-    return { name, present, share: present ? share : 0 };
-  });
-}
 
 function evaluatePrompts(
   prompts: string[],
@@ -104,8 +48,8 @@ function evaluatePrompts(
     let reason: string;
     if (liveChecks[i] !== undefined) {
       reason = liveChecks[i]
-        ? "Live LLM response cited your brand"
-        : "Live LLM response did not cite your brand";
+        ? "Cited on at least one live AI surface check"
+        : "Not cited on live AI surface checks for this prompt";
     } else if (cited) {
       reason = "On-site content aligns with this buyer question";
     } else if (overlap < 0.35) {
@@ -125,21 +69,22 @@ export async function runCitationAudit(input: {
   prompts: string[];
   workspaceId?: string | null;
   competitors?: string[];
+  plan?: BillingPlan;
+  trigger?: "manual" | "scheduled";
 }): Promise<AuditPayload> {
   const domain = normalizeDomain(input.domain);
   const prompts = input.prompts.map((p) => p.trim()).filter(Boolean);
+  const plan = input.plan ?? "free";
   const signals = await analyzeSite(domain);
-  const brand = brandFromDomain(domain);
-  const hasOpenAi = Boolean(process.env.OPENAI_API_KEY);
-  const liveChecks: boolean[] = [];
 
-  if (hasOpenAi) {
-    const toCheck = prompts.slice(0, 2);
-    for (let i = 0; i < toCheck.length; i++) {
-      liveChecks[i] = await checkLiveCitation(toCheck[i], domain, brand);
-    }
-  }
+  const monitoring = await runPlatformMonitoring({
+    domain,
+    prompts,
+    plan,
+    siteSignals: signals,
+  });
 
+  const liveChecks = liveChecksByPromptIndex(monitoring.checks, prompts.length);
   const promptResults = evaluatePrompts(prompts, signals, domain, liveChecks);
   const cited = promptResults.filter((p) => p.cited).length;
   const total = Math.max(prompts.length, 1);
@@ -147,10 +92,10 @@ export async function runCitationAudit(input: {
   const score = Math.round(
     signals.geoScore * 0.45 + citedRatio * 100 * 0.55,
   );
-  const seed = domain.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const platformRows = buildPlatformPresence(signals.geoScore, citedRatio, seed);
+
+  const hasLiveChecks = monitoring.checks.some((c) => c.checkMode === "live");
   const gaps = buildGapsFromSignals(signals, promptResults, domain);
-  const mode: AuditPayload["mode"] = hasOpenAi ? "live" : "technical";
+  const mode: AuditPayload["mode"] = hasLiveChecks ? "live" : "technical";
 
   const payload: AuditPayload = {
     id: uuidv4(),
@@ -158,7 +103,7 @@ export async function runCitationAudit(input: {
     score,
     cited,
     total,
-    platforms: platformRows,
+    platforms: monitoring.platforms,
     gaps,
     competitors: input.competitors ?? [],
     siteSignals: signals,
@@ -168,19 +113,21 @@ export async function runCitationAudit(input: {
     createdAt: new Date().toISOString(),
   };
 
-  await persistAudit(payload, prompts);
+  await persistAudit(payload, prompts, monitoring.checks, input.trigger ?? "manual");
   return payload;
 }
 
 async function persistAudit(
   audit: AuditPayload,
   prompts: string[],
+  platformChecks: Awaited<ReturnType<typeof runPlatformMonitoring>>["checks"],
+  trigger: "manual" | "scheduled",
 ): Promise<void> {
   await dbRun(
     `INSERT INTO audit_runs (
       id, workspace_id, domain, prompts, score, cited_count, total_prompts,
-      platforms, gaps, site_signals, prompt_results, mode, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      platforms, gaps, site_signals, prompt_results, mode, trigger, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       audit.id,
       audit.workspaceId,
@@ -194,8 +141,16 @@ async function persistAudit(
       JSON.stringify(audit.siteSignals),
       JSON.stringify(audit.promptResults),
       audit.mode,
+      trigger,
       audit.createdAt,
     ],
+  );
+
+  await persistPlatformChecks(
+    audit.id,
+    audit.workspaceId,
+    platformChecks,
+    audit.createdAt,
   );
 
   if (audit.workspaceId) {

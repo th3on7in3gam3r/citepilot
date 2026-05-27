@@ -28,8 +28,24 @@ CREATE TABLE IF NOT EXISTS audit_runs (
   site_signals TEXT NOT NULL,
   prompt_results TEXT NOT NULL,
   mode TEXT NOT NULL,
+  trigger TEXT NOT NULL DEFAULT 'manual',
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS platform_citation_checks (
+  id TEXT PRIMARY KEY,
+  audit_id TEXT NOT NULL REFERENCES audit_runs(id),
+  workspace_id TEXT REFERENCES workspaces(id),
+  platform TEXT NOT NULL,
+  prompt_index INTEGER NOT NULL,
+  prompt TEXT NOT NULL,
+  cited INTEGER NOT NULL,
+  check_mode TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_platform_checks_audit ON platform_citation_checks(audit_id);
+CREATE INDEX IF NOT EXISTS idx_platform_checks_workspace ON platform_citation_checks(workspace_id);
 
 CREATE TABLE IF NOT EXISTS citation_snapshots (
   id TEXT PRIMARY KEY,
@@ -181,5 +197,7 @@ CREATE TABLE IF NOT EXISTS cms_publications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cms_publications_workspace ON cms_publications(workspace_id);
+
+ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS trigger TEXT NOT NULL DEFAULT 'manual';
 CREATE INDEX IF NOT EXISTS idx_cms_publications_slug ON cms_publications(post_slug);
 `;

@@ -28,7 +28,8 @@
    | `OPEN_PAGERANK_API_KEY` | Optional — third-party domain authority on Backlinks |
    | `RESEND_API_KEY` | Weekly digest + audit/score-drop emails |
    | `EMAIL_FROM` | Verified sender in Resend (e.g. `CitePilot <alerts@getcitepilot.com>`) |
-   | `CRON_SECRET` | Bearer token for `GET /api/cron/weekly-digest` (Vercel Cron) |
+   | `CRON_SECRET` | Bearer token for Vercel Cron (`weekly-digest`, `weekly-rescan`) |
+   | `PERPLEXITY_API_KEY` | Optional live Perplexity citation checks during audits |
    | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Search Console OAuth — redirect URI `{APP_URL}/api/gsc/callback` |
 
 4. Deploy → attach custom domain **`getcitepilot.com`** (production URL; `citepilot.ai` is not used).
@@ -36,7 +37,7 @@
 6. Set `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` on Vercel once the domain is live.
 7. **Resend**: verify sending domain; add env vars above.
 8. **Google Cloud**: OAuth consent + Web client; authorized redirect URI `https://getcitepilot.com/api/gsc/callback` (and Vercel preview URL for staging).
-9. **Vercel Cron** (in `vercel.json`): weekly digest Mondays 14:00 UTC — set `CRON_SECRET` on Vercel.
+9. **Vercel Cron** (in `vercel.json`): `weekly-rescan` Mondays 12:00 UTC (Pilot/Fleet re-audits), `weekly-digest` Mondays 14:00 UTC — set `CRON_SECRET` on Vercel.
 10. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
 
 ## CMS publishing setup
