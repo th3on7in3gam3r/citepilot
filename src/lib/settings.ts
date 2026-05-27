@@ -1,3 +1,18 @@
+export type AutopilotPreferences = {
+  /** Master switch — weekly rescan + optional Autopilot email (Pilot+) */
+  enabled: boolean;
+  /** Email after Autopilot runs: delta summary + prioritized plan + proof link */
+  emailReport: boolean;
+  /** Generate CitePilot Insights prioritize plan when Autopilot runs */
+  autoInsights: boolean;
+};
+
+export const defaultAutopilotPreferences: AutopilotPreferences = {
+  enabled: false,
+  emailReport: true,
+  autoInsights: true,
+};
+
 export type WorkspacePreferences = {
   weeklyDigest: boolean;
   auditCompleteEmail: boolean;
@@ -9,6 +24,7 @@ export type WorkspacePreferences = {
   monitoringEmail: string;
   /** One-time explain-gap Insight on Free (per workspace) */
   freeExplainGapUsed: boolean;
+  autopilot: AutopilotPreferences;
   /** Paid monitoring — one prompt per line; falls back to buyer question when empty */
   monitoredPrompts: string[];
   whiteLabel: {
@@ -27,6 +43,7 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
   proofReportEmail: true,
   monitoringEmail: "",
   freeExplainGapUsed: false,
+  autopilot: { ...defaultAutopilotPreferences },
   monitoredPrompts: [],
   whiteLabel: {
     agencyName: "",
@@ -58,6 +75,10 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
       freeExplainGapUsed:
         parsed.freeExplainGapUsed ??
         defaultWorkspacePreferences.freeExplainGapUsed,
+      autopilot: {
+        ...defaultAutopilotPreferences,
+        ...(parsed.autopilot ?? {}),
+      },
       monitoredPrompts: Array.isArray(parsed.monitoredPrompts)
         ? parsed.monitoredPrompts.filter((p): p is string => typeof p === "string")
         : defaultWorkspacePreferences.monitoredPrompts,
@@ -79,6 +100,9 @@ export function mergePreferences(
     ...current,
     ...patch,
     monitoredPrompts: patch.monitoredPrompts ?? current.monitoredPrompts,
+    autopilot: patch.autopilot
+      ? { ...current.autopilot, ...patch.autopilot }
+      : current.autopilot,
     whiteLabel: patch.whiteLabel
       ? { ...current.whiteLabel, ...patch.whiteLabel }
       : current.whiteLabel,

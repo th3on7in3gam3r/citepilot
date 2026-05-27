@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
@@ -619,6 +620,18 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             </div>
           )}
         </Panel>
+
+        {workspaceId && (
+          <AutopilotSettingsPanel
+            workspaceId={workspaceId}
+            preferences={preferences}
+            isPilot={isPilot || isFleet}
+            togglesBusy={savingPrefs}
+            onPreferencesChange={(next, toast) => {
+              void savePreferences(next, toast);
+            }}
+          />
+        )}
 
         {isFleet && workspaceId && (
           <FleetSettingsPanel

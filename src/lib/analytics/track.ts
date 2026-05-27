@@ -10,7 +10,8 @@ export type AnalyticsEvent =
   | "fleet_checkout_started"
   | "cms_published"
   | "second_audit_completed"
-  | "insights_completed";
+  | "insights_completed"
+  | "autopilot_run";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

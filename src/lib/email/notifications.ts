@@ -107,7 +107,7 @@ function competitorMoveHtml(
   return parts.join("");
 }
 
-function scanDeltaSummaryHtml(delta: ScanDeltaSummary): string {
+export function scanDeltaSummaryHtml(delta: ScanDeltaSummary): string {
   if (!delta.available || delta.chips.length === 0) {
     return "<p>No major prompt or gap changes vs your prior scan.</p>";
   }

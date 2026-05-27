@@ -12,6 +12,7 @@ Use this file when returning to the project or onboarding someone else. Detailed
 |------|--------|
 | **Core** | GEO audits, workspace dashboard, onboarding, plan limits (Free / Pilot / Fleet) |
 | **Retention** | “Since your last scan” on Overview; weekly proof report email (Pilot+); one free explain-gap Insight on Free |
+| **Autopilot** | Pilot+ weekly co-pilot: post-rescan Insights plan + email (Settings → CitePilot Autopilot); manual “Run now” |
 | **Insights** | CitePilot Insights (`prioritize`, `explain-gap`) — Pilot+; rate-limited |
 | **Agency** | Proof report (`/report/proof`), share links, white-label (Fleet); Pilot sets agency name + monitoring email |
 | **Integrations** | Stripe billing, Resend email, Neon Auth + Postgres, optional GSC, CMS (WP/Ghost/Shopify/Framer/Webflow) |

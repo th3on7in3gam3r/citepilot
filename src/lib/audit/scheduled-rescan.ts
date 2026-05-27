@@ -5,11 +5,13 @@ import {
   sendScheduledProofReportEmail,
 } from "@/lib/email/notifications";
 import { cronPeriodKey, recordCronDispatch } from "@/lib/cron/dispatch-log";
+import { runAutopilotForWorkspace } from "@/lib/autopilot/run";
 import { RESCAN_BATCH_JOB } from "@/lib/email/ops-report";
 import { planForUser } from "@/lib/billing/limits-server";
 import { isPaidPlan } from "@/lib/billing/types";
 import { getBillingByUserId } from "@/lib/billing/store";
 import { dbAll, dbGet } from "@/lib/db";
+import { parsePreferences } from "@/lib/settings";
 
 const RESCAN_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_RESCANS_PER_RUN = 4;
@@ -63,20 +65,21 @@ export async function runScheduledRescanBatch(): Promise<{
       }
     }
 
-    let monitoredPrompts: string[] | undefined;
-    try {
-      const prefs = JSON.parse(row.preferences || "{}") as {
-        monitoredPrompts?: string[];
-      };
-      monitoredPrompts = prefs.monitoredPrompts;
-    } catch {
-      monitoredPrompts = undefined;
-    }
+    const prefs = parsePreferences(row.preferences);
+    const monitoredPrompts = prefs.monitoredPrompts;
 
     const auditPrompts = last?.prompts
       ? (JSON.parse(last.prompts) as string[])
       : undefined;
-    const competitors = JSON.parse(row.competitors || "[]") as string[];
+    let competitors: string[] = [];
+    try {
+      const parsed = JSON.parse(row.competitors || "[]") as unknown;
+      competitors = Array.isArray(parsed)
+        ? parsed.filter((c): c is string => typeof c === "string")
+        : [];
+    } catch {
+      competitors = [];
+    }
     const prompts = resolveMonitoredPrompts({
       monitoredPrompts,
       buyerQuestion: row.buyer_question ?? "",
@@ -114,6 +117,18 @@ export async function runScheduledRescanBatch(): Promise<{
       }).catch((err) =>
         console.error("Scheduled proof report email failed", err),
       );
+
+      if (prefs.autopilot.enabled && row.user_id) {
+        void runAutopilotForWorkspace({
+          workspaceId: row.id,
+          userId: row.user_id,
+          audit,
+          trigger: "scheduled",
+          competitors,
+        }).catch((err) =>
+          console.error("Autopilot after rescan failed", row.id, err),
+        );
+      }
 
       scanned++;
     } catch (err) {
