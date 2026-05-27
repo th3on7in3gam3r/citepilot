@@ -43,7 +43,7 @@ export const helpGuides: HelpGuide[] = [
   {
     title: "Workspace settings",
     description:
-      "Domain, monitored prompts, competitors, email alerts, and Fleet API keys / CSV import.",
+      "Domain, monitored prompts, competitors, Autopilot, email alerts, and Fleet API keys / CSV import.",
     href: "/dashboard/settings",
     cta: "Open settings",
   },
@@ -77,7 +77,7 @@ export const helpWorkflow: HelpWorkflowStep[] = [
   {
     title: "Prove lift (Pilot & Fleet)",
     description:
-      "Paid plans re-scan monitored prompts weekly (Mondays). Each run saves a citation snapshot so the chart and weekly lift update over time.",
+      "Paid plans re-scan monitored prompts weekly (Mondays). Each run saves a citation snapshot so the chart, weekly lift, and “Since your last scan” card update over time.",
     href: "/dashboard/analytics",
   },
   {
@@ -95,15 +95,15 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
   },
   {
     q: "What are the plan limits?",
-    a: `Free: ${WORKSPACE_LIMIT_FREE} workspace, up to ${PROMPT_LIMIT_FREE} prompts per audit. Pilot: up to ${WORKSPACE_LIMIT_PILOT} workspaces, ${PROMPT_LIMIT_PILOT} monitored prompts, weekly rescans, proof report emails, CMS publish, and email alerts — set monitoring email + agency name in Settings. Fleet: unlimited workspaces and prompts, full white-label on share links, JSON export, API keys, and CSV bulk prompt import.`,
+    a: `Free: ${WORKSPACE_LIMIT_FREE} workspace, up to ${PROMPT_LIMIT_FREE} prompts per audit. Pilot: up to ${WORKSPACE_LIMIT_PILOT} workspaces, ${PROMPT_LIMIT_PILOT} monitored prompts, weekly rescans, proof report emails, Autopilot, CMS publish, and email alerts — set monitoring email + agency name in Settings. Fleet: unlimited workspaces and prompts, full white-label on share links, JSON export, API keys, and CSV bulk prompt import.`,
   },
   {
     q: "How does weekly re-scanning work?",
-    a: "Pilot and Fleet workspaces are eligible for automatic weekly citation rescans (scheduled Mondays). Each run stores a new audit and citation snapshot so your dashboard chart and weekly lift reflect real changes. You can also trigger a manual re-audit from Settings.",
+    a: "Pilot and Fleet workspaces are eligible for automatic weekly citation rescans (scheduled Mondays). Each run stores a new audit and citation snapshot so your dashboard chart, weekly lift, and “Since your last scan” chips reflect real changes. You can also trigger a manual re-audit from Settings.",
   },
   {
     q: "What email alerts can I turn on?",
-    a: "In Settings → Notifications: weekly citation digest, audit-complete emails, score-drop alerts (5+ points), competitor move alerts (Pilot+ — when prompts are lost or competitor-related gaps appear), and discussion opportunity alerts. Set a monitoring email address on the same panel.",
+    a: "In Settings → Notifications: weekly citation digest, audit-complete emails, score-drop alerts (5+ points), competitor move alerts (Pilot+ — when prompts are lost or competitor-related gaps appear), weekly proof report emails (score delta + proof link + share URL), and discussion opportunity alerts. Set a monitoring email address on the same panel.",
   },
   {
     q: "What are competitor move alerts?",
@@ -128,5 +128,13 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
   {
     q: "What is CitePilot Insights?",
     a: "One-shot AI guidance grounded in your workspace audit — not a general chat. On Overview, use “Prioritize with CitePilot” for your top 3 weekly actions. On GEO Audit, use “Explain with CitePilot” on any gap. Requires a completed audit and Pilot or Fleet.",
+  },
+  {
+    q: "What is CitePilot Autopilot?",
+    a: "Autopilot is a Pilot+ feature that runs after your weekly Monday re-scan. It summarizes what changed since the last scan, optionally generates a prioritized 7-day plan using CitePilot Insights, and can email a client-ready report with proof link and share URL to your monitoring email. Turn it on per workspace under Settings → CitePilot Autopilot, and you can also run it on-demand.",
+  },
+  {
+    q: "Does Autopilot ever publish to my CMS?",
+    a: "No. Autopilot never auto-publishes content. It only re-scans prompts, generates a plan, and (optionally) emails you. You remain in control of publishing from the Content tab or your CMS.",
   },
 ];
