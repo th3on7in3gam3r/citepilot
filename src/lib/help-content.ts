@@ -95,7 +95,7 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
   },
   {
     q: "What are the plan limits?",
-    a: `Free: ${WORKSPACE_LIMIT_FREE} workspace, up to ${PROMPT_LIMIT_FREE} prompts per audit. Pilot: up to ${WORKSPACE_LIMIT_PILOT} workspaces, ${PROMPT_LIMIT_PILOT} monitored prompts, weekly rescans, CMS publish, and email alerts. Fleet: unlimited workspaces and prompts, white-label proof reports, JSON export, API keys, and CSV bulk prompt import.`,
+    a: `Free: ${WORKSPACE_LIMIT_FREE} workspace, up to ${PROMPT_LIMIT_FREE} prompts per audit. Pilot: up to ${WORKSPACE_LIMIT_PILOT} workspaces, ${PROMPT_LIMIT_PILOT} monitored prompts, weekly rescans, proof report emails, CMS publish, and email alerts — set monitoring email + agency name in Settings. Fleet: unlimited workspaces and prompts, full white-label on share links, JSON export, API keys, and CSV bulk prompt import.`,
   },
   {
     q: "How does weekly re-scanning work?",

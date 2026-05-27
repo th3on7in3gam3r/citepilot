@@ -84,3 +84,8 @@ See [AUDIT.md](./AUDIT.md) for cleanup notes and what to build next.
 | `npm run build` | Production build |
 | `npm run start` | Run production build |
 | `npm test` | Vitest unit tests |
+| `npm run smoke:production` | Live checks vs getcitepilot.com |
+
+**Dependencies:** `npm audit` may show transitive advisories (Neon Auth / Next). **Do not run `npm audit fix --force`** — see [PRODUCTION.md § Security & dependencies](./PRODUCTION.md#security--dependencies). Weekly Dependabot PRs: `.github/dependabot.yml`.
+
+**Analytics funnel:** [docs/ANALYTICS.md](./docs/ANALYTICS.md) — PostHog events for audit → signup → Pilot.

@@ -1,0 +1,11 @@
+# Weekly npm update PRs — merge after `npm test` && `npm run build`.
+# Do not use `npm audit fix --force` (see PRODUCTION.md).
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10

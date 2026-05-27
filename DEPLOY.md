@@ -32,7 +32,8 @@
    | `PERPLEXITY_API_KEY` | Optional live Perplexity citation checks during audits |
    | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Search Console OAuth — redirect URI `{APP_URL}/api/gsc/callback` |
    | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional — Plausible domain for funnel events |
-   | `NEXT_PUBLIC_POSTHOG_KEY` | Optional — PostHog project API key |
+   | `NEXT_PUBLIC_POSTHOG_KEY` | Optional — PostHog project API key (`phc_…`) |
+   | `POSTHOG_KEY` | Optional — same key for server-side capture on API routes |
    | `NEXT_PUBLIC_POSTHOG_HOST` | Optional — PostHog ingest host (default `https://us.i.posthog.com`) |
    | `ADMIN_OPS_EMAIL` | Optional — receives weekly ops report (`/api/cron/weekly-ops-report`) |
    | `SENTRY_DSN` | Optional — error monitoring (audits, webhooks, OpenAI) |
@@ -42,7 +43,7 @@
 6. Set `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` on Vercel once the domain is live.
 7. **Resend**: verify sending domain; add env vars above.
 8. **Google Cloud**: OAuth consent + Web client; authorized redirect URI `https://getcitepilot.com/api/gsc/callback` (and Vercel preview URL for staging).
-9. **Vercel Cron** (in `vercel.json`): `weekly-rescan` Mondays 12:00 UTC (Pilot/Fleet re-audits), `weekly-digest` Mondays 14:00 UTC — set `CRON_SECRET` on Vercel (mandatory in production).
+9. **Vercel Cron** (in `vercel.json`): `weekly-rescan` Mon 12:00 UTC · `weekly-digest` Mon 14:00 UTC · `weekly-ops-report` Mon 15:00 UTC — set `CRON_SECRET` on Vercel (mandatory in production).
 10. **Billing**: In production, paid features require Stripe + Neon Auth — misconfigured env will **deny** Pilot/Fleet access (no silent bypass).
 11. **Fleet API**: `GET /api/workspaces/[id]/export` (session or `Authorization: Bearer cp_fleet_…`), `POST /api/workspaces/[id]/prompts/import` (CSV), and `GET/POST /api/fleet/api-keys` require Fleet. Rate limit: 120 requests/hour per key or session.
 12. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
@@ -72,6 +73,18 @@ See **[PRODUCTION.md](./PRODUCTION.md)** for the full checklist. Quick pass:
 - [ ] `/dashboard/content` connects at least one CMS provider and publishes a test article
 - [ ] `/admin/login` works with `ADMIN_SECRET`
 - [ ] `GET /api/health` returns `"ok": true` and `database.detail` mentions postgres
+
+## Preview / staging
+
+Use a Vercel **Preview** deployment to test auth, crons, and Resend without touching production users:
+
+1. Copy production env vars to Preview, except use Stripe **test** keys (`sk_test_…`, test price IDs).
+2. Use a dedicated `CRON_SECRET` on Preview if you manually hit cron URLs there.
+3. Point Resend at a test inbox or your own email first.
+4. Register the preview URL in Neon Auth **Trusted domains** if testing sign-in on preview.
+5. Keep Stripe **live** webhooks on production URL only.
+
+Funnel and retention testing: [docs/ANALYTICS.md](./docs/ANALYTICS.md). Dependency PRs: Dependabot (`.github/dependabot.yml`).
 
 ## Optional env (not blocking launch)
 

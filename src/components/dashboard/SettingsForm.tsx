@@ -497,6 +497,22 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         </Panel>
 
         <Panel title="Notifications">
+          {(isPilot || isFleet) &&
+            (!preferences.monitoringEmail.trim() ||
+              !preferences.whiteLabel.agencyName.trim()) && (
+              <div
+                className="mb-4 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm leading-relaxed text-amber-950"
+                role="status"
+              >
+                <p className="font-semibold text-ink">Client-ready weekly reports</p>
+                <p className="mt-1 text-muted">
+                  Add a <strong>monitoring email</strong> and{" "}
+                  <strong>agency name</strong> (Client reporting below) so Monday
+                  proof report emails include your branding and a share link for
+                  stakeholders.
+                </p>
+              </div>
+            )}
           <p className="mb-4 text-sm text-muted">
             Pilot and Fleet workspaces re-scan monitored prompts weekly (Mondays)
             and can email digests or score-drop alerts when an address is set.
@@ -613,15 +629,15 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           />
         )}
 
-        {isFleet && (
-          <Panel title="White-label reports">
+        {(isPilot || isFleet) && (
+          <Panel title="Client reporting">
             <p className="mb-4 text-sm text-muted">
-              Fleet — agency branding on GEO audit share links and the stakeholder
-              proof report. The hide branding toggle saves automatically; agency name
-              and logo use Save changes below.
+              Shown on the stakeholder proof report and in weekly proof report
+              emails after Monday re-scans. Fleet can also hide CitePilot branding
+              on share links.
             </p>
             <label className="block text-sm font-semibold text-ink">
-              Agency name
+              Agency / client-facing name
               <input
                 type="text"
                 value={preferences.whiteLabel.agencyName}
@@ -631,64 +647,74 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                     whiteLabel: { ...p.whiteLabel, agencyName: e.target.value },
                   }))
                 }
-                placeholder="Your agency"
+                placeholder="Your agency or client brand"
                 className={inputClass}
               />
             </label>
-            <label className="mt-5 block text-sm font-semibold text-ink">
-              Logo URL
-              <input
-                type="url"
-                value={preferences.whiteLabel.logoUrl}
-                onChange={(e) =>
-                  setPreferences((p) => ({
-                    ...p,
-                    whiteLabel: { ...p.whiteLabel, logoUrl: e.target.value },
-                  }))
-                }
-                placeholder="https://…/logo.png"
-                className={inputClass}
-              />
-            </label>
-            <label className="mt-5 flex items-center justify-between gap-4 rounded-xl bg-surface px-4 py-3">
-              <div>
-                <p className="text-sm font-medium text-ink">Hide “Powered by CitePilot”</p>
-                <p className="text-xs text-muted">
-                  On audit share links and proof report PDF export
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={preferences.whiteLabel.hidePoweredBy}
-                disabled={togglesBusy}
-                onClick={() => {
-                  const next = {
-                    ...preferences,
-                    whiteLabel: {
-                      ...preferences.whiteLabel,
-                      hidePoweredBy: !preferences.whiteLabel.hidePoweredBy,
-                    },
-                  };
-                  setPreferences(next);
-                  void savePreferences(
-                    next,
-                    next.whiteLabel.hidePoweredBy
-                      ? "White-label saved — share links will hide CitePilot branding."
-                      : "White-label saved — CitePilot credit will show on share links.",
-                  );
-                }}
-                className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-                  preferences.whiteLabel.hidePoweredBy ? "bg-accent" : "bg-border"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-                    preferences.whiteLabel.hidePoweredBy ? "left-[22px]" : "left-0.5"
-                  }`}
-                />
-              </button>
-            </label>
+            {isFleet && (
+              <>
+                <label className="mt-5 block text-sm font-semibold text-ink">
+                  Logo URL
+                  <input
+                    type="url"
+                    value={preferences.whiteLabel.logoUrl}
+                    onChange={(e) =>
+                      setPreferences((p) => ({
+                        ...p,
+                        whiteLabel: { ...p.whiteLabel, logoUrl: e.target.value },
+                      }))
+                    }
+                    placeholder="https://…/logo.png"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="mt-5 flex items-center justify-between gap-4 rounded-xl bg-surface px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-ink">
+                      Hide “Powered by CitePilot”
+                    </p>
+                    <p className="text-xs text-muted">
+                      On audit share links and proof report PDF export
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={preferences.whiteLabel.hidePoweredBy}
+                    disabled={togglesBusy}
+                    onClick={() => {
+                      const next = {
+                        ...preferences,
+                        whiteLabel: {
+                          ...preferences.whiteLabel,
+                          hidePoweredBy: !preferences.whiteLabel.hidePoweredBy,
+                        },
+                      };
+                      setPreferences(next);
+                      void savePreferences(
+                        next,
+                        next.whiteLabel.hidePoweredBy
+                          ? "White-label saved — share links will hide CitePilot branding."
+                          : "White-label saved — CitePilot credit will show on share links.",
+                      );
+                    }}
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+                      preferences.whiteLabel.hidePoweredBy
+                        ? "bg-accent"
+                        : "bg-border"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
+                        preferences.whiteLabel.hidePoweredBy
+                          ? "left-[22px]"
+                          : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </label>
+              </>
+            )}
           </Panel>
         )}
 
