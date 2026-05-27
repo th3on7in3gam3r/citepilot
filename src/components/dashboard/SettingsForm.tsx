@@ -511,6 +511,11 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   hint: "Email when score falls 5+ points after a re-scan",
                 },
                 {
+                  key: "competitorMoveAlerts" as const,
+                  label: "Competitor move alerts",
+                  hint: "Email when prompts are lost, platforms slip, or competitor gaps appear (Pilot+)",
+                },
+                {
                   key: "discussionAlerts" as const,
                   label: "Discussion opportunity alerts",
                   hint: "HN & Stack Overflow threads in your niche",

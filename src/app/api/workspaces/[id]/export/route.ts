@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import {
+  FLEET_UPGRADE_MESSAGE,
+  userHasFleetAccess,
+} from "@/lib/billing/access";
 import { PLATFORMS } from "@/lib/dashboard";
 import {
   buildCompetitorBenchmark,
@@ -44,6 +48,13 @@ export async function GET(request: Request, { params }: Params) {
     const workspace = await getWorkspaceById(id, userId);
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    }
+
+    if (!(await userHasFleetAccess(userId))) {
+      return NextResponse.json(
+        { error: FLEET_UPGRADE_MESSAGE, code: "FLEET_REQUIRED" },
+        { status: 403 },
+      );
     }
 
     const snapshot = await enrichSnapshotWithBacklinks(

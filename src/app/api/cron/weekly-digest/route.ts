@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
-import { cronSecret } from "@/lib/email/config";
+import { requireCronAuth } from "@/lib/cron/auth";
 import { runWeeklyDigestBatch } from "@/lib/email/notifications";
 
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 export async function GET(request: Request) {
-  const secret = cronSecret();
-  const auth = request.headers.get("authorization");
-  const querySecret = new URL(request.url).searchParams.get("secret");
-
-  if (secret) {
-    const token = auth?.replace(/^Bearer\s+/i, "") ?? querySecret;
-    if (token !== secret) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
 
   const result = await runWeeklyDigestBatch();
   return NextResponse.json({ ok: true, ...result });

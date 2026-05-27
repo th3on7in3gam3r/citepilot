@@ -64,6 +64,20 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_platform_checks_audit ON platform_citation_checks(audit_id);
     CREATE INDEX IF NOT EXISTS idx_platform_checks_workspace ON platform_citation_checks(workspace_id);
 
+    CREATE TABLE IF NOT EXISTS cron_dispatch_log (
+      id TEXT PRIMARY KEY,
+      job_name TEXT NOT NULL,
+      workspace_id TEXT,
+      period_key TEXT NOT NULL,
+      status TEXT NOT NULL,
+      error TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_cron_dispatch_job_period ON cron_dispatch_log(job_name, period_key);
+    CREATE INDEX IF NOT EXISTS idx_cron_dispatch_workspace ON cron_dispatch_log(workspace_id);
+
     CREATE TABLE IF NOT EXISTS citation_snapshots (
       id TEXT PRIMARY KEY,
       workspace_id TEXT NOT NULL,
@@ -364,6 +378,20 @@ function migrateSchema(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_platform_checks_audit ON platform_citation_checks(audit_id);
     CREATE INDEX IF NOT EXISTS idx_platform_checks_workspace ON platform_citation_checks(workspace_id);
+
+    CREATE TABLE IF NOT EXISTS cron_dispatch_log (
+      id TEXT PRIMARY KEY,
+      job_name TEXT NOT NULL,
+      workspace_id TEXT,
+      period_key TEXT NOT NULL,
+      status TEXT NOT NULL,
+      error TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_cron_dispatch_job_period ON cron_dispatch_log(job_name, period_key);
+    CREATE INDEX IF NOT EXISTS idx_cron_dispatch_workspace ON cron_dispatch_log(workspace_id);
   `);
 
   const auditCols = db

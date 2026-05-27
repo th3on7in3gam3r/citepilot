@@ -199,5 +199,19 @@ CREATE TABLE IF NOT EXISTS cms_publications (
 CREATE INDEX IF NOT EXISTS idx_cms_publications_workspace ON cms_publications(workspace_id);
 
 ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS trigger TEXT NOT NULL DEFAULT 'manual';
+
+CREATE TABLE IF NOT EXISTS cron_dispatch_log (
+  id TEXT PRIMARY KEY,
+  job_name TEXT NOT NULL,
+  workspace_id TEXT REFERENCES workspaces(id),
+  period_key TEXT NOT NULL,
+  status TEXT NOT NULL,
+  error TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_cron_dispatch_job_period ON cron_dispatch_log(job_name, period_key);
+CREATE INDEX IF NOT EXISTS idx_cron_dispatch_workspace ON cron_dispatch_log(workspace_id);
+
 CREATE INDEX IF NOT EXISTS idx_cms_publications_slug ON cms_publications(post_slug);
 `;

@@ -182,6 +182,17 @@ export async function getLatestAuditForWorkspace(
   return rowToAudit(row);
 }
 
+export async function getRecentAuditsForWorkspace(
+  workspaceId: string,
+  limit = 2,
+): Promise<AuditPayload[]> {
+  const rows = await dbAll<Record<string, string | number | null>>(
+    `SELECT * FROM audit_runs WHERE workspace_id = ? ORDER BY created_at DESC LIMIT ?`,
+    [workspaceId, limit],
+  );
+  return rows.map(rowToAudit);
+}
+
 export async function getPreviousAuditScore(
   workspaceId: string,
   currentAuditId: string,

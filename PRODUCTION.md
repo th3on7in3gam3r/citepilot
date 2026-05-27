@@ -35,8 +35,11 @@ Run after each deploy to [citepilot.vercel.app](https://citepilot.vercel.app) or
 ## Email (Resend)
 
 - [ ] `RESEND_API_KEY` + verified `EMAIL_FROM` domain on Vercel
-- [ ] `CRON_SECRET` set; Vercel cron hits `/api/cron/weekly-digest` (Mondays 14:00 UTC)
+- [ ] `CRON_SECRET` set on Vercel (required in production — cron routes return 503 without it)
+- [ ] Vercel cron: `weekly-rescan` Mondays 12:00 UTC, `weekly-digest` Mondays 14:00 UTC
 - [ ] Re-run audit with score drop ≥5 triggers alert when `scoreDropAlerts` is on
+- [ ] Pilot workspace: second audit with prompt loss triggers **Competitor move alerts** when enabled
+- [ ] Digest is idempotent per workspace per week (`cron_dispatch_log` — check Vercel logs for `failed` counts)
 
 ## Google Search Console
 
