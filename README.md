@@ -89,3 +89,5 @@ See [AUDIT.md](./AUDIT.md) for cleanup notes and what to build next.
 **Dependencies:** `npm audit` may show transitive advisories (Neon Auth / Next). **Do not run `npm audit fix --force`** — see [PRODUCTION.md § Security & dependencies](./PRODUCTION.md#security--dependencies). Weekly Dependabot PRs: `.github/dependabot.yml`.
 
 **Analytics funnel:** [docs/ANALYTICS.md](./docs/ANALYTICS.md) — PostHog events for audit → signup → Pilot.
+
+**Handoff:** [HANDOFF.md](./HANDOFF.md) — v1 status, one-time prod validation, ongoing maintenance.
