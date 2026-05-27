@@ -43,6 +43,18 @@ type WorkspaceRow = {
   updated_at: string;
 };
 
+function parseStringArray(raw: string | null, fallback: string[] = []): string[] {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((v): v is string => typeof v === "string")
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function canAccessWorkspace(row: WorkspaceRow, userId: string | null): boolean {
   if (!userId) return true;
   if (!row.user_id) return true;
@@ -58,8 +70,8 @@ function rowToPayload(
     domain: row.domain,
     businessType: row.business_type ?? "",
     description: row.description ?? "",
-    audiences: JSON.parse(row.audiences) as string[],
-    competitors: JSON.parse(row.competitors) as string[],
+    audiences: parseStringArray(row.audiences),
+    competitors: parseStringArray(row.competitors),
     buyerQuestion: row.buyer_question ?? "",
     referral: row.referral ?? "",
     preferences: parsePreferences(row.preferences ?? "{}"),
