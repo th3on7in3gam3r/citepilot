@@ -22,6 +22,8 @@ export function normalizeSnapshot(
     promptResults: data.promptResults ?? [],
     platformPresence: data.platformPresence ?? [],
     citationHistory: data.citationHistory ?? [],
+    scanDelta: data.scanDelta,
+    freeExplainGapTeaserAvailable: data.freeExplainGapTeaserAvailable,
   };
 }
 

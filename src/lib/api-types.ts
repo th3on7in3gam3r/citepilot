@@ -1,4 +1,5 @@
 import type { OnboardingAnswers } from "@/lib/onboarding";
+import type { ScanDeltaSummary } from "@/lib/audit/scan-delta";
 import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import type { WorkspacePreferences } from "@/lib/settings";
 
@@ -93,6 +94,9 @@ export type WorkspaceSnapshotResponse = {
   contentStrategy: ContentCalendarItem[];
   contentStrategyGeneratedAt: string | null;
   weeklyLiftAvailable: boolean;
+  scanDelta: ScanDeltaSummary;
+  /** Free plan: one explain-gap Insight after first real audit */
+  freeExplainGapTeaserAvailable: boolean;
 };
 
 export type RedditThread = DiscussionThread;

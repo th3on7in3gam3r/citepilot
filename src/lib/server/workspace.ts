@@ -11,7 +11,15 @@ import type {
 import { buildWorkspaceSnapshot } from "@/lib/dashboard";
 import { getBacklinkMetricsForWorkspace } from "@/lib/backlinks/store";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
-import { getLatestAuditForWorkspace } from "@/lib/audit/run-audit";
+import {
+  getLatestAuditForWorkspace,
+  getRecentAuditsForWorkspace,
+} from "@/lib/audit/run-audit";
+import {
+  buildScanDeltaSummary,
+  emptyScanDeltaSummary,
+} from "@/lib/audit/scan-delta";
+import { userHasPilotAccess } from "@/lib/billing/access";
 import { getContentStrategy } from "@/lib/content-strategy/store";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
 import {
@@ -91,6 +99,8 @@ export function toSnapshot(
       contentStrategy: [],
       contentStrategyGeneratedAt: null,
       weeklyLiftAvailable: false,
+      scanDelta: emptyScanDeltaSummary,
+      freeExplainGapTeaserAvailable: false,
     };
   }
 
@@ -120,6 +130,8 @@ export function toSnapshot(
     citationHistory: [],
     contentStrategy: [],
     contentStrategyGeneratedAt: null,
+    scanDelta: buildScanDeltaSummary({ current: audit, previous: null }),
+    freeExplainGapTeaserAvailable: false,
   };
 }
 
@@ -127,11 +139,41 @@ export async function enrichSnapshotWithBacklinks(
   snapshot: WorkspaceSnapshotResponse,
   workspaceId: string,
 ): Promise<WorkspaceSnapshotResponse> {
-  const [metrics, citationHistory, contentStrategy] = await Promise.all([
-    getBacklinkMetricsForWorkspace(workspaceId),
-    getCitationSnapshots(workspaceId),
-    getContentStrategy(workspaceId),
-  ]);
+  const [metrics, citationHistory, contentStrategy, recentAudits, ownerRow] =
+    await Promise.all([
+      getBacklinkMetricsForWorkspace(workspaceId),
+      getCitationSnapshots(workspaceId),
+      getContentStrategy(workspaceId),
+      snapshot.hasRealAudit
+        ? getRecentAuditsForWorkspace(workspaceId, 2)
+        : Promise.resolve([]),
+      dbGet<{ user_id: string | null }>(
+        `SELECT user_id FROM workspaces WHERE id = ?`,
+        [workspaceId],
+      ),
+    ]);
+
+  let scanDelta = emptyScanDeltaSummary;
+  if (recentAudits.length >= 2) {
+    scanDelta = buildScanDeltaSummary({
+      current: recentAudits[0]!,
+      previous: recentAudits[1]!,
+      trackedCompetitors: snapshot.competitors,
+    });
+  } else if (recentAudits.length === 1) {
+    scanDelta = buildScanDeltaSummary({
+      current: recentAudits[0]!,
+      previous: null,
+    });
+  }
+
+  const paid = ownerRow?.user_id
+    ? await userHasPilotAccess(ownerRow.user_id)
+    : false;
+  const freeExplainGapTeaserAvailable =
+    snapshot.hasRealAudit &&
+    !snapshot.preferences.freeExplainGapUsed &&
+    !paid;
 
   let weeklyLift = snapshot.weeklyLift;
   let weeklyLiftAvailable = snapshot.weeklyLiftAvailable;
@@ -156,6 +198,8 @@ export async function enrichSnapshotWithBacklinks(
       contentStrategy?.generatedAt ?? snapshot.contentStrategyGeneratedAt,
     weeklyLift,
     weeklyLiftAvailable,
+    scanDelta,
+    freeExplainGapTeaserAvailable,
   };
 }
 

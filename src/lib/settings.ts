@@ -4,7 +4,11 @@ export type WorkspacePreferences = {
   discussionAlerts: boolean;
   scoreDropAlerts: boolean;
   competitorMoveAlerts: boolean;
+  /** Email proof report + client share link after weekly re-scan (Pilot+) */
+  proofReportEmail: boolean;
   monitoringEmail: string;
+  /** One-time explain-gap Insight on Free (per workspace) */
+  freeExplainGapUsed: boolean;
   /** Paid monitoring — one prompt per line; falls back to buyer question when empty */
   monitoredPrompts: string[];
   whiteLabel: {
@@ -20,7 +24,9 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
   discussionAlerts: false,
   scoreDropAlerts: true,
   competitorMoveAlerts: true,
+  proofReportEmail: true,
   monitoringEmail: "",
+  freeExplainGapUsed: false,
   monitoredPrompts: [],
   whiteLabel: {
     agencyName: "",
@@ -47,6 +53,11 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
       competitorMoveAlerts:
         parsed.competitorMoveAlerts ??
         defaultWorkspacePreferences.competitorMoveAlerts,
+      proofReportEmail:
+        parsed.proofReportEmail ?? defaultWorkspacePreferences.proofReportEmail,
+      freeExplainGapUsed:
+        parsed.freeExplainGapUsed ??
+        defaultWorkspacePreferences.freeExplainGapUsed,
       monitoredPrompts: Array.isArray(parsed.monitoredPrompts)
         ? parsed.monitoredPrompts.filter((p): p is string => typeof p === "string")
         : defaultWorkspacePreferences.monitoredPrompts,

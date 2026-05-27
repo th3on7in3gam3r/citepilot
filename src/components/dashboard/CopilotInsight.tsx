@@ -16,6 +16,9 @@ type CopilotInsightProps = {
   requiresAudit?: boolean;
   buttonLabel?: string;
   compact?: boolean;
+  /** One free explain-gap on Free after first audit */
+  freeTeaser?: boolean;
+  onTeaserUsed?: () => void;
 };
 
 export function CopilotInsight({
@@ -25,16 +28,21 @@ export function CopilotInsight({
   requiresAudit = true,
   buttonLabel,
   compact = false,
+  freeTeaser = false,
+  onTeaserUsed,
 }: CopilotInsightProps) {
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsUpgrade, setNeedsUpgrade] = useState(false);
+  const [usedTeaser, setUsedTeaser] = useState(false);
 
   const defaultLabel =
     kind === "prioritize"
       ? "Prioritize with CitePilot"
-      : "Explain with CitePilot";
+      : freeTeaser
+        ? "Explain once (free preview)"
+        : "Explain with CitePilot";
 
   async function run() {
     if (requiresAudit) return;
@@ -58,6 +66,7 @@ export function CopilotInsight({
         text?: string;
         error?: string;
         code?: string;
+        teaser?: boolean;
       };
 
       if (res.status === 402 || data.code === "PILOT_REQUIRED") {
@@ -71,9 +80,14 @@ export function CopilotInsight({
       }
 
       setText(data.text ?? "");
+      if (data.teaser) {
+        setUsedTeaser(true);
+        onTeaserUsed?.();
+      }
       trackEvent("insights_completed", {
         workspaceId,
         kind,
+        teaser: data.teaser ?? false,
         source: kind === "prioritize" ? "overview" : "geo_audit",
       });
     } catch {
@@ -131,8 +145,15 @@ export function CopilotInsight({
         >
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-accent">
             CitePilot Insights
+            {freeTeaser ? " · free preview" : ""}
           </p>
           <div className="whitespace-pre-wrap">{text}</div>
+          {usedTeaser && (
+            <p className="mt-3 border-t border-accent/10 pt-3 text-xs text-muted">
+              That was your one free explanation on this workspace. Upgrade to
+              Pilot for unlimited Insights and weekly rescans.
+            </p>
+          )}
           {kind === "prioritize" && (
             <div className="mt-3 flex flex-wrap gap-2 border-t border-accent/10 pt-3">
               <Link

@@ -3,6 +3,11 @@ import {
   buildDeltaFromAudits,
   type CompetitorMoveDelta,
 } from "@/lib/audit/competitor-delta";
+import { createAuditShare } from "@/lib/audit/share";
+import {
+  buildScanDeltaSummary,
+  type ScanDeltaSummary,
+} from "@/lib/audit/scan-delta";
 import {
   getPreviousAuditScore,
   getRecentAuditsForWorkspace,
@@ -13,6 +18,7 @@ import {
   recordCronDispatch,
   wasCronDispatched,
 } from "@/lib/cron/dispatch-log";
+import { appBaseUrl } from "@/lib/stripe/config";
 import { dashboardUrl } from "@/lib/email/config";
 import { sendEmail } from "@/lib/email/send";
 import { dbAll, dbGet } from "@/lib/db";
@@ -99,6 +105,55 @@ function competitorMoveHtml(
   }
 
   return parts.join("");
+}
+
+function scanDeltaSummaryHtml(delta: ScanDeltaSummary): string {
+  if (!delta.available || delta.chips.length === 0) {
+    return "<p>No major prompt or gap changes vs your prior scan.</p>";
+  }
+  return `<p><strong>Since last scan:</strong> ${delta.chips.join(" · ")}</p>`;
+}
+
+export async function sendProofReportEmail(input: {
+  domain: string;
+  to: string;
+  auditId: string;
+  workspaceId: string;
+  userId: string | null;
+  audit: AuditPayload;
+  previousAudit: AuditPayload | null;
+  competitors: string[];
+}): Promise<{ ok: boolean; error?: string }> {
+  const delta = buildScanDeltaSummary({
+    current: input.audit,
+    previous: input.previousAudit,
+    trackedCompetitors: input.competitors,
+  });
+
+  const proofUrl = `${appBaseUrl()}/report/proof`;
+  const share = await createAuditShare({
+    auditId: input.auditId,
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+  });
+  const shareBlock =
+    "url" in share
+      ? `<p><strong>Client share link</strong> (read-only audit view):<br/><a href="${share.url}">${share.url}</a></p>`
+      : "";
+
+  return sendEmail({
+    to: input.to,
+    subject: `Weekly scan — ${input.domain} (${input.audit.score}/100)`,
+    html: layout(
+      `Weekly scan — ${input.domain}`,
+      `${scanDeltaSummaryHtml(delta)}
+<p>Score: <strong>${input.audit.score}/100</strong> · ${input.audit.cited}/${input.audit.total} prompts cited</p>
+<p>Top gaps:</p><ul>${input.audit.gaps.slice(0, 5).map((g) => `<li>${g}</li>`).join("")}</ul>
+<p><a href="${proofUrl}"><strong>Open proof report</strong></a> — print or save as PDF for stakeholders.</p>
+${shareBlock}`,
+    ),
+    text: `Weekly scan for ${input.domain}: ${input.audit.score}/100. Proof report: ${proofUrl}`,
+  });
 }
 
 export async function sendCompetitorMoveEmail(input: {
@@ -193,16 +248,59 @@ ${deltaScore != null ? `<p>Change since last audit: ${deltaScore >= 0 ? "+" : ""
 
   if (!moveDelta.hasChanges) return;
 
-  const result = await sendCompetitorMoveEmail({
+  await sendCompetitorMoveEmail({
     domain: input.audit.domain,
     to,
     delta: moveDelta,
+    competitors: ws.competitors,
+  }).then((result) => {
+    if (!result.ok) {
+      console.error(
+        `[email] Competitor move alert failed for workspace ${input.workspaceId}:`,
+        result.error,
+      );
+    }
+  });
+}
+
+/** After a scheduled weekly re-scan — proof report + optional share link (Pilot+). */
+export async function sendScheduledProofReportEmail(input: {
+  workspaceId: string;
+  audit: AuditPayload;
+  userId: string | null;
+  userEmail?: string | null;
+}): Promise<void> {
+  const ws = await getWorkspaceById(input.workspaceId, input.userId);
+  if (!ws) return;
+
+  if (!ws.preferences.proofReportEmail) return;
+
+  const paid = input.userId
+    ? await userHasPilotAccess(input.userId)
+    : false;
+  if (!paid) return;
+
+  const to = recipientEmail(ws.preferences, input.userEmail);
+  if (!to) return;
+
+  const audits = await getRecentAuditsForWorkspace(input.workspaceId, 2);
+  const previous =
+    audits.find((a) => a.id !== input.audit.id) ?? audits[1] ?? null;
+
+  const result = await sendProofReportEmail({
+    domain: input.audit.domain,
+    to,
+    auditId: input.audit.id,
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    audit: input.audit,
+    previousAudit: previous,
     competitors: ws.competitors,
   });
 
   if (!result.ok) {
     console.error(
-      `[email] Competitor move alert failed for workspace ${input.workspaceId}:`,
+      `[email] Proof report email failed for workspace ${input.workspaceId}:`,
       result.error,
     );
   }

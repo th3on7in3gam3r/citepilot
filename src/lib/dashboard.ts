@@ -7,6 +7,10 @@ import type {
 } from "@/lib/api-types";
 import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import {
+  emptyScanDeltaSummary,
+  type ScanDeltaSummary,
+} from "@/lib/audit/scan-delta";
+import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
 } from "@/lib/settings";
@@ -127,6 +131,8 @@ export type WorkspaceSnapshot = {
   contentStrategy?: ContentCalendarItem[];
   contentStrategyGeneratedAt?: string | null;
   weeklyLiftAvailable?: boolean;
+  scanDelta?: ScanDeltaSummary;
+  freeExplainGapTeaserAvailable?: boolean;
 };
 
 export function domainSeed(domain: string): number {
@@ -174,6 +180,8 @@ export function buildWorkspaceSnapshot(
     contentStrategy: [],
     contentStrategyGeneratedAt: null,
     weeklyLiftAvailable: false,
+    scanDelta: emptyScanDeltaSummary,
+    freeExplainGapTeaserAvailable: false,
   };
 }
 

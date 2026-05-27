@@ -540,6 +540,11 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   hint: "Email when prompts are lost, platforms slip, or competitor gaps appear (Pilot+)",
                 },
                 {
+                  key: "proofReportEmail" as const,
+                  label: "Weekly proof report email",
+                  hint: "After Monday re-scan: score delta, proof report link, and client share URL (Pilot+)",
+                },
+                {
                   key: "discussionAlerts" as const,
                   label: "Discussion opportunity alerts",
                   hint: "HN & Stack Overflow threads in your niche",
@@ -547,7 +552,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               ] as const
             ).map((item) => {
               const needsPilot =
-                item.key === "competitorMoveAlerts" && !isPilot && !isFleet;
+                (item.key === "competitorMoveAlerts" ||
+                  item.key === "proofReportEmail") &&
+                !isPilot &&
+                !isFleet;
               return (
               <li
                 key={item.key}

@@ -19,6 +19,7 @@ import {
   enrichSnapshotWithBacklinks,
   getWorkspaceById,
   toSnapshot,
+  updateWorkspace,
 } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
@@ -31,34 +32,6 @@ export async function POST(request: Request) {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
     const userId = apiUserId(user);
-
-    if (!(await userHasPilotAccess(userId))) {
-      return NextResponse.json(
-        {
-          error: PILOT_UPGRADE_MESSAGE,
-          upgradeUrl: "/pricing",
-          code: "PILOT_REQUIRED",
-        },
-        { status: 402 },
-      );
-    }
-
-    const rate = await checkHourlyRateLimit(
-      `copilot:${userId}`,
-      COPILOT_RATE_LIMIT_PER_HOUR,
-    );
-    if (!rate.allowed) {
-      return NextResponse.json(
-        {
-          error: `CitePilot Insights limit reached (${rate.limit}/hour). Try again after ${rate.resetAt}.`,
-          code: "RATE_LIMIT",
-        },
-        {
-          status: 429,
-          headers: rateLimitHeaders(rate),
-        },
-      );
-    }
 
     const body = (await request.json()) as {
       kind?: CopilotKind;
@@ -85,6 +58,40 @@ export async function POST(request: Request) {
     const workspace = await getWorkspaceById(workspaceId, userId);
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    }
+
+    const hasPilot = await userHasPilotAccess(userId);
+    const freeTeaser =
+      !hasPilot &&
+      kind === "explain-gap" &&
+      !workspace.preferences.freeExplainGapUsed;
+
+    if (!hasPilot && !freeTeaser) {
+      return NextResponse.json(
+        {
+          error: PILOT_UPGRADE_MESSAGE,
+          upgradeUrl: "/pricing",
+          code: "PILOT_REQUIRED",
+        },
+        { status: 402 },
+      );
+    }
+
+    const rate = await checkHourlyRateLimit(
+      `copilot:${userId}`,
+      COPILOT_RATE_LIMIT_PER_HOUR,
+    );
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          error: `CitePilot Insights limit reached (${rate.limit}/hour). Try again after ${rate.resetAt}.`,
+          code: "RATE_LIMIT",
+        },
+        {
+          status: 429,
+          headers: rateLimitHeaders(rate),
+        },
+      );
     }
 
     const snapshot = await enrichSnapshotWithBacklinks(
@@ -125,10 +132,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: 503 });
     }
 
+    if (freeTeaser) {
+      await updateWorkspace(
+        workspaceId,
+        { preferences: { freeExplainGapUsed: true } },
+        userId,
+      );
+    }
+
     void trackServerEvent("insights_completed", {
       distinctId: userId ?? workspaceId,
       workspaceId,
       kind,
+      teaser: freeTeaser,
     });
 
     return NextResponse.json(
@@ -136,6 +152,7 @@ export async function POST(request: Request) {
         kind,
         text: result.text,
         workspaceId,
+        teaser: freeTeaser,
       },
       { headers: rateLimitHeaders(rate) },
     );

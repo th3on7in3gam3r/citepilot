@@ -18,7 +18,7 @@ const fallbackGaps = [
 ];
 
 export default function GeoAuditPage() {
-  const { workspace, ready } = useWorkspaceContext();
+  const { workspace, ready, refresh } = useWorkspaceContext();
   if (!ready || !workspace) return null;
 
   const gaps = workspace.gaps.length > 0 ? workspace.gaps : fallbackGaps;
@@ -75,7 +75,7 @@ export default function GeoAuditPage() {
       <Panel title="Priority fixes" className="mt-6">
         <p className="mb-4 text-sm text-muted">
           From your latest audit. Use CitePilot Insights for a plain-language
-          explanation of any gap (Pilot+).
+          explanation of any gap (Pilot+, or one free preview on Free).
         </p>
         <ul className="space-y-3 text-sm text-muted">
           {gaps.map((g) => (
@@ -90,6 +90,8 @@ export default function GeoAuditPage() {
                   workspaceId={workspaceId}
                   gap={g}
                   requiresAudit={!workspace.hasRealAudit}
+                  freeTeaser={workspace.freeExplainGapTeaserAvailable}
+                  onTeaserUsed={() => void refresh()}
                   compact
                 />
               )}

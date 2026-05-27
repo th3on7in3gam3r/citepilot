@@ -1,6 +1,9 @@
 import { runCitationAudit } from "@/lib/audit/run-audit";
 import { resolveMonitoredPrompts } from "@/lib/audit/resolve-prompts";
-import { sendAuditCompleteEmail } from "@/lib/email/notifications";
+import {
+  sendAuditCompleteEmail,
+  sendScheduledProofReportEmail,
+} from "@/lib/email/notifications";
 import { cronPeriodKey, recordCronDispatch } from "@/lib/cron/dispatch-log";
 import { RESCAN_BATCH_JOB } from "@/lib/email/ops-report";
 import { planForUser } from "@/lib/billing/limits-server";
@@ -102,6 +105,15 @@ export async function runScheduledRescanBatch(): Promise<{
         audit,
         userEmail: null,
       }).catch((err) => console.error("Scheduled rescan email failed", err));
+
+      void sendScheduledProofReportEmail({
+        workspaceId: row.id,
+        audit,
+        userId: row.user_id,
+        userEmail: null,
+      }).catch((err) =>
+        console.error("Scheduled proof report email failed", err),
+      );
 
       scanned++;
     } catch (err) {

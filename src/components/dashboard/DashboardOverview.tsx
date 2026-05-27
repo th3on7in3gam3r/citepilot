@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
+import { ScanDeltaCard } from "@/components/dashboard/ScanDeltaCard";
+import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import {
@@ -165,6 +167,13 @@ export function DashboardOverview() {
           sub={
             workspace.communityMentions > 0 ? "mentions" : "Check Discussions tab"
           }
+        />
+      </div>
+
+      <div className="mt-6">
+        <ScanDeltaCard
+          domain={workspace.domain}
+          scanDelta={workspace.scanDelta ?? emptyScanDeltaSummary}
         />
       </div>
 
