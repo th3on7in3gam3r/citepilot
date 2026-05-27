@@ -1,4 +1,4 @@
-import { dbGet, dbRun } from "@/lib/db";
+import { dbGet, dbRun, isPostgres } from "@/lib/db";
 
 export type RateLimitResult = {
   allowed: boolean;
@@ -36,13 +36,17 @@ export async function checkHourlyRateLimit(
   const allowed = count < limit;
 
   if (allowed) {
-    await dbRun(
-      `INSERT INTO fleet_api_usage (subject, window_key, request_count)
-       VALUES (?, ?, 1)
-       ON CONFLICT(subject, window_key) DO UPDATE SET
-         request_count = request_count + 1`,
-      [subject, windowKey],
-    );
+    // Postgres requires qualifying the existing row; bare `request_count` is ambiguous (42702).
+    const incrementSql = isPostgres()
+      ? `INSERT INTO fleet_api_usage (subject, window_key, request_count)
+         VALUES (?, ?, 1)
+         ON CONFLICT (subject, window_key) DO UPDATE SET
+           request_count = fleet_api_usage.request_count + 1`
+      : `INSERT INTO fleet_api_usage (subject, window_key, request_count)
+         VALUES (?, ?, 1)
+         ON CONFLICT(subject, window_key) DO UPDATE SET
+           request_count = request_count + 1`;
+    await dbRun(incrementSql, [subject, windowKey]);
   }
 
   const nextCount = allowed ? count + 1 : count;
