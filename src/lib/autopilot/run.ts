@@ -28,6 +28,7 @@ export const AUTOPILOT_JOB = "workspace-autopilot";
 export type AutopilotRunResult = {
   ok: boolean;
   error?: string;
+  warning?: string;
   insightGenerated?: boolean;
   emailSent?: boolean;
   skipped?: string;
@@ -119,22 +120,21 @@ export async function runAutopilotForWorkspace(input: {
     });
     emailSent = sendResult.ok;
     if (!sendResult.ok) {
+      const warning = sendResult.error ?? "Autopilot email failed";
       try {
         await recordCronDispatch({
           jobName: AUTOPILOT_JOB,
           workspaceId: input.workspaceId,
           periodKey,
           status: "failed",
-          error: sendResult.error ?? "email failed",
+          error: warning,
         });
       } catch (err) {
         console.error("[autopilot] recordCronDispatch failed", err);
       }
-      return {
-        ok: false,
-        error: sendResult.error ?? "Autopilot email failed",
-        insightGenerated,
-      };
+      // Do not fail the whole Autopilot run on email provider issues.
+      // Insights + scan processing can still succeed.
+      return { ok: true, warning, insightGenerated, emailSent: false };
     }
   }
 

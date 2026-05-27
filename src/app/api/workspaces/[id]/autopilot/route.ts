@@ -140,6 +140,7 @@ export async function POST(request: Request, { params }: Params) {
         insightGenerated: result.insightGenerated,
         emailSent: result.emailSent,
         skipped: result.skipped,
+        warning: result.warning,
       },
       { headers: rate ? rateLimitHeaders(rate) : {} },
     );
