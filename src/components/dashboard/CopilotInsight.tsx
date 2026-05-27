@@ -66,6 +66,7 @@ export function CopilotInsight({
         text?: string;
         error?: string;
         code?: string;
+        detail?: string;
         teaser?: boolean;
       };
 
@@ -75,7 +76,12 @@ export function CopilotInsight({
       }
 
       if (!res.ok) {
-        setError(data.error ?? "Could not generate insight.");
+        const msg = data.error ?? "Could not generate insight.";
+        setError(
+          data.detail && process.env.NODE_ENV === "development"
+            ? `${msg} (${data.detail})`
+            : msg,
+        );
         return;
       }
 

@@ -19,6 +19,12 @@ import {
   promptOverlap,
 } from "@/lib/audit/site-analyzer";
 import { regenerateContentStrategyForAudit } from "@/lib/content-strategy/regenerate";
+import {
+  parseGaps,
+  parsePlatforms,
+  parsePromptResults,
+  parseSiteSignals,
+} from "@/lib/audit/safe-payload";
 
 function evaluatePrompts(
   prompts: string[],
@@ -209,17 +215,27 @@ export async function getPreviousAuditScore(
 }
 
 function rowToAudit(row: Record<string, string | number | null>): AuditPayload {
+  const score = Number(row.score);
+  let siteSignalsRaw: unknown = null;
+  if (row.site_signals != null && row.site_signals !== "") {
+    try {
+      siteSignalsRaw = JSON.parse(String(row.site_signals));
+    } catch {
+      siteSignalsRaw = null;
+    }
+  }
+
   return {
     id: String(row.id),
     domain: String(row.domain),
-    score: Number(row.score),
+    score,
     cited: Number(row.cited_count),
     total: Number(row.total_prompts),
-    platforms: JSON.parse(String(row.platforms)),
-    gaps: JSON.parse(String(row.gaps)),
+    platforms: parsePlatforms(row.platforms),
+    gaps: parseGaps(row.gaps),
     competitors: [],
-    siteSignals: JSON.parse(String(row.site_signals)),
-    promptResults: JSON.parse(String(row.prompt_results)),
+    siteSignals: parseSiteSignals(siteSignalsRaw, score),
+    promptResults: parsePromptResults(row.prompt_results),
     mode: String(row.mode) as AuditPayload["mode"],
     workspaceId: row.workspace_id ? String(row.workspace_id) : null,
     createdAt: String(row.created_at),

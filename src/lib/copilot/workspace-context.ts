@@ -4,26 +4,27 @@ import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
 export function buildCopilotContext(
   snapshot: WorkspaceSnapshotResponse,
 ): string {
-  const cited = snapshot.promptResults.filter((p) => p.cited);
-  const uncited = snapshot.promptResults.filter((p) => !p.cited);
+  const promptResults = snapshot.promptResults ?? [];
+  const cited = promptResults.filter((p) => p?.cited);
+  const uncited = promptResults.filter((p) => p && !p.cited);
 
   const payload = {
     domain: snapshot.domain,
-    businessType: snapshot.businessType,
-    description: snapshot.description.slice(0, 500),
-    buyerQuestion: snapshot.buyerQuestion,
-    competitors: snapshot.competitors.slice(0, 8),
+    businessType: snapshot.businessType ?? "",
+    description: (snapshot.description ?? "").slice(0, 500),
+    buyerQuestion: snapshot.buyerQuestion ?? "",
+    competitors: (snapshot.competitors ?? []).slice(0, 8),
     citationScore: snapshot.citationScore,
     hasRealAudit: snapshot.hasRealAudit,
     auditMode: snapshot.auditMode,
     citedPlatforms: snapshot.citedPlatforms,
     totalPlatforms: snapshot.totalPlatforms,
     weeklyLift: snapshot.weeklyLiftAvailable ? snapshot.weeklyLift : null,
-    citationHistoryPoints: snapshot.citationHistory.map((p) => ({
+    citationHistoryPoints: (snapshot.citationHistory ?? []).map((p) => ({
       date: p.recordedAt,
       score: p.visibilityIndex,
     })),
-    gaps: snapshot.gaps.slice(0, 12),
+    gaps: (snapshot.gaps ?? []).slice(0, 12),
     siteSignals: snapshot.siteSignals
       ? {
           geoScore: snapshot.siteSignals.geoScore,
@@ -40,7 +41,7 @@ export function buildCopilotContext(
       prompt: p.prompt,
       reason: p.reason,
     })),
-    platformPresence: snapshot.platformPresence
+    platformPresence: (snapshot.platformPresence ?? [])
       .slice(0, 10)
       .map((p) => ({ name: p.name, cited: p.present, share: p.share })),
   };

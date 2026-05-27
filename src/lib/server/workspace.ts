@@ -104,7 +104,9 @@ export function toSnapshot(
     };
   }
 
-  const citedPlatforms = audit.platforms.filter((p) => p.present).length;
+  const platforms = audit.platforms ?? [];
+  const citedPlatforms = platforms.filter((p) => p.present).length;
+  const geoScore = audit.siteSignals?.geoScore ?? audit.score;
 
   return {
     ...base,
@@ -113,9 +115,9 @@ export function toSnapshot(
     updatedAt: payload.updatedAt,
     citationScore: audit.score,
     citedPlatforms,
-    totalPlatforms: audit.platforms.length,
-    visibilityScore: audit.siteSignals.geoScore,
-    domainRating: Math.min(99, Math.round(audit.siteSignals.geoScore * 0.7)),
+    totalPlatforms: platforms.length,
+    visibilityScore: geoScore,
+    domainRating: Math.min(99, Math.round(geoScore * 0.7)),
     weeklyLift: "—",
     weeklyLiftAvailable: false,
     communityMentions: 0,
@@ -123,10 +125,10 @@ export function toSnapshot(
     gaps: audit.gaps,
     auditId: audit.id,
     auditMode: audit.mode,
-    siteSignals: audit.siteSignals,
+    siteSignals: audit.siteSignals ?? null,
     hasRealAudit: true,
-    promptResults: audit.promptResults,
-    platformPresence: audit.platforms,
+    promptResults: audit.promptResults ?? [],
+    platformPresence: platforms,
     citationHistory: [],
     contentStrategy: [],
     contentStrategyGeneratedAt: null,

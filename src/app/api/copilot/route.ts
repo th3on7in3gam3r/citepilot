@@ -158,9 +158,16 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     captureServerException(error, { route: "POST /api/copilot" });
+    const detail =
+      error instanceof Error ? error.message : "Unknown server error";
     console.error("POST /api/copilot", error);
     return NextResponse.json(
-      { error: "Insight generation failed" },
+      {
+        error: "Insight generation failed",
+        code: "COPILOT_INTERNAL",
+        detail:
+          process.env.NODE_ENV === "development" ? detail : undefined,
+      },
       { status: 500 },
     );
   }

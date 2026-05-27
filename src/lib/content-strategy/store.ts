@@ -45,10 +45,17 @@ export async function getContentStrategy(
     [workspaceId],
   );
   if (!row) return null;
+  let items: ContentCalendarItem[] = [];
+  try {
+    const parsed = JSON.parse(row.items) as unknown;
+    items = Array.isArray(parsed) ? (parsed as ContentCalendarItem[]) : [];
+  } catch {
+    items = [];
+  }
   return {
     workspaceId: row.workspace_id,
     auditId: row.audit_id,
-    items: JSON.parse(row.items) as ContentCalendarItem[],
+    items,
     generatedAt: row.generated_at,
   };
 }
