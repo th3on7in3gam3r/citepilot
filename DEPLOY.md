@@ -39,7 +39,7 @@
 8. **Google Cloud**: OAuth consent + Web client; authorized redirect URI `https://getcitepilot.com/api/gsc/callback` (and Vercel preview URL for staging).
 9. **Vercel Cron** (in `vercel.json`): `weekly-rescan` Mondays 12:00 UTC (Pilot/Fleet re-audits), `weekly-digest` Mondays 14:00 UTC — set `CRON_SECRET` on Vercel (mandatory in production).
 10. **Billing**: In production, paid features require Stripe + Neon Auth — misconfigured env will **deny** Pilot/Fleet access (no silent bypass).
-11. **Fleet API export**: `GET /api/workspaces/[id]/export` requires an active Fleet subscription.
+11. **Fleet API**: `GET /api/workspaces/[id]/export` (session or `Authorization: Bearer cp_fleet_…`), `POST /api/workspaces/[id]/prompts/import` (CSV), and `GET/POST /api/fleet/api-keys` require Fleet. Rate limit: 120 requests/hour per key or session.
 12. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
 
 ## CMS publishing setup

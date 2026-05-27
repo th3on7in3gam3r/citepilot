@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Start free with a citation audit. Scale with Pilot or Fleet when monitoring launches.",
+    "Start free with a citation audit. Scale with Pilot or Fleet for weekly monitoring, CMS publishing, and agency tools.",
 };
 
 export default function PricingPage() {

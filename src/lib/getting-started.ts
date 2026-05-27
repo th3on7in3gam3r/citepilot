@@ -9,6 +9,8 @@ export type GettingStartedProgress = {
   dismissedAt?: string;
   visitedDiscussions?: boolean;
   publishedWebflow?: boolean;
+  /** Any CMS publish (Webflow, WordPress, Ghost, Shopify, Framer) */
+  publishedCms?: boolean;
 };
 
 export const GETTING_STARTED_STORAGE_KEY = "citepilot_getting_started";
@@ -48,8 +50,9 @@ export const gettingStartedSteps: GettingStartedStep[] = [
   },
   {
     id: "publish",
-    title: "Publish to Webflow",
-    description: "Push a draft live to your CMS collection.",
+    title: "Publish to your CMS",
+    description:
+      "Push a draft to Webflow, WordPress, Ghost, Shopify, or Framer from the content queue.",
     href: "/dashboard/content",
     optional: true,
   },
@@ -77,9 +80,13 @@ export function writeGettingStartedProgress(
 export function markGettingStartedStep(
   step: keyof Pick<
     GettingStartedProgress,
-    "visitedDiscussions" | "publishedWebflow"
+    "visitedDiscussions" | "publishedWebflow" | "publishedCms"
   >,
 ): void {
+  if (step === "publishedWebflow") {
+    writeGettingStartedProgress({ publishedWebflow: true, publishedCms: true });
+    return;
+  }
   writeGettingStartedProgress({ [step]: true });
 }
 
@@ -93,7 +100,6 @@ export type StepCompletionInput = {
   hasRealAudit: boolean;
   hasGeneratedPost: boolean;
   progress: GettingStartedProgress;
-  webflowConfigured: boolean;
 };
 
 export function isStepComplete(
@@ -110,8 +116,9 @@ export function isStepComplete(
     case "content":
       return input.hasGeneratedPost;
     case "publish":
-      if (!input.webflowConfigured) return true;
-      return Boolean(input.progress.publishedWebflow);
+      return Boolean(
+        input.progress.publishedCms || input.progress.publishedWebflow,
+      );
     default:
       return false;
   }
@@ -122,9 +129,7 @@ export function gettingStartedCompletion(input: StepCompletionInput): {
   total: number;
   allDone: boolean;
 } {
-  const applicable = gettingStartedSteps.filter(
-    (s) => s.id !== "publish" || input.webflowConfigured,
-  );
+  const applicable = gettingStartedSteps;
   const completed = applicable.filter((s) => isStepComplete(s.id, input)).length;
   return {
     completed,

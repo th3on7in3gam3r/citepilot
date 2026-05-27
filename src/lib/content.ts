@@ -145,8 +145,8 @@ export const pricingTiers = [
     features: [
       "Unlimited client workspaces",
       "White-label audit reports",
-      "API access",
-      "Bulk prompt import",
+      "JSON export + API keys",
+      "CSV bulk prompt import",
       "Priority support",
     ],
     cta: "Subscribe to Fleet",

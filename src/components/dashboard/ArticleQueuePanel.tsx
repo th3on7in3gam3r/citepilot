@@ -236,10 +236,8 @@ export function ArticleQueuePanel({
             ? `Published “${data.title}” to ${label} — ${data.liveUrl}`
             : `Published “${data.title}” to ${label}`,
       );
-      if (provider === "webflow") {
-        markGettingStartedStep("publishedWebflow");
-        notifyChecklistUpdate();
-      }
+      markGettingStartedStep("publishedCms");
+      notifyChecklistUpdate();
       await load();
     } catch {
       setError("Network error — try again");

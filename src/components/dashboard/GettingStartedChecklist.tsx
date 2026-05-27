@@ -12,10 +12,6 @@ import {
   type GettingStartedProgress,
 } from "@/lib/getting-started";
 
-type WebflowStatus = {
-  configured: boolean;
-};
-
 export function GettingStartedChecklist({
   workspace,
   welcome,
@@ -25,7 +21,6 @@ export function GettingStartedChecklist({
 }) {
   const [progress, setProgress] = useState<GettingStartedProgress>({});
   const [hasGeneratedPost, setHasGeneratedPost] = useState(false);
-  const [webflowConfigured, setWebflowConfigured] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -44,12 +39,6 @@ export function GettingStartedChecklist({
       )
       .catch(() => undefined);
 
-    void fetch("/api/content/webflow/status")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: WebflowStatus | null) =>
-        setWebflowConfigured(Boolean(data?.configured)),
-      )
-      .catch(() => undefined);
   }, [loadProgress]);
 
   useEffect(() => {
@@ -70,7 +59,6 @@ export function GettingStartedChecklist({
     hasRealAudit: workspace.hasRealAudit,
     hasGeneratedPost,
     progress,
-    webflowConfigured,
   };
 
   const { completed, total, allDone } = gettingStartedCompletion(input);
@@ -128,9 +116,7 @@ export function GettingStartedChecklist({
 
       {!collapsed && (
         <ol className="divide-y divide-border px-2 py-1 sm:px-4">
-          {gettingStartedSteps
-            .filter((step) => step.id !== "publish" || webflowConfigured)
-            .map((step, index) => {
+          {gettingStartedSteps.map((step, index) => {
               const done = isStepComplete(step.id, input);
               return (
                 <li key={step.id}>

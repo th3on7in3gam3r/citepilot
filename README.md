@@ -29,10 +29,16 @@ Data layer: **SQLite** locally (`.data/citepilot.db`) or **Neon Postgres** when 
 | `GET /api/discussions?q=` | HN + Stack Overflow + web (Serper/Tavily) |
 | `GET /api/health` | DB + env key checklist (no secrets exposed) |
 | `GET /api/admin/stats` | Admin metrics |
+| `GET /api/workspaces/[id]/export` | Fleet JSON export (session or API key) |
+| `POST /api/workspaces/[id]/prompts/import` | Fleet CSV prompt import |
+| `GET/POST /api/fleet/api-keys` | Fleet API key management |
+| `POST /api/billing/webhook` | Stripe subscription sync |
+| `GET /api/gsc/metrics` | Google Search Console (OAuth) |
+| `GET/POST /api/cron/weekly-*` | Weekly digest & re-scan (CRON_SECRET) |
 
 **Admin console** (separate from user dashboard): `/admin` — sign in at `/admin/login` when `ADMIN_SECRET` is set. Without it, admin runs in dev mode with a warning banner.
 
-Copy `.env.example` → `.env.local`. Key vars: `OPENAI_API_KEY`, `NEON_URL` or `DATABASE_URL`, `NEON_AUTH_BASE_URL` + `NEON_AUTH_COOKIE_SECRET`, `ADMIN_SECRET`.
+Copy `.env.example` → `.env.local`. Key vars: `OPENAI_API_KEY`, `NEON_URL` or `DATABASE_URL`, `NEON_AUTH_BASE_URL` + `NEON_AUTH_COOKIE_SECRET`, `ADMIN_SECRET`, Stripe + `CRON_SECRET` for production.
 
 ## Dashboard status
 
@@ -47,7 +53,7 @@ Copy `.env.example` → `.env.local`. Key vars: `OPENAI_API_KEY`, `NEON_URL` or 
 | Discussions | HN + Stack Overflow + Serper/Tavily web search |
 | Admin (`/admin`) | Workspaces, audits, waitlist (`ADMIN_SECRET` in prod) |
 
-**Auth:** [Neon Auth](https://neon.com/docs/auth/overview) at `/auth/sign-in` — users stored in your Neon project (no Supabase). **Billing:** Pilot/Fleet plans with workspace limits (Free 1 · Pilot 3 · Fleet unlimited). **Not yet:** Stripe webhook (domain), GSC metrics, email digests.
+**Auth:** [Neon Auth](https://neon.com/docs/auth/overview) at `/auth/sign-in`. **Billing:** Stripe Pilot/Fleet with workspace limits (Free 1 · Pilot 3 · Fleet unlimited). **Fleet:** JSON export, CSV prompt import, API keys (rate-limited), white-label share links. **Monitoring:** Weekly re-scans, citation history, optional email digests (`CRON_SECRET` + Resend). **CMS:** Webflow (env), WordPress, Ghost, Shopify, Framer (per-workspace credentials).
 
 ## Structure
 
@@ -77,3 +83,4 @@ See [AUDIT.md](./AUDIT.md) for cleanup notes and what to build next.
 | `npm run dev` | Dev server |
 | `npm run build` | Production build |
 | `npm run start` | Run production build |
+| `npm test` | Vitest unit tests |

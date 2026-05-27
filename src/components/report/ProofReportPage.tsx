@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { WorkspaceProvider, useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { PLATFORMS } from "@/lib/dashboard";
@@ -8,6 +9,11 @@ import {
   platformRowsFromWorkspace,
   promptRowsForWorkspace,
 } from "@/lib/dashboard-data";
+import {
+  ReportBrandingHeader,
+  ReportPoweredByFooter,
+} from "@/components/report/ReportBrandingHeader";
+import { defaultWorkspacePreferences } from "@/lib/settings";
 
 export function ProofReportPage() {
   return (
@@ -19,6 +25,18 @@ export function ProofReportPage() {
 
 function ProofReportInner() {
   const { workspace, ready } = useWorkspaceContext();
+  const pdfTitle = workspace
+    ? `${workspace.domain} — citation proof report`
+    : "Citation proof report";
+
+  useEffect(() => {
+    if (!workspace) return;
+    const previous = document.title;
+    document.title = pdfTitle;
+    return () => {
+      document.title = previous;
+    };
+  }, [pdfTitle, workspace]);
 
   if (!ready || !workspace) {
     return (
@@ -41,21 +59,27 @@ function ProofReportInner() {
           "Turn buyer discussion insights into citation-ready content",
         ];
   const generatedAt = new Date().toLocaleString();
+  const whiteLabel =
+    workspace.preferences?.whiteLabel ?? defaultWorkspacePreferences.whiteLabel;
+
+  function exportPdf() {
+    document.title = pdfTitle;
+    window.print();
+  }
 
   return (
-    <div className="min-h-[100dvh] bg-cream print:bg-white">
+    <div className="min-h-[100dvh] bg-cream print:bg-white citepilot-print-report">
       <header className="border-b border-border bg-white px-6 py-6 print:border-0">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-              Stakeholder proof report
-            </p>
-            <h1 className="mt-2 font-display text-2xl font-bold text-ink">
-              {workspace.domain}
-            </h1>
-            <p className="mt-1 text-sm text-muted">
-              Generated {generatedAt} · Use this page to share current AI visibility,
-              benchmark position, and next actions with clients or internal teams.
+            <ReportBrandingHeader
+              whiteLabel={whiteLabel}
+              domain={workspace.domain}
+              subtitle={`Proof report · ${workspace.domain} · generated ${generatedAt}`}
+            />
+            <p className="mt-3 max-w-2xl text-sm text-muted">
+              Share current AI visibility, benchmark position, and next actions with
+              clients or internal teams. Use Save as PDF for a print-ready export.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
@@ -67,10 +91,10 @@ function ProofReportInner() {
             </Link>
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={exportPdf}
               className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white"
             >
-              Save as PDF
+              Export PDF
             </button>
           </div>
         </div>
@@ -286,6 +310,9 @@ function ProofReportInner() {
           </div>
         </section>
       </main>
+      <div className="mx-auto max-w-5xl px-6 pb-10">
+        <ReportPoweredByFooter hidePoweredBy={whiteLabel.hidePoweredBy} />
+      </div>
     </div>
   );
 }

@@ -34,7 +34,7 @@ const quickAnswers = [
   },
   {
     q: "Where are the docs today?",
-    a: "The current user-facing guide lives in the CMS publishing help page. More in-app guides can be added here over time.",
+    a: "Start with the CMS publishing guide (Webflow, WordPress, Ghost, Shopify, Framer). Fleet users can also import prompts via CSV and use API keys under Settings.",
   },
 ] as const;
 

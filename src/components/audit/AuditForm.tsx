@@ -247,7 +247,8 @@ export function AuditForm() {
                   Want weekly monitoring?
                 </p>
                 <p className="mt-1 text-xs text-muted">
-                  Join the Pilot waitlist for re-scans and prompt tracking.
+                  Pilot and Fleet include weekly re-scans and citation history — see
+                  Pricing to upgrade, or join the list for product updates.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <input

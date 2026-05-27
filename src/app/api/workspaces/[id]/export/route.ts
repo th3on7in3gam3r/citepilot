@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiUserId, requireApiUser } from "@/lib/auth/api";
-import {
-  FLEET_UPGRADE_MESSAGE,
-  userHasFleetAccess,
-} from "@/lib/billing/access";
+import { requireFleetAccess } from "@/lib/fleet/request-auth";
 import { PLATFORMS } from "@/lib/dashboard";
 import {
   buildCompetitorBenchmark,
@@ -40,21 +36,13 @@ function downloadFilename(domain: string) {
 
 export async function GET(request: Request, { params }: Params) {
   try {
-    const user = await requireApiUser(request);
-    if (user instanceof NextResponse) return user;
-    const userId = apiUserId(user);
+    const auth = await requireFleetAccess(request);
+    if (auth instanceof NextResponse) return auth;
 
     const { id } = await params;
-    const workspace = await getWorkspaceById(id, userId);
+    const workspace = await getWorkspaceById(id, auth.userId);
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
-    }
-
-    if (!(await userHasFleetAccess(userId))) {
-      return NextResponse.json(
-        { error: FLEET_UPGRADE_MESSAGE, code: "FLEET_REQUIRED" },
-        { status: 403 },
-      );
     }
 
     const snapshot = await enrichSnapshotWithBacklinks(
@@ -90,6 +78,7 @@ export async function GET(request: Request, { params }: Params) {
 
     const response = NextResponse.json(payload);
     response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("X-CitePilot-Auth", auth.viaApiKey ? "api-key" : "session");
 
     if (new URL(request.url).searchParams.get("download") === "1") {
       response.headers.set(

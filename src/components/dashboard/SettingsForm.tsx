@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
+import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
   deleteWorkspace,
@@ -558,12 +559,21 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </ul>
         </Panel>
 
+        {isFleet && workspaceId && (
+          <FleetSettingsPanel
+            workspaceId={workspaceId}
+            onPromptsImported={(prompts) =>
+              setMonitoredPromptsText(prompts.join("\n"))
+            }
+          />
+        )}
+
         {isFleet && (
           <Panel title="White-label reports">
             <p className="mb-4 text-sm text-muted">
-              Fleet — branding on shareable audit links from GEO Audit. The hide
-              branding toggle saves automatically; agency name and logo use Save
-              changes below.
+              Fleet — agency branding on GEO audit share links and the stakeholder
+              proof report. The hide branding toggle saves automatically; agency name
+              and logo use Save changes below.
             </p>
             <label className="block text-sm font-semibold text-ink">
               Agency name
@@ -598,7 +608,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             <label className="mt-5 flex items-center justify-between gap-4 rounded-xl bg-surface px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-ink">Hide “Powered by CitePilot”</p>
-                <p className="text-xs text-muted">On public audit share pages</p>
+                <p className="text-xs text-muted">
+                  On audit share links and proof report PDF export
+                </p>
               </div>
               <button
                 type="button"

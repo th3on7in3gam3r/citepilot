@@ -61,6 +61,25 @@ CREATE TABLE IF NOT EXISTS workspace_content_strategies (
   generated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS fleet_api_keys (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  key_prefix TEXT NOT NULL,
+  key_hash TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL,
+  last_used_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_fleet_api_keys_user ON fleet_api_keys(user_id);
+
+CREATE TABLE IF NOT EXISTS fleet_api_usage (
+  subject TEXT NOT NULL,
+  window_key TEXT NOT NULL,
+  request_count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (subject, window_key)
+);
+
 CREATE TABLE IF NOT EXISTS waitlist (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,

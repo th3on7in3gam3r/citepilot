@@ -256,3 +256,25 @@ body {
 .bg-mint\/10 { background-color: color-mix(in srgb, var(--color-mint) 10%, transparent); }
 .border-accent\/40 { border-color: color-mix(in srgb, var(--color-accent) 40%, transparent); }
 .shadow-accent\/25 { --tw-shadow-color: color-mix(in srgb, var(--color-accent) 25%, transparent); }
+
+@media print {
+  @page {
+    margin: 12mm;
+    size: A4;
+  }
+
+  body {
+    background: #fff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .citepilot-print-report main,
+  .citepilot-print-report header {
+    break-inside: avoid-page;
+  }
+
+  .citepilot-print-report section {
+    break-inside: avoid;
+  }
+}
