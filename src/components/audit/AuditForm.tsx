@@ -90,7 +90,11 @@ export function AuditForm() {
     }
 
     const workspaceId = getStoredWorkspaceId() ?? undefined;
-    trackEvent("audit_started", { domain: cleanDomain, workspaceId });
+    trackEvent("audit_started", {
+      domain: cleanDomain,
+      workspaceId,
+      source: "public_audit",
+    });
 
     try {
       const audit = await runAudit({
@@ -99,7 +103,9 @@ export function AuditForm() {
         workspaceId,
       });
       setResult(audit);
-      trackAuditCompleted(workspaceId ?? "anonymous");
+      trackAuditCompleted(workspaceId ?? "anonymous", {
+        source: "public_audit",
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Audit failed");
     } finally {

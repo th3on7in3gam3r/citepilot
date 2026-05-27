@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { trackEvent } from "@/lib/analytics/track";
 
 type CopilotKind = "prioritize" | "explain-gap";
 
@@ -70,6 +71,11 @@ export function CopilotInsight({
       }
 
       setText(data.text ?? "");
+      trackEvent("insights_completed", {
+        workspaceId,
+        kind,
+        source: kind === "prioritize" ? "overview" : "geo_audit",
+      });
     } catch {
       setError("Network error — try again.");
     } finally {

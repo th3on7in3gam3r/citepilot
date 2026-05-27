@@ -73,6 +73,8 @@ Covers `/api/health`, marketing pages, cron auth gates, and copilot auth. Manual
 
 - [ ] `SENTRY_DSN` (or `NEXT_PUBLIC_SENTRY_DSN`) on Vercel — API failures surface in Sentry
 - [ ] CitePilot Insights: Pilot user can run **Prioritize** / **Explain gap**; 21st request in an hour returns 429
+- [ ] `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` and/or `NEXT_PUBLIC_POSTHOG_KEY` — funnel events in dashboard
+- [ ] `ADMIN_OPS_EMAIL` set — Monday ops report cron emails signups, audits, and cron failures
 
 ## Not blocking smoke pass
 

@@ -27,7 +27,7 @@ import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
 } from "@/lib/settings";
-import { trackAuditCompleted } from "@/lib/analytics/track";
+import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { effectInit } from "@/lib/react/effect-init";
 
 const inputClass =
@@ -238,6 +238,11 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         }
         setAuditing(true);
         setMessage("Settings saved. Running citation audit…");
+        trackEvent("audit_started", {
+          workspaceId,
+          domain: answers.domain,
+          source: "settings",
+        });
         await runAudit({
           domain: answers.domain,
           prompts: promptList,
@@ -246,6 +251,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         if (workspaceId) {
           trackAuditCompleted(workspaceId, {
             isSecond: workspace.hasRealAudit,
+            source: "settings",
           });
         }
         onSaved(updated);

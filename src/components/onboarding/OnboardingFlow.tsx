@@ -43,7 +43,7 @@ export function OnboardingFlow() {
   useEffect(() => {
     effectInit(() => {
       if (sessionStorage.getItem("citepilot_signup_tracked")) return;
-      trackEvent("signup_completed");
+      trackEvent("signup_completed", { method: "onboarding" });
       sessionStorage.setItem("citepilot_signup_tracked", "1");
     });
   }, []);

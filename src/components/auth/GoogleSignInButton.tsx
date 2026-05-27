@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
+import { trackEvent } from "@/lib/analytics/track";
 
 function GoogleIcon() {
   return (
@@ -30,10 +31,13 @@ function GoogleIcon() {
 export function GoogleSignInButton({
   label = "Continue with Google",
   callbackPath = "/dashboard",
+  signupIntent = false,
 }: {
   label?: string;
   /** Post-auth redirect when no `from` query param is set */
   callbackPath?: string;
+  /** Fire signup_started when used on the sign-up page */
+  signupIntent?: boolean;
 }) {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -48,6 +52,10 @@ export function GoogleSignInButton({
       searchParams.get("redirect") ??
       callbackPath;
     const path = from.startsWith("/") ? from : "/dashboard";
+
+    if (signupIntent) {
+      trackEvent("signup_started", { method: "google" });
+    }
 
     try {
       await authClient.signIn.social({

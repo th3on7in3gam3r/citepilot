@@ -11,8 +11,9 @@ import {
   planForUser,
 } from "@/lib/billing/limits-server";
 import { getBillingByUserId } from "@/lib/billing/store";
-import { runCitationAudit } from "@/lib/audit/run-audit";
+import { getRecentAuditsForWorkspace, runCitationAudit } from "@/lib/audit/run-audit";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
+import { trackServerEvent } from "@/lib/analytics/track-server";
 import { captureServerException } from "@/lib/observability/sentry";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
@@ -89,6 +90,24 @@ export async function POST(request: Request) {
         audit,
         userEmail: sessionUser?.email,
       }).catch((err) => console.error("Audit email failed", err));
+
+      const recent = await getRecentAuditsForWorkspace(body.workspaceId, 2);
+      const isSecond =
+        recent.filter((row) => row.id !== audit.id).length > 0;
+      void trackServerEvent(
+        isSecond ? "second_audit_completed" : "audit_completed",
+        {
+          distinctId: body.workspaceId,
+          workspaceId: body.workspaceId,
+          source: "api",
+        },
+      );
+    } else {
+      void trackServerEvent("audit_completed", {
+        distinctId: domain,
+        domain,
+        source: "public_audit",
+      });
     }
 
     const response = NextResponse.json({

@@ -1,12 +1,16 @@
+import posthog from "posthog-js";
+
 export type AnalyticsEvent =
   | "audit_started"
   | "audit_completed"
+  | "signup_started"
   | "signup_completed"
   | "workspace_created"
   | "pilot_checkout_started"
   | "fleet_checkout_started"
   | "cms_published"
-  | "second_audit_completed";
+  | "second_audit_completed"
+  | "insights_completed";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 
@@ -16,19 +20,16 @@ declare global {
       event: string,
       options?: { props?: Record<string, string | number> },
     ) => void;
-    posthog?: {
-      capture: (event: string, props?: Record<string, unknown>) => void;
-    };
   }
 }
 
 export function trackAuditCompleted(
   workspaceId: string,
-  options?: { isSecond?: boolean },
+  options?: { isSecond?: boolean; source?: string },
 ): void {
   trackEvent(
     options?.isSecond ? "second_audit_completed" : "audit_completed",
-    { workspaceId },
+    { workspaceId, source: options?.source },
   );
 }
 
@@ -50,7 +51,9 @@ export function trackEvent(name: AnalyticsEvent, props?: TrackProps): void {
   }
 
   try {
-    window.posthog?.capture(name, props);
+    if (posthog.__loaded) {
+      posthog.capture(name, props);
+    }
   } catch {
     /* ignore */
   }

@@ -83,6 +83,14 @@ export async function GET() {
         ? "Weekly digest cron protected"
         : "Set CRON_SECRET for /api/cron/weekly-digest",
     },
+    opsReport: {
+      ok: Boolean(process.env.ADMIN_OPS_EMAIL?.trim() || isEmailConfigured()),
+      detail: process.env.ADMIN_OPS_EMAIL?.trim()
+        ? `Weekly ops report → ${process.env.ADMIN_OPS_EMAIL.trim()}`
+        : isEmailConfigured()
+          ? "Weekly ops report uses EMAIL_FROM address"
+          : "Set ADMIN_OPS_EMAIL + RESEND_API_KEY for ops report",
+    },
   };
 
   try {

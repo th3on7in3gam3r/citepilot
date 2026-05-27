@@ -1,6 +1,8 @@
 import { runCitationAudit } from "@/lib/audit/run-audit";
 import { resolveMonitoredPrompts } from "@/lib/audit/resolve-prompts";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
+import { cronPeriodKey, recordCronDispatch } from "@/lib/cron/dispatch-log";
+import { RESCAN_BATCH_JOB } from "@/lib/email/ops-report";
 import { planForUser } from "@/lib/billing/limits-server";
 import { isPaidPlan } from "@/lib/billing/types";
 import { getBillingByUserId } from "@/lib/billing/store";
@@ -107,6 +109,15 @@ export async function runScheduledRescanBatch(): Promise<{
       errors++;
     }
   }
+
+  const periodKey = cronPeriodKey(RESCAN_BATCH_JOB);
+  await recordCronDispatch({
+    jobName: RESCAN_BATCH_JOB,
+    workspaceId: null,
+    periodKey,
+    status: errors > 0 ? "failed" : "sent",
+    error: `scanned=${scanned};skipped=${skipped};errors=${errors}`,
+  });
 
   return { scanned, skipped, errors };
 }

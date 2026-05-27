@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
+import { trackServerEvent } from "@/lib/analytics/track-server";
 import { completeCopilot } from "@/lib/copilot/complete";
 import { captureServerException } from "@/lib/observability/sentry";
 import { COPILOT_RATE_LIMIT_PER_HOUR } from "@/lib/rate-limit/constants";
@@ -123,6 +124,12 @@ export async function POST(request: Request) {
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 503 });
     }
+
+    void trackServerEvent("insights_completed", {
+      distinctId: userId ?? workspaceId,
+      workspaceId,
+      kind,
+    });
 
     return NextResponse.json(
       {

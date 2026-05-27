@@ -122,6 +122,10 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
     a: "On your main dashboard after onboarding — it tracks workspace setup, first audit, discussions, content generation, and optional CMS publish. Dismiss it anytime; progress is saved in your browser.",
   },
   {
+    q: "How is product analytics tracked?",
+    a: "Optional Plausible and PostHog scripts load when env vars are set. Events include audit start/complete, signup, workspace creation, checkout, CMS publish, and CitePilot Insights usage. Server API routes also send PostHog events when POSTHOG_KEY is configured.",
+  },
+  {
     q: "What is CitePilot Insights?",
     a: "One-shot AI guidance grounded in your workspace audit — not a general chat. On Overview, use “Prioritize with CitePilot” for your top 3 weekly actions. On GEO Audit, use “Explain with CitePilot” on any gap. Requires a completed audit and Pilot or Fleet.",
   },

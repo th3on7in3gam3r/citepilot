@@ -91,6 +91,14 @@ await check("GET /api/cron/weekly-digest (no auth)", async () => {
   return `status ${res.status} (protected)`;
 });
 
+await check("GET /api/cron/weekly-ops-report (no auth)", async () => {
+  const res = await fetchStatus("/api/cron/weekly-ops-report");
+  if (res.status !== 401 && res.status !== 503) {
+    throw new Error(`expected 401/503, got ${res.status}`);
+  }
+  return `status ${res.status} (protected)`;
+});
+
 await check("POST /api/copilot (no auth)", async () => {
   const res = await fetchStatus("/api/copilot", {
     method: "POST",

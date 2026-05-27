@@ -34,6 +34,7 @@
    | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional — Plausible domain for funnel events |
    | `NEXT_PUBLIC_POSTHOG_KEY` | Optional — PostHog project API key |
    | `NEXT_PUBLIC_POSTHOG_HOST` | Optional — PostHog ingest host (default `https://us.i.posthog.com`) |
+   | `ADMIN_OPS_EMAIL` | Optional — receives weekly ops report (`/api/cron/weekly-ops-report`) |
    | `SENTRY_DSN` | Optional — error monitoring (audits, webhooks, OpenAI) |
 
 4. Deploy → attach custom domain **`getcitepilot.com`** (production URL; `citepilot.ai` is not used).
