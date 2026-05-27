@@ -51,10 +51,28 @@ export function CitationVolumeChart({
 }: CitationVolumeChartProps) {
   const [level, setLevel] = useState(8);
 
+  const singlePointFromScore =
+    hasRealAudit &&
+    citationHistory.length === 0 &&
+    citationScore !== undefined;
+
   const insufficientHistory =
-    hasRealAudit && citationHistory.length === 0 && citationScore !== undefined;
+    hasRealAudit &&
+    citationHistory.length === 0 &&
+    citationScore === undefined;
 
   const { current, projected, labels, realHistoryPoints } = useMemo(() => {
+    if (singlePointFromScore) {
+      const anchor = Math.max(0, Math.min(100, Math.round(citationScore!)));
+      const current = [{ month: "Latest audit", value: anchor }];
+      return {
+        current,
+        projected: buildProjectedCitationSeries(current, level),
+        labels: current.map((point) => point.month),
+        realHistoryPoints: 1,
+      };
+    }
+
     if (insufficientHistory) {
       return {
         current: [],
@@ -89,7 +107,15 @@ export function CitationVolumeChart({
       labels: CHART_MONTHS,
       realHistoryPoints: 0,
     };
-  }, [citationHistory, seed, level, citationScore, hasRealAudit, insufficientHistory]);
+  }, [
+    citationHistory,
+    seed,
+    level,
+    citationScore,
+    hasRealAudit,
+    insufficientHistory,
+    singlePointFromScore,
+  ]);
 
   const yMax = useMemo(
     () => chartYMax([...current.map((d) => d.value), ...projected.map((d) => d.value)]),
@@ -121,7 +147,7 @@ export function CitationVolumeChart({
       : realHistoryPoints >= 2
         ? `${realHistoryPoints} saved audits · real trend`
         : realHistoryPoints === 1
-          ? "1 saved audit · run another for trend"
+          ? "1 audit saved · run another for a trend line"
           : "Latest audit loaded · history building";
 
   if (insufficientHistory || (!hasRealAudit && current.length === 0)) {

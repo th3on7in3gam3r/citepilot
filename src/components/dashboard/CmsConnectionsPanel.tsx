@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { cmsPlatforms } from "@/lib/features";
 import type { CmsProvider } from "@/lib/cms/types";
@@ -168,7 +169,9 @@ export function CmsConnectionsPanel({
   }, [workspaceId]);
 
   useEffect(() => {
-    void load();
+    effectInit(() => {
+      void load();
+    });
   }, [load]);
 
   const providerMap = useMemo(

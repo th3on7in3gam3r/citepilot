@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
@@ -26,6 +27,8 @@ import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
 } from "@/lib/settings";
+import { trackAuditCompleted } from "@/lib/analytics/track";
+import { effectInit } from "@/lib/react/effect-init";
 
 const inputClass =
   "mt-2 w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20";
@@ -60,6 +63,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
   const [deleting, setDeleting] = useState(false);
   const [isFleet, setIsFleet] = useState(false);
+  const [isPilot, setIsPilot] = useState(false);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(
     PROMPT_LIMIT_FREE,
   );
@@ -78,21 +82,29 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   useEffect(() => {
     void fetch("/api/billing/status", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { isFleet?: boolean } | null) => setIsFleet(Boolean(d?.isFleet)))
-      .catch(() => setIsFleet(false));
+      .then((d: { isFleet?: boolean; isPilot?: boolean; isPaid?: boolean } | null) => {
+        setIsFleet(Boolean(d?.isFleet));
+        setIsPilot(Boolean(d?.isPilot || d?.isPaid));
+      })
+      .catch(() => {
+        setIsFleet(false);
+        setIsPilot(false);
+      });
   }, []);
 
   useEffect(() => {
-    setDomain(workspace.domain);
-    setBusinessType(workspace.businessType);
-    setDescription(workspace.description);
-    setBuyerQuestion(workspace.buyerQuestion);
-    setAudiences(workspace.audiences);
-    setCompetitors(workspace.competitors);
-    setPreferences(workspace.preferences ?? defaultWorkspacePreferences);
-    setMonitoredPromptsText(
-      (workspace.preferences?.monitoredPrompts ?? []).join("\n"),
-    );
+    effectInit(() => {
+      setDomain(workspace.domain);
+      setBusinessType(workspace.businessType);
+      setDescription(workspace.description);
+      setBuyerQuestion(workspace.buyerQuestion);
+      setAudiences(workspace.audiences);
+      setCompetitors(workspace.competitors);
+      setPreferences(workspace.preferences ?? defaultWorkspacePreferences);
+      setMonitoredPromptsText(
+        (workspace.preferences?.monitoredPrompts ?? []).join("\n"),
+      );
+    });
   }, [workspace]);
 
   function parseMonitoredPrompts(): string[] {
@@ -231,6 +243,11 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           prompts: promptList,
           workspaceId,
         });
+        if (workspaceId) {
+          trackAuditCompleted(workspaceId, {
+            isSecond: workspace.hasRealAudit,
+          });
+        }
         onSaved(updated);
         setMessage("Settings saved and audit complete.");
       }
@@ -522,7 +539,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   hint: "HN & Stack Overflow threads in your niche",
                 },
               ] as const
-            ).map((item) => (
+            ).map((item) => {
+              const needsPilot =
+                item.key === "competitorMoveAlerts" && !isPilot && !isFleet;
+              return (
               <li
                 key={item.key}
                 className="flex items-start justify-between gap-4 rounded-xl bg-surface px-4 py-3"
@@ -535,8 +555,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   type="button"
                   role="switch"
                   aria-checked={preferences[item.key]}
-                  disabled={togglesBusy}
+                  disabled={togglesBusy || needsPilot}
                   onClick={() => {
+                    if (needsPilot) return;
                     const next = {
                       ...preferences,
                       [item.key]: !preferences[item.key],
@@ -555,8 +576,18 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                   />
                 </button>
               </li>
-            ))}
+            );
+            })}
           </ul>
+          {!isPilot && !isFleet && (
+            <div className="mt-4">
+              <UpgradePrompt
+                compact
+                title="Competitor move alerts (Pilot+)"
+                description="Get email when you lose prompts, platforms slip, or new competitor gaps appear."
+              />
+            </div>
+          )}
         </Panel>
 
         {isFleet && workspaceId && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
@@ -30,7 +31,7 @@ export default function DiscussionsPage() {
   useEffect(() => {
     if (!workspace) return;
     const query = workspace.buyerQuestion || workspace.domain;
-    setLoading(true);
+    effectInit(() => setLoading(true));
     fetch(`/api/discussions?q=${encodeURIComponent(query)}`)
       .then((r) => r.json())
       .then((data: { threads: DiscussionThread[] }) =>

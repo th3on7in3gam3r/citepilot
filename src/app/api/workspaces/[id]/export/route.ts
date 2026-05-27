@@ -52,7 +52,7 @@ export async function GET(request: Request, { params }: Params) {
     const promptRows = promptRowsForWorkspace(snapshot);
     const platformRows = platformRowsFromWorkspace(snapshot, PLATFORMS);
     const benchmark = buildCompetitorBenchmark(snapshot, promptRows);
-    const alerts = buildDashboardAlerts(snapshot, promptRows);
+    const alerts = buildDashboardAlerts(snapshot);
     const correlations = buildCorrelationInsights(snapshot, promptRows);
 
     const payload = {

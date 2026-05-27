@@ -8,9 +8,11 @@ import {
   gettingStartedCompletion,
   gettingStartedSteps,
   isStepComplete,
+  markGettingStartedStep,
   readGettingStartedProgress,
   type GettingStartedProgress,
 } from "@/lib/getting-started";
+import { effectInit } from "@/lib/react/effect-init";
 
 export function GettingStartedChecklist({
   workspace,
@@ -29,8 +31,13 @@ export function GettingStartedChecklist({
   }, []);
 
   useEffect(() => {
-    loadProgress();
-    setHydrated(true);
+    effectInit(() => {
+      loadProgress();
+      setHydrated(true);
+      if (welcome) {
+        markGettingStartedStep("visitedDiscussions");
+      }
+    });
 
     void fetch("/api/blog/posts", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : { posts: [] }))
@@ -38,8 +45,7 @@ export function GettingStartedChecklist({
         setHasGeneratedPost((data.posts?.length ?? 0) > 0),
       )
       .catch(() => undefined);
-
-  }, [loadProgress]);
+  }, [loadProgress, welcome]);
 
   useEffect(() => {
     const onUpdate = () => loadProgress();

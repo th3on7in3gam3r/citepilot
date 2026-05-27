@@ -15,8 +15,10 @@ import {
   fetchWorkspacesList,
   getStoredWorkspaceId,
   normalizeSnapshot,
+  runAudit,
   storeWorkspaceId,
 } from "@/lib/client/api";
+import { effectInit } from "@/lib/react/effect-init";
 import type { WorkspaceLimits } from "@/lib/billing/limits";
 import {
   ONBOARDING_STORAGE_KEY,
@@ -83,6 +85,14 @@ export function useWorkspace() {
         const created = await createWorkspaceFromOnboarding(answers);
         if (created) {
           setWorkspace(normalizeSnapshot(created.workspace, created.id));
+          const prompts = [answers.buyerQuestion].filter(Boolean);
+          if (prompts.length > 0) {
+            await runAudit({
+              domain: answers.domain,
+              prompts,
+              workspaceId: created.id,
+            }).catch(() => undefined);
+          }
           await loadList();
           return;
         }
@@ -143,7 +153,9 @@ export function useWorkspace() {
   );
 
   useEffect(() => {
-    refresh().finally(() => setReady(true));
+    effectInit(() => {
+      void refresh().finally(() => setReady(true));
+    });
   }, [refresh]);
 
   return {

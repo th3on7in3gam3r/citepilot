@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import { AnalyticsDashboard } from "@/components/dashboard/AnalyticsDashboard";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -29,18 +30,20 @@ export default function AnalyticsPage() {
   const [gscBanner, setGscBanner] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const gsc = params.get("gsc");
-    if (gsc && gscMessages[gsc]) {
-      setGscBanner(gsc);
-      params.delete("gsc");
-      const qs = params.toString();
-      window.history.replaceState(
-        {},
-        "",
-        qs ? `${window.location.pathname}?${qs}` : window.location.pathname,
-      );
-    }
+    effectInit(() => {
+      const params = new URLSearchParams(window.location.search);
+      const gsc = params.get("gsc");
+      if (gsc && gscMessages[gsc]) {
+        setGscBanner(gsc);
+        params.delete("gsc");
+        const qs = params.toString();
+        window.history.replaceState(
+          {},
+          "",
+          qs ? `${window.location.pathname}?${qs}` : window.location.pathname,
+        );
+      }
+    });
   }, []);
 
   if (!ready || !workspace) return null;

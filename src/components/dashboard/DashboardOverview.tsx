@@ -16,7 +16,6 @@ import {
   buildDashboardAlerts,
   buildMoneyPromptIdeas,
   platformRowsFromWorkspace,
-  promptRowsForWorkspace,
   type DashboardAlertItem,
   type MoneyPromptIdea,
 } from "@/lib/dashboard-data";
@@ -86,9 +85,8 @@ export function DashboardOverview() {
 
   const platformRows = platformRowsFromWorkspace(workspace, PLATFORMS);
   const seed = workspace.domain.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const promptRows = promptRowsForWorkspace(workspace);
   const moneyPrompts = buildMoneyPromptIdeas(workspace);
-  const alerts = buildDashboardAlerts(workspace, promptRows);
+  const alerts = buildDashboardAlerts(workspace);
   const gaps =
     workspace.gaps.length > 0
       ? workspace.gaps.slice(0, 3)

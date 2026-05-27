@@ -31,6 +31,9 @@
    | `CRON_SECRET` | **Required in production.** Bearer token for Vercel Cron (`weekly-digest`, `weekly-rescan`). Generate with `openssl rand -base64 32`. |
    | `PERPLEXITY_API_KEY` | Optional live Perplexity citation checks during audits |
    | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Search Console OAuth — redirect URI `{APP_URL}/api/gsc/callback` |
+   | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional — Plausible domain for funnel events |
+   | `NEXT_PUBLIC_POSTHOG_KEY` | Optional — PostHog project API key |
+   | `NEXT_PUBLIC_POSTHOG_HOST` | Optional — PostHog ingest host (default `https://us.i.posthog.com`) |
 
 4. Deploy → attach custom domain **`getcitepilot.com`** (production URL; `citepilot.ai` is not used).
 5. Neon Console → Auth → **Trusted domains**: include every origin users visit (`https://getcitepilot.com`, `https://www.getcitepilot.com`, `https://citepilot.vercel.app` with **no** trailing slash, `http://localhost:3000`). Must match the branch used by `NEON_AUTH_BASE_URL`.

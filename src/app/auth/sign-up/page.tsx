@@ -22,7 +22,7 @@ export default function SignUpPage() {
 
       <div className="mt-6">
         <Suspense fallback={null}>
-          <GoogleSignInButton label="Sign up with Google" />
+          <GoogleSignInButton label="Sign up with Google" callbackPath="/start" />
         </Suspense>
       </div>
 

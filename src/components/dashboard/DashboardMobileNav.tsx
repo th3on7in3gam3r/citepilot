@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DashboardNavLink } from "@/components/dashboard/DashboardNavLink";
@@ -17,7 +18,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
   const footer = dashboardNav.filter((item) => item.section === "footer");
 
   useEffect(() => {
-    setOpen(false);
+    effectInit(() => setOpen(false));
   }, [pathname]);
 
   useEffect(() => {

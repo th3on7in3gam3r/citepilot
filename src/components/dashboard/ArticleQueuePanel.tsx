@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics/track";
+import { effectInit } from "@/lib/react/effect-init";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import type { CmsProvider } from "@/lib/cms/types";
@@ -128,7 +130,9 @@ export function ArticleQueuePanel({
   }, [workspaceId]);
 
   useEffect(() => {
-    void load();
+    effectInit(() => {
+      void load();
+    });
   }, [load, refreshKey]);
 
   const webflowConfigured = Boolean(webflow?.configured);
@@ -179,7 +183,7 @@ export function ArticleQueuePanel({
       ...connectedProviders.map((item) => item.id),
     ]);
     if (!allowed.has(filter)) {
-      setFilter("all");
+      effectInit(() => setFilter("all"));
     }
   }, [connectedProviders, filter]);
 
@@ -238,6 +242,7 @@ export function ArticleQueuePanel({
       );
       markGettingStartedStep("publishedCms");
       notifyChecklistUpdate();
+      trackEvent("cms_published", { provider, slug });
       await load();
     } catch {
       setError("Network error — try again");

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type { WorkspaceListItem, WorkspaceLimitsInfo } from "@/hooks/useWorkspace";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { workspaceLimitMessage } from "@/lib/billing/limits";
 
 function planBadge(plan: WorkspaceLimitsInfo["plan"]) {
@@ -164,15 +164,13 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
                   + Add client workspace
                 </button>
               ) : (
-                <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                  <p>{limitHint}</p>
-                  <Link
-                    href="/pricing"
-                    className="mt-1 inline-block font-semibold text-accent hover:underline"
-                    onClick={() => setOpen(false)}
-                  >
-                    Upgrade plan →
-                  </Link>
+                <div onClick={() => setOpen(false)} role="presentation">
+                  <UpgradePrompt
+                    compact
+                    title="Workspace limit reached"
+                    description={limitHint ?? "Upgrade to add more client workspaces."}
+                    plan={limits?.plan === "fleet" ? "fleet" : "pilot"}
+                  />
                 </div>
               )
             ) : (

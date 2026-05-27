@@ -27,7 +27,14 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleSignInButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleSignInButton({
+  label = "Continue with Google",
+  callbackPath = "/dashboard",
+}: {
+  label?: string;
+  /** Post-auth redirect when no `from` query param is set */
+  callbackPath?: string;
+}) {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +43,10 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
     setLoading(true);
     setError(null);
 
-    const from = searchParams.get("from") ?? searchParams.get("redirect") ?? "/dashboard";
+    const from =
+      searchParams.get("from") ??
+      searchParams.get("redirect") ??
+      callbackPath;
     const path = from.startsWith("/") ? from : "/dashboard";
 
     try {

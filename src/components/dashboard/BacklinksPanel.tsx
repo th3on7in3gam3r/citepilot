@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type {
@@ -75,12 +76,16 @@ export function BacklinksPanel() {
   );
 
   useEffect(() => {
-    void load();
+    effectInit(() => {
+      void load();
+    });
   }, [load]);
 
   useEffect(() => {
     if (workspace?.domain && !targetUrl) {
-      setTargetUrl(`https://${workspace.domain.replace(/^https?:\/\//, "")}/`);
+      effectInit(() => {
+        setTargetUrl(`https://${workspace.domain.replace(/^https?:\/\//, "")}/`);
+      });
     }
   }, [workspace?.domain, targetUrl]);
 

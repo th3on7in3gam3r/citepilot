@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
@@ -11,7 +12,6 @@ import {
   buildCompetitorBenchmark,
   buildCorrelationInsights,
   promptRowsForWorkspace,
-  type BenchmarkBrandRow,
   type BenchmarkPromptRow,
   type CompetitorBenchmarkResult,
   type CorrelationInsight,
@@ -101,7 +101,9 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
   }, [workspaceId]);
 
   useEffect(() => {
-    void loadGscStatus();
+    effectInit(() => {
+      void loadGscStatus();
+    });
   }, [loadGscStatus]);
 
   const rows = useMemo(

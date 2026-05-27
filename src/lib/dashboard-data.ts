@@ -1,4 +1,4 @@
-import type { PlatformPresence, PromptResult } from "@/lib/api-types";
+import type { PromptResult } from "@/lib/api-types";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { domainSeed, PLATFORMS } from "@/lib/dashboard";
 import { buildPromptRows, type PromptRow } from "@/lib/features";
@@ -251,7 +251,6 @@ export function buildMoneyPromptIdeas(
 
 export function buildDashboardAlerts(
   workspace: WorkspaceSnapshot,
-  rows: PromptRow[],
 ): DashboardAlertItem[] {
   const alerts: DashboardAlertItem[] = [];
   const platformRows = platformRowsFromWorkspace(workspace, PLATFORMS);

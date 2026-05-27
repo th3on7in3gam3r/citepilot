@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics/track";
 import type { BillingPlan } from "@/lib/billing/types";
 
 type Props = {
@@ -29,6 +30,7 @@ export function PilotCheckoutButton({
 
     setLoading(true);
     setError(null);
+    trackEvent(plan === "fleet" ? "fleet_checkout_started" : "pilot_checkout_started");
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",

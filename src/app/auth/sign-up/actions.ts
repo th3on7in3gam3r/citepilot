@@ -26,5 +26,5 @@ export async function signUpWithEmail(
     return { error: error.message ?? "Could not create account" };
   }
 
-  redirect("/dashboard");
+  redirect("/start");
 }

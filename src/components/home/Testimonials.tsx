@@ -12,9 +12,11 @@ export function Testimonials() {
     <Section className="bg-cream">
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-4xl lg:text-[2.75rem]">
-          Trusted by early teams
+          From early access teams
         </h2>
-        <p className="mt-3 text-lg text-muted">in 20+ countries</p>
+        <p className="mt-3 text-lg text-muted">
+          Quotes from Pilot and Fleet users during private beta — not paid endorsements.
+        </p>
       </div>
 
       <div className="mx-auto mt-14 max-w-2xl md:mt-16">
@@ -36,7 +38,10 @@ export function Testimonials() {
             <div>
               <p className="font-semibold text-ink">{review.author}</p>
               <p className="text-sm text-muted">{review.role}</p>
-              <p className="mt-0.5 text-xs text-muted/80">{review.date}</p>
+              <p className="mt-0.5 text-xs text-muted/80">
+                {review.date}
+                {review.verified === false ? " · Illustrative" : ""}
+              </p>
             </div>
           </footer>
         </article>

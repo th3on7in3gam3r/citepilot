@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ProductCTA } from "@/components/ui/ProductCTA";
+import { ProductPreviewBadge } from "@/components/ui/ProductPreviewBadge";
 import { PromptQuizMock } from "@/components/home/mockups/PromptQuizMock";
 import { ScanMock } from "@/components/home/mockups/ScanMock";
 import { FullAnalysisMock } from "@/components/home/mockups/FullAnalysisMock";
@@ -50,6 +51,9 @@ export function StickyProductShowcase() {
           description="Scroll each step — one product view updates as you go."
           align="center"
         />
+        <p className="mt-4 flex justify-center">
+          <ProductPreviewBadge />
+        </p>
       </Container>
 
       <div ref={containerRef} className="relative">

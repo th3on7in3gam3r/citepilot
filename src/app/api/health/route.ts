@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isNeonAuthEnabled } from "@/lib/auth/server";
 import { ensureDb, isPostgres, postgresEnvVar } from "@/lib/db";
 import { webflowEnvStatus } from "@/lib/webflow/config";
 import { stripeEnvStatus } from "@/lib/stripe/config";

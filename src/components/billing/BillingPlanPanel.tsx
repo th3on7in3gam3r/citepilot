@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { PilotCheckoutButton } from "@/components/billing/PilotCheckoutButton";
 
@@ -30,12 +31,14 @@ export function BillingPlanPanel() {
   }, []);
 
   useEffect(() => {
-    void load();
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("billing") === "success") {
-      setMessage("Subscription active — thank you!");
-      window.history.replaceState({}, "", "/dashboard/settings");
-    }
+    effectInit(() => {
+      void load();
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("billing") === "success") {
+        setMessage("Subscription active — thank you!");
+        window.history.replaceState({}, "", "/dashboard/settings");
+      }
+    });
   }, [load]);
 
   async function openPortal() {

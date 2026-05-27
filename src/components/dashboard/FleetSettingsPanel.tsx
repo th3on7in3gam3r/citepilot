@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { FLEET_API_RATE_LIMIT_PER_HOUR } from "@/lib/fleet/constants";
 
@@ -39,7 +40,9 @@ export function FleetSettingsPanel({
   }
 
   useEffect(() => {
-    void loadKeys();
+    effectInit(() => {
+      void loadKeys();
+    });
   }, []);
 
   async function createKey() {

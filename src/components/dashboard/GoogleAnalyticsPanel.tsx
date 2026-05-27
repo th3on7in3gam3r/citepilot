@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { effectInit } from "@/lib/react/effect-init";
 import type { GscMetrics } from "@/lib/gsc/client";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
@@ -39,7 +40,9 @@ export function GoogleAnalyticsPanel({
   }, [workspaceId]);
 
   useEffect(() => {
-    void load();
+    effectInit(() => {
+      void load();
+    });
   }, [load]);
 
   async function connectGsc() {

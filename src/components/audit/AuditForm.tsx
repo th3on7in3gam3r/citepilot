@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { ProductCTAButton } from "@/components/ui/ProductCTA";
 import type { AuditPayload } from "@/lib/api-types";
+import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 import { getStoredWorkspaceId, joinWaitlist, runAudit } from "@/lib/client/api";
 import { ONBOARDING_STORAGE_KEY, type OnboardingAnswers } from "@/lib/onboarding";
+import { effectInit } from "@/lib/react/effect-init";
 
 export function AuditForm() {
   const searchParams = useSearchParams();
@@ -34,22 +37,35 @@ export function AuditForm() {
   }, []);
 
   useEffect(() => {
-    const fromUrl = searchParams.get("domain");
-    const promptFromUrl = searchParams.get("prompt");
+    effectInit(() => {
+      const fromUrl = searchParams.get("domain");
+      const promptFromUrl = searchParams.get("prompt");
 
-    if (fromUrl) setDomain(fromUrl);
-    if (promptFromUrl) setPrompts(promptFromUrl);
+      if (fromUrl) setDomain(fromUrl);
+      if (promptFromUrl) setPrompts(promptFromUrl);
 
-    try {
-      const raw = sessionStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw) as OnboardingAnswers;
-      if (!fromUrl && data.domain) setDomain(data.domain);
-      if (!promptFromUrl && data.buyerQuestion) setPrompts(data.buyerQuestion);
-    } catch {
-      /* ignore */
-    }
+      try {
+        const raw = sessionStorage.getItem(ONBOARDING_STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw) as OnboardingAnswers;
+        if (!fromUrl && data.domain) setDomain(data.domain);
+        if (!promptFromUrl && data.buyerQuestion) setPrompts(data.buyerQuestion);
+      } catch {
+        /* ignore */
+      }
+    });
   }, [searchParams]);
+
+  const promptCount = useMemo(
+    () =>
+      prompts
+        .split("\n")
+        .map((p) => p.trim())
+        .filter(Boolean).length,
+    [prompts],
+  );
+  const overPromptLimit =
+    promptLimitMax !== null && promptCount > promptLimitMax;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,18 +83,23 @@ export function AuditForm() {
 
     if (promptLimitMax !== null && promptList.length > promptLimitMax) {
       setError(
-        `Free tier allows up to ${promptLimitMax} prompts per audit. Remove ${promptList.length - promptLimitMax} line(s) or upgrade to Pilot.`,
+        `Your plan allows up to ${promptLimitMax} prompts per audit. Remove ${promptList.length - promptLimitMax} line(s) or upgrade to Pilot.`,
       );
+      setLoading(false);
       return;
     }
+
+    const workspaceId = getStoredWorkspaceId() ?? undefined;
+    trackEvent("audit_started", { domain: cleanDomain, workspaceId });
 
     try {
       const audit = await runAudit({
         domain: cleanDomain,
         prompts: promptList,
-        workspaceId: getStoredWorkspaceId() ?? undefined,
+        workspaceId,
       });
       setResult(audit);
+      trackAuditCompleted(workspaceId ?? "anonymous");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Audit failed");
     } finally {
@@ -128,10 +149,20 @@ export function AuditForm() {
           />
         </label>
 
+        {overPromptLimit && (
+          <div className="mt-4">
+            <UpgradePrompt
+              compact
+              title="Prompt limit reached"
+              description={`Your plan allows ${promptLimitMax} prompts per audit. Upgrade to Pilot for ${25} or Fleet for unlimited monitoring.`}
+            />
+          </div>
+        )}
+
         <div className="mt-8">
           <ProductCTAButton
             variant="accent"
-            disabled={loading}
+            disabled={loading || overPromptLimit}
             sublabel={loading ? "Analyzing site…" : "Free · ~60 seconds"}
             showArrow={!loading}
           >

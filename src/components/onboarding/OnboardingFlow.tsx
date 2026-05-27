@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
@@ -13,6 +13,8 @@ import {
   TOTAL_STEPS,
   type OnboardingAnswers,
 } from "@/lib/onboarding";
+import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
+import { effectInit } from "@/lib/react/effect-init";
 import { runAudit } from "@/lib/client/api";
 import { WORKSPACE_STORAGE_KEY } from "@/lib/constants";
 
@@ -38,6 +40,14 @@ export function OnboardingFlow() {
 
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    effectInit(() => {
+      if (sessionStorage.getItem("citepilot_signup_tracked")) return;
+      trackEvent("signup_completed");
+      sessionStorage.setItem("citepilot_signup_tracked", "1");
+    });
+  }, []);
+
   function next() {
     if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);
     else finish();
@@ -62,13 +72,17 @@ export function OnboardingFlow() {
         const data = (await res.json()) as { id: string };
         localStorage.setItem(WORKSPACE_STORAGE_KEY, data.id);
 
+        trackEvent("workspace_created", { domain: answers.domain });
+
         const prompts = [answers.buyerQuestion].filter(Boolean);
         if (prompts.length > 0) {
-          runAudit({
+          trackEvent("audit_started", { workspaceId: data.id });
+          await runAudit({
             domain: answers.domain,
             prompts,
             workspaceId: data.id,
           }).catch(() => undefined);
+          trackAuditCompleted(data.id);
         }
       }
     } catch {

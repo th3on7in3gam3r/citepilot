@@ -1,4 +1,5 @@
 import { CitationDashboardMock } from "@/components/home/mockups/CitationDashboardMock";
+import { ProductPreviewBadge } from "@/components/ui/ProductPreviewBadge";
 
 const tabs = [
   { id: "live", label: "Live workspace", active: true },
@@ -92,9 +93,7 @@ export function HeroProductBanner() {
                 </span>
               ))}
             </div>
-            <span className="hidden shrink-0 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-white/45 sm:inline">
-              Sample · acme.com
-            </span>
+            <ProductPreviewBadge className="hidden shrink-0 sm:inline-flex" />
           </div>
 
           <div className="relative px-2.5 pb-2.5 pt-2 sm:px-4 sm:pb-4 sm:pt-3">
