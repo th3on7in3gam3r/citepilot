@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { HeroProductBanner } from "@/components/home/HeroProductBanner";
+import Link from "next/link";
 
 export function Hero() {
   return (
@@ -19,13 +20,34 @@ export function Hero() {
           </div>
 
           <h1 className="font-display mt-5 text-[2.125rem] font-bold leading-[1.08] tracking-[-0.02em] sm:mt-6 sm:text-5xl md:text-[3.5rem] lg:text-[3.75rem]">
-            Analyze your
-            <span className="mt-0.5 block text-shimmer">AI citations</span>
+            Grow SEO + LLM traffic
+            <span className="mt-0.5 block text-shimmer">on autopilot</span>
           </h1>
 
           <p className="mx-auto mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-white/60 sm:mt-5 sm:max-w-2xl sm:text-lg">
-            Track where ChatGPT, Perplexity, Google AI, Grok, and DeepSeek mention
-            your brand — per money prompt, with proof of citation lift.
+            CitePilot audits your money prompts, tracks citation changes, and
+            sends weekly action plans + proof reports so you can grow organic and
+            AI visibility without constant manual work.
+          </p>
+
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row">
+            <Link
+              href="/audit"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-5 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(107,140,255,0.3)] transition hover:opacity-95 sm:text-base"
+            >
+              Start free audit
+            </Link>
+            <Link
+              href="/dashboard/settings"
+              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.04] px-5 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/[0.08] sm:text-base"
+            >
+              See how Autopilot works
+            </Link>
+          </div>
+
+          <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-medium tracking-wide text-white/45 sm:text-xs">
+            Weekly rescans • Citation delta tracking • Client-ready proof reports •
+            No CMS auto-publish
           </p>
         </header>
 
