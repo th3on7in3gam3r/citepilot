@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import {
@@ -10,6 +11,7 @@ import {
   Panel,
   StatCard,
 } from "@/components/dashboard/DashboardUI";
+import { getStoredWorkspaceId } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { PLATFORMS } from "@/lib/dashboard";
 import {
@@ -97,6 +99,8 @@ export function DashboardOverview() {
         ];
 
   const showWelcome = searchParams.get("welcome") === "1";
+  const workspaceId =
+    workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId() ?? undefined;
 
   async function copyPrompt(prompt: string) {
     try {
@@ -244,7 +248,14 @@ export function DashboardOverview() {
         </Panel>
 
         <Panel title="This week's actions">
-          <ol className="space-y-3 text-sm text-muted">
+          {workspaceId && (
+            <CopilotInsight
+              kind="prioritize"
+              workspaceId={workspaceId}
+              requiresAudit={!workspace.hasRealAudit}
+            />
+          )}
+          <ol className="mt-4 space-y-3 text-sm text-muted">
             {gaps.map((g, i) => (
               <li key={g} className="flex gap-3">
                 <span className="font-bold text-accent">{i + 1}</span>

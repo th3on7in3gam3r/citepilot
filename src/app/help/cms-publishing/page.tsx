@@ -53,7 +53,11 @@ const howItWorks = [
 const quickAnswers = [
   {
     q: "Do I need a CMS to use CitePilot?",
-    a: "No. CMS publishing is optional. You can still run audits, generate content, manage workspaces, and use the rest of CitePilot without connecting anything.",
+    a: "No. CMS publishing is optional. You can still run audits, track citation history, generate content, and use alerts without connecting anything.",
+  },
+  {
+    q: "Which plan includes CMS publish?",
+    a: "Pilot and Fleet include publishing to connected CMS providers. Free tier covers audits and dashboard access — upgrade when you want ongoing monitoring and publish.",
   },
   {
     q: "What if I do not have WordPress, Ghost, Shopify, Framer, or Webflow?",
@@ -89,6 +93,12 @@ export default function CmsPublishingHelpPage() {
                 className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
               >
                 Open Content dashboard
+              </Link>
+              <Link
+                href="/dashboard/help"
+                className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-ink transition hover:bg-surface"
+              >
+                Dashboard help
               </Link>
               <Link
                 href="/pricing"

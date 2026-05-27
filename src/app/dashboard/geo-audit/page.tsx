@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
+import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
 import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
+import { getStoredWorkspaceId } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { productFeatures } from "@/lib/features";
 
@@ -21,6 +23,8 @@ export default function GeoAuditPage() {
 
   const gaps = workspace.gaps.length > 0 ? workspace.gaps : fallbackGaps;
   const geoScore = workspace.siteSignals?.geoScore ?? workspace.citationScore;
+  const workspaceId =
+    workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId() ?? undefined;
 
   return (
     <>
@@ -69,11 +73,26 @@ export default function GeoAuditPage() {
         </Panel>
       )}
       <Panel title="Priority fixes" className="mt-6">
+        <p className="mb-4 text-sm text-muted">
+          From your latest audit. Use CitePilot Insights for a plain-language
+          explanation of any gap (Pilot+).
+        </p>
         <ul className="space-y-3 text-sm text-muted">
           {gaps.map((g) => (
-            <li key={g} className="flex gap-3 rounded-xl bg-surface px-4 py-3">
-              <span className="text-accent">•</span>
-              {g}
+            <li key={g} className="rounded-xl bg-surface px-4 py-3">
+              <div className="flex gap-3">
+                <span className="text-accent">•</span>
+                <span className="flex-1 text-ink">{g}</span>
+              </div>
+              {workspaceId && (
+                <CopilotInsight
+                  kind="explain-gap"
+                  workspaceId={workspaceId}
+                  gap={g}
+                  requiresAudit={!workspace.hasRealAudit}
+                  compact
+                />
+              )}
             </li>
           ))}
         </ul>

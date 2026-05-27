@@ -131,6 +131,7 @@ export const pricingTiers = [
       "Weekly prioritized action plan",
       "Citation delta tracking",
       "Email alerts on competitor moves",
+      "CitePilot Insights (prioritize fixes & explain gaps)",
       "CMS publish (Webflow, WordPress, Ghost, Shopify, Framer)",
     ],
     cta: "Subscribe to Pilot",
