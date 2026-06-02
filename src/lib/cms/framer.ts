@@ -11,14 +11,33 @@ export class FramerApiError extends Error {
   }
 }
 
+type FramerCollectionItem = {
+  id: string;
+  slug: string;
+};
+
 type FramerCollection = {
   id: string;
   name?: string;
+  getItems(): Promise<FramerCollectionItem[]>;
   addItems(items: unknown[]): Promise<void>;
 };
 
 async function openFramer(credentials: FramerCredentials) {
   return connect(credentials.projectUrl, credentials.apiKey);
+}
+
+async function resolveFramerItemId(
+  collection: FramerCollection,
+  slug: string,
+  existingRemoteId?: string | null,
+): Promise<string | undefined> {
+  const items = await collection.getItems();
+  if (existingRemoteId) {
+    const byId = items.find((item) => item.id === existingRemoteId);
+    if (byId) return byId.id;
+  }
+  return items.find((item) => item.slug === slug)?.id;
 }
 
 async function getFramerCollection(
@@ -77,7 +96,11 @@ export async function publishPostToFramer(input: {
   const framer = await openFramer(input.credentials);
   try {
     const collection = await getFramerCollection(framer, input.credentials.collectionId);
-    const itemId = input.existingRemoteId || `citepilot-${input.slug}`;
+    const existingId = await resolveFramerItemId(
+      collection,
+      input.slug,
+      input.existingRemoteId,
+    );
     const fieldData: Record<string, { type: string; value: string }> = {
       [input.credentials.titleFieldId]: {
         type: "string",
@@ -96,20 +119,35 @@ export async function publishPostToFramer(input: {
       };
     }
 
-    await collection.addItems([
-      {
-        id: itemId,
-        slug: input.slug,
-        fieldData,
-      },
-    ]);
+    const itemPayload: {
+      slug: string;
+      fieldData: Record<string, { type: string; value: string }>;
+      id?: string;
+    } = {
+      slug: input.slug,
+      fieldData,
+    };
+    if (existingId) {
+      itemPayload.id = existingId;
+    }
+
+    await collection.addItems([itemPayload]);
+
+    const items = await collection.getItems();
+    const saved = items.find((item) => item.slug === input.slug);
+    if (!saved) {
+      throw new FramerApiError(
+        "Framer item was saved but could not be found by slug",
+        500,
+      );
+    }
 
     const published = await framer.publish();
     await framer.deploy(published.deployment.id);
     const primaryHost = published.hostnames.find((item) => item.isPrimary)?.hostname;
 
     return {
-      remoteId: itemId,
+      remoteId: saved.id,
       liveUrl: hostnameToUrl(primaryHost),
     };
   } finally {
