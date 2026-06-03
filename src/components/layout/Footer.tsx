@@ -1,7 +1,44 @@
 import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { nav, site } from "@/lib/site";
+
+type FooterLink = { label: string; href: string };
+
+function FooterColumn({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
+        {title}
+      </p>
+      <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+
+function FooterLinks({ links }: { links: readonly FooterLink[] }) {
+  return (
+    <ul className="space-y-2.5">
+      {links.map((link) => (
+        <li key={link.href}>
+          <Link
+            href={link.href}
+            className="text-sm text-white/65 transition hover:text-accent"
+          >
+            {link.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -10,7 +47,7 @@ export function Footer() {
     <footer className="mt-auto border-t border-border bg-ink text-white">
       <Container className="py-14 md:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
-          <div className="lg:col-span-5">
+          <div className="sm:col-span-2 lg:col-span-5">
             <Logo light />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
               {site.description}
@@ -29,72 +66,41 @@ export function Footer() {
             </p>
           </div>
 
-          <div className="lg:col-span-3 lg:col-start-7">
-            <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
-              Product
-            </p>
-            <ul className="mt-4 space-y-2.5">
-              {nav.main.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-white/65 transition hover:text-accent"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link
-                  href="/audit"
-                  className="text-sm text-white/65 transition hover:text-accent"
-                >
-                  Free citation audit
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="text-sm text-white/65 transition hover:text-accent"
-                >
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/help/cms-publishing"
-                  className="text-sm text-white/65 transition hover:text-accent"
-                >
-                  CMS publishing guide
-                </Link>
-              </li>
-            </ul>
+          <div className="lg:col-span-2 lg:col-start-7">
+            <FooterColumn title="Product">
+              <FooterLinks links={nav.footer.product} />
+            </FooterColumn>
+          </div>
+
+          <div className="lg:col-span-2">
+            <FooterColumn title="Resources">
+              <FooterLinks links={nav.footer.resources} />
+            </FooterColumn>
           </div>
 
           <div className="lg:col-span-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
-              Contact
-            </p>
-            <ul className="mt-4 space-y-2.5 text-sm text-white/65">
-              <li>
-                <a
-                  href={`mailto:${site.supportEmail}`}
-                  className="transition hover:text-accent"
-                >
-                  {site.supportEmail}
-                </a>
-              </li>
-              <li>
-                <a
-                  href={site.studio.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition hover:text-accent"
-                >
-                  {site.studio.name}
-                </a>
-              </li>
-            </ul>
+            <FooterColumn title="Contact">
+              <ul className="space-y-2.5 text-sm text-white/65">
+                <li>
+                  <a
+                    href={`mailto:${site.supportEmail}`}
+                    className="transition hover:text-accent"
+                  >
+                    {site.supportEmail}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={site.studio.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition hover:text-accent"
+                  >
+                    {site.studio.name}
+                  </a>
+                </li>
+              </ul>
+            </FooterColumn>
           </div>
         </div>
 

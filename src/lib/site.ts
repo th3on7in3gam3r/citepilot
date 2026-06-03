@@ -19,6 +19,20 @@ export const nav = {
     { label: "GEO Playbook", href: "/nurture" },
     { label: "Pricing", href: "/pricing" },
   ],
+  footer: {
+    product: [
+      { label: "How it works", href: "/#journey" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Free citation audit", href: "/audit" },
+      { label: "Start analysis", href: "/start" },
+      { label: "Dashboard", href: "/dashboard" },
+    ],
+    resources: [
+      { label: "GEO Playbook", href: "/nurture" },
+      { label: "Blog", href: "/blog" },
+      { label: "CMS publishing guide", href: "/help/cms-publishing" },
+    ],
+  },
   startAnalysis: { label: "Start Analysis", href: "/start" },
   cta: { label: "Free citation audit", href: "/audit" },
 } as const;
