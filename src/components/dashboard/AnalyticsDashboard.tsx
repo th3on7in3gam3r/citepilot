@@ -187,35 +187,42 @@ function AnalyticsSourceToggle({
 
   return (
     <div
-      className="flex items-center gap-3 rounded-full border border-border/90 bg-white/80 px-3 py-2 shadow-sm backdrop-blur-sm"
+      className="flex min-w-[11rem] flex-col items-stretch gap-2.5 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm"
       role="group"
       aria-label="Analytics data source"
     >
-      <button
-        type="button"
-        onClick={() => onChange("google")}
-        className={`text-xs font-semibold transition sm:text-sm ${
-          !isLlms ? "text-ink" : "text-muted hover:text-ink"
-        }`}
-      >
-        {googleLabel}
-      </button>
-      <LiquidToggle
-        id="analytics-source-toggle"
-        checked={isLlms}
-        onCheckedChange={(checked) => onChange(checked ? "llms" : "google")}
-        aria-label={`Switch to ${isLlms ? "Google Search Console" : "LLM citation analytics"}`}
-        className="[--c-active:#6b8cff] shrink-0"
-      />
-      <button
-        type="button"
-        onClick={() => onChange("llms")}
-        className={`text-xs font-semibold transition sm:text-sm ${
-          isLlms ? "text-ink" : "text-muted hover:text-ink"
-        }`}
-      >
-        LLMs
-      </button>
+      <div className="flex items-center justify-between gap-4">
+        <button
+          type="button"
+          onClick={() => onChange("google")}
+          className={`text-xs font-semibold transition sm:text-sm ${
+            !isLlms ? "text-ink" : "text-muted hover:text-ink"
+          }`}
+        >
+          {googleLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("llms")}
+          className={`text-xs font-semibold transition sm:text-sm ${
+            isLlms ? "text-ink" : "text-muted hover:text-ink"
+          }`}
+        >
+          LLMs
+        </button>
+      </div>
+      <div className="flex justify-center border-t border-border/80 pt-2.5">
+        <LiquidToggle
+          id="analytics-source-toggle"
+          checked={isLlms}
+          onCheckedChange={(checked) => onChange(checked ? "llms" : "google")}
+          aria-label={
+            isLlms
+              ? "Showing LLM citation analytics. Switch to Google Search Console."
+              : "Showing Google Search Console. Switch to LLM citation analytics."
+          }
+        />
+      </div>
     </div>
   );
 }

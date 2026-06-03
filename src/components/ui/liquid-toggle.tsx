@@ -3,49 +3,19 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-const styles = {
-  switch: `relative block cursor-pointer h-8 w-[52px]
-    [--c-active:#275EFE]
-    [--c-success:#10B981]
-    [--c-warning:#F59E0B]
-    [--c-danger:#EF4444]
-    [--c-active-inner:#FFFFFF]
-    [--c-default:#D2D6E9]
-    [--c-default-dark:#C7CBDF]
-    [--c-black:#1B1B22]
-    [transform:translateZ(0)]
-    [-webkit-transform:translateZ(0)]
-    [backface-visibility:hidden]
-    [-webkit-backface-visibility:hidden]
-    [perspective:1000]
-    [-webkit-perspective:1000]`,
-  input: `h-full w-full cursor-pointer appearance-none rounded-full
-    bg-[--c-default] outline-none transition-colors duration-500
-    hover:bg-[--c-default-dark]
-    [transform:translate3d(0,0,0)]
-    [-webkit-transform:translate3d(0,0,0)]
-    data-[checked=true]:bg-[--c-background]`,
-  svg: `pointer-events-none absolute inset-0 fill-white
-    [transform:translate3d(0,0,0)]
-    [-webkit-transform:translate3d(0,0,0)]`,
-  circle: `transform-gpu transition-transform duration-500
-    [transform:translate3d(0,0,0)]
-    [-webkit-transform:translate3d(0,0,0)]
-    [backface-visibility:hidden]
-    [-webkit-backface-visibility:hidden]`,
-  dropCircle: `transform-gpu transition-transform duration-700
-    [transform:translate3d(0,0,0)]
-    [-webkit-transform:translate3d(0,0,0)]`,
+const GOO_FILTER_ID = "citepilot-liquid-goo";
+
+const variantActiveBg: Record<
+  "default" | "success" | "warning" | "danger",
+  string
+> = {
+  default: "#6b8cff",
+  success: "#10b981",
+  warning: "#f59e0b",
+  danger: "#ef4444",
 };
 
-const variantStyles = {
-  default: "[--c-background:var(--c-active)]",
-  success: "[--c-background:var(--c-success)]",
-  warning: "[--c-background:var(--c-warning)]",
-  danger: "[--c-background:var(--c-danger)]",
-};
-
-export type LiquidToggleVariant = keyof typeof variantStyles;
+export type LiquidToggleVariant = keyof typeof variantActiveBg;
 
 export interface LiquidToggleProps {
   checked?: boolean;
@@ -79,11 +49,13 @@ export function LiquidToggle({
     onCheckedChange?.(next);
   };
 
+  const activeColor = variantActiveBg[variant];
+
   return (
     <label
       htmlFor={id}
       className={cn(
-        styles.switch,
+        "relative block h-9 w-[3.25rem] shrink-0 cursor-pointer",
         disabled && "cursor-not-allowed opacity-50",
         className,
       )}
@@ -94,43 +66,69 @@ export function LiquidToggle({
         checked={isChecked}
         disabled={disabled}
         onChange={handleChange}
-        data-checked={isChecked}
         aria-label={ariaLabel}
-        className={cn(styles.input, variantStyles[variant])}
+        className="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-full outline-none transition-colors duration-300"
+        style={{
+          backgroundColor: isChecked ? activeColor : "#d2d6e9",
+        }}
       />
-      <svg viewBox="0 0 52 32" filter="url(#goo)" className={styles.svg} aria-hidden>
+      <svg
+        viewBox="0 0 52 32"
+        filter={`url(#${GOO_FILTER_ID})`}
+        className="pointer-events-none absolute inset-0 h-full w-full fill-white drop-shadow-sm"
+        aria-hidden
+      >
         <circle
-          className={styles.circle}
+          className="transform-gpu transition-transform duration-500"
           cx="16"
           cy="16"
           r="10"
+          fill="#ffffff"
           style={{
             transformOrigin: "16px 16px",
             transform: `translateX(${isChecked ? "12px" : "0px"}) scale(${isChecked ? "0" : "1"})`,
           }}
         />
         <circle
-          className={styles.circle}
+          className="transform-gpu transition-transform duration-500"
           cx="36"
           cy="16"
           r="10"
+          fill="#ffffff"
           style={{
             transformOrigin: "36px 16px",
             transform: `translateX(${isChecked ? "0px" : "-12px"}) scale(${isChecked ? "1" : "0"})`,
           }}
         />
-        {isChecked && <circle className={styles.dropCircle} cx="35" cy="-1" r="2.5" />}
+        {isChecked && (
+          <circle
+            className="transform-gpu transition-transform duration-700"
+            cx="35"
+            cy="-1"
+            r="2.5"
+            fill="#ffffff"
+          />
+        )}
       </svg>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-black/10 peer-focus-visible:ring-2 peer-focus-visible:ring-accent"
+      />
     </label>
   );
 }
 
-/** SVG filter for liquid toggle animation — mount once per page that uses LiquidToggle. */
+/** SVG filter for liquid toggle — mount once per page that uses LiquidToggle. */
 export function GooeyFilter() {
   return (
-    <svg className="fixed h-0 w-0" aria-hidden>
+    <svg
+      width="0"
+      height="0"
+      className="pointer-events-none absolute"
+      aria-hidden
+    >
       <defs>
-        <filter id="goo">
+        <filter id={GOO_FILTER_ID}>
           <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
           <feColorMatrix
             in="blur"
@@ -145,5 +143,5 @@ export function GooeyFilter() {
   );
 }
 
-/** @deprecated Use LiquidToggle — alias for shadcn paste compatibility */
+/** @deprecated Use LiquidToggle */
 export const Toggle = LiquidToggle;
