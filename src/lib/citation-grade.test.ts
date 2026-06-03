@@ -28,5 +28,13 @@ describe("citation-grade", () => {
     expect(metrics.promptsCited).toBe(2);
     expect(metrics.promptsTotal).toBe(3);
     expect(metrics.promptCitationPct).toBe(67);
+    expect(metrics.platformCoveragePct).toBeGreaterThan(0);
+  });
+
+  it("reports actual audience count without a floor of 1", () => {
+    const base = buildWorkspaceSnapshot({ domain: "example.com", audiences: [] });
+    const metrics = buildExecutiveBriefingMetrics(base);
+    expect(metrics.audienceCount).toBe(0);
+    expect(metrics.primaryAudience).toBeNull();
   });
 });

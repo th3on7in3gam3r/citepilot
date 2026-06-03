@@ -42,10 +42,14 @@ export type ExecutiveBriefingMetrics = {
   promptsTotal: number;
   promptCitationPct: number | null;
   hasPromptBreakdown: boolean;
-  audienceSegments: number;
+  audienceCount: number;
+  primaryAudience: string | null;
   platformsCited: number;
   platformsTotal: number;
+  platformCoveragePct: number;
+  platformsMissing: number;
   planWeeks: number;
+  hasGeneratedStrategy: boolean;
 };
 
 export function buildExecutiveBriefingMetrics(
@@ -66,10 +70,19 @@ export function buildExecutiveBriefingMetrics(
       : null;
 
   const strategyItems = workspace.contentStrategy ?? [];
-  const planWeeks =
-    strategyItems.length > 0
-      ? new Set(strategyItems.map((item) => item.week)).size
-      : 4;
+  const hasGeneratedStrategy = strategyItems.length > 0;
+  const planWeeks = hasGeneratedStrategy
+    ? new Set(strategyItems.map((item) => item.week)).size
+    : 4;
+
+  const platformsTotal = Math.max(workspace.totalPlatforms, 1);
+  const platformsCited = Math.min(workspace.citedPlatforms, platformsTotal);
+  const platformsMissing = Math.max(platformsTotal - platformsCited, 0);
+  const platformCoveragePct = Math.round((platformsCited / platformsTotal) * 100);
+
+  const audiences = workspace.audiences.filter(Boolean);
+  const audienceCount = audiences.length;
+  const primaryAudience = audiences[0] ?? null;
 
   return {
     letterGrade: scoreToLetterGrade(workspace.citationScore),
@@ -78,9 +91,13 @@ export function buildExecutiveBriefingMetrics(
     promptsTotal,
     promptCitationPct,
     hasPromptBreakdown,
-    audienceSegments: Math.max(workspace.audiences.length, 1),
-    platformsCited: workspace.citedPlatforms,
-    platformsTotal: workspace.totalPlatforms,
+    audienceCount,
+    primaryAudience,
+    platformsCited,
+    platformsTotal,
+    platformCoveragePct,
+    platformsMissing,
     planWeeks,
+    hasGeneratedStrategy,
   };
 }

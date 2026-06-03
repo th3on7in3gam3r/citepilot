@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CitationGradeRing } from "@/components/dashboard/CitationGradeRing";
+import { ExecutiveBriefingStatCards } from "@/components/dashboard/ExecutiveBriefingStatCards";
 import { buildExecutiveBriefingMetrics } from "@/lib/citation-grade";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { site } from "@/lib/site";
@@ -107,38 +108,15 @@ export function ExecutiveBriefingPanel({
             hasRealAudit={workspace.hasRealAudit}
           />
 
-          <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-3">
-              <dt className="text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                Segments
-              </dt>
-              <dd className="mt-1 font-display text-xl font-bold text-white">
-                {metrics.audienceSegments}
-              </dd>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-3">
-              <dt className="text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                Platforms
-              </dt>
-              <dd className="mt-1 font-display text-xl font-bold text-white">
-                {metrics.platformsCited}
-                <span className="text-sm font-normal text-white/40">
-                  /{metrics.platformsTotal}
-                </span>
-              </dd>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-3">
-              <dt className="text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                Plan weeks
-              </dt>
-              <dd className="mt-1 font-display text-xl font-bold text-white">
-                {metrics.planWeeks}
-              </dd>
-            </div>
-          </dl>
+          <ExecutiveBriefingStatCards metrics={metrics} />
 
           <p className="mt-4 text-center text-[11px] text-white/40">
-            {site.name} · {workspace.businessType || "workspace"}
+            {site.name}
+            {workspace.auditMode
+              ? ` · ${workspace.auditMode} audit`
+              : workspace.businessType
+                ? ` · ${workspace.businessType}`
+                : ""}
           </p>
         </div>
       </div>
