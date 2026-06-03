@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
@@ -135,14 +135,11 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:items-end">
-            <div className="inline-flex rounded-full border border-white/80 bg-white/90 p-1 shadow-sm">
-          <TabButton active={tab === "google"} onClick={() => setTab("google")}>
-            Google{gscConnected ? " · Live" : ""}
-          </TabButton>
-          <TabButton active={tab === "llms"} onClick={() => setTab("llms")}>
-            LLMs
-          </TabButton>
-            </div>
+            <AnalyticsSourceToggle
+              value={tab}
+              onChange={setTab}
+              gscConnected={gscConnected}
+            />
             <select className="rounded-full border border-border bg-white px-4 py-2 text-sm text-muted shadow-sm">
               <option>Last 30 days</option>
               <option>Last 90 days</option>
@@ -174,26 +171,63 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
   );
 }
 
-function TabButton({
+function AnalyticsSourceToggle({
+  value,
+  onChange,
+  gscConnected,
+}: {
+  value: Tab;
+  onChange: (tab: Tab) => void;
+  gscConnected: boolean;
+}) {
+  const googleLabel = gscConnected ? "Google · Live" : "Google";
+
+  return (
+    <div
+      className="relative inline-grid h-9 w-[min(100%,13.5rem)] grid-cols-2 items-center rounded-full border border-border/90 bg-white/70 p-0.5 shadow-sm backdrop-blur-sm"
+      role="group"
+      aria-label="Analytics data source"
+    >
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute top-0.5 bottom-0.5 left-0.5 w-[calc(50%-2px)] rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent shadow-[0_2px_8px_rgba(107,140,255,0.35)] transition-transform duration-200 ease-out ${
+          value === "llms" ? "translate-x-full" : "translate-x-0"
+        }`}
+      />
+      <ToggleOption
+        active={value === "google"}
+        onClick={() => onChange("google")}
+        label={googleLabel}
+      />
+      <ToggleOption
+        active={value === "llms"}
+        onClick={() => onChange("llms")}
+        label="LLMs"
+      />
+    </div>
+  );
+}
+
+function ToggleOption({
   active,
   onClick,
-  children,
+  label,
 }: {
   active: boolean;
   onClick: () => void;
-  children: ReactNode;
+  label: string;
 }) {
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
-      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-        active
-          ? "bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent text-white shadow-[0_8px_20px_rgba(107,140,255,0.28)]"
-          : "text-muted hover:text-ink"
+      className={`relative z-10 truncate px-3 py-1.5 text-center text-xs font-semibold transition-colors sm:text-sm ${
+        active ? "text-white" : "text-muted hover:text-ink"
       }`}
     >
-      {children}
+      {label}
     </button>
   );
 }
