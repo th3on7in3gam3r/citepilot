@@ -6,6 +6,8 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
+import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
+import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
@@ -295,6 +297,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
   return (
     <>
+      <GooeyFilter />
       <DashboardPageHeader
         title="Settings"
         description="Edit your workspace profile, tracked prompts, and notification preferences."
@@ -574,40 +577,24 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                 !isPilot &&
                 !isFleet;
               return (
-              <li
-                key={item.key}
-                className="flex items-start justify-between gap-4 rounded-xl bg-surface px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-ink">{item.label}</p>
-                  <p className="text-xs text-muted">{item.hint}</p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={preferences[item.key]}
+                <SettingsToggleRow
+                  key={item.key}
+                  id={`settings-${item.key}`}
+                  label={item.label}
+                  hint={item.hint}
+                  checked={preferences[item.key]}
                   disabled={togglesBusy || needsPilot}
-                  onClick={() => {
+                  onCheckedChange={(enabled) => {
                     if (needsPilot) return;
                     const next = {
                       ...preferences,
-                      [item.key]: !preferences[item.key],
+                      [item.key]: enabled,
                     };
                     setPreferences(next);
                     void savePreferences(next);
                   }}
-                  className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-                    preferences[item.key] ? "bg-accent" : "bg-border"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-                      preferences[item.key] ? "left-[22px]" : "left-0.5"
-                    }`}
-                  />
-                </button>
-              </li>
-            );
+                />
+              );
             })}
           </ul>
           {!isPilot && !isFleet && (
@@ -681,51 +668,31 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                     className={inputClass}
                   />
                 </label>
-                <label className="mt-5 flex items-center justify-between gap-4 rounded-xl bg-surface px-4 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-ink">
-                      Hide “Powered by CitePilot”
-                    </p>
-                    <p className="text-xs text-muted">
-                      On audit share links and proof report PDF export
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={preferences.whiteLabel.hidePoweredBy}
+                <ul className="mt-5">
+                  <SettingsToggleRow
+                    id="settings-hide-powered-by"
+                    label='Hide “Powered by CitePilot”'
+                    hint="On audit share links and proof report PDF export"
+                    checked={preferences.whiteLabel.hidePoweredBy}
                     disabled={togglesBusy}
-                    onClick={() => {
+                    onCheckedChange={(hidePoweredBy) => {
                       const next = {
                         ...preferences,
                         whiteLabel: {
                           ...preferences.whiteLabel,
-                          hidePoweredBy: !preferences.whiteLabel.hidePoweredBy,
+                          hidePoweredBy,
                         },
                       };
                       setPreferences(next);
                       void savePreferences(
                         next,
-                        next.whiteLabel.hidePoweredBy
+                        hidePoweredBy
                           ? "White-label saved — share links will hide CitePilot branding."
                           : "White-label saved — CitePilot credit will show on share links.",
                       );
                     }}
-                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-                      preferences.whiteLabel.hidePoweredBy
-                        ? "bg-accent"
-                        : "bg-border"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-                        preferences.whiteLabel.hidePoweredBy
-                          ? "left-[22px]"
-                          : "left-0.5"
-                      }`}
-                    />
-                  </button>
-                </label>
+                  />
+                </ul>
               </>
             )}
           </Panel>

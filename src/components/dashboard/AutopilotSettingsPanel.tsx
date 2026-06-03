@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
+import { LiquidToggle } from "@/components/ui/liquid-toggle";
 import type { WorkspacePreferences } from "@/lib/settings";
 import { trackEvent } from "@/lib/analytics/track";
 
@@ -16,45 +18,6 @@ type AutopilotSettingsPanelProps = {
     toast?: string,
   ) => void | Promise<void>;
 };
-
-function ToggleRow({
-  label,
-  hint,
-  checked,
-  disabled,
-  onToggle,
-}: {
-  label: string;
-  hint: string;
-  checked: boolean;
-  disabled?: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <li className="flex items-start justify-between gap-4 rounded-xl bg-surface px-4 py-3">
-      <div>
-        <p className="text-sm font-medium text-ink">{label}</p>
-        <p className="text-xs text-muted">{hint}</p>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={onToggle}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-          checked ? "bg-accent" : "bg-border"
-        } ${disabled ? "opacity-50" : ""}`}
-      >
-        <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-            checked ? "left-[22px]" : "left-0.5"
-          }`}
-        />
-      </button>
-    </li>
-  );
-}
 
 export function AutopilotSettingsPanel({
   workspaceId,
@@ -144,37 +107,37 @@ export function AutopilotSettingsPanel({
       ) : (
         <>
           <ul className="space-y-3">
-            <ToggleRow
+            <SettingsToggleRow
+              id="autopilot-enabled"
               label="Enable Autopilot"
               hint="After each Monday re-scan, run Insights and optional email"
               checked={ap.enabled}
               disabled={togglesBusy}
-              onToggle={() =>
+              onCheckedChange={(enabled) =>
                 patchAutopilot(
-                  { enabled: !ap.enabled },
-                  ap.enabled ? "Autopilot turned off." : "Autopilot enabled.",
+                  { enabled },
+                  enabled ? "Autopilot enabled." : "Autopilot turned off.",
                 )
               }
             />
-            <ToggleRow
+            <SettingsToggleRow
+              id="autopilot-email-report"
               label="Autopilot email report"
               hint="Delta summary, 7-day plan, proof report + share link"
               checked={ap.emailReport}
               disabled={togglesBusy || !ap.enabled}
-              onToggle={() =>
-                patchAutopilot({ emailReport: !ap.emailReport }, "Autopilot email preference saved.")
+              onCheckedChange={(emailReport) =>
+                patchAutopilot({ emailReport }, "Autopilot email preference saved.")
               }
             />
-            <ToggleRow
+            <SettingsToggleRow
+              id="autopilot-auto-insights"
               label="Generate Insights plan"
               hint="Prioritized actions from your latest audit data"
               checked={ap.autoInsights}
               disabled={togglesBusy || !ap.enabled}
-              onToggle={() =>
-                patchAutopilot(
-                  { autoInsights: !ap.autoInsights },
-                  "Autopilot Insights preference saved.",
-                )
+              onCheckedChange={(autoInsights) =>
+                patchAutopilot({ autoInsights }, "Autopilot Insights preference saved.")
               }
             />
           </ul>
@@ -185,14 +148,17 @@ export function AutopilotSettingsPanel({
               Uses your latest audit, or run a fresh scan first. Limited to 5 runs per
               hour.
             </p>
-            <label className="mt-3 flex items-center gap-2 text-xs text-muted">
-              <input
-                type="checkbox"
+            <label
+              htmlFor="autopilot-run-audit-first"
+              className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-white/60 px-3 py-2 text-xs text-muted"
+            >
+              <span>Run a new citation audit first</span>
+              <LiquidToggle
+                id="autopilot-run-audit-first"
                 checked={runAudit}
-                onChange={(e) => setRunAudit(e.target.checked)}
-                className="rounded border-border"
+                onCheckedChange={setRunAudit}
+                aria-label="Run a new citation audit before Autopilot"
               />
-              Run a new citation audit first
             </label>
             <button
               type="button"
