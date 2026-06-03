@@ -1,157 +1,78 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import {
   useReadTimeTracker,
   type ReadTimeTrackerState,
 } from "@/hooks/useReadTimeTracker";
-import { joinWaitlist } from "@/lib/client/api";
-import { ONBOARDING_STORAGE_KEY } from "@/lib/onboarding";
 
-const ARTICLE_WORD_COUNT = 980;
+const ARTICLE_WORD_COUNT = 920;
 
 const SECTIONS = [
-  { id: "geo-curriculum", label: "Curriculum" },
-  { id: "geo-module-1", label: "1. RAG era" },
-  { id: "geo-module-2", label: "2. Money prompts" },
-  { id: "geo-module-3", label: "3. GEO audit" },
-  { id: "geo-module-4", label: "4. Attribution" },
-  { id: "geo-landing", label: "Value props" },
-  { id: "geo-capture", label: "Get playbook" },
+  { id: "nurture-email-1", label: "Email 1 · Welcome" },
+  { id: "nurture-email-2", label: "Email 2 · Citation gap" },
+  { id: "nurture-email-3", label: "Email 3 · Audit CTA" },
 ] as const;
 
-const MODULES = [
+const EMAILS = [
   {
-    id: "geo-module-1",
+    id: "nurture-email-1",
     number: 1,
-    title: "The Death of the Blue Link & Rise of RAG Architecture",
-    topics: [
-      {
-        label: "The Paradigm Shift",
-        body: "Why traditional CTR is collapsing and how Retrieval-Augmented Generation (RAG) models select references.",
-      },
-      {
-        label: "The Mechanics of Citation",
-        body: "How LLMs parse trusted data sources, technical docs, and third-party reviews to formulate answers.",
-      },
-      {
-        label: "The Cost of Invisibility",
-        body: "What happens when an LLM summarizes your entire category and leaves your brand out of the bulleted recommendations.",
-      },
-    ],
+    title: "Warm Welcome & High Value Hook",
+    subject: "Stop optimizing for dead blue links (GEO Playbook inside)",
+    preview:
+      "Why traditional SEO is losing 60%+ of high-intent search traffic to AI engines, and how to claim your brand's citation space today.",
+    cta: { label: "Download the GEO Strategy Playbook", href: "/nurture" },
+    teaser: "In our next email, we'll dive into the exact citation gaps that are silently leaking your pipeline to competitors.",
   },
   {
-    id: "geo-module-2",
+    id: "nurture-email-2",
     number: 2,
-    title: "Mapping Your Brand's \"Money Prompts\"",
-    topics: [
-      {
-        label: "Defining Money Prompts",
-        body: "Moving past high-volume vanity keywords to capture high-intent commercial prompts (e.g., “What are the best enterprise alternatives to Segment for real-time data orchestration?”).",
-      },
-      {
-        label: "The Intent Matrix",
-        body: "Classification of informational, comparative, and transactional prompts utilized by modern B2B buyers.",
-      },
-      {
-        label: "Competitor Siphoning",
-        body: "Identifying the prompts where competitors are recommended and building a targeted displacement map.",
-      },
-    ],
+    title: "Problem & Solution Narrative",
+    subject: "Your competitors are answering ChatGPT prompts. Are you?",
+    preview:
+      "The hidden gap between your search rankings and your actual pipeline revenue.",
+    cta: { label: "Run Your First Money Prompt Audit", href: "/audit" },
+    teaser: null,
   },
   {
-    id: "geo-module-3",
+    id: "nurture-email-3",
     number: 3,
-    title: "The Technical GEO Audit Checklist",
-    topics: [
-      {
-        label: "Structured Data & Semantic Markup",
-        body: "Preparing your domain for LLM crawler optimization.",
-      },
-      {
-        label: "The 3rd-Party Authority Loop",
-        body: "Uncovering the exact industry databases, directories, and forums Gemini and Perplexity use as trusted ground truths.",
-      },
-      {
-        label: "N-gram Optimization for LLM Tokenizers",
-        body: "How phrasing your product's unique value propositions matches LLM semantic embedding spaces.",
-      },
-    ],
-  },
-  {
-    id: "geo-module-4",
-    number: 4,
-    title: "Generative Search Attribution & Reporting",
-    topics: [
-      {
-        label: "Calculating Share of Model (SoM)",
-        body: "The modern replacement for Share of Voice (SoV).",
-      },
-      {
-        label: "The GEO Pipeline Formula",
-        body: "How to attribute pipeline directly back to AI engine recommendations.",
-      },
-      {
-        label: "Building Client-Ready Proof Reports",
-        body: "Frameworks for presenting LLM visibility gains to stakeholders and board members.",
-      },
-    ],
+    title: "Urgent Call-to-Action / Offer",
+    subject: "Your 60-Second Citation Audit is waiting (Bonus inside)",
+    preview:
+      "See exactly where your brand is cited in AI search results. Get your custom GEO report before our weekly capacity limit resets.",
+    cta: { label: "Run My 60-Second Free Citation Audit", href: "/audit" },
+    teaser: null,
   },
 ] as const;
 
-const VALUE_BULLETS = [
+const EXAMPLE_PROMPTS = [
+  "What is the best enterprise CRM for mid-market manufacturing?",
+  "Which SOC-2 compliance software has the fastest onboarding?",
+] as const;
+
+const CITE_PILOT_FEATURES = [
   {
-    title: "Map Your High-Intent Money Prompts",
-    body: "Learn to identify and target the exact comparative and transactional queries your actual buyers ask ChatGPT, Claude, and Perplexity.",
+    title: "Money Prompt Tracking",
+    body: "We monitor the exact prompts your buyers use, across all major AI engines.",
   },
   {
-    title: "Uncover Your Critical Citation Gaps",
-    body: "Identify precisely where and why your competitors are being cited over you—and get the tactical playbook to close those gaps.",
+    title: "Real-Time Citation Audits",
+    body: "Pinpoint exactly why you were excluded and which sources the LLM trusted instead.",
   },
   {
-    title: "Master RAG Crawler Optimization",
-    body: "Get the precise technical requirements, semantic structures, and API data feeds that force LLMs to trust and cite your domain.",
-  },
-  {
-    title: "Transition from Traffic to Share of Model",
-    body: "Stop tracking vanity keywords. Learn how to measure, prove, and scale your brand's share of generative search answers and directly feed your pipeline.",
+    title: "Automated Remediation",
+    body: "Get clear, actionable workflows to update your digital footprint so LLMs reference your product on autopilot.",
   },
 ] as const;
 
-const SOFTWARE_CATEGORIES = [
-  "Enterprise Analytics",
-  "DevOps",
-  "FinTech",
-  "Cybersecurity",
-  "MarTech / CDP",
-  "HR Tech",
-  "Sales Enablement",
-  "Other B2B SaaS",
+const AUDIT_BULLETS = [
+  "Where your brand is being cited for high-intent money prompts.",
+  "Which of your direct competitors are stealing your share-of-voice.",
+  "The exact steps required to claim your missing citations.",
 ] as const;
-
-const PERSONAL_EMAIL_DOMAINS = new Set([
-  "gmail.com",
-  "googlemail.com",
-  "yahoo.com",
-  "hotmail.com",
-  "outlook.com",
-  "live.com",
-  "icloud.com",
-  "me.com",
-  "aol.com",
-  "protonmail.com",
-  "proton.me",
-  "mail.com",
-  "yandex.com",
-  "gmx.com",
-]);
-
-function isWorkEmail(email: string): boolean {
-  const domain = email.split("@")[1]?.toLowerCase().trim();
-  return Boolean(domain && !PERSONAL_EMAIL_DOMAINS.has(domain));
-}
 
 function ReadTimeRail({
   tracker,
@@ -267,181 +188,266 @@ function MobileReadBar({ tracker }: { tracker: ReadTimeTrackerState }) {
           {tracker.percentRead}% · {tracker.minutes} min
         </span>
         <span className="truncate pl-4 text-ink">
-          {tracker.activeSectionLabel ?? "GEO Playbook"}
+          {tracker.activeSectionLabel ?? "Growth sequence"}
         </span>
       </div>
     </div>
   );
 }
 
-function SectionShell({
+function EmailMeta({
+  subject,
+  preview,
+}: {
+  subject: string;
+  preview: string;
+}) {
+  return (
+    <div className="border-b border-border bg-surface/80 px-5 py-4 sm:px-6">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+        <span className="rounded-md bg-ink/5 px-2 py-0.5 font-medium text-ink">
+          Inbox
+        </span>
+        <span>Cite Pilot</span>
+        <span aria-hidden>·</span>
+        <span>to you</span>
+      </div>
+      <p className="font-display mt-3 text-base font-bold text-ink sm:text-lg">
+        {subject}
+      </p>
+      <p className="mt-1 text-sm text-muted">{preview}</p>
+    </div>
+  );
+}
+
+function EmailSignature() {
+  return (
+    <div className="border-t border-border/60 pt-5 text-sm text-muted">
+      <p>Best,</p>
+      <p className="mt-2 font-medium text-ink">The Cite Pilot Team</p>
+    </div>
+  );
+}
+
+function EmailCta({
+  label,
+  href,
+}: {
+  label: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="mt-6 inline-flex rounded-xl bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
+    >
+      {label}
+    </Link>
+  );
+}
+
+function EmailCard({
   id,
   number,
   title,
+  subject,
+  preview,
+  cta,
   children,
+  teaser,
 }: {
   id: string;
   number: number;
   title: string;
+  subject: string;
+  preview: string;
+  cta: { label: string; href: string };
   children: ReactNode;
+  teaser?: string | null;
 }) {
   return (
     <section id={id} className="scroll-mt-28">
-      <div className="flex items-start gap-4">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 font-display text-lg font-bold text-accent">
+      <div className="mb-4 flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/15 font-display text-sm font-bold text-accent">
           {number}
         </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="font-display text-2xl font-bold leading-tight text-ink sm:text-3xl">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+            Email {number}
+          </p>
+          <h2 className="font-display text-xl font-bold text-ink sm:text-2xl">
             {title}
           </h2>
-          <div className="mt-5 space-y-4 text-base leading-relaxed text-muted">
-            {children}
-          </div>
         </div>
       </div>
+
+      <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+        <EmailMeta subject={subject} preview={preview} />
+        <div className="space-y-4 px-5 py-6 text-base leading-relaxed text-muted sm:px-6">
+          <p>Hi [First Name],</p>
+          {children}
+          <EmailCta label={cta.label} href={cta.href} />
+          {teaser && (
+            <p className="text-sm italic text-muted/90">{teaser}</p>
+          )}
+          <EmailSignature />
+        </div>
+      </article>
     </section>
   );
 }
 
-function LeadCaptureForm() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [domain, setDomain] = useState("");
-  const [competitor, setCompetitor] = useState("");
-  const [category, setCategory] = useState<string>(SOFTWARE_CATEGORIES[0]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanDomain = domain
-      .trim()
-      .replace(/^https?:\/\//, "")
-      .replace(/\/$/, "");
-    const cleanCompetitor = competitor
-      .trim()
-      .replace(/^https?:\/\//, "")
-      .replace(/\/$/, "");
-
-    if (!cleanEmail || !cleanDomain) {
-      setError("Work email and company domain are required.");
-      return;
-    }
-    if (!isWorkEmail(cleanEmail)) {
-      setError("Please use your work email — personal domains are not accepted.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await joinWaitlist(cleanEmail);
-      sessionStorage.setItem(
-        ONBOARDING_STORAGE_KEY,
-        JSON.stringify({
-          domain: cleanDomain,
-          competitor: cleanCompetitor,
-          category,
-          buyerQuestion: `best ${category.toLowerCase()} software\nalternatives to ${cleanCompetitor || "leading competitor"}\nhow to choose ${category.toLowerCase()} for enterprise`,
-        }),
-      );
-      const params = new URLSearchParams({ domain: cleanDomain });
-      if (cleanCompetitor) params.set("competitor", cleanCompetitor);
-      router.push(`/audit?${params.toString()}`);
-    } catch {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
-    }
-  }
-
+function EmailOneBody() {
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <label className="block sm:col-span-2">
-          <span className="text-sm font-medium text-ink">Work email</span>
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="name@yourcompany.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-ink outline-none ring-accent/30 transition focus:ring-2"
-          />
-          <span className="mt-1 block text-xs text-muted">
-            Verifies B2B intent — personal domains blocked
-          </span>
-        </label>
-
-        <label className="block">
-          <span className="text-sm font-medium text-ink">Company domain</span>
-          <input
-            type="text"
-            required
-            autoComplete="organization"
-            placeholder="yourcompany.com"
-            value={domain}
-            onChange={(e) => setDomain(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-ink outline-none ring-accent/30 transition focus:ring-2"
-          />
-          <span className="mt-1 block text-xs text-muted">
-            Pulls your real-time AI citation footprint
-          </span>
-        </label>
-
-        <label className="block">
-          <span className="text-sm font-medium text-ink">
-            Primary competitor domain
-          </span>
-          <input
-            type="text"
-            placeholder="competitor.com"
-            value={competitor}
-            onChange={(e) => setCompetitor(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-ink outline-none ring-accent/30 transition focus:ring-2"
-          />
-          <span className="mt-1 block text-xs text-muted">
-            Shows immediate comparative citation overlap
-          </span>
-        </label>
-
-        <label className="block sm:col-span-2">
-          <span className="text-sm font-medium text-ink">
-            Most important software category
-          </span>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-ink outline-none ring-accent/30 transition focus:ring-2"
+    <>
+      <p>
+        Traditional SEO is experiencing a silent extinction event.
+      </p>
+      <p>
+        While search teams celebrate ranking #1 for arbitrary keywords on Google,
+        high-intent buyers are skipping search engine result pages entirely.
+        Instead, they are asking ChatGPT, Perplexity, and Gemini:
+      </p>
+      <ul className="space-y-2">
+        {EXAMPLE_PROMPTS.map((prompt) => (
+          <li
+            key={prompt}
+            className="rounded-xl border-l-4 border-accent bg-surface px-4 py-3 text-sm italic text-ink"
           >
-            {SOFTWARE_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-xl bg-accent px-6 py-4 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-60 sm:w-auto"
-      >
-        {loading ? "Starting audit…" : "Get playbook + run 60-second audit"}
-      </button>
-    </form>
+            &ldquo;{prompt}&rdquo;
+          </li>
+        ))}
+      </ul>
+      <p>
+        If these engines aren&apos;t citing your brand in their answers, you
+        don&apos;t exist to those buyers.
+      </p>
+      <p>
+        At <strong className="text-ink">Cite Pilot</strong>, we don&apos;t track
+        blue links. We optimize for{" "}
+        <strong className="text-ink">money prompts</strong>—the exact queries
+        driving high-value pipelines. To get you started, we&apos;ve put together
+        our proprietary{" "}
+        <strong className="text-ink">
+          GEO Strategy Playbook: Winning the AI Answer Engine.
+        </strong>
+      </p>
+      <p className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
+        No fluff, no vanity metrics. Just a technical, step-by-step framework to
+        secure your brand&apos;s citations in LLM responses.
+      </p>
+    </>
   );
 }
+
+function EmailTwoBody() {
+  return (
+    <>
+      <p>
+        Yesterday, we talked about how AI engines are eating traditional search.
+        Today, let&apos;s talk about the hard numbers.
+      </p>
+      <p>
+        We recently analyzed 1,000+ commercial B2B SaaS prompts across GPT-4o and
+        Claude 3.5 Sonnet. The results were stark:{" "}
+        <strong className="text-ink">
+          Over 74% of the industry-leading brands ranking on Google&apos;s Page 1
+          were completely omitted from AI-generated recommendations.
+        </strong>
+      </p>
+      <p>
+        This is called the{" "}
+        <strong className="text-ink">Citation Gap</strong>.
+      </p>
+      <p>
+        When high-value prospects ask an LLM for product comparisons, the engine
+        synthesizes its answer from obscure developer docs, forum discussions,
+        and third-party reviews. If your GEO strategy isn&apos;t actively feeding
+        these models the right data structures, you get left out.
+      </p>
+      <p className="font-medium text-ink">Here is how Cite Pilot solves this:</p>
+      <ul className="space-y-3">
+        {CITE_PILOT_FEATURES.map((feature) => (
+          <li
+            key={feature.title}
+            className="rounded-xl border border-border bg-surface px-4 py-3"
+          >
+            <span className="font-display font-bold text-ink">
+              {feature.title}:
+            </span>{" "}
+            <span className="text-sm">{feature.body}</span>
+          </li>
+        ))}
+      </ul>
+      <blockquote className="rounded-2xl border border-border bg-ink px-5 py-5 text-white">
+        <p className="text-sm leading-relaxed italic text-white/90">
+          &ldquo;Within 30 days of deploying Cite Pilot, our SaaS brand went from
+          8% share-of-voice in ChatGPT recommendations to 42% on our top 15 money
+          prompts. The inbound pipeline growth has been immediate.&rdquo;
+        </p>
+        <footer className="mt-3 text-xs font-medium text-white/60">
+          — Head of Growth, Series-B DevTools Platform
+        </footer>
+      </blockquote>
+      <p className="font-medium text-ink">
+        Don&apos;t let your competitors monopolize the AI search interface.
+      </p>
+    </>
+  );
+}
+
+function EmailThreeBody() {
+  return (
+    <>
+      <p>
+        We&apos;ve covered the shifting landscape and the mechanics of the
+        Citation Gap. Now it&apos;s time to stop guessing and start measuring.
+      </p>
+      <p>
+        You can map your entire AI search footprint in less than a minute. Our{" "}
+        <strong className="text-ink">60-Second Free Citation Audit</strong> scans
+        ChatGPT, Perplexity, and Gemini to show you exactly:
+      </p>
+      <ol className="space-y-2">
+        {AUDIT_BULLETS.map((bullet, i) => (
+          <li
+            key={bullet}
+            className="flex gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+              {i + 1}
+            </span>
+            <span>{bullet}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/80 p-5">
+        <p className="font-display font-bold text-ink">
+          Limited Time Onboarding Bonus
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          If you run your audit within the next 48 hours, our lead GEO architect
+          will record a personalized, 5-minute video teardown of your gap analysis,
+          outlining your fastest path to AI citation dominance.
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          We limit these human-curated video teardowns to{" "}
+          <strong className="text-ink">50 growth marketers per week</strong> to
+          maintain our service quality. Currently, we have{" "}
+          <strong className="text-accent">12 slots remaining</strong> for this
+          cohort.
+        </p>
+      </div>
+      <p>
+        Your pipeline shouldn&apos;t rely on users clicking blue links that
+        they&apos;ve already trained themselves to ignore. Claim your AI search
+        real estate today.
+      </p>
+    </>
+  );
+}
+
+const EMAIL_BODIES = [EmailOneBody, EmailTwoBody, EmailThreeBody] as const;
 
 export function InteractiveArticle() {
   const articleRef = useRef<HTMLElement>(null);
@@ -459,164 +465,74 @@ export function InteractiveArticle() {
         <article ref={articleRef} className="min-w-0 flex-1 space-y-14">
           <header className="rounded-3xl border border-border bg-gradient-to-br from-ink via-ink to-accent/30 p-6 text-white sm:p-10">
             <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-              Part 1 · Lead magnet blueprint
+              B2B SaaS growth sequence
             </p>
             <h1 className="font-display mt-3 text-3xl font-bold leading-tight sm:text-4xl lg:text-[2.65rem]">
-              The Generative Engine Optimization (GEO) Playbook: How to Dominate
-              B2B &ldquo;Money Prompts&rdquo; in ChatGPT, Claude, and Perplexity
+              Dominating the LLM Era
             </h1>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
+              A three-email nurture sequence for growth teams moving from
+              traditional SEO to generative engine optimization—money prompts,
+              citation gaps, and your 60-second audit.
+            </p>
             <div className="mt-6 flex flex-wrap gap-3 text-sm">
               <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white/90">
                 {tracker.minutes} min read
               </span>
               <span className="rounded-full border border-accent/40 bg-accent/20 px-3 py-1 font-medium text-white">
-                4 modules · B2B SaaS
+                3 emails · B2B SaaS
               </span>
             </div>
           </header>
 
-          <section
-            id="geo-curriculum"
-            className="scroll-mt-28 rounded-2xl border border-border bg-surface p-6 sm:p-8"
+          <nav
+            aria-label="Email sequence overview"
+            className="rounded-2xl border border-border bg-surface p-6 sm:p-8"
           >
             <h2 className="font-display text-lg font-bold text-ink">
-              Playbook index &amp; curriculum
+              Sequence overview
             </h2>
-            <ol className="mt-5 space-y-4">
-              {MODULES.map((mod) => (
-                <li key={mod.id}>
+            <ol className="mt-4 space-y-3">
+              {EMAILS.map((email) => (
+                <li key={email.id}>
                   <a
-                    href={`#${mod.id}`}
-                    className="group flex gap-4 rounded-xl border border-border bg-white p-4 shadow-sm transition hover:border-accent/40 hover:shadow-md"
+                    href={`#${email.id}`}
+                    className="group flex gap-4 rounded-xl border border-border bg-white p-4 shadow-sm transition hover:border-accent/40"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/15 font-display text-sm font-bold text-accent">
-                      {mod.number}
+                      {email.number}
                     </span>
                     <div className="min-w-0">
-                      <p className="font-display font-bold text-ink group-hover:text-accent">
-                        Module {mod.number}: {mod.title}
+                      <p className="font-display text-sm font-bold text-ink group-hover:text-accent">
+                        {email.title}
                       </p>
-                      <ul className="mt-2 space-y-1">
-                        {mod.topics.map((topic) => (
-                          <li
-                            key={topic.label}
-                            className="text-sm text-muted before:mr-2 before:text-accent before:content-['•']"
-                          >
-                            <span className="font-medium text-ink">
-                              {topic.label}:
-                            </span>{" "}
-                            {topic.body}
-                          </li>
-                        ))}
-                      </ul>
+                      <p className="mt-1 truncate text-xs text-muted">
+                        {email.subject}
+                      </p>
                     </div>
                   </a>
                 </li>
               ))}
             </ol>
-          </section>
+          </nav>
 
-          {MODULES.map((mod) => (
-            <SectionShell
-              key={mod.id}
-              id={mod.id}
-              number={mod.number}
-              title={mod.title}
-            >
-              <div className="space-y-4">
-                {mod.topics.map((topic, i) => (
-                  <article
-                    key={topic.label}
-                    className="overflow-hidden rounded-2xl border border-border"
-                  >
-                    <div className="flex items-center gap-3 border-b border-border bg-ink px-5 py-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/20 text-xs font-bold text-accent">
-                        {i + 1}
-                      </span>
-                      <h3 className="font-display text-sm font-bold text-white sm:text-base">
-                        {topic.label}
-                      </h3>
-                    </div>
-                    <p className="bg-surface p-5 text-sm leading-relaxed">
-                      {topic.body}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </SectionShell>
-          ))}
-
-          <section
-            id="geo-landing"
-            className="scroll-mt-28 overflow-hidden rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/10 via-white to-surface"
-          >
-            <div className="border-b border-accent/20 bg-ink px-6 py-3 sm:px-8">
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-                Part 2 · Landing page copy
-              </p>
-            </div>
-            <div className="space-y-8 p-6 sm:p-10">
-              <div>
-                <h2 className="font-display text-2xl font-bold leading-tight text-ink sm:text-3xl lg:text-4xl">
-                  Stop Optimizing for Clicks That Don&apos;t Exist. Get Cited in
-                  the AI Answers Your Buyers Actually Read.
-                </h2>
-                <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted sm:text-lg">
-                  Traditional SEO is bleeding traffic to AI engines. Acquire the
-                  definitive technical blueprint to map your B2B SaaS &ldquo;Money
-                  Prompts,&rdquo; audit your brand&apos;s current AI visibility, and
-                  claim your unfair share of generative recommendations on
-                  autopilot.
-                </p>
-              </div>
-
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {VALUE_BULLETS.map((bullet, i) => (
-                  <li
-                    key={bullet.title}
-                    className="flex gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm"
-                  >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent font-display text-sm font-bold text-white">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <h3 className="font-display font-bold text-ink">
-                        {bullet.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-muted">
-                        {bullet.body}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-
-          <section
-            id="geo-capture"
-            className="scroll-mt-28 rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-10"
-          >
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent">
-              Part 3 · Lead capture
-            </p>
-            <h2 className="font-display mt-2 text-2xl font-bold text-ink sm:text-3xl">
-              Get Your Free Playbook + Run an Instant 60-Second Citation Audit
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-muted">
-              Enter your work details below. We&apos;ll deliver the playbook and
-              pre-load your domain for a live AI citation footprint check.
-            </p>
-            <div className="mt-8">
-              <LeadCaptureForm />
-            </div>
-            <p className="mt-6 text-center text-xs text-muted">
-              Already have an account?{" "}
-              <Link href="/audit" className="font-medium text-accent hover:underline">
-                Run audit directly
-              </Link>
-            </p>
-          </section>
+          {EMAILS.map((email, i) => {
+            const Body = EMAIL_BODIES[i]!;
+            return (
+              <EmailCard
+                key={email.id}
+                id={email.id}
+                number={email.number}
+                title={email.title}
+                subject={email.subject}
+                preview={email.preview}
+                cta={email.cta}
+                teaser={email.teaser}
+              >
+                <Body />
+              </EmailCard>
+            );
+          })}
         </article>
       </div>
     </div>
