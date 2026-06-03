@@ -16,6 +16,7 @@ export const nav = {
     { label: "How it works", href: "/#journey" },
     { label: "Product", href: "/#pillars" },
     { label: "Blog", href: "/blog" },
+    { label: "GEO Playbook", href: "/nurture" },
     { label: "Pricing", href: "/pricing" },
   ],
   startAnalysis: { label: "Start Analysis", href: "/start" },

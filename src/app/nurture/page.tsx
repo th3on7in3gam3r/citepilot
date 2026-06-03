@@ -4,27 +4,17 @@ import { Header } from "@/components/layout/Header";
 import { InteractiveArticle } from "@/components/marketing/InteractiveArticle";
 
 export const metadata: Metadata = {
-  title: "GEO Nurture Sequence",
+  title: "GEO Playbook",
   description:
-    "Preview CitePilot's three-email nurture flow for B2B SaaS teams moving from SEO to generative engine optimization.",
+    "How to secure citations in ChatGPT, Perplexity, and Google AI Overviews — the CitePilot generative engine optimization playbook.",
 };
 
-type PageProps = {
-  searchParams: Promise<{ name?: string }>;
-};
-
-export default async function NurturePage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const firstName =
-    typeof params.name === "string" && params.name.trim().length > 0
-      ? params.name.trim()
-      : undefined;
-
+export default function NurturePage() {
   return (
     <>
       <Header />
       <main className="bg-cream pt-24">
-        <InteractiveArticle firstName={firstName} />
+        <InteractiveArticle />
       </main>
       <Footer />
     </>
