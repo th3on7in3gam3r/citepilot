@@ -94,23 +94,33 @@ async function getValidAccessToken(
   conn: Awaited<ReturnType<typeof getGscConnection>>,
 ): Promise<string | null> {
   if (!conn) return null;
-  if (
-    conn.expiresAt &&
-    new Date(conn.expiresAt).getTime() - Date.now() < 60_000 &&
-    conn.refreshToken
-  ) {
-    const refreshed = await refreshAccessToken(conn.refreshToken);
-    await upsertGscConnection({
-      workspaceId: conn.workspaceId,
-      userId: conn.userId,
-      siteUrl: conn.siteUrl,
-      accessToken: refreshed.accessToken,
-      refreshToken: conn.refreshToken,
-      expiresAt: refreshed.expiresAt,
-    });
-    return refreshed.accessToken;
+
+  const expiresMs = conn.expiresAt
+    ? new Date(conn.expiresAt).getTime()
+    : Number.POSITIVE_INFINITY;
+  const needsRefresh =
+    Boolean(conn.refreshToken) &&
+    (!Number.isFinite(expiresMs) || expiresMs - Date.now() < 60_000);
+
+  if (needsRefresh) {
+    try {
+      const refreshed = await refreshAccessToken(conn.refreshToken!);
+      await upsertGscConnection({
+        workspaceId: conn.workspaceId,
+        userId: conn.userId,
+        siteUrl: conn.siteUrl,
+        accessToken: refreshed.accessToken,
+        refreshToken: conn.refreshToken,
+        expiresAt: refreshed.expiresAt,
+      });
+      return refreshed.accessToken;
+    } catch (err) {
+      console.error("[gsc] token refresh failed", err);
+      return null;
+    }
   }
-  return conn.accessToken;
+
+  return conn.accessToken?.trim() ? conn.accessToken : null;
 }
 
 export async function listGscSites(accessToken: string): Promise<string[]> {
@@ -159,92 +169,103 @@ export async function connectGscForWorkspace(input: {
   return siteUrl;
 }
 
+const emptyGscMetrics = (siteUrl: string | null = null): GscMetrics => ({
+  connected: false,
+  siteUrl,
+  clicks: 0,
+  impressions: 0,
+  ctr: 0,
+  position: 0,
+  clicksDelta: null,
+  impressionsDelta: null,
+});
+
 export async function fetchGscMetrics(
   workspaceId: string,
 ): Promise<GscMetrics> {
-  const conn = await getGscConnection(workspaceId);
-  if (!conn) {
-    return {
-      connected: false,
-      siteUrl: null,
-      clicks: 0,
-      impressions: 0,
-      ctr: 0,
-      position: 0,
-      clicksDelta: null,
-      impressionsDelta: null,
-    };
-  }
+  try {
+    const conn = await getGscConnection(workspaceId);
+    if (!conn) {
+      return emptyGscMetrics();
+    }
 
-  const token = await getValidAccessToken(conn);
-  if (!token) {
+    const token = await getValidAccessToken(conn);
+    if (!token) {
+      return emptyGscMetrics(conn.siteUrl);
+    }
+
+    const end = new Date();
+    const start = new Date(end.getTime() - 28 * 86400000);
+    const prevEnd = new Date(start.getTime() - 86400000);
+    const prevStart = new Date(prevEnd.getTime() - 28 * 86400000);
+
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    const siteUrl = conn.siteUrl;
+
+    async function queryRange(startDate: string, endDate: string) {
+      try {
+        const res = await fetch(
+          `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              startDate,
+              endDate,
+              dimensions: [],
+            }),
+          },
+        );
+        if (!res.ok) {
+          console.error("[gsc] searchAnalytics query failed", res.status, siteUrl);
+          return null;
+        }
+        const data = (await res.json()) as {
+          rows?: {
+            clicks?: number;
+            impressions?: number;
+            ctr?: number;
+            position?: number;
+          }[];
+        };
+        return data.rows?.[0] ?? null;
+      } catch (err) {
+        console.error("[gsc] searchAnalytics query error", err);
+        return null;
+      }
+    }
+
+    const [current, previous] = await Promise.all([
+      queryRange(fmt(start), fmt(end)),
+      queryRange(fmt(prevStart), fmt(prevEnd)),
+    ]);
+
+    const clicks = Math.round(current?.clicks ?? 0);
+    const impressions = Math.round(current?.impressions ?? 0);
+    const prevClicks = previous?.clicks ?? 0;
+    const prevImpressions = previous?.impressions ?? 0;
+
     return {
-      connected: false,
+      connected: true,
       siteUrl: conn.siteUrl,
-      clicks: 0,
-      impressions: 0,
-      ctr: 0,
-      position: 0,
-      clicksDelta: null,
-      impressionsDelta: null,
+      clicks,
+      impressions,
+      ctr: current?.ctr ?? 0,
+      position: current?.position ?? 0,
+      clicksDelta:
+        previous != null
+          ? `${clicks - prevClicks >= 0 ? "+" : ""}${Math.round(clicks - prevClicks)}`
+          : null,
+      impressionsDelta:
+        previous != null
+          ? `${impressions - prevImpressions >= 0 ? "+" : ""}${Math.round(impressions - prevImpressions).toLocaleString()}`
+          : null,
     };
+  } catch (err) {
+    console.error("[gsc] fetchGscMetrics failed", workspaceId, err);
+    return emptyGscMetrics();
   }
-
-  const end = new Date();
-  const start = new Date(end.getTime() - 28 * 86400000);
-  const prevEnd = new Date(start.getTime() - 86400000);
-  const prevStart = new Date(prevEnd.getTime() - 28 * 86400000);
-
-  const fmt = (d: Date) => d.toISOString().slice(0, 10);
-  const siteUrl = conn.siteUrl;
-
-  async function queryRange(startDate: string, endDate: string) {
-    const res = await fetch(
-      `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          startDate,
-          endDate,
-          dimensions: [],
-        }),
-      },
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      rows?: { clicks?: number; impressions?: number; ctr?: number; position?: number }[];
-    };
-    return data.rows?.[0] ?? null;
-  }
-
-  const [current, previous] = await Promise.all([
-    queryRange(fmt(start), fmt(end)),
-    queryRange(fmt(prevStart), fmt(prevEnd)),
-  ]);
-
-  const clicks = Math.round(current?.clicks ?? 0);
-  const impressions = Math.round(current?.impressions ?? 0);
-  const prevClicks = previous?.clicks ?? 0;
-  const prevImpressions = previous?.impressions ?? 0;
-
-  return {
-    connected: true,
-    siteUrl: conn.siteUrl,
-    clicks,
-    impressions,
-    ctr: current?.ctr ?? 0,
-    position: current?.position ?? 0,
-    clicksDelta:
-      previous != null
-        ? `${clicks - prevClicks >= 0 ? "+" : ""}${Math.round(clicks - prevClicks)}`
-        : null,
-    impressionsDelta:
-      previous != null
-        ? `${impressions - prevImpressions >= 0 ? "+" : ""}${Math.round(impressions - prevImpressions).toLocaleString()}`
-        : null,
-  };
 }
