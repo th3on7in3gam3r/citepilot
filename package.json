@@ -16,6 +16,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@sentry/nextjs": "^10.54.0",
     "better-sqlite3": "^12.10.0",
+    "clsx": "^2.1.1",
     "framer-api": "^0.1.10",
     "next": "16.2.6",
     "posthog-js": "^1.376.2",
@@ -25,6 +26,7 @@
     "remark-gfm": "^4.0.1",
     "resend": "^6.12.3",
     "stripe": "^17.7.0",
+    "tailwind-merge": "^3.6.0",
     "uuid": "^14.0.0"
   },
   "devDependencies": {

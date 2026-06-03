@@ -6,6 +6,7 @@ import { effectInit } from "@/lib/react/effect-init";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { GooeyFilter, LiquidToggle } from "@/components/ui/liquid-toggle";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { PromptRow } from "@/lib/features";
 import {
@@ -121,6 +122,7 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
 
   return (
     <>
+      <GooeyFilter />
       <div className="overflow-hidden rounded-2xl border border-border bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.06))] p-4 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -181,54 +183,40 @@ function AnalyticsSourceToggle({
   gscConnected: boolean;
 }) {
   const googleLabel = gscConnected ? "Google · Live" : "Google";
+  const isLlms = value === "llms";
 
   return (
     <div
-      className="relative inline-grid h-9 w-[min(100%,13.5rem)] grid-cols-2 items-center rounded-full border border-border/90 bg-white/70 p-0.5 shadow-sm backdrop-blur-sm"
+      className="flex items-center gap-3 rounded-full border border-border/90 bg-white/80 px-3 py-2 shadow-sm backdrop-blur-sm"
       role="group"
       aria-label="Analytics data source"
     >
-      <span
-        aria-hidden
-        className={`pointer-events-none absolute top-0.5 bottom-0.5 left-0.5 w-[calc(50%-2px)] rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent shadow-[0_2px_8px_rgba(107,140,255,0.35)] transition-transform duration-200 ease-out ${
-          value === "llms" ? "translate-x-full" : "translate-x-0"
-        }`}
-      />
-      <ToggleOption
-        active={value === "google"}
+      <button
+        type="button"
         onClick={() => onChange("google")}
-        label={googleLabel}
+        className={`text-xs font-semibold transition sm:text-sm ${
+          !isLlms ? "text-ink" : "text-muted hover:text-ink"
+        }`}
+      >
+        {googleLabel}
+      </button>
+      <LiquidToggle
+        id="analytics-source-toggle"
+        checked={isLlms}
+        onCheckedChange={(checked) => onChange(checked ? "llms" : "google")}
+        aria-label={`Switch to ${isLlms ? "Google Search Console" : "LLM citation analytics"}`}
+        className="[--c-active:#6b8cff] shrink-0"
       />
-      <ToggleOption
-        active={value === "llms"}
+      <button
+        type="button"
         onClick={() => onChange("llms")}
-        label="LLMs"
-      />
+        className={`text-xs font-semibold transition sm:text-sm ${
+          isLlms ? "text-ink" : "text-muted hover:text-ink"
+        }`}
+      >
+        LLMs
+      </button>
     </div>
-  );
-}
-
-function ToggleOption({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={active}
-      onClick={onClick}
-      className={`relative z-10 truncate px-3 py-1.5 text-center text-xs font-semibold transition-colors sm:text-sm ${
-        active ? "text-white" : "text-muted hover:text-ink"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 
