@@ -23,7 +23,7 @@ export function ExecutiveBriefingPanel({
 
   return (
     <section className="mb-8 overflow-hidden rounded-2xl border border-slate-800/80 bg-[#070b14] text-white shadow-[0_20px_60px_rgba(7,11,20,0.35)]">
-      <div className="grid gap-0 lg:grid-cols-[1fr_minmax(280px,340px)]">
+      <div className="grid gap-0 lg:grid-cols-[1fr_minmax(300px,360px)]">
         <div className="p-6 sm:p-8 lg:p-10">
           <span className="inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
             Executive briefing
@@ -97,7 +97,7 @@ export function ExecutiveBriefingPanel({
           </div>
         </div>
 
-        <div className="flex flex-col border-t border-white/10 bg-white/[0.02] p-6 sm:p-8 lg:border-t-0 lg:border-l">
+        <div className="flex min-w-0 flex-col border-t border-white/10 bg-white/[0.02] p-6 sm:p-8 lg:border-t-0 lg:border-l">
           <CitationGradeRing
             letterGrade={metrics.letterGrade}
             citationScore={metrics.citationScore}
