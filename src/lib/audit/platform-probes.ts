@@ -32,6 +32,25 @@ const LIVE_PLATFORM_PROVIDERS: Record<string, LiveProvider | null> = {
   DeepSeek: null,
 };
 
+/** Per external LLM/search call — keeps audits inside Vercel time limits. */
+const PROBE_TIMEOUT_MS = 12_000;
+/** Max concurrent live probes (OpenAI + Perplexity + Serper). */
+const PROBE_CONCURRENCY = 5;
+
+/** Cap total live API calls so audits finish before gateway timeouts. */
+const MAX_LIVE_PROBE_CALLS: Record<BillingPlan, number> = {
+  free: 6,
+  pilot: 15,
+  fleet: 30,
+};
+
+type ProbeTask = {
+  promptIndex: number;
+  prompt: string;
+  platform: string;
+  provider: LiveProvider;
+};
+
 function textMentionsBrand(text: string, domain: string, brand: string): boolean {
   const lower = text.toLowerCase();
   const domainClean = domain.replace(/^www\./, "").toLowerCase();
@@ -43,47 +62,58 @@ function textMentionsBrand(text: string, domain: string, brand: string): boolean
   );
 }
 
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+): Promise<Response | null> {
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+    });
+  } catch {
+    return null;
+  }
+}
+
 async function fetchOpenAiAnswer(prompt: string): Promise<string | null> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return null;
 
-  try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Answer the user question helpfully. Mention specific products, tools, and brands when relevant.",
-          },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 450,
-        temperature: 0.35,
-      }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    return data.choices?.[0]?.message?.content ?? null;
-  } catch {
-    return null;
-  }
+  const res = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Answer the user question helpfully. Mention specific products, tools, and brands when relevant.",
+        },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 450,
+      temperature: 0.35,
+    }),
+  });
+  if (!res?.ok) return null;
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return data.choices?.[0]?.message?.content ?? null;
 }
 
 async function fetchPerplexityAnswer(prompt: string): Promise<string | null> {
   const key = process.env.PERPLEXITY_API_KEY;
   if (!key) return null;
 
-  try {
-    const res = await fetch("https://api.perplexity.ai/chat/completions", {
+  const res = await fetchWithTimeout(
+    "https://api.perplexity.ai/chat/completions",
+    {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,
@@ -95,47 +125,41 @@ async function fetchPerplexityAnswer(prompt: string): Promise<string | null> {
         max_tokens: 450,
         temperature: 0.2,
       }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    return data.choices?.[0]?.message?.content ?? null;
-  } catch {
-    return null;
-  }
+    },
+  );
+  if (!res?.ok) return null;
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return data.choices?.[0]?.message?.content ?? null;
 }
 
 async function fetchSerperContext(prompt: string): Promise<string | null> {
   const key = process.env.SERPER_API_KEY;
   if (!key) return null;
 
-  try {
-    const res = await fetch("https://google.serper.dev/search", {
-      method: "POST",
-      headers: {
-        "X-API-KEY": key,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ q: prompt, num: 8 }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      answerBox?: { snippet?: string; title?: string };
-      organic?: { title?: string; snippet?: string; link?: string }[];
-    };
-    const parts: string[] = [];
-    if (data.answerBox?.snippet) parts.push(data.answerBox.snippet);
-    if (data.answerBox?.title) parts.push(data.answerBox.title);
-    for (const row of data.organic ?? []) {
-      if (row.title) parts.push(row.title);
-      if (row.snippet) parts.push(row.snippet);
-      if (row.link) parts.push(row.link);
-    }
-    return parts.join("\n") || null;
-  } catch {
-    return null;
+  const res = await fetchWithTimeout("https://google.serper.dev/search", {
+    method: "POST",
+    headers: {
+      "X-API-KEY": key,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ q: prompt, num: 8 }),
+  });
+  if (!res?.ok) return null;
+  const data = (await res.json()) as {
+    answerBox?: { snippet?: string; title?: string };
+    organic?: { title?: string; snippet?: string; link?: string }[];
+  };
+  const parts: string[] = [];
+  if (data.answerBox?.snippet) parts.push(data.answerBox.snippet);
+  if (data.answerBox?.title) parts.push(data.answerBox.title);
+  for (const row of data.organic ?? []) {
+    if (row.title) parts.push(row.title);
+    if (row.snippet) parts.push(row.snippet);
+    if (row.link) parts.push(row.link);
   }
+  return parts.join("\n") || null;
 }
 
 async function fetchLiveAnswer(
@@ -145,6 +169,25 @@ async function fetchLiveAnswer(
   if (provider === "openai") return fetchOpenAiAnswer(prompt);
   if (provider === "perplexity") return fetchPerplexityAnswer(prompt);
   return fetchSerperContext(prompt);
+}
+
+async function runPool<T>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  if (items.length === 0) return;
+  let index = 0;
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    async () => {
+      while (index < items.length) {
+        const i = index++;
+        await fn(items[i]!);
+      }
+    },
+  );
+  await Promise.all(workers);
 }
 
 function probeBudget(plan: BillingPlan): {
@@ -160,16 +203,22 @@ function probeBudget(plan: BillingPlan): {
     return false;
   });
 
-  if (plan === "fleet") {
-    return { maxPrompts: 12, livePlatforms: configuredLive };
+  let maxPrompts =
+    plan === "fleet" ? 12 : plan === "pilot" ? 8 : configuredLive.length > 0 ? 3 : 0;
+  const livePlatforms =
+    plan === "free"
+      ? configuredLive.slice(0, 2)
+      : configuredLive;
+
+  const callCap = MAX_LIVE_PROBE_CALLS[plan];
+  if (livePlatforms.length > 0) {
+    maxPrompts = Math.min(
+      maxPrompts,
+      Math.max(1, Math.floor(callCap / livePlatforms.length)),
+    );
   }
-  if (plan === "pilot") {
-    return { maxPrompts: 8, livePlatforms: configuredLive };
-  }
-  return {
-    maxPrompts: configuredLive.length > 0 ? 3 : 0,
-    livePlatforms: configuredLive.slice(0, 2),
-  };
+
+  return { maxPrompts, livePlatforms };
 }
 
 function inferPlatformPresence(
@@ -216,6 +265,62 @@ function aggregateLivePresence(
   return out;
 }
 
+/** Live probes only — safe to run in parallel with analyzeSite(). */
+export async function runLivePlatformProbes(input: {
+  domain: string;
+  prompts: string[];
+  plan: BillingPlan;
+}): Promise<PlatformProbeResult[]> {
+  const domain = input.domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const brand = brandFromDomain(domain);
+  const budget = probeBudget(input.plan);
+  const promptsToProbe = input.prompts.slice(0, budget.maxPrompts);
+
+  const tasks: ProbeTask[] = [];
+  for (let promptIndex = 0; promptIndex < promptsToProbe.length; promptIndex++) {
+    const prompt = promptsToProbe[promptIndex]!;
+    for (const platform of budget.livePlatforms) {
+      const provider = LIVE_PLATFORM_PROVIDERS[platform];
+      if (!provider) continue;
+      tasks.push({ promptIndex, prompt, platform, provider });
+    }
+  }
+
+  const checks: PlatformProbeResult[] = [];
+  await runPool(tasks, PROBE_CONCURRENCY, async (task) => {
+    const answer = await fetchLiveAnswer(task.provider, task.prompt);
+    if (answer === null) return;
+    checks.push({
+      platform: task.platform,
+      prompt: task.prompt,
+      promptIndex: task.promptIndex,
+      cited: textMentionsBrand(answer, domain, brand),
+      checkMode: "live",
+    });
+  });
+
+  return checks;
+}
+
+export function buildPlatformPresence(
+  checks: PlatformProbeResult[],
+  siteSignals: SiteSignals,
+  promptCount: number,
+): PlatformPresenceRow[] {
+  const liveCitedPrompts = new Set(
+    checks.filter((c) => c.cited).map((c) => c.promptIndex),
+  );
+  const liveCitationRate =
+    promptCount > 0 ? liveCitedPrompts.size / promptCount : 0;
+
+  const livePresence = aggregateLivePresence(checks);
+  return PLATFORMS.map((name) => {
+    const live = livePresence.get(name);
+    if (live) return live;
+    return inferPlatformPresence(name, siteSignals.geoScore, liveCitationRate);
+  });
+}
+
 export async function runPlatformMonitoring(input: {
   domain: string;
   prompts: string[];
@@ -225,44 +330,16 @@ export async function runPlatformMonitoring(input: {
   checks: PlatformProbeResult[];
   platforms: PlatformPresenceRow[];
 }> {
-  const domain = input.domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  const brand = brandFromDomain(domain);
-  const budget = probeBudget(input.plan);
-  const promptsToProbe = input.prompts.slice(0, budget.maxPrompts);
-  const checks: PlatformProbeResult[] = [];
-
-  for (let promptIndex = 0; promptIndex < promptsToProbe.length; promptIndex++) {
-    const prompt = promptsToProbe[promptIndex]!;
-    for (const platform of budget.livePlatforms) {
-      const provider = LIVE_PLATFORM_PROVIDERS[platform];
-      if (!provider) continue;
-      const answer = await fetchLiveAnswer(provider, prompt);
-      if (answer === null) continue;
-      checks.push({
-        platform,
-        prompt,
-        promptIndex,
-        cited: textMentionsBrand(answer, domain, brand),
-        checkMode: "live",
-      });
-    }
-  }
-
-  const liveCitedPrompts = new Set(
-    checks.filter((c) => c.cited).map((c) => c.promptIndex),
-  );
-  const liveCitationRate =
-    promptsToProbe.length > 0
-      ? liveCitedPrompts.size / promptsToProbe.length
-      : 0;
-
-  const livePresence = aggregateLivePresence(checks);
-  const platforms: PlatformPresenceRow[] = PLATFORMS.map((name) => {
-    const live = livePresence.get(name);
-    if (live) return live;
-    return inferPlatformPresence(name, input.siteSignals.geoScore, liveCitationRate);
+  const checks = await runLivePlatformProbes({
+    domain: input.domain,
+    prompts: input.prompts,
+    plan: input.plan,
   });
-
+  const platforms = buildPlatformPresence(
+    checks,
+    input.siteSignals,
+    input.prompts.length,
+  );
   return { checks, platforms };
 }
 

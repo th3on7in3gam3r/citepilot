@@ -6,9 +6,11 @@ import type {
 } from "@/lib/api-types";
 import type { BillingPlan } from "@/lib/billing/types";
 import { persistPlatformChecks } from "@/lib/audit/platform-checks-store";
+import type { PlatformProbeResult } from "@/lib/audit/platform-probes";
 import {
+  buildPlatformPresence,
   liveChecksByPromptIndex,
-  runPlatformMonitoring,
+  runLivePlatformProbes,
 } from "@/lib/audit/platform-probes";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import {
@@ -82,16 +84,14 @@ export async function runCitationAudit(input: {
   const domain = normalizeDomain(input.domain);
   const prompts = input.prompts.map((p) => p.trim()).filter(Boolean);
   const plan = input.plan ?? "free";
-  const signals = await analyzeSite(domain);
 
-  const monitoring = await runPlatformMonitoring({
-    domain,
-    prompts,
-    plan,
-    siteSignals: signals,
-  });
+  const [signals, checks] = await Promise.all([
+    analyzeSite(domain),
+    runLivePlatformProbes({ domain, prompts, plan }),
+  ]);
 
-  const liveChecks = liveChecksByPromptIndex(monitoring.checks, prompts.length);
+  const platforms = buildPlatformPresence(checks, signals, prompts.length);
+  const liveChecks = liveChecksByPromptIndex(checks, prompts.length);
   const promptResults = evaluatePrompts(prompts, signals, domain, liveChecks);
   const cited = promptResults.filter((p) => p.cited).length;
   const total = Math.max(prompts.length, 1);
@@ -100,7 +100,7 @@ export async function runCitationAudit(input: {
     signals.geoScore * 0.45 + citedRatio * 100 * 0.55,
   );
 
-  const hasLiveChecks = monitoring.checks.some((c) => c.checkMode === "live");
+  const hasLiveChecks = checks.some((c) => c.checkMode === "live");
   const gaps = buildGapsFromSignals(signals, promptResults, domain);
   const mode: AuditPayload["mode"] = hasLiveChecks ? "live" : "technical";
 
@@ -110,7 +110,7 @@ export async function runCitationAudit(input: {
     score,
     cited,
     total,
-    platforms: monitoring.platforms,
+    platforms,
     gaps,
     competitors: input.competitors ?? [],
     siteSignals: signals,
@@ -120,14 +120,14 @@ export async function runCitationAudit(input: {
     createdAt: new Date().toISOString(),
   };
 
-  await persistAudit(payload, prompts, monitoring.checks, input.trigger ?? "manual");
+  await persistAudit(payload, prompts, checks, input.trigger ?? "manual");
   return payload;
 }
 
 async function persistAudit(
   audit: AuditPayload,
   prompts: string[],
-  platformChecks: Awaited<ReturnType<typeof runPlatformMonitoring>>["checks"],
+  platformChecks: PlatformProbeResult[],
   trigger: "manual" | "scheduled",
 ): Promise<void> {
   await dbRun(
