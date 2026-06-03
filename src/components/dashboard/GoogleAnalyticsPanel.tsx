@@ -18,16 +18,30 @@ export function GoogleAnalyticsPanel({
   const workspaceId = workspace.workspaceId ?? workspace.id;
   const [metrics, setMetrics] = useState<GscMetrics | null>(null);
   const [configured, setConfigured] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
 
+  const loadServerGscConfig = useCallback(async () => {
+    const res = await fetch("/api/gsc/status", { credentials: "include" });
+    if (!res.ok) return false;
+    const data = (await res.json()) as { configured?: boolean };
+    return Boolean(data.configured);
+  }, []);
+
   const load = useCallback(async () => {
-    if (!workspaceId) return;
+    if (!workspaceId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
+    setLoadError(null);
+
     const res = await fetch(
       `/api/gsc/metrics?workspaceId=${encodeURIComponent(workspaceId)}`,
       { credentials: "include" },
     );
+
     if (res.ok) {
       const data = (await res.json()) as {
         configured: boolean;
@@ -35,9 +49,23 @@ export function GoogleAnalyticsPanel({
       };
       setConfigured(data.configured);
       setMetrics(data.metrics);
+      setLoading(false);
+      return;
     }
+
+    const serverConfigured = await loadServerGscConfig();
+    setConfigured(serverConfigured);
+
+    if (res.status === 401) {
+      setLoadError("Sign in again to load Search Console for this workspace.");
+    } else if (res.status === 404) {
+      setLoadError("Workspace not found — refresh the page or re-select your workspace.");
+    } else {
+      setLoadError("Could not load Search Console status. Try refreshing.");
+    }
+    setMetrics(null);
     setLoading(false);
-  }, [workspaceId]);
+  }, [workspaceId, loadServerGscConfig]);
 
   useEffect(() => {
     effectInit(() => {
@@ -82,15 +110,24 @@ export function GoogleAnalyticsPanel({
 
   return (
     <>
-      {!configured && (
+      {loadError && (
+        <div
+          className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-4"
+          role="alert"
+        >
+          <p className="text-sm font-medium text-red-800">{loadError}</p>
+        </div>
+      )}
+
+      {!configured && !loadError && (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-[linear-gradient(135deg,rgba(254,243,199,0.7),rgba(255,251,235,0.98))] px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-800">
             Search Console setup
           </p>
           <p className="mt-2 text-sm text-amber-950">
             Add <code className="text-xs">GOOGLE_CLIENT_ID</code> and{" "}
-            <code className="text-xs">GOOGLE_CLIENT_SECRET</code> to enable Search
-            Console.
+            <code className="text-xs">GOOGLE_CLIENT_SECRET</code> on the server (Vercel
+            Production), then redeploy.
           </p>
         </div>
       )}
