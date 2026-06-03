@@ -1,10 +1,6 @@
 import { geoPlaybook } from "@/lib/marketing/geo-playbook";
+import { absoluteUrl } from "@/lib/schema/urls";
 import { site } from "@/lib/site";
-
-function absoluteUrl(path: string): string {
-  const base = site.url.replace(/\/$/, "");
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
-}
 
 export function GeoPlaybookJsonLd() {
   const pageUrl = absoluteUrl(geoPlaybook.path);
