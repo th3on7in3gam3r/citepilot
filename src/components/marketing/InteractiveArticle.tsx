@@ -9,16 +9,25 @@ import {
 } from "@/hooks/useReadTimeTracker";
 import { downloadGeoPlaybook } from "@/lib/marketing/geo-playbook";
 
-const ARTICLE_WORD_COUNT = 1400;
+const ARTICLE_WORD_COUNT = 2200;
+
+const NURTURE_SEQUENCE_ID = "nurture-sequence";
+const PLAYBOOK_SECTION_ID = "geo-playbook";
 
 const SECTIONS = [
+  { id: NURTURE_SEQUENCE_ID, label: "Email sequence" },
   { id: "nurture-email-1", label: "Email 1 · Welcome" },
   { id: "nurture-email-2", label: "Email 2 · Citation gap" },
   { id: "nurture-email-3", label: "Email 3 · Audit CTA" },
-  { id: "geo-playbook", label: "GEO Playbook" },
+  { id: PLAYBOOK_SECTION_ID, label: "GEO Playbook" },
+  { id: "geo-curriculum", label: "Curriculum" },
+  { id: "geo-module-1", label: "1. RAG era" },
+  { id: "geo-module-2", label: "2. Money prompts" },
+  { id: "geo-module-3", label: "3. GEO audit" },
+  { id: "geo-module-4", label: "4. Attribution" },
+  { id: "geo-landing", label: "Value props" },
+  { id: "geo-capture", label: "Get playbook" },
 ] as const;
-
-const PLAYBOOK_SECTION_ID = "geo-playbook";
 
 function scrollToPlaybook(updateUrl = true) {
   const el = document.getElementById(PLAYBOOK_SECTION_ID);
@@ -371,9 +380,13 @@ function EmailOneBody() {
         <strong className="text-ink">money prompts</strong>—the exact queries
         driving high-value pipelines. To get you started, we&apos;ve put together
         our proprietary{" "}
-        <strong className="text-ink">
-          GEO Strategy Playbook: Winning the AI Answer Engine.
-        </strong>
+        <a
+          href={`#${PLAYBOOK_SECTION_ID}`}
+          className="font-semibold text-accent hover:underline"
+        >
+          GEO Strategy Playbook: Winning the AI Answer Engine
+        </a>
+        .
       </p>
       <p className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
         No fluff, no vanity metrics. Just a technical, step-by-step framework to
@@ -400,7 +413,11 @@ function EmailTwoBody() {
       </p>
       <p>
         This is called the{" "}
-        <strong className="text-ink">Citation Gap</strong>.
+        <strong className="text-ink">Citation Gap</strong> — see{" "}
+        <a href="#geo-module-3" className="font-medium text-accent hover:underline">
+          Module 3
+        </a>{" "}
+        for the technical audit checklist.
       </p>
       <p>
         When high-value prospects ask an LLM for product comparisons, the engine
@@ -499,9 +516,12 @@ export function InteractiveArticle() {
   });
 
   useEffect(() => {
-    if (window.location.hash === `#${PLAYBOOK_SECTION_ID}`) {
-      requestAnimationFrame(() => scrollToPlaybook(false));
-    }
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(hash);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }, []);
 
   return (
@@ -520,50 +540,132 @@ export function InteractiveArticle() {
               Dominating the LLM Era
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
-              A three-email nurture sequence for growth teams moving from
-              traditional SEO to generative engine optimization—money prompts,
-              citation gaps, and your 60-second audit.
+              Read the three-email nurture sequence, then explore the full GEO
+              Playbook—four modules, landing copy, and a 60-second citation audit
+              form.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3 text-sm">
+            <nav
+              aria-label="Jump to page sections"
+              className="mt-6 flex flex-wrap gap-2"
+            >
+              <a
+                href={`#${NURTURE_SEQUENCE_ID}`}
+                className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                Email sequence
+              </a>
+              <a
+                href={`#${PLAYBOOK_SECTION_ID}`}
+                className="rounded-full border border-accent/50 bg-accent/25 px-4 py-2 text-sm font-medium text-white transition hover:bg-accent/35"
+              >
+                GEO Playbook
+              </a>
+              <a
+                href="#geo-capture"
+                className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                Get playbook + audit
+              </a>
+            </nav>
+            <div className="mt-4 flex flex-wrap gap-3 text-sm">
               <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white/90">
                 {tracker.minutes} min read
               </span>
               <span className="rounded-full border border-accent/40 bg-accent/20 px-3 py-1 font-medium text-white">
-                3 emails · B2B SaaS
+                3 emails + playbook
               </span>
             </div>
           </header>
 
           <nav
-            aria-label="Email sequence overview"
+            aria-label="Page overview"
             className="rounded-2xl border border-border bg-surface p-6 sm:p-8"
           >
             <h2 className="font-display text-lg font-bold text-ink">
-              Sequence overview
+              On this page
             </h2>
-            <ol className="mt-4 space-y-3">
-              {EMAILS.map((email) => (
-                <li key={email.id}>
-                  <a
-                    href={`#${email.id}`}
-                    className="group flex gap-4 rounded-xl border border-border bg-white p-4 shadow-sm transition hover:border-accent/40"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/15 font-display text-sm font-bold text-accent">
-                      {email.number}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-display text-sm font-bold text-ink group-hover:text-accent">
-                        {email.title}
-                      </p>
-                      <p className="mt-1 truncate text-xs text-muted">
-                        {email.subject}
-                      </p>
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ol>
+            <div className="mt-5 grid gap-6 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                  Growth emails
+                </p>
+                <ol className="mt-3 space-y-2">
+                  {EMAILS.map((email) => (
+                    <li key={email.id}>
+                      <a
+                        href={`#${email.id}`}
+                        className="group flex gap-3 rounded-xl border border-border bg-white p-3 text-sm shadow-sm transition hover:border-accent/40"
+                      >
+                        <span className="font-bold text-accent">
+                          {email.number}.
+                        </span>
+                        <span className="min-w-0">
+                          <span className="font-medium text-ink group-hover:text-accent">
+                            {email.title}
+                          </span>
+                          <span className="mt-0.5 block truncate text-xs text-muted">
+                            {email.subject}
+                          </span>
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                  GEO Playbook
+                </p>
+                <ul className="mt-3 space-y-2 text-sm">
+                  <li>
+                    <a
+                      href={`#${PLAYBOOK_SECTION_ID}`}
+                      className="font-medium text-ink transition hover:text-accent"
+                    >
+                      Playbook title &amp; download
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#geo-curriculum"
+                      className="font-medium text-ink transition hover:text-accent"
+                    >
+                      4-module curriculum
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#geo-landing"
+                      className="font-medium text-ink transition hover:text-accent"
+                    >
+                      Landing page value props
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#geo-capture"
+                      className="font-medium text-ink transition hover:text-accent"
+                    >
+                      Lead capture + audit
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </nav>
+
+          <section id={NURTURE_SEQUENCE_ID} className="scroll-mt-28 space-y-14">
+            <div className="rounded-2xl border border-dashed border-border bg-white/60 px-5 py-4 text-center text-sm text-muted">
+              <strong className="text-ink">Email nurture sequence</strong> — Email
+              1 links to the{" "}
+              <a
+                href={`#${PLAYBOOK_SECTION_ID}`}
+                className="font-medium text-accent hover:underline"
+              >
+                GEO Playbook
+              </a>{" "}
+              below.
+            </div>
 
           {EMAILS.map((email, i) => {
             const Body = EMAIL_BODIES[i]!;
@@ -582,6 +684,23 @@ export function InteractiveArticle() {
               </EmailCard>
             );
           })}
+          </section>
+
+          <div className="rounded-2xl border border-accent/30 bg-accent/5 px-5 py-4 text-center text-sm text-muted">
+            <strong className="text-ink">GEO Playbook</strong> — referenced in
+            Email 1.{" "}
+            <a
+              href={`#${PLAYBOOK_SECTION_ID}`}
+              className="font-medium text-accent hover:underline"
+            >
+              Jump to playbook
+            </a>{" "}
+            or{" "}
+            <a href="#geo-capture" className="font-medium text-accent hover:underline">
+              skip to the audit form
+            </a>
+            .
+          </div>
 
           <GeoPlaybookSection />
         </article>
