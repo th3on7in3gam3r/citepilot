@@ -6,8 +6,9 @@ import {
   useReadTimeTracker,
   type ReadTimeTrackerState,
 } from "@/hooks/useReadTimeTracker";
+import { geoPlaybook } from "@/lib/marketing/geo-playbook";
 
-const ARTICLE_WORD_COUNT = 920;
+const ARTICLE_WORD_COUNT = 1100;
 
 const SECTIONS = [
   { id: "geo-section-1", label: "1. GEO era" },
@@ -15,6 +16,7 @@ const SECTIONS = [
   { id: "geo-section-3", label: "3. Money prompts" },
   { id: "geo-section-4", label: "4. Strategies" },
   { id: "geo-section-5", label: "5. Roadmap" },
+  { id: "geo-faq", label: "FAQ" },
 ] as const;
 
 const TOC = [
@@ -38,6 +40,7 @@ const TOC = [
     id: "geo-section-5",
     title: "Actionable Roadmap: Audit Your Brand's AI Footprint Today",
   },
+  { id: "geo-faq", title: "FAQ" },
 ] as const;
 
 const RAG_PHASES = [
@@ -462,6 +465,27 @@ export function InteractiveArticle() {
               </Link>
             </div>
           </SectionShell>
+
+          <section id="geo-faq" className="scroll-mt-28">
+            <h2 className="font-display text-2xl font-bold text-ink">FAQ</h2>
+            <p className="mt-2 max-w-2xl text-muted">
+              Common questions about GEO, RAG, Money Prompts, and auditing your AI
+              citation footprint.
+            </p>
+            <dl className="mt-6 space-y-4">
+              {geoPlaybook.faqs.map((faq) => (
+                <div
+                  key={faq.q}
+                  className="rounded-2xl border border-border bg-white px-5 py-4 shadow-sm"
+                >
+                  <dt className="font-display font-bold text-ink">{faq.q}</dt>
+                  <dd className="mt-2 text-sm leading-relaxed text-muted">
+                    {faq.a}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
         </article>
       </div>
     </div>
