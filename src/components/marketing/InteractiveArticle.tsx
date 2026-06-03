@@ -1,19 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { GeoPlaybookSection } from "@/components/marketing/GeoPlaybookSection";
 import {
   useReadTimeTracker,
   type ReadTimeTrackerState,
 } from "@/hooks/useReadTimeTracker";
+import { downloadGeoPlaybook } from "@/lib/marketing/geo-playbook";
 
-const ARTICLE_WORD_COUNT = 920;
+const ARTICLE_WORD_COUNT = 1400;
 
 const SECTIONS = [
   { id: "nurture-email-1", label: "Email 1 · Welcome" },
   { id: "nurture-email-2", label: "Email 2 · Citation gap" },
   { id: "nurture-email-3", label: "Email 3 · Audit CTA" },
+  { id: "geo-playbook", label: "GEO Playbook" },
 ] as const;
+
+const PLAYBOOK_SECTION_ID = "geo-playbook";
+
+function scrollToPlaybook(updateUrl = true) {
+  const el = document.getElementById(PLAYBOOK_SECTION_ID);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (updateUrl) {
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}#${PLAYBOOK_SECTION_ID}`,
+    );
+  }
+}
 
 const EMAILS = [
   {
@@ -23,7 +41,11 @@ const EMAILS = [
     subject: "Stop optimizing for dead blue links (GEO Playbook inside)",
     preview:
       "Why traditional SEO is losing 60%+ of high-intent search traffic to AI engines, and how to claim your brand's citation space today.",
-    cta: { label: "Download the GEO Strategy Playbook", href: "/nurture" },
+    cta: {
+      label: "Download the GEO Strategy Playbook",
+      href: `#${PLAYBOOK_SECTION_ID}`,
+      downloadPlaybook: true,
+    },
     teaser: "In our next email, we'll dive into the exact citation gaps that are silently leaking your pipeline to competitors.",
   },
   {
@@ -232,15 +254,32 @@ function EmailSignature() {
 function EmailCta({
   label,
   href,
+  downloadPlaybook = false,
 }: {
   label: string;
   href: string;
+  downloadPlaybook?: boolean;
 }) {
+  const className =
+    "mt-6 inline-flex rounded-xl bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95";
+
+  if (href.startsWith("#")) {
+    return (
+      <button
+        type="button"
+        className={className}
+        onClick={() => {
+          if (downloadPlaybook) downloadGeoPlaybook();
+          scrollToPlaybook();
+        }}
+      >
+        {label}
+      </button>
+    );
+  }
+
   return (
-    <Link
-      href={href}
-      className="mt-6 inline-flex rounded-xl bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-    >
+    <Link href={href} className={className}>
       {label}
     </Link>
   );
@@ -261,7 +300,7 @@ function EmailCard({
   title: string;
   subject: string;
   preview: string;
-  cta: { label: string; href: string };
+  cta: { label: string; href: string; downloadPlaybook?: boolean };
   children: ReactNode;
   teaser?: string | null;
 }) {
@@ -286,7 +325,11 @@ function EmailCard({
         <div className="space-y-4 px-5 py-6 text-base leading-relaxed text-muted sm:px-6">
           <p>Hi [First Name],</p>
           {children}
-          <EmailCta label={cta.label} href={cta.href} />
+          <EmailCta
+            label={cta.label}
+            href={cta.href}
+            downloadPlaybook={cta.downloadPlaybook}
+          />
           {teaser && (
             <p className="text-sm italic text-muted/90">{teaser}</p>
           )}
@@ -455,6 +498,12 @@ export function InteractiveArticle() {
     sections: [...SECTIONS],
   });
 
+  useEffect(() => {
+    if (window.location.hash === `#${PLAYBOOK_SECTION_ID}`) {
+      requestAnimationFrame(() => scrollToPlaybook(false));
+    }
+  }, []);
+
   return (
     <div className="relative pb-16 lg:pb-0">
       <MobileReadBar tracker={tracker} />
@@ -533,6 +582,8 @@ export function InteractiveArticle() {
               </EmailCard>
             );
           })}
+
+          <GeoPlaybookSection />
         </article>
       </div>
     </div>
