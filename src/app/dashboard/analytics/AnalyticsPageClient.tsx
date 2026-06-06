@@ -46,7 +46,34 @@ export function AnalyticsPageClient() {
     });
   }, []);
 
-  if (!ready || !workspace) return null;
+  if (!ready) {
+    return (
+      <div className="animate-pulse space-y-6">
+        <div className="h-10 w-56 rounded-lg bg-surface" />
+        <div className="h-64 rounded-2xl bg-surface" />
+      </div>
+    );
+  }
+
+  if (!workspace) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
+        <p className="font-display text-lg font-bold text-ink">
+          Sign in to open your analytics workspace
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          Connect a workspace to view LLM citation benchmarks, competitor share of
+          model, and Google Search Console trends for your domain.
+        </p>
+        <Link
+          href="/auth/sign-in?from=/dashboard/analytics"
+          className="mt-6 inline-block rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white"
+        >
+          Sign in →
+        </Link>
+      </div>
+    );
+  }
 
   const banner = gscBanner ? gscMessages[gscBanner] : null;
 

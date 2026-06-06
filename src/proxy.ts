@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_COOKIE } from "@/lib/constants";
 import { auth, isNeonAuthEnabled } from "@/lib/auth/server";
+import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
 
 function isAdminApiPublic(pathname: string): boolean {
   return pathname === "/api/admin/login" || pathname === "/api/admin/logout";
@@ -50,6 +51,14 @@ export async function proxy(request: NextRequest) {
         dashboard.searchParams.set(key, value);
       });
       return NextResponse.redirect(dashboard);
+    }
+    // Let crawlers and signed-out visitors read server-rendered hub SEO copy.
+    if (
+      request.method === "GET" &&
+      !hasOAuthVerifier &&
+      isDashboardSeoHubPath(pathname)
+    ) {
+      return NextResponse.next();
     }
     return dashboardAuthProxy(request);
   }
