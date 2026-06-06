@@ -115,7 +115,7 @@ export const geoPlaybook = {
   path: "/nurture",
   title:
     "The Generative Engine Optimization (GEO) Playbook: How to Dominate B2B \"Money Prompts\" in ChatGPT, Claude, and Perplexity",
-  shortTitle: "GEO Playbook",
+  shortTitle: "GEO Playbook — AI Money Prompts",
   description:
     "Map your B2B SaaS money prompts, audit AI citation gaps, and claim generative recommendations across ChatGPT, Claude, and Perplexity.",
   datePublished: "2026-06-02",

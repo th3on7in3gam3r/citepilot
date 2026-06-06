@@ -13,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: "GEO, SEO & AI Citation Guides",
   description:
     "SEO, GEO, and AI citation playbooks for founders, agencies, and SaaS teams — from CitePilot.",
 };

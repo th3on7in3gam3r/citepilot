@@ -5,6 +5,7 @@ export function SectionHeading({
   align = "center",
   light = false,
   className = "",
+  headingLevel = "h2",
 }: {
   eyebrow?: string;
   title: string;
@@ -12,8 +13,13 @@ export function SectionHeading({
   align?: "center" | "left";
   light?: boolean;
   className?: string;
+  headingLevel?: "h1" | "h2";
 }) {
   const alignClass = align === "center" ? "mx-auto text-center" : "text-left";
+  const Heading = headingLevel;
+  const headingClass = `font-display mt-3 text-3xl font-bold tracking-tight md:mt-4 md:text-4xl lg:text-[2.75rem] ${
+    light ? "text-white" : "text-ink"
+  }`;
 
   return (
     <div className={`max-w-2xl ${alignClass} ${className}`}>
@@ -22,13 +28,7 @@ export function SectionHeading({
           {eyebrow}
         </p>
       )}
-      <h2
-        className={`font-display mt-3 text-3xl font-bold tracking-tight md:mt-4 md:text-4xl lg:text-[2.75rem] ${
-          light ? "text-white" : "text-ink"
-        }`}
-      >
-        {title}
-      </h2>
+      <Heading className={headingClass}>{title}</Heading>
       {description && (
         <p
           className={`mt-4 text-base leading-relaxed md:mt-5 md:text-lg ${

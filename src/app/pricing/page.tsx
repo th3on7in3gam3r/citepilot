@@ -7,7 +7,7 @@ import { pricingTiers } from "@/lib/content";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "GEO & AI Citation Monitoring Plans",
   description:
     "Start free with a citation audit. Scale with Pilot or Fleet for weekly monitoring, CMS publishing, and agency tools.",
 };
@@ -19,9 +19,10 @@ export default function PricingPage() {
       <main className="bg-cream pt-16 md:pt-[4.5rem]">
         <Container className="py-16 md:py-24 lg:py-28">
           <SectionHeading
+            headingLevel="h1"
             eyebrow="Pricing"
-            title="Start free. Scale when citations move."
-            description="Free includes 1 workspace and a citation audit. Upgrade to Pilot for 3 workspaces plus monitoring, content generation, and CMS publish, or Fleet for unlimited client workspaces."
+            title="GEO & AI citation monitoring pricing"
+            description="Start free. Scale when citations move. Free includes 1 workspace and a citation audit. Upgrade to Pilot for 3 workspaces plus monitoring, content generation, and CMS publish, or Fleet for unlimited client workspaces."
             align="center"
           />
 
