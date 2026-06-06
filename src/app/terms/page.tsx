@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service",
+  title: "Terms of Service for GEO & AI Citation",
   description: `Terms governing your use of ${site.name} audits, dashboard, and subscriptions.`,
 };
 

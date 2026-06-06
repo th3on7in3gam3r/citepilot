@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Container } from "@/components/ui/Container";
 import { getPostBySlug } from "@/lib/blog";
+import { clampMetaDescription } from "@/lib/seo/meta";
 import { AUDIENCE_LABELS } from "@/lib/content-strategy";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -18,12 +19,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return {};
+  const description = clampMetaDescription(post.description);
   return {
     title: post.seoTitle,
-    description: post.description,
+    description,
     openGraph: {
       title: post.title,
-      description: post.description,
+      description,
       type: "article",
       publishedTime: post.publishedAt,
     },

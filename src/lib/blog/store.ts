@@ -5,6 +5,7 @@ import type {
   EditorialPillarId,
 } from "@/lib/content-strategy";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
+import { clampMetaDescription } from "@/lib/seo/meta";
 import type { BlogPost } from "./types";
 
 export type BlogPostRow = {
@@ -129,7 +130,7 @@ export async function saveGeneratedPost(
     id,
     slug: input.slug,
     title: input.title,
-    description: input.description,
+    description: clampMetaDescription(input.description),
     pillar: input.pillar,
     audience: input.audience,
     content_type: input.contentType,
@@ -248,7 +249,9 @@ export async function buildPostFromMarkdown(
 ): Promise<{ post: BlogPost; row: BlogPostRow }> {
   const parsed = parseMarkdownMeta(markdown);
   const title = parsed.title ?? meta.suggestedTitle;
-  const description = parsed.description ?? meta.metaDescription;
+  const description = clampMetaDescription(
+    parsed.description ?? meta.metaDescription,
+  );
   const seoTitle = parsed.seoTitle ?? meta.metaTitle;
   const tldr = parsed.tldr ?? description.slice(0, 280);
   const slug = await ensureUniqueSlug(title);

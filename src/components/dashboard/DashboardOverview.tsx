@@ -120,7 +120,8 @@ export function DashboardOverview() {
       <GettingStartedChecklist workspace={workspace} welcome={showWelcome} />
 
       <DashboardPageHeader
-        title="Overview"
+        headingLevel="h2"
+        title="Citation overview"
         description={
           workspace.hasRealAudit
             ? `Citation health for ${workspace.domain}. Scores from your latest GEO audit (${workspace.auditMode ?? "technical"}).`
