@@ -4,17 +4,21 @@ export function DashboardPageHeader({
   title,
   description,
   action,
+  headingLevel = "h1",
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  headingLevel?: "h1" | "h2";
 }) {
+  const Heading = headingLevel;
+
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
+        <Heading className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
           {title}
-        </h1>
+        </Heading>
         {description && (
           <p className="mt-2 max-w-2xl text-muted">{description}</p>
         )}

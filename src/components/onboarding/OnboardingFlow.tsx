@@ -173,9 +173,9 @@ export function OnboardingFlow() {
               </span>
             </div>
 
-            <h1 className="font-display text-3xl font-bold tracking-tight text-ink md:text-[2rem]">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-[2rem]">
               {meta.title}
-            </h1>
+            </h2>
             <p className="mt-3 text-base leading-relaxed text-muted md:mt-4">
               {meta.subtitle}
             </p>
@@ -228,9 +228,9 @@ export function OnboardingFlow() {
                 <div className="space-y-8">
                   <div>
                     <div className="mb-2 flex items-center justify-between">
-                      <label className="text-sm font-bold text-ink">
+                      <h3 className="text-sm font-bold text-ink">
                         Business description
-                      </label>
+                      </h3>
                       <button
                         type="button"
                         className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-ink transition hover:border-accent/40 hover:bg-surface"
@@ -250,12 +250,12 @@ export function OnboardingFlow() {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-bold text-ink">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-ink">
                       Target audience
                       <span className="font-normal text-muted">
                         {answers.audiences.length}/2
                       </span>
-                    </label>
+                    </h3>
                     <div className="relative mt-2">
                       <input
                         type="text"
@@ -311,7 +311,7 @@ export function OnboardingFlow() {
               {step === 3 && (
                 <div className="space-y-6">
                   <div className="rounded-2xl border border-border bg-surface px-5 py-4 text-sm leading-relaxed text-ink">
-                    <p className="font-bold">Adding competitors helps us:</p>
+                    <h3 className="font-bold">Adding competitors helps us</h3>
                     <ul className="mt-2 list-inside list-disc space-y-1 text-muted">
                       <li>
                         <strong className="text-ink">Find content gaps</strong>{" "}
@@ -376,9 +376,7 @@ export function OnboardingFlow() {
               {/* Step 5: Buyer question */}
               {step === 4 && (
                 <div>
-                  <label className="text-sm font-bold text-ink">
-                    Buyer question
-                  </label>
+                  <h3 className="text-sm font-bold text-ink">Buyer question</h3>
                   <input
                     type="text"
                     value={answers.buyerQuestion}

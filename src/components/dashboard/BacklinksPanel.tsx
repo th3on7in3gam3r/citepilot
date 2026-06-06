@@ -200,7 +200,11 @@ export function BacklinksPanel() {
 
   return (
     <>
-      <DashboardPageHeader title="Backlinks" description={feature.description} />
+      <DashboardPageHeader
+        headingLevel="h2"
+        title="Backlink workspace"
+        description={feature.description}
+      />
 
       {!data?.searchConfigured && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">

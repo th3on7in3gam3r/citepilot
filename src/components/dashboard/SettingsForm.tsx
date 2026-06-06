@@ -299,8 +299,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     <>
       <GooeyFilter />
       <DashboardPageHeader
-        title="Settings"
-        description="Edit your workspace profile, tracked prompts, and notification preferences."
+        headingLevel="h2"
+        title="Edit workspace settings"
+        description="Update your domain, money prompts, monitoring email, notifications, Autopilot, and white-label options."
         action={
           lastUpdated ? (
             <p className="text-xs text-muted">Last updated {lastUpdated}</p>
