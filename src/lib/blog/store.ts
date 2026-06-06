@@ -5,7 +5,7 @@ import type {
   EditorialPillarId,
 } from "@/lib/content-strategy";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
-import { clampMetaDescription } from "@/lib/seo/meta";
+import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { BlogPost } from "./types";
 
 export type BlogPostRow = {
@@ -135,7 +135,7 @@ export async function saveGeneratedPost(
     audience: input.audience,
     content_type: input.contentType,
     published_at: now,
-    seo_title: input.seoTitle,
+    seo_title: clampSeoTitle(input.seoTitle),
     tldr: input.tldr,
     markdown: input.markdown,
     reading_minutes: input.readingMinutes,
@@ -252,7 +252,7 @@ export async function buildPostFromMarkdown(
   const description = clampMetaDescription(
     parsed.description ?? meta.metaDescription,
   );
-  const seoTitle = parsed.seoTitle ?? meta.metaTitle;
+  const seoTitle = clampSeoTitle(parsed.seoTitle ?? meta.metaTitle);
   const tldr = parsed.tldr ?? description.slice(0, 280);
   const slug = await ensureUniqueSlug(title);
   const readingMinutes = estimateReadingMinutes(markdown);

@@ -1,13 +1,15 @@
 import { site } from "@/lib/site";
 import type { BlogPost } from "@/lib/blog/types";
+import { clampMetaDescription } from "@/lib/seo/meta";
 
 export function ArticleJsonLd({ post }: { post: BlogPost }) {
   const url = `${site.url.replace(/\/$/, "")}/blog/${post.slug}`;
+  const description = clampMetaDescription(post.description);
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: post.title,
-    description: post.description,
+    description,
     datePublished: post.publishedAt,
     author: { "@type": "Organization", name: site.name },
     publisher: {

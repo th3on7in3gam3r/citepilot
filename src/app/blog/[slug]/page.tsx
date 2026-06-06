@@ -8,7 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Container } from "@/components/ui/Container";
 import { getPostBySlug } from "@/lib/blog";
-import { clampMetaDescription } from "@/lib/seo/meta";
+import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { AUDIENCE_LABELS } from "@/lib/content-strategy";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -20,14 +20,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPostBySlug(slug);
   if (!post) return {};
   const description = clampMetaDescription(post.description);
+  const title = clampSeoTitle(post.seoTitle);
   return {
-    title: post.seoTitle,
+    title,
     description,
     openGraph: {
       title: post.title,
       description,
       type: "article",
       publishedTime: post.publishedAt,
+    },
+    twitter: {
+      title: post.title,
+      description,
     },
   };
 }
@@ -36,6 +41,7 @@ export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) notFound();
+  const description = clampMetaDescription(post.description);
 
   return (
     <>
@@ -53,7 +59,7 @@ export default async function BlogPostPage({ params }: Props) {
             <h1 className="font-display mt-3 text-3xl font-bold tracking-tight text-ink md:text-4xl">
               {post.title}
             </h1>
-            <p className="mt-4 text-lg text-muted">{post.description}</p>
+            <p className="mt-4 text-lg text-muted">{description}</p>
           </header>
           <div className="mt-10">
             {post.markdown ? (

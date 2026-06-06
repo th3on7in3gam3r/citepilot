@@ -1,4 +1,5 @@
 import type { ArticleBrief, ArticleBriefInput } from "./types";
+import { SEO_TITLE_MAX } from "@/lib/seo/meta";
 import { CONTENT_TYPE_LABELS, WORD_TARGETS } from "./constants";
 
 function titleCase(s: string): string {
@@ -26,7 +27,9 @@ export function buildArticleBrief(input: ArticleBriefInput): ArticleBrief {
           : "Informational / topical authority";
 
   const metaTitle =
-    title.length <= 58 ? `${title} | CitePilot` : `${title.slice(0, 52)}… | CitePilot`;
+    title.length <= SEO_TITLE_MAX
+      ? title
+      : `${title.slice(0, SEO_TITLE_MAX - 1).replace(/\s+\S*$/, "").trim()}…`;
 
   return {
     topic: input.topic,
@@ -44,7 +47,7 @@ export function buildArticleBrief(input: ArticleBriefInput): ArticleBrief {
     ],
     searchIntent: intent,
     suggestedTitle: title,
-    metaTitle: metaTitle.slice(0, 60),
+    metaTitle,
     metaDescription: `Learn ${kw} with practical steps for Google and AI engines. ${CONTENT_TYPE_LABELS[input.contentType]}.`,
     outline: [
       {

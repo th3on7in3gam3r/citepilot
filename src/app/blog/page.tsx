@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Container } from "@/components/ui/Container";
 import { getAllPosts } from "@/lib/blog";
+import { clampMetaDescription } from "@/lib/seo/meta";
 import {
   AUDIENCE_LABELS,
   CONTENT_TYPE_LABELS,
@@ -72,7 +73,9 @@ export default async function BlogIndexPage() {
                     {post.title}
                   </Link>
                 </h2>
-                <p className="mt-2 text-muted">{post.description}</p>
+                <p className="mt-2 text-muted">
+                  {clampMetaDescription(post.description)}
+                </p>
                 <Link
                   href={`/blog/${post.slug}`}
                   className="mt-4 inline-block text-sm font-semibold text-accent"
