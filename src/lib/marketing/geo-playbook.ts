@@ -1,97 +1,71 @@
-export const geoPlaybookCurriculum = [
-  {
-    id: "geo-module-1",
-    number: 1,
-    title: "The Death of the Blue Link & Rise of RAG Architecture",
-    topics: [
-      {
-        label: "The Paradigm Shift",
-        body: "Why traditional CTR is collapsing and how Retrieval-Augmented Generation (RAG) models select references.",
-      },
-      {
-        label: "The Mechanics of Citation",
-        body: "How LLMs parse trusted data sources, technical docs, and third-party reviews to formulate answers.",
-      },
-      {
-        label: "The Cost of Invisibility",
-        body: "What happens when an LLM summarizes your entire category and leaves your brand out of the bulleted recommendations.",
-      },
-    ],
-  },
-  {
-    id: "geo-module-2",
-    number: 2,
-    title: "Mapping Your Brand's \"Money Prompts\"",
-    topics: [
-      {
-        label: "Defining Money Prompts",
-        body: "Moving past high-volume vanity keywords to capture high-intent commercial prompts (e.g., \"What are the best enterprise alternatives to Segment for real-time data orchestration?\").",
-      },
-      {
-        label: "The Intent Matrix",
-        body: "Classification of informational, comparative, and transactional prompts utilized by modern B2B buyers.",
-      },
-      {
-        label: "Competitor Siphoning",
-        body: "Identifying the prompts where competitors are recommended and building a targeted displacement map.",
-      },
-    ],
-  },
-  {
-    id: "geo-module-3",
-    number: 3,
-    title: "The Technical GEO Audit Checklist",
-    topics: [
-      {
-        label: "Structured Data & Semantic Markup",
-        body: "Preparing your domain for LLM crawler optimization.",
-      },
-      {
-        label: "The 3rd-Party Authority Loop",
-        body: "Uncovering the exact industry databases, directories, and forums Gemini and Perplexity use as trusted ground truths.",
-      },
-      {
-        label: "N-gram Optimization for LLM Tokenizers",
-        body: "How phrasing your product's unique value propositions matches LLM semantic embedding spaces.",
-      },
-    ],
-  },
-  {
-    id: "geo-module-4",
-    number: 4,
-    title: "Generative Search Attribution & Reporting",
-    topics: [
-      {
-        label: "Calculating Share of Model (SoM)",
-        body: "The modern replacement for Share of Voice (SoV).",
-      },
-      {
-        label: "The GEO Pipeline Formula",
-        body: "How to attribute pipeline directly back to AI engine recommendations.",
-      },
-      {
-        label: "Building Client-Ready Proof Reports",
-        body: "Frameworks for presenting LLM visibility gains to stakeholders and board members.",
-      },
-    ],
-  },
-] as const;
+import {
+  geoFrameworks,
+  geoImplementationChecklist,
+  geoPlaybookCurriculum,
+  geoSevenDayPlan,
+  type GeoModule,
+} from "./geo-playbook-content";
+
+export {
+  geoEngines,
+  geoFrameworks,
+  geoGuideNavSections,
+  geoImplementationChecklist,
+  geoPlaybookCurriculum,
+  geoSevenDayPlan,
+} from "./geo-playbook-content";
+export type {
+  GeoChecklistItem,
+  GeoFramework,
+  GeoModule,
+  GeoModuleTopic,
+  GeoSevenDayTask,
+} from "./geo-playbook-content";
 
 export function buildPlaybookMarkdown(): string {
   const lines = [
     "# The Generative Engine Optimization (GEO) Playbook",
-    "## How to Dominate B2B \"Money Prompts\" in ChatGPT, Claude, and Perplexity",
+    "## Complete guide to money prompts, RAG citations, and Share of Model",
     "",
-    "By Cite Pilot — getcitepilot.com",
+    "By CitePilot — getcitepilot.com",
+    "",
+    "## Frameworks",
     "",
   ];
+
+  for (const fw of geoFrameworks) {
+    lines.push(`### ${fw.acronym}: ${fw.name}`, "", fw.tagline, "");
+    for (const pillar of fw.pillars) {
+      lines.push(`**${pillar.label}** — ${pillar.body}`, "");
+    }
+    lines.push(`_Apply when:_ ${fw.applyWhen}`, "");
+  }
+
   for (const mod of geoPlaybookCurriculum) {
-    lines.push(`## Module ${mod.number}: ${mod.title}`, "");
+    lines.push(`## Module ${mod.number}: ${mod.title}`, "", mod.summary, "");
     for (const topic of mod.topics) {
       lines.push(`### ${topic.label}`, topic.body, "");
+      if (topic.bullets?.length) {
+        for (const b of topic.bullets) lines.push(`- ${b}`);
+        lines.push("");
+      }
     }
   }
+
+  lines.push("## 7-Day Implementation Plan", "");
+  for (const day of geoSevenDayPlan) {
+    lines.push(`### Day ${day.day}: ${day.title}`, day.outcome, "");
+    for (const t of day.tasks) lines.push(`- ${t}`);
+    lines.push("");
+  }
+
+  lines.push("## Implementation Checklist", "");
+  for (const item of geoImplementationChecklist) {
+    lines.push(`- [ ] **${item.label}** — ${item.detail}`);
+  }
+
   lines.push(
+    "",
     "---",
     "",
     "Run your free citation audit: https://getcitepilot.com/audit",
@@ -114,37 +88,48 @@ export function downloadGeoPlaybook(): void {
 export const geoPlaybook = {
   path: "/nurture",
   title:
-    "The Generative Engine Optimization (GEO) Playbook: How to Dominate B2B \"Money Prompts\" in ChatGPT, Claude, and Perplexity",
-  shortTitle: "GEO Playbook — AI Money Prompts",
+    "The Complete GEO Playbook: Money Prompts, RAG Citations & Share of Model",
+  shortTitle: "GEO Playbook — Complete Guide",
   description:
-    "Map your B2B SaaS money prompts, audit AI citation gaps, and claim generative recommendations across ChatGPT, Claude, and Perplexity.",
+    "Interactive GEO guide: RAG citation stack, ACE & CITE frameworks, money prompts, technical audit checklist, 7-day rollout, and Share of Model measurement.",
   datePublished: "2026-06-02",
   dateModified: "2026-06-03",
-  readingMinutes: 12,
+  readingMinutes: 35,
   faqs: [
     {
       q: "What is Generative Engine Optimization (GEO)?",
-      a: "GEO is the practice of optimizing your brand's visibility inside AI-generated answers from systems like ChatGPT, Perplexity, and Google AI Overviews. Instead of ranking for ten blue links, you secure citations and recommendations inside synthesized responses.",
+      a: "GEO is the practice of optimizing your brand's visibility inside AI-generated answers from ChatGPT, Perplexity, Gemini, Claude, and Google AI Overviews. Instead of ranking for ten blue links, you secure citations and recommendations inside synthesized responses.",
     },
     {
-      q: "How does Retrieval-Augmented Generation (RAG) affect my brand?",
-      a: "RAG systems deconstruct the user query, retrieve the most relevant web pages from vector databases and live search APIs, then synthesize an answer with inline citations. GEO ensures your site is retrieved in step two and cited in step three.",
+      q: "How does the RAG citation stack work?",
+      a: "Retrieval-Augmented Generation follows four steps: Retrieve candidate sources, Rank them by trust and relevance, Synthesize a narrative, and Cite survivors in the answer. GEO interventions target whichever step drops your brand.",
     },
     {
-      q: "What are Money Prompts?",
-      a: "Money Prompts are high-intent conversational queries prospects ask AI search engines at the bottom of the funnel—for example, comparing enterprise CRMs or asking which security tool integrates with AWS. Winning these prompts means your brand is cited when buyers are ready to purchase.",
+      q: "What are money prompts?",
+      a: "Money prompts are high-intent conversational queries prospects ask AI engines at the bottom of the funnel — comparisons, alternatives, best-for, pricing, and integration questions. Winning them means your brand is cited when buyers are ready to purchase.",
+    },
+    {
+      q: "What is the ACE framework in GEO?",
+      a: "ACE stands for Authority, Clarity, and Extractability — the on-page triangle for LLM-friendly content. Authority builds trust, clarity enables accurate quoting, and extractability structures answer capsules models can lift without distortion.",
     },
     {
       q: "What is Share of Model (SoM)?",
-      a: "Share of Model is the modern replacement for Share of Voice—measuring how often your brand is cited in generative answers versus competitors for your category's money prompts.",
+      a: "Share of Model measures how often your brand is cited or recommended versus competitors across your money-prompt set. It replaces Share of Voice for AI-mediated discovery and should be tracked weekly with re-scans.",
     },
     {
-      q: "What are the top technical strategies to earn LLM citations?",
-      a: "Focus on structured data and semantic markup, build a third-party authority loop across trusted directories and reviews, and align phrasing with how LLM tokenizers embed product value.",
+      q: "How is GEO different from SEO?",
+      a: "SEO optimizes for rankings and clicks on search engine result pages. GEO optimizes for inclusion in AI answers — extractability, third-party corroboration, and prompt-aligned content. Dual-track optimization shares crawlability and schema foundations.",
+    },
+    {
+      q: "What technical fixes improve LLM citations fastest?",
+      a: "Unblock AI crawlers where policy allows, ship Organization + Product + FAQ schema, publish comparison and alternatives pages with tables, and align FAQ copy verbatim with money prompts.",
     },
     {
       q: "How do I audit my brand's AI footprint today?",
-      a: "Run Cite Pilot's 60-second citation audit to see where you are cited, which competitors win your money prompts, and the fixes required to close citation gaps on autopilot.",
+      a: "Run CitePilot's 60-second citation audit to see where you are cited, which competitors win your money prompts, and the fixes required to close citation gaps — then track SoM weekly.",
     },
   ],
 } as const;
+
+/** @deprecated Use geoPlaybookCurriculum from geo-playbook-content */
+export type LegacyCurriculumModule = GeoModule;

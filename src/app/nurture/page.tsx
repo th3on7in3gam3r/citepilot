@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { GeoPlaybookJsonLd } from "@/components/marketing/GeoPlaybookJsonLd";
-import { InteractiveArticle } from "@/components/marketing/InteractiveArticle";
+import { GeoGuideArticle } from "@/components/marketing/GeoGuideArticle";
 import { geoPlaybook } from "@/lib/marketing/geo-playbook";
 import { site } from "@/lib/site";
 
@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     publishedTime: geoPlaybook.datePublished,
     modifiedTime: geoPlaybook.dateModified,
   },
+  twitter: {
+    title: geoPlaybook.shortTitle,
+    description: geoPlaybook.description,
+  },
 };
 
 export default function NurturePage() {
@@ -28,7 +32,7 @@ export default function NurturePage() {
       <GeoPlaybookJsonLd />
       <Header />
       <main className="bg-cream pt-24">
-        <InteractiveArticle />
+        <GeoGuideArticle />
       </main>
       <Footer />
     </>
