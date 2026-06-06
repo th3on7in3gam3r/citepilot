@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
+import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 import "./globals.css";
+
+const homeDescription = clampMetaDescription(site.description);
 
 const inter = Inter({
   variable: "--font-inter",
@@ -17,10 +20,10 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} — ${site.tagline}`,
+    default: site.homeTitle,
     template: `%s · ${site.name}`,
   },
-  description: site.description,
+  description: homeDescription,
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -29,8 +32,8 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: site.name,
-    description: site.description,
+    title: site.homeTitle,
+    description: homeDescription,
     type: "website",
     url: site.url,
     siteName: site.name,
@@ -46,8 +49,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: site.name,
-    description: site.description,
+    title: site.homeTitle,
+    description: homeDescription,
     images: ["/images/branding/citepilot-logo-full.png"],
   },
   robots: {

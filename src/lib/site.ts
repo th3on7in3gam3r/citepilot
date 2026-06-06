@@ -1,8 +1,9 @@
 export const site = {
   name: "CitePilot",
   tagline: "Get cited in AI answers — then prove it moved.",
+  homeTitle: "CitePilot | Generative Engine Optimization (GEO) Platform",
   description:
-    "Track money prompts on ChatGPT, Perplexity & AI Overviews. Audit gaps, ship fixes, and prove citation lift week over week.",
+    "Track & secure brand citations across ChatGPT, Perplexity, and AI Overviews. Run a free 60-second GEO audit to instantly measure your AI search footprint.",
   url: "https://getcitepilot.com",
   supportEmail: "hello@getcitepilot.com",
   studio: {
