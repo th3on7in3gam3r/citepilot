@@ -8,6 +8,7 @@ import { ScanDeltaCard } from "@/components/dashboard/ScanDeltaCard";
 import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
 import { ExecutiveBriefingPanel } from "@/components/dashboard/ExecutiveBriefingPanel";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
+import { CitationVisibilityBarChart } from "@/components/dashboard/CitationVisibilityBarChart";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import {
   DashboardPageHeader,
@@ -181,7 +182,12 @@ export function DashboardOverview() {
         />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <CitationVisibilityBarChart
+          platformRows={platformRows}
+          hasRealAudit={workspace.hasRealAudit}
+          domain={workspace.domain}
+        />
         <CitationVolumeChart
           seed={seed}
           compact

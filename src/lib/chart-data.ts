@@ -116,3 +116,70 @@ export function areaPath(
   const first = points[0];
   return `${line} L ${last.x} ${baselineY} L ${first.x} ${baselineY} Z`;
 }
+
+export type PlatformVisibilityBar = {
+  id: string;
+  label: string;
+  shortLabel: string;
+  value: number;
+  cited: boolean;
+  color: string;
+};
+
+const PLATFORM_BAR_COLORS: Record<string, string> = {
+  chatgpt: "#10a37f",
+  perplexity: "#20b8cd",
+  google: "#4285f4",
+  gemini: "#8b5cf6",
+  copilot: "#0078d4",
+  claude: "#d97757",
+  grok: "#a1a1aa",
+  deepseek: "#4f46e5",
+};
+
+const PLATFORM_SHORT_LABELS: Record<string, string> = {
+  chatgpt: "GPT",
+  perplexity: "PPLX",
+  google: "Google",
+  gemini: "Gemini",
+  copilot: "Copilot",
+  claude: "Claude",
+  grok: "Grok",
+  deepseek: "DS",
+};
+
+function platformKey(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("chatgpt")) return "chatgpt";
+  if (n.includes("perplexity")) return "perplexity";
+  if (n.includes("google")) return "google";
+  if (n.includes("gemini")) return "gemini";
+  if (n.includes("copilot")) return "copilot";
+  if (n.includes("claude")) return "claude";
+  if (n.includes("grok")) return "grok";
+  if (n.includes("deepseek")) return "deepseek";
+  return n.replace(/\s+/g, "");
+}
+
+/** Map workspace platform rows to 0–100 bar values for the dashboard chart. */
+export function buildPlatformVisibilityBars(
+  rows: { name: string; cited: boolean; share?: number }[],
+): PlatformVisibilityBar[] {
+  return rows.map((row) => {
+    const key = platformKey(row.name);
+    const value =
+      row.share !== undefined
+        ? Math.max(0, Math.min(100, Math.round(row.share)))
+        : row.cited
+          ? 100
+          : 0;
+    return {
+      id: key || row.name,
+      label: row.name,
+      shortLabel: PLATFORM_SHORT_LABELS[key] ?? row.name.slice(0, 8),
+      value,
+      cited: row.cited,
+      color: PLATFORM_BAR_COLORS[key] ?? "#6b8cff",
+    };
+  });
+}
