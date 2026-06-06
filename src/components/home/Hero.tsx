@@ -44,6 +44,16 @@ export function Hero() {
               See how Autopilot works
             </Link>
           </div>
+          <p className="mt-4 text-sm text-white/55">
+            New —{" "}
+            <Link
+              href="/nurture"
+              className="font-semibold text-white/85 underline decoration-white/25 underline-offset-4 transition hover:text-glow hover:decoration-glow"
+            >
+              Read the complete GEO Playbook
+            </Link>
+            , including our Perplexity citation guide.
+          </p>
 
           <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-medium tracking-wide text-white/45 sm:text-xs">
             Weekly rescans • Citation delta tracking • Client-ready proof reports •

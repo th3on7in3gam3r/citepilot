@@ -1,4 +1,5 @@
 import { FeatureSuite } from "@/components/home/FeatureSuite";
+import { GeoPlaybookPromo } from "@/components/home/GeoPlaybookPromo";
 import { Hero } from "@/components/home/Hero";
 import { HomeActionBar } from "@/components/home/HomeActionBar";
 import { ScrollBrandMarquee } from "@/components/home/ScrollBrandMarquee";
@@ -16,6 +17,7 @@ export function HomePage() {
       <Hero />
       <HomeActionBar />
       <FeatureSuite />
+      <GeoPlaybookPromo />
       <ScrollBrandMarquee />
       <StickyProductShowcase />
       <Pillars />

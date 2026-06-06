@@ -7,6 +7,7 @@ import { GeoGuideChecklist } from "@/components/marketing/geo-guide/GeoGuideChec
 import { GeoGuideFaq } from "@/components/marketing/geo-guide/GeoGuideFaq";
 import { GeoGuideFrameworks } from "@/components/marketing/geo-guide/GeoGuideFrameworks";
 import { GeoGuideModules } from "@/components/marketing/geo-guide/GeoGuideModules";
+import { GeoGuidePerplexity } from "@/components/marketing/geo-guide/GeoGuidePerplexity";
 import { GeoGuideSevenDay } from "@/components/marketing/geo-guide/GeoGuideSevenDay";
 import {
   useReadTimeFromRef,
@@ -22,6 +23,7 @@ import {
 const GUIDE_TABS = [
   { id: "geo-overview", label: "Overview" },
   { id: "geo-frameworks", label: "Frameworks" },
+  { id: "geo-perplexity", label: "Perplexity" },
   { id: "geo-curriculum", label: "Modules" },
   { id: "geo-seven-day", label: "7-day plan" },
   { id: "geo-checklist", label: "Checklist" },
@@ -299,6 +301,10 @@ export function GeoGuideArticle() {
                 </tbody>
               </table>
             </div>
+          </section>
+
+          <section id="geo-perplexity" className="scroll-mt-28 space-y-4">
+            <GeoGuidePerplexity />
           </section>
 
           <GeoGuideModules />

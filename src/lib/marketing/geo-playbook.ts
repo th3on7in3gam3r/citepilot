@@ -3,6 +3,7 @@ import {
   geoImplementationChecklist,
   geoPlaybookCurriculum,
   geoSevenDayPlan,
+  perplexityCitationPlaybook,
   type GeoModule,
 } from "./geo-playbook-content";
 
@@ -13,6 +14,7 @@ export {
   geoImplementationChecklist,
   geoPlaybookCurriculum,
   geoSevenDayPlan,
+  perplexityCitationPlaybook,
 } from "./geo-playbook-content";
 export type {
   GeoChecklistItem,
@@ -20,6 +22,7 @@ export type {
   GeoModule,
   GeoModuleTopic,
   GeoSevenDayTask,
+  PerplexityPlaybookStep,
 } from "./geo-playbook-content";
 
 export function buildPlaybookMarkdown(): string {
@@ -39,6 +42,36 @@ export function buildPlaybookMarkdown(): string {
       lines.push(`**${pillar.label}** — ${pillar.body}`, "");
     }
     lines.push(`_Apply when:_ ${fw.applyWhen}`, "");
+  }
+
+  lines.push(
+    `## ${perplexityCitationPlaybook.title}`,
+    "",
+    perplexityCitationPlaybook.intro,
+    "",
+    "### Citation pipeline",
+    "",
+  );
+  perplexityCitationPlaybook.pipeline.forEach((stage, i) => {
+    lines.push(`${i + 1}. ${stage}`);
+  });
+  lines.push("");
+  for (const step of perplexityCitationPlaybook.steps) {
+    lines.push(
+      `### Step ${step.step}: ${step.title}`,
+      step.subtitle,
+      "",
+      step.body,
+      "",
+    );
+    for (const action of step.actions) lines.push(`- ${action}`);
+    if (step.technical?.length) {
+      lines.push("", "**Technical reference**", "");
+      for (const ref of step.technical) {
+        lines.push(`- **${ref.label}**: ${ref.detail}`);
+      }
+    }
+    lines.push("");
   }
 
   for (const mod of geoPlaybookCurriculum) {
@@ -123,6 +156,10 @@ export const geoPlaybook = {
     {
       q: "What technical fixes improve LLM citations fastest?",
       a: "Unblock AI crawlers where policy allows, ship Organization + Product + FAQ schema, publish comparison and alternatives pages with tables, and align FAQ copy verbatim with money prompts.",
+    },
+    {
+      q: "How does Perplexity choose which sources to cite?",
+      a: "Perplexity decomposes the query, retrieves live web results, ranks by relevance and domain trust, synthesizes an answer, and attaches footnotes to URLs that supplied evidence. Optimize with PerplexityBot access, JSON-LD schema, OpenAPI/llms.txt feeds, entity consistency, and answer capsules.",
     },
     {
       q: "How do I audit my brand's AI footprint today?",

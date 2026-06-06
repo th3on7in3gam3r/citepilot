@@ -40,6 +40,15 @@ export function HomeActionBar() {
           >
             How it works
           </ProductCTA>
+          <ProductCTA
+            href="/nurture"
+            variant="outline"
+            sublabel="Perplexity + RAG guides"
+            showArrow={false}
+            className="!border-border/80 !bg-surface/50 hover:!border-accent/40"
+          >
+            GEO Playbook
+          </ProductCTA>
         </div>
       </Container>
     </section>

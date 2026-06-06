@@ -578,10 +578,219 @@ export const geoSevenDayPlan: GeoSevenDayTask[] = [
   },
 ];
 
+export type PerplexityPlaybookStep = {
+  id: string;
+  step: number;
+  title: string;
+  subtitle: string;
+  body: string;
+  actions: string[];
+  technical?: { label: string; detail: string }[];
+};
+
+/** Step-by-step playbook: how Perplexity extracts citations. */
+export const perplexityCitationPlaybook = {
+  id: "geo-perplexity",
+  title: "How Perplexity Extracts Citations",
+  tagline:
+    "An authoritative, step-by-step playbook for structured data, API schemas, and entity optimization.",
+  intro:
+    "Perplexity is a retrieval-first answer engine. It decomposes your prompt, runs live web search, ranks sources by relevance and domain trust, synthesizes an answer, and attaches numbered footnotes to the URLs that survived ranking. GEO for Perplexity means engineering your domain and entity graph so you are retrieved, trusted, and quoted — not just indexed.",
+  pipeline: [
+    "Query decomposition — intent, entities, and sub-questions",
+    "Live retrieval — web crawl + index APIs (not training data alone)",
+    "Source ranking — freshness, authority, semantic match, consensus",
+    "Answer synthesis — compress evidence into prose with inline claims",
+    "Citation surfacing — footnote cards link to the exact URLs used",
+  ],
+  steps: [
+    {
+      id: "perplexity-step-1",
+      step: 1,
+      title: "Map the Perplexity citation pipeline",
+      subtitle: "Know where your brand drops off",
+      body: "Before optimizing, trace the five stages above for your top money prompts. Run 10–20 comparative queries in Perplexity and record which domains appear in footnotes, in what order, and whether your brand is named in the prose. Gaps fall into three buckets: not retrieved (crawl/schema), retrieved but not ranked (authority/extractability), ranked but not named (answer capsule weakness).",
+      actions: [
+        "Export your top 20 B2B money prompts (vs, alternatives, best-for).",
+        "Screenshot Perplexity answers + footnote domains per prompt.",
+        "Classify each gap: retrieval, ranking, or synthesis.",
+      ],
+    },
+    {
+      id: "perplexity-step-2",
+      step: 2,
+      title: "Open the crawl path for PerplexityBot",
+      subtitle: "Retrieval starts with access",
+      body: "Perplexity's retrieval layer must fetch your HTML. Blocked crawlers, orphan URLs, and slow TTFB remove you before ranking begins. Allow PerplexityBot where policy permits, ensure money pages are internally linked, and eliminate redirect chains that waste crawl budget.",
+      actions: [
+        "Audit robots.txt for PerplexityBot / Perplexity-User rules.",
+        "Confirm comparison, pricing, and docs URLs return 200 with canonical self-reference.",
+        "Target LCP < 2.5s on top citation candidate pages.",
+      ],
+      technical: [
+        {
+          label: "robots.txt",
+          detail:
+            "User-agent: PerplexityBot — Allow: / for public marketing and docs unless legal requires blocks.",
+        },
+        {
+          label: "Crawl depth",
+          detail:
+            "Money prompts should resolve to pages ≤3 clicks from homepage with descriptive anchor text.",
+        },
+      ],
+    },
+    {
+      id: "perplexity-step-3",
+      step: 3,
+      title: "Ship structured data Perplexity can parse",
+      subtitle: "JSON-LD is your machine-readable API",
+      body: "Perplexity's ranker uses page structure and schema to understand entities, products, and FAQs. JSON-LD gives deterministic fields — name, description, offers, FAQ pairs — that HTML alone obscures. Invalid or conflicting schema reduces trust scores at ranking time.",
+      actions: [
+        "Deploy Organization + WebSite schema site-wide with logo and sameAs.",
+        "Add SoftwareApplication or Product schema on product pages with feature lists.",
+        "Mirror money-prompt FAQs in FAQPage schema with verbatim question text.",
+        "Validate with Google Rich Results Test and schema.org validator — zero errors.",
+      ],
+      technical: [
+        {
+          label: "Organization",
+          detail:
+            '@type Organization — name, url, logo, sameAs [LinkedIn, Crunchbase, G2], contactPoint.',
+        },
+        {
+          label: "SoftwareApplication",
+          detail:
+            "applicationCategory, operatingSystem (Web), offers, aggregateRating when eligible.",
+        },
+        {
+          label: "FAQPage",
+          detail:
+            "mainEntity array of Question/Answer pairs matching visible on-page FAQ copy.",
+        },
+        {
+          label: "Article / HowTo",
+          detail:
+            "Use on guides and implementation content; include dateModified for freshness signals.",
+        },
+      ],
+    },
+    {
+      id: "perplexity-step-4",
+      step: 4,
+      title: "Publish API schemas & machine-readable feeds",
+      subtitle: "Beyond HTML — give engines a structured corpus",
+      body: "Technical buyers trigger Perplexity prompts about integrations, APIs, and data models. OpenAPI documents, public JSON feeds, and llms.txt files give retrieval systems dense, structured evidence that marketing pages lack. When your API schema is citable, you win implementation-intent prompts competitors miss.",
+      actions: [
+        "Host OpenAPI 3.x at a stable /openapi.json or /api/docs URL.",
+        "Publish llms.txt at site root listing canonical docs, pricing, comparisons, and changelog.",
+        "Expose product changelog and status page as RSS or JSON for freshness.",
+        "Link OpenAPI and llms.txt from footer and docs index — discoverable in one hop.",
+      ],
+      technical: [
+        {
+          label: "OpenAPI",
+          detail:
+            "Document auth, rate limits, webhooks, and integration endpoints — models cite precise capability lists.",
+        },
+        {
+          label: "llms.txt",
+          detail:
+            "Plain-text index of priority URLs with one-line descriptions; emerging standard for LLM crawlers.",
+        },
+        {
+          label: "JSON-LD @id",
+          detail:
+            "Use stable @id URIs for Product and API entities so graph nodes dedupe across pages.",
+        },
+      ],
+    },
+    {
+      id: "perplexity-step-5",
+      step: 5,
+      title: "Optimize entities for cross-corpus resolution",
+      subtitle: "Perplexity ranks consensus across the web",
+      body: "Perplexity weights agreement across sources. Your brand is an entity graph — website, G2 profile, LinkedIn, Crunchbase, press, Wikipedia/Wikidata if eligible. Conflicting names, URLs, or product descriptions split entity confidence and hurt ranking against competitors with clean graphs.",
+      actions: [
+        "Audit NAP consistency: legal name, domain, logo URL, support email across all properties.",
+        "Populate sameAs in Organization schema with every authoritative profile URL.",
+        "Align product naming in docs, schema, and reviews (no internal codenames on public pages).",
+        "Publish a definitive /company or /about page with quotable positioning and founding facts.",
+      ],
+      technical: [
+        {
+          label: "Entity home",
+          detail:
+            "One canonical URL per product line; redirect legacy names with 301s.",
+        },
+        {
+          label: "Knowledge panels",
+          detail:
+            "Google Knowledge Graph and Crunchbase entries should match schema name + url exactly.",
+        },
+        {
+          label: "Review entities",
+          detail:
+            "G2/Capterra profiles use the same logo and description keywords as your comparison pages.",
+        },
+      ],
+    },
+    {
+      id: "perplexity-step-6",
+      step: 6,
+      title: "Engineer answer capsules for footnote extraction",
+      subtitle: "Give the synthesizer quotable blocks",
+      body: "Perplexity footnotes point to pages that supplied specific claims. Pages with clear H2 questions, 40–80 word lead paragraphs, comparison tables, and attributed statistics are easier to extract than long narrative marketing. Structure every money page as a stack of capsules — one intent per H2.",
+      actions: [
+        "Rewrite top 10 URLs: H2 = prompt question, first paragraph = direct answer.",
+        "Add comparison tables with Feature | You | Competitor columns.",
+        "Include 'According to [Brand]…' stat blocks with year for attribution.",
+        "Place FAQ blocks above fold on commercial pages — not hidden in tabs.",
+      ],
+      technical: [
+        {
+          label: "Capsule length",
+          detail: "40–80 words per lead paragraph — matches typical model extraction windows.",
+        },
+        {
+          label: "Table markup",
+          detail: "Use semantic <table> with <th> headers; avoid image-only comparison charts.",
+        },
+      ],
+    },
+    {
+      id: "perplexity-step-7",
+      step: 7,
+      title: "Seed the third-party corpus Perplexity already cites",
+      subtitle: "Off-site evidence closes ranking gaps",
+      body: "For many B2B prompts, Perplexity footnotes cluster on G2, Capterra, Hacker News, Stack Overflow, analyst reports, and niche directories — not vendor homepages. If your category answers are built from reviews and forums, you must exist there with segment-specific, keyword-rich mentions.",
+      actions: [
+        "List top 10 footnote domains for your prompt set; score your presence on each.",
+        "Request detailed G2 reviews naming integrations and buyer segment.",
+        "Answer SO threads for '[Product] vs [Competitor]' with factual doc links.",
+        "Pitch comparison inclusion to publications that already appear in footnotes.",
+      ],
+    },
+    {
+      id: "perplexity-step-8",
+      step: 8,
+      title: "Measure Perplexity Share of Model weekly",
+      subtitle: "Close the loop with rescans and proof",
+      body: "Perplexity's index shifts frequently. Track citation rate per money prompt weekly: recommended in prose, footnoted, mentioned only, or absent. Tie lifts to remediation shipped — schema sprint, new vs page, review velocity — and report Perplexity SoM alongside Google rankings for the same prompts.",
+      actions: [
+        "Baseline SoM on Perplexity for 50+ prompts before changes.",
+        "Re-scan weekly; log footnote position and competitor displacement.",
+        "Ship proof report: prompt → action → citation delta for stakeholders.",
+      ],
+    },
+  ] satisfies PerplexityPlaybookStep[],
+} as const;
+
 export const geoGuideNavSections = [
   { id: "geo-overview", label: "Overview" },
   { id: "geo-frameworks", label: "Frameworks" },
   { id: "geo-engines", label: "AI engines" },
+  { id: "geo-perplexity", label: "Perplexity playbook" },
   { id: "geo-curriculum", label: "Curriculum" },
   ...geoPlaybookCurriculum.map((m) => ({
     id: m.id,
