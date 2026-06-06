@@ -13,6 +13,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/start",
     "/blog",
     "/nurture",
+    "/chatgpt-prompts",
+    "/ai-visibility",
     "/terms",
     "/privacy",
   ];

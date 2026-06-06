@@ -41,13 +41,13 @@ export function HomeActionBar() {
             How it works
           </ProductCTA>
           <ProductCTA
-            href="/nurture"
+            href="/ai-visibility"
             variant="outline"
-            sublabel="Perplexity + RAG guides"
+            sublabel="Metrics · AEO · schema"
             showArrow={false}
             className="!border-border/80 !bg-surface/50 hover:!border-accent/40"
           >
-            GEO Playbook
+            AI visibility
           </ProductCTA>
         </div>
       </Container>

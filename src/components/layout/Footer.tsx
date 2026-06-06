@@ -15,22 +15,22 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
         {title}
       </p>
-      <div className="mt-4">{children}</div>
+      <div className="mt-3.5">{children}</div>
     </div>
   );
 }
 
 function FooterLinks({ links }: { links: readonly FooterLink[] }) {
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-2">
       {links.map((link) => (
         <li key={link.href}>
           <Link
             href={link.href}
-            className="text-sm text-white/65 transition hover:text-accent"
+            className="text-sm text-white/70 transition hover:text-white"
           >
             {link.label}
           </Link>
@@ -45,80 +45,65 @@ export function Footer() {
 
   return (
     <footer className="mt-auto border-t border-border bg-ink text-white">
-      <Container className="py-14 md:py-16">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
-          <div className="sm:col-span-2 lg:col-span-5">
+      <Container className="py-12 md:py-14">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5 lg:gap-8">
+          <div className="sm:col-span-2 lg:col-span-2">
             <Logo light />
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-              {site.description}
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
+              {site.tagline}
             </p>
-            <p className="mt-6 text-sm text-white/50">
-              A{" "}
-              <a
-                href={site.studio.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-white/80 underline decoration-white/25 underline-offset-4 transition hover:text-accent hover:decoration-accent"
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <Link
+                href={nav.cta.href}
+                className="inline-flex items-center justify-center rounded-full border border-accent/60 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/20"
               >
-                {site.studio.name}
-              </a>{" "}
-              brand
-            </p>
+                {nav.cta.label}
+              </Link>
+              <a
+                href={`mailto:${site.supportEmail}`}
+                className="text-sm text-white/55 transition hover:text-white"
+              >
+                {site.supportEmail}
+              </a>
+            </div>
           </div>
 
-          <div className="lg:col-span-2 lg:col-start-7">
-            <FooterColumn title="Product">
-              <FooterLinks links={nav.footer.product} />
-            </FooterColumn>
-          </div>
+          <FooterColumn title="Product">
+            <FooterLinks links={nav.footer.product} />
+          </FooterColumn>
 
-          <div className="lg:col-span-2">
-            <FooterColumn title="Resources">
-              <FooterLinks links={nav.footer.resources} />
-            </FooterColumn>
-          </div>
+          <FooterColumn title="Tools">
+            <FooterLinks links={nav.footer.tools} />
+          </FooterColumn>
 
-          <div className="lg:col-span-3">
-            <FooterColumn title="Contact">
-              <ul className="space-y-2.5 text-sm text-white/65">
-                <li>
-                  <a
-                    href={`mailto:${site.supportEmail}`}
-                    className="transition hover:text-accent"
-                  >
-                    {site.supportEmail}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={site.studio.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="transition hover:text-accent"
-                  >
-                    {site.studio.name}
-                  </a>
-                </li>
-              </ul>
-            </FooterColumn>
-          </div>
+          <FooterColumn title="Learn">
+            <FooterLinks links={nav.footer.learn} />
+          </FooterColumn>
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-white/45">
-            © {year} {site.name}. Built for teams who care about AI discovery.
-          </p>
-          <nav
-            className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/45"
-            aria-label="Legal"
-          >
-            <Link href="/terms" className="transition hover:text-white/80">
-              Terms
-            </Link>
-            <span className="text-white/20" aria-hidden>
+        <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-7 text-sm text-white/40 md:flex-row md:items-center md:justify-between">
+          <p>
+            © {year} {site.name}
+            <span className="mx-2 text-white/20" aria-hidden>
               ·
             </span>
-            <Link href="/privacy" className="transition hover:text-white/80">
+            <a
+              href={site.studio.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition hover:text-white/70"
+            >
+              {site.studio.name}
+            </a>
+          </p>
+          <nav
+            className="flex flex-wrap items-center gap-x-5 gap-y-2"
+            aria-label="Legal"
+          >
+            <Link href="/terms" className="transition hover:text-white/70">
+              Terms
+            </Link>
+            <Link href="/privacy" className="transition hover:text-white/70">
               Privacy
             </Link>
           </nav>

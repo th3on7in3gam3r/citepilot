@@ -22,15 +22,20 @@ export const nav = {
   footer: {
     product: [
       { label: "How it works", href: "/#journey" },
+      { label: "Features", href: "/#pillars" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Free citation audit", href: "/audit" },
-      { label: "Start analysis", href: "/start" },
       { label: "Dashboard", href: "/dashboard" },
     ],
-    resources: [
+    tools: [
+      { label: "Citation audit", href: "/audit" },
+      { label: "Start analysis", href: "/start" },
+    ],
+    learn: [
       { label: "GEO Playbook", href: "/nurture" },
+      { label: "ChatGPT prompts", href: "/chatgpt-prompts" },
+      { label: "AI visibility", href: "/ai-visibility" },
       { label: "Blog", href: "/blog" },
-      { label: "CMS publishing guide", href: "/help/cms-publishing" },
+      { label: "CMS publishing", href: "/help/cms-publishing" },
     ],
   },
   startAnalysis: { label: "Start Analysis", href: "/start" },

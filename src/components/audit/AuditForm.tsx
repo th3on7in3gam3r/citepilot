@@ -9,6 +9,7 @@ import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 import { getStoredWorkspaceId, joinWaitlist, runAudit } from "@/lib/client/api";
 import { ONBOARDING_STORAGE_KEY, type OnboardingAnswers } from "@/lib/onboarding";
+import { auditDiagnosticPhases } from "@/lib/marketing/audit-landing";
 import { effectInit } from "@/lib/react/effect-init";
 
 export function AuditForm() {
@@ -18,6 +19,7 @@ export function AuditForm() {
     "best tool for [your category]\nalternatives to [competitor]\nhow to choose [product type]",
   );
   const [loading, setLoading] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AuditPayload | null>(null);
   const [waitlistEmail, setWaitlistEmail] = useState("");
@@ -73,8 +75,15 @@ export function AuditForm() {
     if (!cleanDomain) return;
 
     setLoading(true);
+    setLoadingPhase(0);
     setError(null);
     setResult(null);
+
+    const phaseTimer = window.setInterval(() => {
+      setLoadingPhase((p) =>
+        p < auditDiagnosticPhases.length - 1 ? p + 1 : p,
+      );
+    }, 11_000);
 
     const promptList = prompts
       .split("\n")
@@ -82,10 +91,12 @@ export function AuditForm() {
       .filter(Boolean);
 
     if (promptLimitMax !== null && promptList.length > promptLimitMax) {
+      window.clearInterval(phaseTimer);
       setError(
         `Your plan allows up to ${promptLimitMax} prompts per audit. Remove ${promptList.length - promptLimitMax} line(s) or upgrade to Pilot.`,
       );
       setLoading(false);
+      setLoadingPhase(0);
       return;
     }
 
@@ -109,7 +120,9 @@ export function AuditForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Audit failed");
     } finally {
+      window.clearInterval(phaseTimer);
       setLoading(false);
+      setLoadingPhase(0);
     }
   }
 
@@ -189,23 +202,66 @@ export function AuditForm() {
 
       <div className="min-h-[320px]">
         {!result && !loading && (
-          <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
+          <div className="flex h-full flex-col justify-center rounded-2xl border border-dashed border-border bg-surface p-8">
             <p className="font-display text-lg font-bold text-ink">
-              Your citation map appears here
+              Your 60-second diagnostic report
             </p>
-            <p className="mt-2 max-w-xs text-sm text-muted">
-              We&apos;ll fetch your site, score GEO readiness, and check each
-              buyer question against your homepage content.
+            <p className="mt-2 text-sm text-muted">
+              Citation score, platform presence across 8 AI engines, per-prompt
+              verdicts, and prioritized GEO gaps — generated after you run the
+              audit.
             </p>
+            <ul className="mt-5 space-y-2 text-xs text-muted">
+              {auditDiagnosticPhases.slice(0, 3).map((phase) => (
+                <li key={phase.id} className="flex gap-2">
+                  <span className="shrink-0 font-mono text-accent">
+                    {phase.seconds}
+                  </span>
+                  <span>{phase.title}</span>
+                </li>
+              ))}
+              <li className="text-muted/70">…then platform map + gap report</li>
+            </ul>
           </div>
         )}
 
         {loading && (
-          <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-border bg-surface p-8">
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-            <p className="mt-4 text-sm font-medium text-muted">
-              Fetching {domain || "site"} and analyzing GEO signals…
-            </p>
+          <div className="flex h-full flex-col justify-center rounded-2xl border border-border bg-white p-8 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+              <div>
+                <p className="text-sm font-semibold text-ink">
+                  Running engine diagnostic…
+                </p>
+                <p className="text-xs text-muted">
+                  {auditDiagnosticPhases[loadingPhase]?.title ?? "Finishing up"}
+                </p>
+              </div>
+            </div>
+            <ol className="mt-6 space-y-2">
+              {auditDiagnosticPhases.map((phase, i) => (
+                <li
+                  key={phase.id}
+                  className={`flex gap-2 text-xs ${
+                    i <= loadingPhase ? "text-ink" : "text-muted/50"
+                  }`}
+                >
+                  <span
+                    className={
+                      i < loadingPhase
+                        ? "text-mint"
+                        : i === loadingPhase
+                          ? "text-accent"
+                          : ""
+                    }
+                    aria-hidden
+                  >
+                    {i < loadingPhase ? "✓" : i === loadingPhase ? "→" : "○"}
+                  </span>
+                  {phase.title}
+                </li>
+              ))}
+            </ol>
           </div>
         )}
 

@@ -56,12 +56,12 @@ export function GeoPlaybookPromo() {
                 Read the GEO Playbook
               </ProductCTA>
               <ProductCTA
-                href="/nurture#geo-perplexity"
+                href="/chatgpt-prompts"
                 variant="outline"
-                sublabel="Structured data + APIs"
+                sublabel="Workspace prompt loop"
                 showArrow={false}
               >
-                Perplexity citations guide
+                ChatGPT prompts guide
               </ProductCTA>
             </div>
           </div>
