@@ -8,6 +8,7 @@ const discussionsDescription =
 export const metadata: Metadata = {
   title: clampSeoTitle(discussionsTitle),
   description: clampMetaDescription(discussionsDescription),
+  robots: { index: true, follow: true },
 };
 
 export default function DiscussionsLayout({

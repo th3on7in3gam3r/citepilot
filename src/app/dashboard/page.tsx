@@ -4,6 +4,7 @@ import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+const overviewPath = "/dashboard";
 const overviewTitle = "GEO Citation Dashboard Overview";
 const overviewDescription =
   "Your GEO citation command center in CitePilot — executive briefing, money prompts, platform presence, alerts, and weekly actions to prove AI visibility lift.";
@@ -11,6 +12,18 @@ const overviewDescription =
 export const metadata: Metadata = {
   title: clampSeoTitle(overviewTitle),
   description: clampMetaDescription(overviewDescription),
+  alternates: { canonical: overviewPath },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: overviewTitle,
+    description: clampMetaDescription(overviewDescription),
+    url: overviewPath,
+    type: "website",
+  },
+  twitter: {
+    title: overviewTitle,
+    description: clampMetaDescription(overviewDescription),
+  },
 };
 
 export default function DashboardPage() {

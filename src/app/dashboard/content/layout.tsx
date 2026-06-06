@@ -8,6 +8,7 @@ const contentDescription =
 export const metadata: Metadata = {
   title: clampSeoTitle(contentTitle),
   description: clampMetaDescription(contentDescription),
+  robots: { index: true, follow: true },
 };
 
 export default function ContentLayout({

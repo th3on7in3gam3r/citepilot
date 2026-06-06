@@ -8,6 +8,7 @@ const settingsDescription =
 export const metadata: Metadata = {
   title: clampSeoTitle(settingsTitle),
   description: clampMetaDescription(settingsDescription),
+  robots: { index: true, follow: true },
 };
 
 export default function SettingsLayout({

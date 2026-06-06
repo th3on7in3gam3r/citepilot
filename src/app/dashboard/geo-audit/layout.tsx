@@ -8,6 +8,7 @@ const geoAuditDescription =
 export const metadata: Metadata = {
   title: clampSeoTitle(geoAuditTitle),
   description: clampMetaDescription(geoAuditDescription),
+  robots: { index: true, follow: true },
 };
 
 export default function GeoAuditLayout({

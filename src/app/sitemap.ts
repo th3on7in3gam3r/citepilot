@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
+import { DASHBOARD_SEO_HUB_PATHS } from "@/lib/dashboard-seo-hubs";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/ai-visibility",
     "/terms",
     "/privacy",
+    ...DASHBOARD_SEO_HUB_PATHS,
   ];
 
   const staticEntries = routes.map((path) => ({

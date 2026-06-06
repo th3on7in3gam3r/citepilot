@@ -7,7 +7,7 @@ import {
 describe("isDashboardSeoHubPath", () => {
   it("includes analytics and other hub routes", () => {
     expect(isDashboardSeoHubPath("/dashboard/analytics")).toBe(true);
-    expect(DASHBOARD_SEO_HUB_PATHS.has("/dashboard")).toBe(true);
+    expect(DASHBOARD_SEO_HUB_PATHS.includes("/dashboard")).toBe(true);
   });
 
   it("excludes nested non-hub routes", () => {

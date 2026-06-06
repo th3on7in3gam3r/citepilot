@@ -5,6 +5,12 @@ import {
   helpQuickAnswers,
   helpWorkflow,
 } from "@/lib/help-content";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Help",
+  robots: { index: false, follow: false },
+};
 
 export default function DashboardHelpPage() {
   return (
