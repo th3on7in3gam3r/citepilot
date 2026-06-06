@@ -9,7 +9,6 @@ import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
 import { ExecutiveBriefingPanel } from "@/components/dashboard/ExecutiveBriefingPanel";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { CitationVisibilityBarChart } from "@/components/dashboard/CitationVisibilityBarChart";
-import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
 import {
   DashboardPageHeader,
   Panel,
@@ -90,7 +89,6 @@ export function DashboardOverview() {
   }
 
   const platformRows = platformRowsFromWorkspace(workspace, PLATFORMS);
-  const seed = workspace.domain.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   const moneyPrompts = buildMoneyPromptIdeas(workspace);
   const alerts = buildDashboardAlerts(workspace);
   const gaps =
@@ -182,18 +180,11 @@ export function DashboardOverview() {
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+      <div className="mt-6">
         <CitationVisibilityBarChart
           platformRows={platformRows}
           hasRealAudit={workspace.hasRealAudit}
           domain={workspace.domain}
-        />
-        <CitationVolumeChart
-          seed={seed}
-          compact
-          citationScore={workspace.citationScore}
-          hasRealAudit={workspace.hasRealAudit}
-          citationHistory={workspace.citationHistory}
         />
       </div>
 
