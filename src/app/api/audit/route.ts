@@ -15,6 +15,15 @@ import { getRecentAuditsForWorkspace, runCitationAudit } from "@/lib/audit/run-a
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
 import { trackServerEvent } from "@/lib/analytics/track-server";
 import { captureServerException } from "@/lib/observability/sentry";
+import {
+  AUDIT_AUTH_RATE_LIMIT_PER_HOUR,
+  AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR,
+} from "@/lib/rate-limit/constants";
+import {
+  clientIpFromRequest,
+  enforceHourlyRateLimit,
+} from "@/lib/rate-limit/request";
+import { rateLimitHeaders } from "@/lib/rate-limit/hourly";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
@@ -22,6 +31,20 @@ export const maxDuration = 120;
 
 export async function POST(request: Request) {
   try {
+    const sessionUserId = await getSessionUserId();
+    const auditRate = await enforceHourlyRateLimit(
+      sessionUserId
+        ? `audit:user:${sessionUserId}`
+        : `audit:ip:${clientIpFromRequest(request)}`,
+      sessionUserId
+        ? AUDIT_AUTH_RATE_LIMIT_PER_HOUR
+        : AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR,
+      sessionUserId
+        ? `Audit limit reached (${AUDIT_AUTH_RATE_LIMIT_PER_HOUR}/hour). Try again later.`
+        : `Free audit limit reached (${AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR}/hour per IP). Sign in or try again later.`,
+    );
+    if (auditRate instanceof NextResponse) return auditRate;
+
     const body = (await request.json()) as {
       domain?: string;
       prompts?: string[];
@@ -43,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     let competitors: string[] = [];
-    let userId: string | null = await getSessionUserId();
+    let userId: string | null = sessionUserId;
 
     if (body.workspaceId) {
       const user = await requireApiUser(request);
@@ -117,6 +140,9 @@ export async function POST(request: Request) {
     });
     if (trimmed) {
       response.headers.set("X-CitePilot-Prompts-Trimmed", "1");
+    }
+    for (const [key, value] of Object.entries(rateLimitHeaders(auditRate))) {
+      response.headers.set(key, value);
     }
     return response;
   } catch (error) {

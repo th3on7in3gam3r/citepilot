@@ -8,6 +8,9 @@ import {
   workspaceLimitUpgradeError,
 } from "@/lib/billing/limits";
 import { WORKSPACE_COOKIE } from "@/lib/constants";
+import { WORKSPACES_RATE_LIMIT_PER_HOUR } from "@/lib/rate-limit/constants";
+import { rateLimitHeaders } from "@/lib/rate-limit/hourly";
+import { enforceHourlyRateLimit } from "@/lib/rate-limit/request";
 import {
   createWorkspace,
   enrichSnapshotWithBacklinks,
@@ -23,6 +26,13 @@ export async function GET(request: Request) {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
     const userId = apiUserId(user);
+
+    const rate = await enforceHourlyRateLimit(
+      `workspaces:${userId}`,
+      WORKSPACES_RATE_LIMIT_PER_HOUR,
+      `Workspace API limit reached (${WORKSPACES_RATE_LIMIT_PER_HOUR}/hour).`,
+    );
+    if (rate instanceof NextResponse) return rate;
 
     const limits = await getWorkspaceLimitsForUser(userId);
 
@@ -49,10 +59,13 @@ export async function GET(request: Request) {
       }),
     );
 
-    return NextResponse.json({
-      workspaces: snapshots,
-      limits,
-    });
+    return NextResponse.json(
+      {
+        workspaces: snapshots,
+        limits,
+      },
+      { headers: rateLimitHeaders(rate) },
+    );
   } catch (error) {
     console.error("GET /api/workspaces", error);
     return NextResponse.json(
@@ -67,6 +80,13 @@ export async function POST(request: Request) {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
     const userId = apiUserId(user);
+
+    const rate = await enforceHourlyRateLimit(
+      `workspaces:${userId}`,
+      WORKSPACES_RATE_LIMIT_PER_HOUR,
+      `Workspace API limit reached (${WORKSPACES_RATE_LIMIT_PER_HOUR}/hour).`,
+    );
+    if (rate instanceof NextResponse) return rate;
 
     const limits = await getWorkspaceLimitsForUser(userId);
     if (userId && !limits.canCreate) {
@@ -103,6 +123,9 @@ export async function POST(request: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
     });
+    for (const [key, value] of Object.entries(rateLimitHeaders(rate))) {
+      response.headers.set(key, value);
+    }
 
     return response;
   } catch (error) {

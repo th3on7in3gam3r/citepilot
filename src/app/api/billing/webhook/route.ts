@@ -26,6 +26,7 @@ async function syncSubscription(
 }
 
 export async function POST(request: Request) {
+  // Intentionally not app-rate-limited: Stripe signs payloads and retries on failure.
   const secret = stripeWebhookSecret();
   if (!secret) {
     return NextResponse.json({ error: "STRIPE_WEBHOOK_SECRET not set" }, { status: 503 });

@@ -3,3 +3,15 @@ export const COPILOT_RATE_LIMIT_PER_HOUR = 20;
 
 /** Manual Autopilot runs per user per hour (Pilot+). */
 export const AUTOPILOT_MANUAL_LIMIT_PER_HOUR = 5;
+
+/** Public /audit landing audits per IP per hour (unauthenticated). */
+export const AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR = 8;
+
+/** Authenticated citation audits per user per hour. */
+export const AUDIT_AUTH_RATE_LIMIT_PER_HOUR = 30;
+
+/** Workspace list/create API calls per signed-in user per hour. */
+export const WORKSPACES_RATE_LIMIT_PER_HOUR = 120;
+
+/** Waitlist signups per IP per hour. */
+export const WAITLIST_RATE_LIMIT_PER_HOUR = 10;
