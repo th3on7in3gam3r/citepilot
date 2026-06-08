@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_COOKIE } from "@/lib/constants";
 import { auth, isNeonAuthEnabled } from "@/lib/auth/server";
+import { ADMIN_COOKIE, checkAdminAccess } from "@/lib/admin-auth";
+import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
-
-function isAdminApiPublic(pathname: string): boolean {
-  return pathname === "/api/admin/login" || pathname === "/api/admin/logout";
-}
 
 const dashboardAuthProxy =
   isNeonAuthEnabled() && auth
@@ -15,26 +12,52 @@ const dashboardAuthProxy =
 
 const OAUTH_VERIFIER_PARAM = "neon_auth_session_verifier";
 
-export async function proxy(request: NextRequest) {
+/** Browser CORS for /api/* — server-to-server calls omit Origin and skip this layer. */
+function resolveApiCors(request: NextRequest): NextResponse | null {
+  if (!request.nextUrl.pathname.startsWith("/api/")) return null;
+
+  const origin = request.headers.get("origin");
+  if (!origin) return null;
+
+  if (!isAllowedCorsOrigin(origin)) {
+    return NextResponse.json({ error: "CORS not allowed" }, { status: 403 });
+  }
+
+  if (request.method === "OPTIONS") {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(origin) });
+  }
+
+  return null;
+}
+
+function withApiCorsHeaders(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse {
+  const origin = request.headers.get("origin");
+  if (origin && isAllowedCorsOrigin(origin)) {
+    for (const [key, value] of Object.entries(corsHeaders(origin))) {
+      response.headers.set(key, value);
+    }
+  }
+  return response;
+}
+
+async function handleProxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
   const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
 
-  const adminSecret = process.env.ADMIN_SECRET;
-  if (adminSecret) {
-    const isAdminPage = pathname.startsWith("/admin") && pathname !== "/admin/login";
-    const isAdminApi = pathname.startsWith("/api/admin") && !isAdminApiPublic(pathname);
-
-    if (isAdminPage || isAdminApi) {
-      const token = request.cookies.get(ADMIN_COOKIE)?.value;
-      if (token !== adminSecret) {
-        if (isAdminApi) {
-          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        const login = new URL("/admin/login", request.url);
-        login.searchParams.set("from", pathname);
-        return NextResponse.redirect(login);
-      }
+  const admin = checkAdminAccess(
+    pathname,
+    request.cookies.get(ADMIN_COOKIE)?.value,
+  );
+  if (admin.protected && !admin.allowed) {
+    if (pathname.startsWith("/api/admin")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const login = new URL("/admin/login", request.url);
+    login.searchParams.set("from", pathname);
+    return NextResponse.redirect(login);
   }
 
   if (
@@ -66,10 +89,18 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
+export async function proxy(request: NextRequest) {
+  const corsResponse = resolveApiCors(request);
+  if (corsResponse) return corsResponse;
+
+  const response = await handleProxy(request);
+  return withApiCorsHeaders(request, response);
+}
+
 export const config = {
   matcher: [
+    "/api/:path*",
     "/admin/:path*",
-    "/api/admin/:path*",
     "/dashboard",
     "/dashboard/:path*",
     "/auth/sign-in",

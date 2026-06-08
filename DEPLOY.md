@@ -4,7 +4,7 @@
 
 1. Copy `.env.example` → `.env.local` (local) and Vercel **Environment Variables** (production).
 2. Never commit `.env.local`. Keys belong only in Vercel / local.
-3. Set `ADMIN_SECRET` in production so `/admin` is protected.
+3. Set `ADMIN_SECRET` in production so `/admin` is protected. Enforced in `src/proxy.ts` via `checkAdminAccess()` (`src/lib/admin-auth.ts`): httpOnly cookie `citepilot_admin` must match the env value on `/admin/*` (except `/admin/login`) and `/api/admin/*` (except login/logout). Without `ADMIN_SECRET`, admin runs in dev mode (open).
 4. Set `DATABASE_URL` or `NEON_URL` (Neon Postgres) on Vercel — without either, SQLite under `.data/` will not persist across deploys.
 
 ## Vercel + Neon (recommended)
@@ -54,7 +54,8 @@
     - Fleet export/import/API keys — 120/hour per API key or session
     - `POST /api/waitlist` — 10/hour per IP
     - `POST /api/billing/webhook` — no app rate limit (Stripe signature verification only)
-12. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
+12. **CORS** — Browser API calls are same-origin (`/api/*` from getcitepilot.com). Cross-origin browser requests are allowed only from trusted origins (`getcitepilot.com`, `www`, Vercel preview, localhost); server webhooks (Stripe, cron) omit `Origin` and are unaffected.
+13. Hit `GET /api/health` — confirms DB + which API keys are set (no secret values returned).
 
 ## CMS publishing setup
 

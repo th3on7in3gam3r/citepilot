@@ -36,9 +36,11 @@ Data layer: **SQLite** locally (`.data/citepilot.db`) or **Neon Postgres** when 
 | `GET /api/gsc/metrics` | Google Search Console (OAuth) |
 | `GET/POST /api/cron/weekly-*` | Weekly digest & re-scan (CRON_SECRET) |
 
-**Admin console** (separate from user dashboard): `/admin` — sign in at `/admin/login` when `ADMIN_SECRET` is set. Without it, admin runs in dev mode with a warning banner.
+**Admin console** (separate from user dashboard): `/admin` — sign in at `/admin/login` when `ADMIN_SECRET` is set. Middleware in `src/proxy.ts` + `src/lib/admin-auth.ts` rejects unauthenticated access to `/admin/*` and `/api/admin/*` (401/redirect). Without `ADMIN_SECRET`, admin runs in dev mode with a warning banner.
 
 Copy `.env.example` → `.env.local`. Key vars: `OPENAI_API_KEY`, `NEON_URL` or `DATABASE_URL`, `NEON_AUTH_BASE_URL` + `NEON_AUTH_COOKIE_SECRET`, `ADMIN_SECRET`, Stripe + `CRON_SECRET` for production.
+
+**CORS:** Browser `/api/*` calls are same-origin. Cross-origin browser requests are allowlisted in `src/lib/cors.ts` and enforced in `src/proxy.ts` (production domains + localhost). Webhooks/cron omit `Origin` and are unaffected. See [DEPLOY.md](./DEPLOY.md).
 
 ## Dashboard status
 
