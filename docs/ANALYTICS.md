@@ -1,6 +1,6 @@
 # Product analytics (PostHog / Plausible)
 
-Set `NEXT_PUBLIC_POSTHOG_KEY` (+ `POSTHOG_KEY` for server routes) and/or `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` on Vercel.
+Set `NEXT_PUBLIC_POSTHOG_KEY` for the browser SDK and `POSTHOG_KEY` (same `phc_…` value) for server routes. Optionally `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` for Plausible. These `NEXT_PUBLIC_*` analytics vars are intentionally public, like Stripe publishable keys.
 
 ## Core funnel (optimize with data, not guesses)
 

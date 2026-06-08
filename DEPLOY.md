@@ -32,11 +32,12 @@
    | `PERPLEXITY_API_KEY` | Optional live Perplexity citation checks during audits |
    | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Search Console OAuth — redirect URI `{APP_URL}/api/gsc/callback` |
    | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional — Plausible domain for funnel events |
-   | `NEXT_PUBLIC_POSTHOG_KEY` | Optional — PostHog project API key (`phc_…`) |
-   | `POSTHOG_KEY` | Optional — same key for server-side capture on API routes |
-   | `NEXT_PUBLIC_POSTHOG_HOST` | Optional — PostHog ingest host (default `https://us.i.posthog.com`) |
+   | `NEXT_PUBLIC_POSTHOG_KEY` | Optional — browser PostHog SDK (intentionally public `phc_…` key) |
+   | `POSTHOG_KEY` | Optional — server-side capture on API routes (same `phc_…` key; server-only) |
+   | `NEXT_PUBLIC_POSTHOG_HOST` | Optional — browser PostHog ingest host (default `https://us.i.posthog.com`) |
+   | `POSTHOG_HOST` | Optional — server PostHog ingest host (defaults to `https://us.i.posthog.com`) |
    | `ADMIN_OPS_EMAIL` | Optional — receives weekly ops report (`/api/cron/weekly-ops-report`) |
-   | `SENTRY_DSN` | Optional — error monitoring (audits, webhooks, OpenAI) |
+   | `SENTRY_DSN` | Optional — error monitoring (server-only env; Sentry injects for client at build) |
 
 4. Deploy → attach custom domain **`getcitepilot.com`** (production URL; `citepilot.ai` is not used).
 5. Neon Console → Auth → **Trusted domains**: include every origin users visit (`https://getcitepilot.com`, `https://www.getcitepilot.com`, `https://citepilot.vercel.app` with **no** trailing slash, `http://localhost:3000`). Must match the branch used by `NEON_AUTH_BASE_URL`.

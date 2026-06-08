@@ -94,7 +94,7 @@ curl -sS -H "Authorization: Bearer $CRON_SECRET" \
 
 ## Observability
 
-- [ ] `SENTRY_DSN` (or `NEXT_PUBLIC_SENTRY_DSN`) on Vercel — API failures surface in Sentry
+- [ ] `SENTRY_DSN` on Vercel — API failures surface in Sentry (server-only; no `NEXT_PUBLIC_SENTRY_DSN`)
 - [ ] CitePilot Insights: Pilot user can run **Prioritize** / **Explain gap**; 21st request in an hour returns 429
 - [ ] `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` and/or `NEXT_PUBLIC_POSTHOG_KEY` + `POSTHOG_KEY` — funnel events in PostHog; see [docs/ANALYTICS.md](./docs/ANALYTICS.md)
 - [ ] `ADMIN_OPS_EMAIL` set — Monday ops report cron emails signups, audits, and cron failures

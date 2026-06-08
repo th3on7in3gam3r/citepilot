@@ -3,19 +3,11 @@ import type { AnalyticsEvent } from "@/lib/analytics/track";
 type ServerTrackProps = Record<string, string | number | boolean | undefined>;
 
 function posthogHost(): string {
-  return (
-    process.env.POSTHOG_HOST?.trim() ||
-    process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() ||
-    "https://us.i.posthog.com"
-  );
+  return process.env.POSTHOG_HOST?.trim() || "https://us.i.posthog.com";
 }
 
 function posthogKey(): string | null {
-  return (
-    process.env.POSTHOG_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim() ||
-    null
-  );
+  return process.env.POSTHOG_KEY?.trim() || null;
 }
 
 /** Server-side PostHog capture for API routes (complements client Plausible/PostHog). */

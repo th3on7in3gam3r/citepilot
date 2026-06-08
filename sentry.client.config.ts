@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
-const dsn =
-  process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() || process.env.SENTRY_DSN?.trim();
+// SENTRY_DSN is injected into the client bundle at build time by @sentry/nextjs.
+const dsn = process.env.SENTRY_DSN?.trim();
 
 Sentry.init({
   dsn,
