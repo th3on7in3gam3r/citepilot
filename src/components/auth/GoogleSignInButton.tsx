@@ -32,16 +32,23 @@ export function GoogleSignInButton({
   label = "Continue with Google",
   callbackPath = "/dashboard",
   signupIntent = false,
+  variant = "light",
 }: {
   label?: string;
   /** Post-auth redirect when no `from` query param is set */
   callbackPath?: string;
   /** Fire signup_started when used on the sign-up page */
   signupIntent?: boolean;
+  variant?: "light" | "dark";
 }) {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const buttonClass =
+    variant === "dark"
+      ? "flex w-full items-center justify-center gap-3 rounded-full border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] py-3 text-sm font-semibold text-white transition hover:bg-[rgba(255,255,255,0.14)] disabled:opacity-60"
+      : "flex w-full items-center justify-center gap-3 rounded-full border border-border bg-white py-3 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-60";
 
   async function handleGoogleSignIn() {
     setLoading(true);
@@ -76,12 +83,12 @@ export function GoogleSignInButton({
         type="button"
         onClick={() => void handleGoogleSignIn()}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-border bg-white py-3 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-60"
+        className={buttonClass}
       >
         <GoogleIcon />
         {loading ? "Redirecting to Google…" : label}
       </button>
-      {error && <p className="mt-2 text-center text-sm text-red-600">{error}</p>}
+      {error && <p className={`mt-2 text-center text-sm ${variant === "dark" ? "text-red-400" : "text-red-600"}`}>{error}</p>}
     </div>
   );
 }

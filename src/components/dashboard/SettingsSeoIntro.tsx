@@ -11,7 +11,16 @@ export function SettingsSeoIntro({ section = "header" }: SettingsSeoIntroProps) 
   if (section === "footer") {
     return (
       <Panel className="mt-10">
-        <div className="space-y-8 text-sm leading-relaxed text-muted">
+        <details className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 select-none">
+            <span className="font-display text-sm font-semibold text-ink">
+              Billing, plans &amp; FAQ
+            </span>
+            <span className="text-xs text-muted transition-transform group-open:rotate-180" aria-hidden="true">
+              ▾
+            </span>
+          </summary>
+          <div className="mt-6 space-y-8 text-sm leading-relaxed text-muted">
           <section>
             <h2 className="font-display text-lg font-bold text-ink">
               Billing, plans, and workspace limits
@@ -127,79 +136,85 @@ export function SettingsSeoIntro({ section = "header" }: SettingsSeoIntroProps) 
             </dl>
           </section>
         </div>
+        </details>
       </Panel>
     );
   }
 
   return (
-    <Panel className="mb-10">
-      <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
-        GEO citation workspace settings
-      </h1>
-      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted md:text-base">
-        CitePilot settings connect your domain, money prompts, and notification
-        preferences to a single generative engine optimization workspace. Every
-        field on this page feeds GEO audits, weekly rescans, proof reports, and
-        Autopilot action plans — so accuracy here directly affects how well we
-        track ChatGPT, Perplexity, Google AI Overviews, and other AI answer
-        surfaces on high-intent buyer questions.
-      </p>
-      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted md:text-base">
-        Use the form below to edit your workspace profile, monitored prompts,
-        alert preferences, and Fleet white-label options. New users can run the{" "}
-        <Link href="/audit" className="font-semibold text-accent">
-          free citation audit
-        </Link>{" "}
-        first, then return here to tune tracking before enabling Pilot
-        monitoring.
-      </p>
-
-      <div className="mt-8 space-y-8 text-sm leading-relaxed text-muted">
-        <section>
-          <h2 className="font-display text-lg font-bold text-ink">
-            Workspace profile and citation tracking
-          </h2>
-          <p className="mt-2">
-            Start with your primary domain and business category. Your description
-            and buyer question teach CitePilot which high-intent prompts matter
-            for pipeline — not vanity keywords. Add up to two audience segments
-            and competitor domains so benchmark emails and gap alerts compare you
-            against the brands buyers actually see in AI answers.
-          </p>
-          <p className="mt-2">
-            Monitored prompts live on this page as well: one prompt per line, tied
-            to your plan limits. Free workspaces can track a focused set; Pilot
-            and Fleet unlock more prompts per audit and automatic Monday rescans
-            that refresh citation scores, platform presence, and weekly lift chips
-            on your{" "}
-            <Link href="/dashboard" className="font-semibold text-accent">
-              dashboard overview
-            </Link>
-            .
-          </p>
-        </section>
-
-        <section>
-          <h2 className="font-display text-lg font-bold text-ink">
-            Notifications, Autopilot, and client reporting
-          </h2>
-          <p className="mt-2">
-            Set a monitoring email, then choose which events should reach your
-            inbox: weekly citation digests, audit-complete alerts, score-drop
-            warnings, competitor move signals, proof report emails with share
-            links, and discussion opportunities from Hacker News or Stack
-            Overflow. Pilot and Fleet add competitor move alerts and
-            stakeholder-ready proof report delivery after each re-scan.
-          </p>
-          <p className="mt-2">
-            Autopilot (Pilot+) runs after Monday rescans to summarize what
-            changed, generate a prioritized seven-day plan, and optionally email a
-            client-ready report. Fleet customers can also configure agency name,
-            logo URL, and white-label share links that hide CitePilot branding on
-            exported proof PDFs.
-          </p>
-        </section>
+    <Panel className="mb-8">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
+          Workspace settings
+        </h1>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent-deep">
+          ✦ GEO Citation
+        </span>
       </div>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+        Configure your domain, money prompts, monitoring alerts, and white-label options. Every field feeds GEO audits, weekly rescans, and Autopilot action plans.
+      </p>
+
+      <details className="group mt-5">
+        <summary className="flex w-fit cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-muted hover:text-accent select-none transition-colors">
+          <span className="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+          What do these settings do?
+        </summary>
+        <div className="mt-4 space-y-6 text-sm leading-relaxed text-muted border-l-2 border-border pl-4">
+          <section>
+            <h2 className="font-display text-base font-bold text-ink">
+              Workspace profile and citation tracking
+            </h2>
+            <p className="mt-2">
+              Start with your primary domain and business category. Your description
+              and buyer question teach CitePilot which high-intent prompts matter
+              for pipeline — not vanity keywords. Add up to two audience segments
+              and competitor domains so benchmark emails and gap alerts compare you
+              against the brands buyers actually see in AI answers.
+            </p>
+            <p className="mt-2">
+              Monitored prompts live on this page as well: one prompt per line, tied
+              to your plan limits. Free workspaces can track a focused set; Pilot
+              and Fleet unlock more prompts per audit and automatic Monday rescans
+              that refresh citation scores, platform presence, and weekly lift chips
+              on your{" "}
+              <Link href="/dashboard" className="font-semibold text-accent">
+                dashboard overview
+              </Link>
+              .
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display text-base font-bold text-ink">
+              Notifications, Autopilot, and client reporting
+            </h2>
+            <p className="mt-2">
+              Set a monitoring email, then choose which events should reach your
+              inbox: weekly citation digests, audit-complete alerts, score-drop
+              warnings, competitor move signals, proof report emails with share
+              links, and discussion opportunities from Hacker News or Stack
+              Overflow. Pilot and Fleet add competitor move alerts and
+              stakeholder-ready proof report delivery after each re-scan.
+            </p>
+            <p className="mt-2">
+              Autopilot (Pilot+) runs after Monday rescans to summarize what
+              changed, generate a prioritized seven-day plan, and optionally email a
+              client-ready report. Fleet customers can also configure agency name,
+              logo URL, and white-label share links that hide CitePilot branding on
+              exported proof PDFs.
+            </p>
+          </section>
+
+          <p className="text-xs">
+            New user?{" "}
+            <Link href="/audit" className="font-semibold text-accent">
+              Run the free citation audit
+            </Link>{" "}
+            first, then return here to tune tracking before enabling Pilot monitoring.
+          </p>
+        </div>
+      </details>
     </Panel>
   );
 }

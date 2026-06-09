@@ -5,8 +5,10 @@ import { Container } from "@/components/ui/Container";
 import { scrollBrands } from "@/lib/brands";
 import { useScrollSection } from "@/hooks/useScrollSection";
 
-/** Icon width + horizontal gap between brands */
+/** Icon width + horizontal gap between brands — gap-12 = 48px, item w-[7.5rem] = 120px */
 const ITEM_STEP = 168;
+/** Half of item wrapper width to center the spotlight */
+const HALF_ITEM = ITEM_STEP / 2;
 
 export function ScrollBrandMarquee() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -33,20 +35,21 @@ export function ScrollBrandMarquee() {
     >
       <div className="sticky top-16 border-y border-border bg-white">
         <Container className="flex flex-col items-center py-16 md:py-20 lg:py-24">
-          <p className="mb-10 text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted md:mb-12">
-            Scroll to explore platforms &amp; ecosystems
-          </p>
+          <div className="mb-10 text-center md:mb-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+              Platforms &amp; ecosystems
+            </p>
+            <p className="font-display mt-2 text-xl font-bold text-ink md:text-2xl">
+              Get cited everywhere AI is used
+            </p>
+          </div>
 
           <div className="relative w-full overflow-hidden px-2 py-8 md:py-10">
-            <div
-              className="pointer-events-none absolute inset-y-4 left-1/2 z-10 w-32 -translate-x-1/2 rounded-3xl bg-gradient-to-r from-transparent via-accent/10 to-transparent md:w-40"
-              aria-hidden
-            />
 
             <div
-              className="flex items-end gap-12 transition-transform duration-500 ease-out will-change-transform md:gap-16"
+              className="flex items-center gap-12 transition-transform duration-500 ease-out will-change-transform md:gap-16"
               style={{
-                transform: `translateX(calc(50% - ${ITEM_STEP / 2}px - ${trackOffset}px))`,
+                transform: `translateX(calc(50% - ${HALF_ITEM}px - ${trackOffset}px))`,
               }}
             >
               {scrollBrands.map((brand) => {
@@ -55,19 +58,18 @@ export function ScrollBrandMarquee() {
                   <div
                     key={brand.id}
                     className={`flex w-[7.5rem] shrink-0 flex-col items-center transition-all duration-500 md:w-[8.5rem] ${
-                      isActive ? "scale-105 opacity-100" : "scale-95 opacity-45"
+                      isActive ? "scale-110 opacity-100" : "scale-90 opacity-35"
                     }`}
                   >
                     <div
-                      className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl border-2 text-lg font-bold shadow-sm transition-colors duration-500 md:h-20 md:w-20 md:text-xl"
+                      className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl border-2 text-lg font-bold transition-all duration-500 md:h-20 md:w-20 md:text-xl"
                       style={{
-                        borderColor: isActive
-                          ? brand.color
-                          : "var(--color-border)",
-                        backgroundColor: isActive
-                          ? `${brand.color}18`
-                          : "white",
+                        borderColor: isActive ? brand.color : "var(--color-border)",
+                        backgroundColor: isActive ? `${brand.color}15` : "white",
                         color: isActive ? brand.color : "var(--color-muted)",
+                        boxShadow: isActive
+                          ? `0 0 0 4px ${brand.color}20, 0 8px 24px ${brand.color}25`
+                          : "none",
                       }}
                     >
                       {brand.short}

@@ -157,20 +157,37 @@ export function OnboardingFlow() {
 
         <main className="flex flex-1 flex-col px-6 pb-10 md:px-10 lg:px-14 lg:pb-14">
           <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center py-6 lg:py-10">
-            {/* Step row */}
-            <div className="mb-8 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="h-4 w-1 shrink-0 rounded-full bg-gradient-to-b from-glow to-accent" />
-                <span className="text-sm font-bold text-ink">{meta.stepLabel}</span>
-                {meta.optional && (
-                  <span className="rounded-md bg-surface px-2 py-0.5 text-xs font-medium text-muted">
-                    Optional
-                  </span>
-                )}
+            {/* Progress bar */}
+            <div className="mb-8">
+              <div className="mb-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="h-4 w-1 shrink-0 rounded-full bg-gradient-to-b from-glow to-accent" />
+                  <span className="text-sm font-bold text-ink">{meta.stepLabel}</span>
+                  {meta.optional && (
+                    <span className="rounded-md bg-surface px-2 py-0.5 text-xs font-medium text-muted">
+                      Optional
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs font-medium text-muted">
+                  {step + 1} / {TOTAL_STEPS}
+                </span>
               </div>
-              <span className="text-sm text-muted">
-                Step {step + 1} of {TOTAL_STEPS}
-              </span>
+              <div className="flex gap-1.5">
+                {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                      i < step
+                        ? "bg-accent"
+                        : i === step
+                          ? "bg-accent opacity-100"
+                          : "bg-border"
+                    }`}
+                    style={i === step ? { backgroundImage: "linear-gradient(90deg, var(--color-accent), var(--color-glow))" } : undefined}
+                  />
+                ))}
+              </div>
             </div>
 
             <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-[2rem]">

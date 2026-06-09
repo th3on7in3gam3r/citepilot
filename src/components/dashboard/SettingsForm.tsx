@@ -31,6 +31,7 @@ import {
   type WorkspacePreferences,
 } from "@/lib/settings";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
+import { useToast } from "@/components/notifications/ToastProvider";
 import { effectInit } from "@/lib/react/effect-init";
 
 const inputClass =
@@ -44,6 +45,7 @@ type SettingsFormProps = {
 
 export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const workspaceId = workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId();
 
   const [domain, setDomain] = useState(workspace.domain);
@@ -61,9 +63,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   const [saving, setSaving] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [auditing, setAuditing] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   const [deleting, setDeleting] = useState(false);
   const [isFleet, setIsFleet] = useState(false);
   const [isPilot, setIsPilot] = useState(false);
@@ -155,15 +154,14 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
   async function savePreferences(
     next: WorkspacePreferences,
-    toast = "Preferences saved.",
+    toastMsg = "Preferences saved.",
   ): Promise<boolean> {
     if (!workspaceId) {
-      setError("No workspace found. Complete onboarding first.");
+      toast.error("No workspace found. Complete onboarding first.");
       return false;
     }
 
     setSavingPrefs(true);
-    setError(null);
 
     try {
       const updated = await updateWorkspace(workspaceId, {
@@ -172,16 +170,16 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       });
 
       if (!updated) {
-        setError("Failed to save preferences.");
+        toast.error("Failed to save preferences.");
         return false;
       }
 
       setPreferences(updated.preferences ?? next);
       onSaved(updated);
-      setMessage(toast);
+      toast.success(toastMsg);
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
       return false;
     } finally {
       setSavingPrefs(false);
@@ -190,21 +188,19 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
   async function persist(andAudit: boolean) {
     if (!workspaceId) {
-      setError("No workspace found. Complete onboarding first.");
+      toast.error("No workspace found. Complete onboarding first.");
       return;
     }
     if (domain.trim().length < 3) {
-      setError("Enter a valid domain.");
+      toast.error("Enter a valid domain.");
       return;
     }
     if (buyerQuestion.trim().length < 5) {
-      setError("Buyer question must be at least 5 characters.");
+      toast.error("Buyer question must be at least 5 characters.");
       return;
     }
 
     setSaving(true);
-    setError(null);
-    setMessage(null);
 
     try {
       const answers = buildAnswers();
@@ -215,32 +211,34 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       });
 
       if (!updated) {
-        setError("Failed to save settings.");
+        toast.error("Failed to save settings.");
         return;
       }
 
       setPreferences(updated.preferences ?? prefs);
       sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
       onSaved(updated);
-      setMessage("Settings saved.");
+      toast.success("Settings saved.");
 
       if (andAudit) {
         const promptList = promptsFromPreferences(prefs, answers.buyerQuestion);
         if (promptList.length === 0) {
-          setError("Add at least one monitored prompt or buyer question.");
+          toast.error("Add at least one monitored prompt or buyer question.");
           return;
         }
         if (
           promptLimitMax !== null &&
           promptList.length > promptLimitMax
         ) {
-          setError(
+          toast.error(
             `Your plan allows up to ${promptLimitMax} prompts per audit. Remove ${promptList.length - promptLimitMax} prompt(s) or upgrade.`,
           );
           return;
         }
         setAuditing(true);
-        setMessage("Settings saved. Running citation audit…");
+        toast.info("Running citation audit…", {
+          description: "Settings saved. This may take a minute.",
+        });
         trackEvent("audit_started", {
           workspaceId,
           domain: answers.domain,
@@ -258,10 +256,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           });
         }
         onSaved(updated);
-        setMessage("Settings saved and audit complete.");
+        toast.success("Settings saved and audit complete.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setSaving(false);
       setAuditing(false);
@@ -278,11 +276,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       return;
     }
     setDeleting(true);
-    setError(null);
     const ok = await deleteWorkspace(workspaceId);
     setDeleting(false);
     if (!ok) {
-      setError("Failed to delete workspace.");
+      toast.error("Failed to delete workspace.");
       return;
     }
     await onDeleted?.();
@@ -308,18 +305,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           ) : undefined
         }
       />
-
-      {(message || error) && (
-        <div
-          className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
-            error
-              ? "border-red-200 bg-red-50 text-red-700"
-              : "border-mint/30 bg-mint/10 text-ink"
-          }`}
-        >
-          {error ?? message}
-        </div>
-      )}
 
       <form
         onSubmit={(e) => {
@@ -369,7 +354,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </label>
         </Panel>
 
-        <Panel title="Citation tracking">
+        <Panel title="Citation tracking" className="border-l-4 border-l-accent">
           <label className="block text-sm font-semibold text-ink">
             Primary buyer question
             <span className="mt-1 block text-xs font-normal text-muted">
@@ -501,7 +486,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </div>
         </Panel>
 
-        <Panel title="Notifications">
+        <Panel title="Notifications" className="border-l-4 border-l-mint">
           {(isPilot || isFleet) &&
             (!preferences.monitoringEmail.trim() ||
               !preferences.whiteLabel.agencyName.trim()) && (
@@ -708,7 +693,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             <button
               type="submit"
               disabled={busy}
-              className="rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(107,140,255,0.3)] disabled:opacity-60"
+              className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-deep disabled:opacity-60"
             >
               {saving && !auditing ? "Saving…" : "Save changes"}
             </button>
@@ -716,19 +701,19 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               type="button"
               disabled={busy}
               onClick={() => persist(true)}
-              className="rounded-full border border-accent bg-accent/10 px-6 py-3 text-sm font-semibold text-accent disabled:opacity-60"
+              className="rounded-full border border-accent bg-accent/10 px-6 py-3 text-sm font-semibold text-accent transition hover:bg-accent/20 disabled:opacity-60"
             >
               {auditing ? "Running audit…" : "Save & re-run audit"}
             </button>
             <Link
               href="/audit"
-              className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-ink hover:bg-surface"
+              className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-ink transition hover:bg-surface"
             >
               Open audit tool
             </Link>
             <Link
               href="/start?full=1"
-              className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-medium text-muted hover:text-ink"
+              className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-medium text-muted transition hover:text-ink"
             >
               Re-run full setup
             </Link>
@@ -750,7 +735,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         </Panel>
 
         <BillingPlanPanel />
-        <Panel title="Danger zone">
+        <Panel title="Danger zone" className="border-l-4 border-l-red-500">
           <p className="text-sm text-muted">
             Permanently remove this workspace, audits, and snapshots from your local
             database.
@@ -759,7 +744,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             type="button"
             disabled={busy}
             onClick={handleDelete}
-            className="mt-4 rounded-full border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+            className="mt-4 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
           >
             {deleting ? "Deleting…" : "Delete workspace"}
           </button>
