@@ -53,57 +53,61 @@ export function useWorkspace() {
   }, []);
 
   const loadActiveWorkspace = useCallback(async () => {
-    const storedId = getStoredWorkspaceId();
-    if (storedId) {
-      const fromApi = await fetchWorkspace(storedId);
-      if (fromApi) {
-        setWorkspace(normalizeSnapshot(fromApi, storedId));
-        return;
-      }
-      clearStoredWorkspaceId();
-    }
-
-    const list = await loadList();
-    const first = list?.workspaces[0];
-    if (first) {
-      storeWorkspaceId(first.id);
-      setWorkspace(normalizeSnapshot(first.workspace, first.id));
-      return;
-    }
-
-    const fallback = await fetchDefaultWorkspace();
-    if (fallback) {
-      storeWorkspaceId(fallback.id);
-      setWorkspace(normalizeSnapshot(fallback.workspace, fallback.id));
-      return;
-    }
-
     try {
-      const raw = sessionStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (raw) {
-        const answers = JSON.parse(raw) as OnboardingAnswers;
-        const created = await createWorkspaceFromOnboarding(answers);
-        if (created) {
-          setWorkspace(normalizeSnapshot(created.workspace, created.id));
-          const prompts = [answers.buyerQuestion].filter(Boolean);
-          if (prompts.length > 0) {
-            await runAudit({
-              domain: answers.domain,
-              prompts,
-              workspaceId: created.id,
-            }).catch(() => undefined);
-          }
-          await loadList();
+      const storedId = getStoredWorkspaceId();
+      if (storedId) {
+        const fromApi = await fetchWorkspace(storedId);
+        if (fromApi) {
+          setWorkspace(normalizeSnapshot(fromApi, storedId));
           return;
         }
-        setWorkspace(buildWorkspaceSnapshot(answers));
+        clearStoredWorkspaceId();
+      }
+
+      const list = await loadList();
+      const first = list?.workspaces[0];
+      if (first) {
+        storeWorkspaceId(first.id);
+        setWorkspace(normalizeSnapshot(first.workspace, first.id));
         return;
       }
-    } catch {
-      /* ignore */
-    }
 
-    setWorkspace(buildWorkspaceSnapshot({}));
+      const fallback = await fetchDefaultWorkspace();
+      if (fallback) {
+        storeWorkspaceId(fallback.id);
+        setWorkspace(normalizeSnapshot(fallback.workspace, fallback.id));
+        return;
+      }
+
+      try {
+        const raw = sessionStorage.getItem(ONBOARDING_STORAGE_KEY);
+        if (raw) {
+          const answers = JSON.parse(raw) as OnboardingAnswers;
+          const created = await createWorkspaceFromOnboarding(answers);
+          if (created) {
+            setWorkspace(normalizeSnapshot(created.workspace, created.id));
+            const prompts = [answers.buyerQuestion].filter(Boolean);
+            if (prompts.length > 0) {
+              await runAudit({
+                domain: answers.domain,
+                prompts,
+                workspaceId: created.id,
+              }).catch(() => undefined);
+            }
+            await loadList();
+            return;
+          }
+          setWorkspace(buildWorkspaceSnapshot(answers));
+          return;
+        }
+      } catch {
+        /* ignore onboarding parse/create errors */
+      }
+
+      setWorkspace(buildWorkspaceSnapshot({}));
+    } catch {
+      setWorkspace(buildWorkspaceSnapshot({}));
+    }
   }, [loadList]);
 
   const refresh = useCallback(async () => {

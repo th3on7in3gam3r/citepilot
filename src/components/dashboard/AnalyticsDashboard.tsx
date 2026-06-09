@@ -49,7 +49,7 @@ function benchmarkRankLabel(rank: number) {
 
 function benchmarkDeltaTone(delta: number | null) {
   if (delta === null) return "bg-surface text-muted";
-  if (delta > 0) return "bg-red-50 text-red-700";
+  if (delta > 0) return "bg-amber-50 text-amber-800";
   if (delta < 0) return "bg-emerald-50 text-emerald-700";
   return "bg-surface text-muted";
 }
@@ -586,7 +586,7 @@ function CompetitorBenchmarkPanel({
           const positionTone = isYou
             ? "bg-ink text-white"
             : leading
-              ? "bg-red-50 text-red-700"
+              ? "bg-violet-50 text-violet-800"
               : trailing
                 ? "bg-emerald-50 text-emerald-700"
                 : "bg-surface text-muted";

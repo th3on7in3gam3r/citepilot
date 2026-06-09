@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { FLEET_API_RATE_LIMIT_PER_HOUR } from "@/lib/fleet/constants";
+import { useToast } from "@/components/notifications/ToastProvider";
 
 type ApiKeyRow = {
   id: string;
@@ -25,9 +26,8 @@ export function FleetSettingsPanel({
   const [loadingKeys, setLoadingKeys] = useState(true);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
+  const toast = useToast();
   const [newSecret, setNewSecret] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   async function loadKeys() {
     setLoadingKeys(true);
@@ -47,8 +47,6 @@ export function FleetSettingsPanel({
 
   async function createKey() {
     setCreating(true);
-    setError(null);
-    setMessage(null);
     setNewSecret(null);
     const res = await fetch("/api/fleet/api-keys", {
       method: "POST",
@@ -62,11 +60,11 @@ export function FleetSettingsPanel({
     };
     setCreating(false);
     if (!res.ok) {
-      setError(data.error ?? "Could not create API key");
+      toast.error(data.error ?? "Could not create API key");
       return;
     }
     setNewSecret(data.key?.secret ?? null);
-    setMessage("API key created — copy it now.");
+    toast.success("API key created — copy it now.");
     await loadKeys();
   }
 
@@ -80,8 +78,6 @@ export function FleetSettingsPanel({
 
   async function importCsv(file: File) {
     setImporting(true);
-    setError(null);
-    setMessage(null);
     const form = new FormData();
     form.append("file", file);
     const res = await fetch(`/api/workspaces/${workspaceId}/prompts/import`, {
@@ -97,13 +93,14 @@ export function FleetSettingsPanel({
     };
     setImporting(false);
     if (!res.ok) {
-      setError(data.error ?? "Import failed");
+      toast.error(data.error ?? "Import failed");
       return;
     }
-    setMessage(
-      `Imported ${data.imported} prompt${data.imported === 1 ? "" : "s"}${
-        data.trimmed ? " (trimmed to your plan limit)" : ""
-      }.`,
+    toast.success(
+      `Imported ${data.imported} prompt${data.imported === 1 ? "" : "s"}`,
+      {
+        description: data.trimmed ? "Trimmed to your plan limit." : undefined,
+      },
     );
     if (data.monitoredPrompts) onPromptsImported(data.monitoredPrompts);
   }
@@ -192,14 +189,6 @@ export function FleetSettingsPanel({
         )}
       </Panel>
 
-      {(message || error) && (
-        <p
-          className={`mt-4 text-sm ${error ? "text-red-600" : "text-mint"}`}
-          role="status"
-        >
-          {error ?? message}
-        </p>
-      )}
     </>
   );
 }

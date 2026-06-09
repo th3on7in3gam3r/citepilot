@@ -14,6 +14,7 @@ import type {
   ContentType,
   EditorialPillarId,
 } from "@/lib/content-strategy";
+import { useToast } from "@/components/notifications/ToastProvider";
 
 type GenerateResult = {
   post: { slug: string; title: string; url: string };
@@ -31,18 +32,17 @@ export function GenerateArticlePanel({
   const [audience, setAudience] = useState<AudienceSegment>("solo-founder");
   const [contentType, setContentType] = useState<ContentType>("tutorial");
   const [pillar, setPillar] = useState<EditorialPillarId>("geo");
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResult | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!topic.trim()) {
-      setError("Enter a topic");
+      toast.error("Enter a topic");
       return;
     }
     setLoading(true);
-    setError(null);
     setResult(null);
 
     try {
@@ -64,16 +64,17 @@ export function GenerateArticlePanel({
         post?: GenerateResult["post"];
       };
       if (!res.ok) {
-        setError(data.error ?? "Generation failed");
+        toast.error(data.error ?? "Generation failed");
         return;
       }
       if (data.post) {
         setResult({ post: data.post });
+        toast.success("Article published", { description: data.post.title });
         onGenerated?.();
         notifyChecklistUpdate();
       }
     } catch {
-      setError("Network error — try again");
+      toast.error("Network error — try again");
     } finally {
       setLoading(false);
     }
@@ -174,12 +175,6 @@ export function GenerateArticlePanel({
             </select>
           </div>
         </div>
-
-        {error && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            {error}
-          </p>
-        )}
 
         {result && (
           <p className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
