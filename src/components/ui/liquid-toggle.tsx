@@ -39,7 +39,10 @@ export function LiquidToggle({
   const [isChecked, setIsChecked] = React.useState(checked);
 
   React.useEffect(() => {
-    setIsChecked(checked);
+    const t = setTimeout(() => {
+      setIsChecked(checked);
+    }, 0);
+    return () => clearTimeout(t);
   }, [checked]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -19,7 +19,8 @@ export function ToastCard({
   const [expanded, setExpanded] = useState(hasBody);
   const [paused, setPaused] = useState(false);
   const [remainingMs, setRemainingMs] = useState(toast.duration);
-  const startRef = useRef(Date.now());
+  const [startTime] = useState(() => Date.now());
+  const startRef = useRef(startTime);
   const pausedAtRef = useRef<number | null>(null);
 
   const dismiss = useCallback(() => onDismiss(toast.id), [onDismiss, toast.id]);

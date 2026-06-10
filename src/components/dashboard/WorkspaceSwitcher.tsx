@@ -48,9 +48,12 @@ export function WorkspaceSwitcher({
 
   useEffect(() => {
     if (!showAddForm) return;
-    setOpen(true);
-    setShowAdd(true);
-    onAddFormConsumed?.();
+    const t = setTimeout(() => {
+      setOpen(true);
+      setShowAdd(true);
+      onAddFormConsumed?.();
+    }, 0);
+    return () => clearTimeout(t);
   }, [showAddForm, onAddFormConsumed]);
 
   useEffect(() => {

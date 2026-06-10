@@ -30,8 +30,10 @@ export function FilterBuilderModal({
 
   useEffect(() => {
     if (!generating) {
-      setRunningSec(0);
-      return;
+      const t = setTimeout(() => {
+        setRunningSec(0);
+      }, 0);
+      return () => clearTimeout(t);
     }
     const t = setInterval(() => setRunningSec((s) => s + 1), 1000);
     return () => clearInterval(t);

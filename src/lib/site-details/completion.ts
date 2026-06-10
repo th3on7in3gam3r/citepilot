@@ -33,7 +33,7 @@ export function isSectionComplete(
       const services = ctx.googleServices;
       if (!services) return false;
       return (
-        services.analytics || services["my-business"] || services["search-console"]
+        services.analytics || services["search-console"]
       );
     }
     case "targeting":

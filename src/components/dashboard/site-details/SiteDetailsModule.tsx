@@ -43,7 +43,10 @@ export function SiteDetailsModule() {
   useEffect(() => {
     const section = searchParams.get("section");
     if (section && VALID_SECTIONS.has(section as SiteDetailsSectionId)) {
-      setActive(section as SiteDetailsSectionId);
+      const t = setTimeout(() => {
+        setActive(section as SiteDetailsSectionId);
+      }, 0);
+      return () => clearTimeout(t);
     }
   }, [searchParams]);
 

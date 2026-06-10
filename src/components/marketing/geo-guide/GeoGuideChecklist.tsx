@@ -34,8 +34,11 @@ export function GeoGuideChecklist() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setChecked(loadChecked());
-    setHydrated(true);
+    const t = setTimeout(() => {
+      setChecked(loadChecked());
+      setHydrated(true);
+    }, 0);
+    return () => clearTimeout(t);
   }, []);
 
   const toggle = useCallback((id: string) => {

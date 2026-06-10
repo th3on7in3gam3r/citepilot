@@ -79,7 +79,10 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!workspaceId) return;
-    setWidgets(loadStoredWidgets(workspaceId));
+    const t = setTimeout(() => {
+      setWidgets(loadStoredWidgets(workspaceId));
+    }, 0);
+    return () => clearTimeout(t);
   }, [workspaceId]);
 
   useEffect(() => {
@@ -89,15 +92,18 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isOpen && !hasWelcomed) {
-      setHasWelcomed(true);
-      setMessages([
-        {
-          id: msgId(),
-          role: "assistant",
-          time: timeLabel(),
-          text: "Hi, this is CitePilot Copilot, your AI assistant! I can generate dynamic analytics widgets, uncover high-impact keywords, and analyze competitor rankings for your site.",
-        },
-      ]);
+      const t = setTimeout(() => {
+        setHasWelcomed(true);
+        setMessages([
+          {
+            id: msgId(),
+            role: "assistant",
+            time: timeLabel(),
+            text: "Hi, this is CitePilot Copilot, your AI assistant! I can generate dynamic analytics widgets, uncover high-impact keywords, and analyze competitor rankings for your site.",
+          },
+        ]);
+      }, 0);
+      return () => clearTimeout(t);
     }
   }, [isOpen, hasWelcomed]);
 
