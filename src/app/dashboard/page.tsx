@@ -1,5 +1,7 @@
-import { OverviewSeoIntro } from "@/components/dashboard/OverviewSeoIntro";
+import { DashboardCrawlContent } from "@/components/dashboard/DashboardCrawlContent";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
+import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
+import { OverviewSeoIntro } from "@/components/dashboard/OverviewSeoIntro";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -29,15 +31,13 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   return (
     <>
-      <OverviewSeoIntro section="header" />
-      <Suspense
-        fallback={
-          <div className="h-40 animate-pulse rounded-2xl bg-surface" />
-        }
-      >
+      <DashboardCrawlContent>
+        <OverviewSeoIntro section="header" />
+        <OverviewSeoIntro section="footer" />
+      </DashboardCrawlContent>
+      <Suspense fallback={<DashboardPageSkeleton />}>
         <DashboardOverview />
       </Suspense>
-      <OverviewSeoIntro section="footer" />
     </>
   );
 }
