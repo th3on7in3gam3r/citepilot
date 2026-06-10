@@ -7,6 +7,8 @@ import {
   SiteDetailsFooter,
 } from "@/components/dashboard/site-details/SiteDetailsShared";
 import { useToast } from "@/components/notifications/ToastProvider";
+import { updateWorkspace } from "@/lib/client/api";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import {
   buildKeywordRows,
@@ -25,9 +27,13 @@ export function KeywordsSection({
   onContinue: () => void;
 }) {
   const toast = useToast();
+  const { applyWorkspace } = useWorkspaceContext();
   const [tab, setTab] = useState<Tab>("active");
   const [range, setRange] = useState<Range>("7d");
   const [saving, setSaving] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [adding, setAdding] = useState(false);
 
   const allRows = useMemo(() => buildKeywordRows(workspace), [workspace]);
   const activeRows = allRows.filter((r) => r.active);
@@ -35,9 +41,54 @@ export function KeywordsSection({
   const rows = tab === "active" ? activeRows : pendingRows;
   const summary = keywordRankingSummary(allRows);
 
+  const workspaceId = workspace.workspaceId ?? workspace.id ?? "";
+
   const displayDomain = workspace.domain
     .replace(/^https?:\/\//, "")
     .replace(/\/$/, "");
+
+  async function handleAddKeyword(e: React.FormEvent) {
+    e.preventDefault();
+    const kw = newKeyword.trim();
+    if (!kw || !workspaceId) return;
+
+    const existing = workspace.preferences?.monitoredPrompts ?? [];
+    if (existing.includes(kw)) {
+      toast.error("This keyword is already being tracked.");
+      return;
+    }
+
+    setAdding(true);
+    try {
+      const updated = await updateWorkspace(workspaceId, {
+        domain: workspace.domain,
+        businessType: workspace.businessType,
+        description: workspace.description,
+        buyerQuestion: workspace.buyerQuestion,
+        audiences: workspace.audiences,
+        competitors: workspace.competitors,
+        referral: "",
+        preferences: {
+          ...(workspace.preferences ?? {}),
+          monitoredPrompts: [...existing, kw],
+        },
+      });
+      if (updated) {
+        applyWorkspace(updated, workspaceId);
+        toast.success("Keyword added", {
+          description: `"${kw}" is now being tracked.`,
+        });
+        setNewKeyword("");
+        setShowAddForm(false);
+      } else {
+        toast.error("Failed to save keyword.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save keyword.");
+    } finally {
+      setAdding(false);
+    }
+  }
 
   function handleSave(andContinue: boolean) {
     setSaving(true);
@@ -77,18 +128,63 @@ export function KeywordsSection({
           </Link>
           <button
             type="button"
-            onClick={() =>
-              toast.info("Add keyword", {
-                description: "Import money prompts from Settings or run a citation audit to populate keywords.",
-                action: { label: "Settings", href: "/dashboard/settings" },
-              })
-            }
-            className="rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#0f172a] transition hover:bg-[#f8fafb]"
+            onClick={() => setShowAddForm((v) => !v)}
+            className="rounded-xl border border-accent/40 bg-accent/5 px-4 py-2.5 text-sm font-semibold text-accent transition hover:bg-accent/10"
           >
-            + Add New Keyword
+            {showAddForm ? "Cancel" : "+ Add Keyword"}
           </button>
         </div>
       </div>
+
+      {/* Inline add keyword form */}
+      {showAddForm && (
+        <form
+          onSubmit={handleAddKeyword}
+          className="flex gap-3 rounded-2xl border border-accent/30 bg-accent/5 p-4"
+        >
+          <input
+            type="text"
+            value={newKeyword}
+            onChange={(e) => setNewKeyword(e.target.value)}
+            placeholder="Enter a buyer question or keyword to track…"
+            className="min-w-0 flex-1 rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+            autoFocus
+            required
+          />
+          <button
+            type="submit"
+            disabled={adding || !newKeyword.trim()}
+            className="shrink-0 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-60"
+          >
+            {adding ? "Saving…" : "Add"}
+          </button>
+        </form>
+      )}
+
+      {/* Empty state for active tab */}
+      {tab === "active" && activeRows.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
+          <p className="font-display text-lg font-bold text-ink">No active keywords yet</p>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
+            Add a buyer question above, or run a citation audit to populate keywords from your money prompts.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowAddForm(true)}
+              className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep"
+            >
+              + Add keyword
+            </button>
+            <Link
+              href="/dashboard/settings"
+              className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+            >
+              Configure in Settings
+            </Link>
+          </div>
+        </div>
+      )}
 
       <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -149,10 +245,10 @@ export function KeywordsSection({
               {rows.map((row) => (
                 <KeywordTableRow key={row.id} row={row} />
               ))}
-              {rows.length === 0 && (
+              {rows.length === 0 && tab === "pending" && (
                 <tr>
                   <td colSpan={6} className="px-4 py-10 text-center text-sm text-[#64748b]">
-                    No {tab} keywords yet. Run an audit or add money prompts in Settings.
+                    No pending keywords. All tracked keywords are active.
                   </td>
                 </tr>
               )}

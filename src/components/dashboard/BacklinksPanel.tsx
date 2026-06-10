@@ -11,6 +11,7 @@ import type {
   PlacementStatus,
 } from "@/lib/backlinks/types";
 import { productFeatures } from "@/lib/features";
+import { useToast } from "@/components/notifications/ToastProvider";
 
 const feature = productFeatures.find((f) => f.id === "backlinks")!;
 
@@ -34,11 +35,10 @@ const statusLabel: Record<PlacementStatus, string> = {
 
 export function BacklinksPanel() {
   const { workspace, ready } = useWorkspaceContext();
+  const toast = useToast();
   const [data, setData] = useState<BacklinkDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const [targetUrl, setTargetUrl] = useState("");
   const [anchorText, setAnchorText] = useState("");
@@ -51,7 +51,6 @@ export function BacklinksPanel() {
   const load = useCallback(
     async (opts?: { refresh?: boolean }) => {
       if (!workspaceId) return;
-      setError(null);
       if (opts?.refresh) setRefreshing(true);
       else setLoading(true);
 
@@ -61,18 +60,18 @@ export function BacklinksPanel() {
         const res = await fetch(`/api/backlinks?${q}`, { credentials: "include" });
         const json = (await res.json()) as BacklinkDashboard & { error?: string };
         if (!res.ok) {
-          setError(json.error ?? "Could not load backlinks");
+          toast.error(json.error ?? "Could not load backlinks");
           return;
         }
         setData(json);
       } catch {
-        setError("Network error — try again");
+        toast.error("Network error — try again");
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [workspaceId],
+    [workspaceId, toast],
   );
 
   useEffect(() => {
@@ -92,7 +91,6 @@ export function BacklinksPanel() {
   async function handleRefresh() {
     if (!workspaceId) return;
     setRefreshing(true);
-    setError(null);
     try {
       const res = await fetch("/api/backlinks/refresh", {
         method: "POST",
@@ -102,13 +100,13 @@ export function BacklinksPanel() {
       });
       const json = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setError(json.error ?? "Refresh failed");
+        toast.error(json.error ?? "Refresh failed");
         return;
       }
-      setMessage("Backlink profile updated.");
+      toast.success("Backlink profile updated.");
       await load({ refresh: true });
     } catch {
-      setError("Network error — try again");
+      toast.error("Network error — try again");
     } finally {
       setRefreshing(false);
     }
@@ -116,7 +114,6 @@ export function BacklinksPanel() {
 
   async function toggleNetwork(optedIn: boolean) {
     if (!workspaceId) return;
-    setError(null);
     const res = await fetch("/api/backlinks/network", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -125,10 +122,12 @@ export function BacklinksPanel() {
     });
     const json = (await res.json()) as { error?: string };
     if (!res.ok) {
-      setError(json.error ?? "Could not update network settings");
+      toast.error(json.error ?? "Could not update network settings");
       return;
     }
-    setMessage(optedIn ? "You joined the CitePilot link network." : "You left the network.");
+    toast.success(
+      optedIn ? "You joined the CitePilot link network." : "You left the network.",
+    );
     await load({ refresh: true });
   }
 
@@ -136,8 +135,6 @@ export function BacklinksPanel() {
     e.preventDefault();
     if (!workspaceId) return;
     setSubmitting(true);
-    setError(null);
-    setMessage(null);
     try {
       const res = await fetch("/api/backlinks/request", {
         method: "POST",
@@ -153,19 +150,25 @@ export function BacklinksPanel() {
       });
       const json = (await res.json()) as { error?: string; placement?: BacklinkPlacement };
       if (!res.ok) {
-        setError(json.error ?? "Request failed");
+        toast.error(json.error ?? "Request failed");
         return;
       }
-      setMessage(
+      toast.success(
         json.placement?.status === "queued"
-          ? "Placement queued — we will match a network partner when one is available."
-          : `Request sent to ${json.placement?.partnerDomain ?? "network partner"}.`,
+          ? "Placement queued"
+          : "Request sent",
+        {
+          description:
+            json.placement?.status === "queued"
+              ? "We will match a network partner when one is available."
+              : `Sent to ${json.placement?.partnerDomain ?? "network partner"}.`,
+        },
       );
       setAnchorText("");
       setContextNote("");
       await load({ refresh: true });
     } catch {
-      setError("Network error — try again");
+      toast.error("Network error — try again");
     } finally {
       setSubmitting(false);
     }
@@ -176,7 +179,6 @@ export function BacklinksPanel() {
     action: "accept" | "decline" | "mark_live" | "cancel",
   ) {
     if (!workspaceId) return;
-    setError(null);
     const res = await fetch(`/api/backlinks/placements/${placementId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -185,10 +187,10 @@ export function BacklinksPanel() {
     });
     const json = (await res.json()) as { error?: string };
     if (!res.ok) {
-      setError(json.error ?? "Action failed");
+      toast.error(json.error ?? "Action failed");
       return;
     }
-    setMessage("Placement updated.");
+    toast.success("Placement updated.");
     await load({ refresh: true });
   }
 
@@ -215,17 +217,6 @@ export function BacklinksPanel() {
             pages. Competitors from Settings still appear as peer targets.
           </p>
         </div>
-      )}
-
-      {message && (
-        <p className="mb-4 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
-          {message}
-        </p>
-      )}
-      {error && (
-        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">

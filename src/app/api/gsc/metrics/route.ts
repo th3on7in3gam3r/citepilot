@@ -47,6 +47,7 @@ export async function GET(request: Request) {
           position: 0,
           clicksDelta: null,
           impressionsDelta: null,
+          daily: [],
         },
         error:
           process.env.NODE_ENV === "development" ? message : undefined,

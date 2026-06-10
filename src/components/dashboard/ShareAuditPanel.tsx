@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useToast } from "@/components/notifications/ToastProvider";
 
 export function ShareAuditPanel() {
   const { workspace } = useWorkspaceContext();
   const workspaceId = workspace?.workspaceId ?? workspace?.id;
   const [canShare, setCanShare] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -28,7 +29,6 @@ export function ShareAuditPanel() {
   async function createShare() {
     if (!workspaceId) return;
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch("/api/audit/share", {
         method: "POST",
@@ -38,12 +38,13 @@ export function ShareAuditPanel() {
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok) {
-        setError(data.error ?? "Could not create share link");
+        toast.error(data.error ?? "Could not create share link");
         return;
       }
       setShareUrl(data.url ?? null);
+      toast.success("Share link created.");
     } catch {
-      setError("Network error");
+      toast.error("Network error");
     } finally {
       setLoading(false);
     }
@@ -53,6 +54,7 @@ export function ShareAuditPanel() {
     if (!shareUrl) return;
     await navigator.clipboard.writeText(shareUrl);
     setCopied(true);
+    toast.success("Link copied to clipboard.");
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -107,7 +109,6 @@ export function ShareAuditPanel() {
           )}
         </div>
       )}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </Panel>
   );
 }
