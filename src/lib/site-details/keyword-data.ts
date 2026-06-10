@@ -63,7 +63,8 @@ export function buildKeywordRows(workspace: WorkspaceSnapshot): KeywordRow[] {
         trend7d,
         trend30d,
         trendLife,
-        active: meta.cited || rank <= 100,
+        // All tracked prompts are active — "active" means being monitored, not cited
+        active: true,
       };
     });
 }

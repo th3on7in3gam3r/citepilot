@@ -5,6 +5,7 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type { WorkspaceListItem, WorkspaceLimitsInfo } from "@/hooks/useWorkspace";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { workspaceLimitMessage } from "@/lib/billing/limits";
+import { useToast } from "@/components/notifications/ToastProvider";
 
 function planBadge(plan: WorkspaceLimitsInfo["plan"]) {
   if (plan === "fleet") return "Fleet";
@@ -12,7 +13,18 @@ function planBadge(plan: WorkspaceLimitsInfo["plan"]) {
   return "Free";
 }
 
-export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
+export function WorkspaceSwitcher({
+  compact = false,
+  variant = "default",
+  showAddForm = false,
+  onAddFormConsumed,
+}: {
+  compact?: boolean;
+  variant?: "default" | "bar";
+  /** When true, opens the dropdown with the new-site form (controlled from parent). */
+  showAddForm?: boolean;
+  onAddFormConsumed?: () => void;
+}) {
   const {
     workspace,
     workspaces,
@@ -28,11 +40,18 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   const [domain, setDomain] = useState("");
   const [buyerQuestion, setBuyerQuestion] = useState("");
   const [clientName, setClientName] = useState("");
+  const toast = useToast();
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const activeId = workspace?.workspaceId ?? workspace?.id;
+
+  useEffect(() => {
+    if (!showAddForm) return;
+    setOpen(true);
+    setShowAdd(true);
+    onAddFormConsumed?.();
+  }, [showAddForm, onAddFormConsumed]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -56,11 +75,10 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!domain.trim() || !buyerQuestion.trim()) {
-      setError("Domain and buyer question are required.");
+      toast.error("Domain and buyer question are required.");
       return;
     }
     setCreating(true);
-    setError(null);
     const result = await createClientWorkspace({
       domain: domain.trim(),
       buyerQuestion: buyerQuestion.trim(),
@@ -69,9 +87,10 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
     });
     setCreating(false);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Workspace created.");
     setShowAdd(false);
     setOpen(false);
     setDomain("");
@@ -89,31 +108,53 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   }
 
   const limitHint = limits ? workspaceLimitMessage(limits) : null;
+  const isBar = variant === "bar";
+  const shellClass = isBar
+    ? "border-[#e2e8f0] bg-white hover:border-[#0ea5e9]/40"
+    : "border-border bg-surface hover:border-accent/40 hover:bg-white";
 
   return (
-    <div ref={rootRef} className={`relative ${compact ? "min-w-0 max-w-[12rem]" : "w-full"}`}>
+    <div
+      ref={rootRef}
+      className={`relative ${compact ? "min-w-0 max-w-[12rem]" : isBar ? "min-w-0 flex-1" : "w-full"}`}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface text-left transition hover:border-accent/40 hover:bg-white ${
-          compact ? "px-3 py-2" : "px-3 py-2.5"
+        className={`flex w-full items-center gap-2 rounded-xl border text-left transition ${shellClass} ${
+          isBar ? "px-2.5 py-2" : compact ? "px-3 py-2" : "px-3 py-2.5"
         }`}
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-label={`Active site: ${workspace?.domain ?? "none selected"}`}
       >
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink">
+        {isBar && (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#e0f2fe] text-[#0284c7]">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+            </svg>
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p
+            className={`truncate font-semibold ${isBar ? "text-sm text-[#0f172a]" : "text-sm text-ink"}`}
+          >
             {workspace?.domain ?? "Select workspace"}
           </p>
-          {!compact && limits && (
+          {!isBar && !compact && limits && (
             <p className="truncate text-[11px] text-muted">
               {limits.max == null
-                ? `${limits.count} client${limits.count === 1 ? "" : "s"} · ${planBadge(limits.plan)}`
-                : `${limits.count}/${limits.max} · ${planBadge(limits.plan)}`}
+                ? `${limits.count} site${limits.count === 1 ? "" : "s"} · ${planBadge(limits.plan)}`
+                : `${limits.count}/${limits.max} sites · ${planBadge(limits.plan)}`}
             </p>
           )}
         </div>
-        <span className="shrink-0 text-xs text-muted" aria-hidden>
+        {isBar && limits && (
+          <span className="hidden shrink-0 rounded-md bg-[#f1f5f9] px-1.5 py-0.5 text-[10px] font-semibold text-[#64748b] lg:inline">
+            {planBadge(limits.plan)}
+          </span>
+        )}
+        <span className={`shrink-0 text-xs ${isBar ? "text-[#94a3b8]" : "text-muted"}`} aria-hidden>
           {open ? "▴" : "▾"}
         </span>
       </button>
@@ -161,7 +202,7 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
                   onClick={() => setShowAdd(true)}
                   className="flex w-full items-center justify-center rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-white hover:bg-ink/90"
                 >
-                  + Add client workspace
+                  + Add another site
                 </button>
               ) : (
                 <div onClick={() => setOpen(false)} role="presentation">
@@ -175,7 +216,7 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
               )
             ) : (
               <form onSubmit={handleCreate} className="space-y-2 p-1">
-                <p className="text-xs font-semibold text-ink">New client workspace</p>
+                <p className="text-xs font-semibold text-ink">Add a new site</p>
                 <input
                   type="text"
                   value={clientName}
@@ -199,7 +240,6 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
                   required
                   className="w-full rounded-lg border border-border px-3 py-2 text-xs"
                 />
-                {error && <p className="text-xs text-red-600">{error}</p>}
                 <div className="flex gap-2">
                   <button
                     type="submit"
@@ -210,10 +250,7 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowAdd(false);
-                      setError(null);
-                    }}
+                    onClick={() => setShowAdd(false)}
                     className="rounded-lg border border-border px-3 py-2 text-xs font-semibold"
                   >
                     Cancel

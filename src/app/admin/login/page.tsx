@@ -57,6 +57,7 @@ export default function AdminLoginPage() {
               required
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
+              suppressHydrationWarning
               className="mt-2 w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </label>
