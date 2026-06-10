@@ -21,7 +21,7 @@ export const SITE_DETAILS_SECTIONS: SiteDetailsSection[] = [
     id: "domain-info",
     label: "Domain Info",
     icon: "domain",
-    description: "Short page description text",
+    description: "Configure your site domain, description, and business profile",
   },
   {
     id: "pages",
@@ -33,7 +33,7 @@ export const SITE_DETAILS_SECTIONS: SiteDetailsSection[] = [
     id: "google-data",
     label: "Google Data",
     icon: "google",
-    description: "Short page description text",
+    description: "Connect Google Analytics and Search Console to enrich citation audits",
   },
   {
     id: "targeting",
@@ -51,7 +51,7 @@ export const SITE_DETAILS_SECTIONS: SiteDetailsSection[] = [
     id: "keywords",
     label: "Keywords",
     icon: "keywords",
-    description: "Short page description text",
+    description: "Track organic keyword rankings and visibility trends",
   },
   {
     id: "working-files",

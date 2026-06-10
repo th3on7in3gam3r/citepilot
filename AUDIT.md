@@ -1,6 +1,6 @@
 # CitePilot codebase audit
 
-Last reviewed: May 2026
+Last reviewed: June 2026
 
 ## Summary
 
@@ -45,11 +45,11 @@ The project is in good shape for a marketing + demo-audit MVP. This pass **remov
 
 ## Still to build (product)
 
-1. **Real audit API** — replace `buildDemoResult()` in `AuditForm.tsx`
-2. **Auth + waitlist** — Pilot tier CTA currently goes to `/audit`
+1. ~~**Real audit API**~~ — ✅ `runAudit()` in `lib/client/api.ts` calls real `/api/audit` route
+2. ~~**Auth + waitlist**~~ — ✅ Neon Auth at `/auth/sign-in`; Stripe billing tiers live
 3. **Product video** — re-add a section when asset exists
-4. **Legal pages** — Terms, Privacy (footer links when needed)
-5. **Analytics** — GTM/Plausible once you ship
+4. ~~**Legal pages**~~ — ✅ Terms and Privacy pages exist at `/terms` and `/privacy`
+5. ~~**Analytics**~~ — ✅ PostHog + Plausible wired (see `docs/ANALYTICS.md`)
 
 ---
 
@@ -59,6 +59,15 @@ The project is in good shape for a marketing + demo-audit MVP. This pass **remov
 - Move icon SVGs in `Pillars` to `components/icons/`
 - Add `prefers-reduced-motion` guards on scroll marquee + float animations
 - Rename repo folder `GrowthEngineAI` → `citepilot` for consistency
+- Swap generic beta testimonials for real user quotes when available
+
+---
+
+## Code quality fixes (June 2026)
+
+- ~~`src/lib/site-details-sections.ts`~~ — ✅ Replaced `"Short page description text"` placeholders with real copy for `domain-info`, `google-data`, and `keywords` sections
+- ~~`src/components/notifications/ToastCard.tsx`~~ — ✅ Simplified timer into a single `useEffect` using delta-time accumulation; removed redundant `useRef` state and second `useEffect`
+- ~~`src/lib/email/ops-report.test.ts`~~ — ✅ Fixed flaky test: workspace timestamp now 1 s in the past to avoid the `created_at == until` edge-case with the exclusive upper bound
 
 ---
 

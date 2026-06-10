@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   TOAST_STYLES,
   type ToastRecord,
@@ -19,39 +19,29 @@ export function ToastCard({
   const [expanded, setExpanded] = useState(hasBody);
   const [paused, setPaused] = useState(false);
   const [remainingMs, setRemainingMs] = useState(toast.duration);
-  const [startTime] = useState(() => Date.now());
-  const startRef = useRef(startTime);
-  const pausedAtRef = useRef<number | null>(null);
 
   const dismiss = useCallback(() => onDismiss(toast.id), [onDismiss, toast.id]);
 
   useEffect(() => {
     if (toast.duration <= 0) return;
+    if (paused) return;
 
+    let lastTick = Date.now();
     const tick = () => {
-      if (paused) return;
-      const elapsed = Date.now() - startRef.current;
-      const left = Math.max(0, toast.duration - elapsed);
-      setRemainingMs(left);
-      if (left <= 0) dismiss();
+      const now = Date.now();
+      const delta = now - lastTick;
+      lastTick = now;
+
+      setRemainingMs((prev) => {
+        const next = Math.max(0, prev - delta);
+        if (next <= 0) dismiss();
+        return next;
+      });
     };
 
-    tick();
     const id = window.setInterval(tick, 50);
     return () => window.clearInterval(id);
   }, [toast.duration, paused, dismiss]);
-
-  useEffect(() => {
-    if (paused) {
-      pausedAtRef.current = Date.now();
-      return;
-    }
-    if (pausedAtRef.current) {
-      const pauseDuration = Date.now() - pausedAtRef.current;
-      startRef.current += pauseDuration;
-      pausedAtRef.current = null;
-    }
-  }, [paused]);
 
   const secondsLeft = Math.max(1, Math.ceil(remainingMs / 1000));
   const progressPct =
