@@ -164,60 +164,93 @@ export function MyDashboardOverview() {
         dataStatus={auditDataStatus}
         className="overflow-hidden"
       >
-        <div className="grid gap-6 xl:grid-cols-[220px_1fr_1.2fr]">
-          <div className="flex flex-col items-center">
+        {/* Top row: gauge + 4 stat tiles */}
+        <div className="grid gap-5 sm:grid-cols-[auto_1fr]">
+          {/* Gauge */}
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-surface p-5 sm:min-w-[180px]">
             <DashboardGaugeChart
               value={activeWorkspace.citationScore}
               label="Citation health"
               size="lg"
             />
-            <div className="mt-3 flex gap-4 text-[11px] text-muted">
+            <div className="mt-3 flex flex-col gap-1.5 text-[11px] text-muted">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-accent" /> Your site
+                <span className="h-2 w-2 rounded-full bg-accent" aria-hidden /> Your site
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#a78bfa]" /> Top 10% sites
+                <span className="h-2 w-2 rounded-full bg-[#a78bfa]" aria-hidden /> Top 10% sites
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {keywordBuckets.map((b) => (
-              <div key={b.label} className="rounded-xl bg-surface p-4">
-                <p className="text-xs text-muted">{b.label}</p>
-                <p className="mt-1 text-xl font-bold text-ink">
-                  {formatCompact(b.value)}{" "}
-                  <span className="text-sm font-medium text-accent">{b.delta}</span>
-                </p>
-                <DashboardSparkline values={b.spark} />
-              </div>
-            ))}
+
+          {/* 4 stat tiles */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {keywordBuckets.map((b) => {
+              const isNegative = b.label === "Gaps";
+              return (
+                <div
+                  key={b.label}
+                  className={`flex flex-col rounded-2xl border p-4 ${
+                    isNegative
+                      ? "border-amber-200/60 bg-amber-50/50"
+                      : "border-border bg-white"
+                  }`}
+                >
+                  <p className="text-[11px] font-medium text-muted">{b.label}</p>
+                  <p className={`mt-1.5 text-2xl font-bold ${isNegative ? "text-amber-700" : "text-ink"}`}>
+                    {formatCompact(b.value)}
+                  </p>
+                  <p className={`text-xs font-semibold ${isNegative ? "text-amber-500" : "text-accent"}`}>
+                    {b.delta}
+                  </p>
+                  <div className="mt-2 flex-1">
+                    <DashboardSparkline values={b.spark} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[320px] text-left text-xs">
-              <thead>
-                <tr className="border-b border-border text-muted">
-                  <th className="pb-2 font-medium">Money prompt</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium">Leader</th>
+        </div>
+
+        {/* Bottom row: prompt table */}
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-border">
+          <table className="w-full min-w-[420px] text-left text-xs">
+            <thead>
+              <tr className="border-b border-border bg-surface/60">
+                <th className="px-4 py-3 font-semibold text-muted">Money prompt</th>
+                <th className="px-4 py-3 font-semibold text-muted">Status</th>
+                <th className="px-4 py-3 font-semibold text-muted">Leader</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {(topPrompts.length
+                ? topPrompts
+                : [{ prompt: activeWorkspace.buyerQuestion, cited: false, leader: "—" }]
+              ).map((row) => (
+                <tr key={row.prompt} className="bg-white transition-colors hover:bg-surface/60">
+                  <td className="px-4 py-3 pr-2 font-medium text-ink">
+                    {row.prompt.length > 52 ? `${row.prompt.slice(0, 52)}…` : row.prompt}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        row.cited
+                          ? "bg-accent/10 text-accent-deep"
+                          : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${row.cited ? "bg-accent" : "bg-amber-400"}`}
+                        aria-hidden
+                      />
+                      {row.cited ? "Cited" : "Gap"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-muted">{row.leader ?? "—"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {(topPrompts.length ? topPrompts : [{ prompt: activeWorkspace.buyerQuestion, cited: false, leader: "—" }]).map(
-                  (row) => (
-                    <tr key={row.prompt} className="border-b border-surface">
-                      <td className="py-2.5 pr-2">
-                        <span className="rounded-md bg-accent/10 px-2 py-1 text-ink">
-                          {row.prompt.length > 42 ? `${row.prompt.slice(0, 42)}…` : row.prompt}
-                        </span>
-                      </td>
-                      <td className="py-2.5 text-muted">{row.cited ? "Cited" : "Gap"}</td>
-                      <td className="py-2.5 text-muted">{row.leader ?? "—"}</td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </DashboardCard>
 

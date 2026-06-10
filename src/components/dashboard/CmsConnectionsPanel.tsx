@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { useToast } from "@/components/notifications/ToastProvider";
 import { cmsPlatforms } from "@/lib/features";
 import type { CmsProvider } from "@/lib/cms/types";
 
@@ -134,18 +135,18 @@ function Field({
 export function CmsConnectionsPanel({
   workspaceId,
   onChanged,
+  embedded = false,
 }: {
   workspaceId: string;
   onChanged?: () => void;
+  embedded?: boolean;
 }) {
+  const toast = useToast();
   const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
   const [providers, setProviders] = useState<CmsProviderStatus[]>([]);
   const [forms, setForms] = useState<ProviderForms>(emptyForms);
   const [saving, setSaving] = useState<CmsProvider | null>(null);
   const [removing, setRemoving] = useState<CmsProvider | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   const load = useCallback(async () => {
     const [webflowRes, cmsRes] = await Promise.all([
       fetch("/api/content/webflow/status", { credentials: "include" }),
@@ -198,8 +199,6 @@ export function CmsConnectionsPanel({
 
   async function saveProvider(provider: CmsProvider) {
     setSaving(provider);
-    setMessage(null);
-    setError(null);
 
     try {
       const res = await fetch(`/api/content/cms/${provider}`, {
@@ -213,15 +212,15 @@ export function CmsConnectionsPanel({
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? `Could not connect ${providerLabels[provider]}`);
+        toast.error(data.error ?? `Could not connect ${providerLabels[provider]}`);
         return;
       }
 
-      setMessage(`${providerLabels[provider]} connected.`);
+      toast.success(`${providerLabels[provider]} connected.`);
       await load();
       onChanged?.();
     } catch {
-      setError(`Network error while connecting ${providerLabels[provider]}.`);
+      toast.error(`Network error while connecting ${providerLabels[provider]}.`);
     } finally {
       setSaving(null);
     }
@@ -229,8 +228,6 @@ export function CmsConnectionsPanel({
 
   async function disconnectProvider(provider: CmsProvider) {
     setRemoving(provider);
-    setMessage(null);
-    setError(null);
 
     try {
       const res = await fetch(
@@ -242,21 +239,21 @@ export function CmsConnectionsPanel({
       );
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? `Could not disconnect ${providerLabels[provider]}`);
+        toast.error(data.error ?? `Could not disconnect ${providerLabels[provider]}`);
         return;
       }
-      setMessage(`${providerLabels[provider]} disconnected.`);
+      toast.success(`${providerLabels[provider]} disconnected.`);
       await load();
       onChanged?.();
     } catch {
-      setError(`Network error while disconnecting ${providerLabels[provider]}.`);
+      toast.error(`Network error while disconnecting ${providerLabels[provider]}.`);
     } finally {
       setRemoving(null);
     }
   }
 
-  return (
-    <Panel title="CMS connections" className="mt-6">
+  const body = (
+    <>
       <p className="text-sm text-muted">
         Push generated articles from CitePilot to your marketing site CMS. Webflow
         still uses your shared env config; the providers below save a workspace-level
@@ -307,17 +304,6 @@ export function CmsConnectionsPanel({
           </ul>
         </div>
       </div>
-
-      {message && (
-        <p className="mt-4 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
-          {message}
-        </p>
-      )}
-      {error && (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      )}
 
       {!hasConnectedProvider && (
         <div className="mt-4 rounded-2xl border border-dashed border-border bg-white px-4 py-4 text-sm text-muted">
@@ -537,6 +523,14 @@ export function CmsConnectionsPanel({
           </div>
         </ProviderCard>
       </div>
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <Panel title="CMS connections" className="mt-6">
+      {body}
     </Panel>
   );
 }

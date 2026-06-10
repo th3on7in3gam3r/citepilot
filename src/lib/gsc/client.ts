@@ -2,6 +2,12 @@ import { googleClientId, googleClientSecret, GSC_SCOPE } from "@/lib/gsc/config"
 import { getGscConnection, upsertGscConnection } from "@/lib/gsc/store";
 import { appBaseUrl } from "@/lib/stripe/config";
 
+export type GscDailyPoint = {
+  date: string;
+  clicks: number;
+  impressions: number;
+};
+
 export type GscMetrics = {
   connected: boolean;
   siteUrl: string | null;
@@ -11,6 +17,7 @@ export type GscMetrics = {
   position: number;
   clicksDelta: string | null;
   impressionsDelta: string | null;
+  daily: GscDailyPoint[];
 };
 
 function redirectUri(): string {
@@ -178,6 +185,7 @@ const emptyGscMetrics = (siteUrl: string | null = null): GscMetrics => ({
   position: 0,
   clicksDelta: null,
   impressionsDelta: null,
+  daily: [],
 });
 
 export async function fetchGscMetrics(
@@ -238,9 +246,45 @@ export async function fetchGscMetrics(
       }
     }
 
-    const [current, previous] = await Promise.all([
+    async function queryDaily(startDate: string, endDate: string) {
+      try {
+        const res = await fetch(
+          `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              startDate,
+              endDate,
+              dimensions: ["date"],
+            }),
+          },
+        );
+        if (!res.ok) return [];
+        const data = (await res.json()) as {
+          rows?: { keys?: string[]; clicks?: number; impressions?: number }[];
+        };
+        return (data.rows ?? [])
+          .map((row) => ({
+            date: row.keys?.[0] ?? "",
+            clicks: Math.round(row.clicks ?? 0),
+            impressions: Math.round(row.impressions ?? 0),
+          }))
+          .filter((row) => row.date)
+          .sort((a, b) => a.date.localeCompare(b.date));
+      } catch (err) {
+        console.error("[gsc] daily query error", err);
+        return [];
+      }
+    }
+
+    const [current, previous, daily] = await Promise.all([
       queryRange(fmt(start), fmt(end)),
       queryRange(fmt(prevStart), fmt(prevEnd)),
+      queryDaily(fmt(start), fmt(end)),
     ]);
 
     const clicks = Math.round(current?.clicks ?? 0);
@@ -263,6 +307,7 @@ export async function fetchGscMetrics(
         previous != null
           ? `${impressions - prevImpressions >= 0 ? "+" : ""}${Math.round(impressions - prevImpressions).toLocaleString()}`
           : null,
+      daily,
     };
   } catch (err) {
     console.error("[gsc] fetchGscMetrics failed", workspaceId, err);

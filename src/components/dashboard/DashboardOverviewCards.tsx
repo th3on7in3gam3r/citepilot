@@ -1,24 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { DashboardSparkline } from "@/components/charts/DashboardCharts";
+import { CHART_COLORS } from "@/lib/charts/theme";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 
 function MiniSparkline({ seed }: { seed: number }) {
-  const points = Array.from({ length: 8 }, (_, i) => {
-    const v = 20 + i * 8 + ((seed + i * 11) % 12);
-    return `${i * 14},${40 - v / 2}`;
-  }).join(" ");
-
+  const values = Array.from({ length: 8 }, (_, i) => 20 + i * 8 + ((seed + i * 11) % 12));
   return (
-    <svg viewBox="0 0 98 40" className="mt-3 h-10 w-full" aria-hidden>
-      <polyline
-        fill="none"
-        stroke="#f97316"
-        strokeWidth={2}
-        strokeLinecap="round"
-        points={points}
-      />
-    </svg>
+    <div className="mt-3 h-10 w-full">
+      <DashboardSparkline values={values} color={CHART_COLORS.primary} className="h-full w-full" />
+    </div>
   );
 }
 
@@ -78,17 +70,17 @@ export function DashboardOverviewCards({
             {workspace.citationScore}
             <span className="text-lg font-normal text-muted">/100</span>
           </p>
-          <p className="mt-1 text-xs font-semibold text-red-500">
+          <p className="mt-1 text-xs font-semibold text-amber-700">
             {String(geoIssues).padStart(2, "0")} issues found
           </p>
           <ul className="mt-3 space-y-2 text-xs">
-            <li className="flex items-center justify-between rounded-lg bg-red-50 px-3 py-2 text-red-700">
+            <li className="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
               Missing answer capsule
               <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold">
                 Check
               </span>
             </li>
-            <li className="flex items-center justify-between rounded-lg bg-red-50 px-3 py-2 text-red-700">
+            <li className="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
               Weak FAQ schema
               <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold">
                 Check

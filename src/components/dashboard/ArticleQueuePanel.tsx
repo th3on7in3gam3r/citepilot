@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics/track";
 import { effectInit } from "@/lib/react/effect-init";
+import { useToast } from "@/components/notifications/ToastProvider";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import type { CmsProvider } from "@/lib/cms/types";
@@ -88,13 +89,10 @@ export function ArticleQueuePanel({
   const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
   const [providers, setProviders] = useState<CmsProviderStatus[]>([]);
   const [filter, setFilter] = useState<QueueFilter>("all");
+  const toast = useToast();
   const [publishingKey, setPublishingKey] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoadError(null);
     const [postsRes, webflowRes, cmsRes] = await Promise.all([
       fetch(
         `/api/blog/posts?workspaceId=${encodeURIComponent(workspaceId)}&scope=workspace`,
@@ -113,7 +111,7 @@ export function ArticleQueuePanel({
       setPosts(data.posts);
     } else {
       const data = (await postsRes.json().catch(() => ({}))) as { error?: string };
-      setLoadError(data.error ?? `Could not load articles (${postsRes.status})`);
+      toast.error(data.error ?? `Could not load articles (${postsRes.status})`);
       setPosts([]);
     }
 
@@ -127,7 +125,7 @@ export function ArticleQueuePanel({
     } else {
       setProviders([]);
     }
-  }, [workspaceId]);
+  }, [workspaceId, toast]);
 
   useEffect(() => {
     effectInit(() => {
@@ -207,8 +205,6 @@ export function ArticleQueuePanel({
   ) {
     const label = provider === "webflow" ? "Webflow" : providerLabels[provider];
     setPublishingKey(`${provider}:${slug}`);
-    setMessage(null);
-    setError(null);
 
     try {
       const res = await fetch(
@@ -228,24 +224,23 @@ export function ArticleQueuePanel({
         title?: string;
       };
       if (!res.ok) {
-        setError(data.error ?? "Publish failed");
+        toast.error(data.error ?? "Publish failed");
         return;
       }
-      setMessage(
-        isUpdate
-          ? data.liveUrl
-            ? `Updated “${data.title}” on ${label} — ${data.liveUrl}`
-            : `Updated “${data.title}” on ${label}`
-          : data.liveUrl
-            ? `Published “${data.title}” to ${label} — ${data.liveUrl}`
-            : `Published “${data.title}” to ${label}`,
+      toast.success(
+        isUpdate ? `Updated on ${label}` : `Published to ${label}`,
+        {
+          description: data.liveUrl
+            ? `${data.title ?? slug} — ${data.liveUrl}`
+            : data.title ?? slug,
+        },
       );
       markGettingStartedStep("publishedCms");
       notifyChecklistUpdate();
       trackEvent("cms_published", { provider, slug });
       await load();
     } catch {
-      setError("Network error — try again");
+      toast.error("Network error — try again");
     } finally {
       setPublishingKey(null);
     }
@@ -351,23 +346,6 @@ export function ArticleQueuePanel({
             </button>
           ))}
         </div>
-      )}
-
-      {loadError && (
-        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {loadError}
-        </p>
-      )}
-
-      {message && (
-        <p className="mb-4 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
-          {message}
-        </p>
-      )}
-      {error && (
-        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
       )}
 
       {posts.length === 0 ? (

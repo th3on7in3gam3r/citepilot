@@ -29,36 +29,34 @@ export function AuditDiagnosticExplorer() {
           phase to see outputs.
         </p>
 
-        <div className="mt-6 flex gap-1 overflow-x-auto pb-1">
+        <div className="mt-6 flex gap-1.5 overflow-x-auto pb-1">
           {auditDiagnosticPhases.map((p, i) => (
             <button
               key={p.id}
               type="button"
               onClick={() => setActivePhase(p.id)}
-              className={`flex min-w-[4.5rem] flex-col items-center rounded-xl px-2 py-3 text-center transition ${
+              className={`flex min-w-[5rem] flex-col items-center rounded-xl border px-3 py-3 text-center transition ${
                 activePhase === p.id
-                  ? "bg-accent text-white"
-                  : "bg-surface text-muted hover:bg-accent/10 hover:text-accent"
+                  ? "border-accent/50 bg-accent text-white shadow-[0_4px_16px_rgba(14,165,233,0.3)]"
+                  : "border-border bg-surface text-muted hover:border-accent/30 hover:text-accent"
               }`}
             >
-              <span className="text-[10px] font-bold uppercase tracking-wide opacity-80">
+              <span className="text-[10px] font-bold uppercase tracking-wide opacity-75">
                 {p.seconds}
               </span>
-              <span className="mt-1 text-lg font-bold">{i + 1}</span>
+              <span className="mt-1 font-display text-lg font-bold">{i + 1}</span>
             </button>
           ))}
         </div>
 
         {phase && (
-          <div className="mt-6 rounded-xl border border-border bg-surface/50 p-5">
+          <div className="mt-6 rounded-xl border border-accent/20 bg-accent/5 p-5">
             <h3 className="font-display font-bold text-ink">{phase.title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted">{phase.body}</p>
             <ul className="mt-4 space-y-2">
               {phase.outputs.map((out) => (
-                <li key={out} className="flex gap-2 text-sm text-muted">
-                  <span className="text-accent" aria-hidden>
-                    →
-                  </span>
+                <li key={out} className="flex items-start gap-2 text-sm text-muted">
+                  <span className="mt-0.5 shrink-0 text-accent" aria-hidden>→</span>
                   {out}
                 </li>
               ))}
