@@ -1,4 +1,5 @@
 import { faq } from "@/lib/content";
+import { answerCapsuleBlocks } from "@/lib/marketing/answer-capsule";
 import { absoluteUrl } from "@/lib/schema/urls";
 import { site } from "@/lib/site";
 
@@ -37,14 +38,25 @@ export function SiteJsonLd() {
   const faqPage = {
     "@type": "FAQPage",
     "@id": `${homeUrl}#faq`,
-    mainEntity: faq.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.a,
-      },
-    })),
+    mainEntity: [
+      ...answerCapsuleBlocks.map((block) => ({
+        "@type": "Question",
+        "@id": `${homeUrl}#${block.id}`,
+        name: block.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: block.answer,
+        },
+      })),
+      ...faq.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a,
+        },
+      })),
+    ],
   };
 
   return (

@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { HeroProductBanner } from "@/components/home/HeroProductBanner";
+import { AnswerCapsule } from "@/components/home/AnswerCapsule";
 import Link from "next/link";
 
 export function Hero() {
@@ -29,6 +30,8 @@ export function Hero() {
             sends weekly action plans + proof reports so you can grow organic and
             AI visibility without constant manual work.
           </p>
+
+          <AnswerCapsule variant="hero" />
 
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row">
             <Link

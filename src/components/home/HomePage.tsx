@@ -1,7 +1,6 @@
 import { FeatureSuite } from "@/components/home/FeatureSuite";
 import { GeoPlaybookPromo } from "@/components/home/GeoPlaybookPromo";
 import { Hero } from "@/components/home/Hero";
-import { AnswerCapsule } from "@/components/home/AnswerCapsule";
 import { HomeActionBar } from "@/components/home/HomeActionBar";
 import { ScrollBrandMarquee } from "@/components/home/ScrollBrandMarquee";
 import { StickyProductShowcase } from "@/components/home/StickyProductShowcase";
@@ -16,7 +15,6 @@ export function HomePage() {
   return (
     <>
       <Hero />
-      <AnswerCapsule />
       <HomeActionBar />
       <FeatureSuite />
       <GeoPlaybookPromo />
