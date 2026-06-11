@@ -8,4 +8,17 @@ describe("audit prompt signals", () => {
     const low = promptOverlap("enterprise data warehouse", corpus);
     expect(high).toBeGreaterThan(low);
   });
+
+  it("scores high overlap for GEO prompt alternatives to top competitor", () => {
+    const description = "Getcitepilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.";
+    const title = "CitePilot | Generative Engine Optimization (GEO) Platform";
+    const h1 = "Grow SEO + LLM traffic on autopilot";
+    const brand = "getcitepilot";
+    const domain = "getcitepilot.com";
+    const corpus = [title, description, h1, brand, domain].filter(Boolean).join(" ");
+
+    const overlap = promptOverlap("alternatives to top compalternatives to top competitoretitor", corpus);
+    // Overlap should be 0.5 (2 of the 4 tokens "alternatives" and "top" match)
+    expect(overlap).toBeGreaterThanOrEqual(0.35);
+  });
 });
