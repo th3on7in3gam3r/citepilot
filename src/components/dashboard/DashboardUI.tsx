@@ -62,14 +62,17 @@ export function Panel({
   title,
   children,
   className = "",
+  id,
 }: {
   title?: string;
   children: ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
     <section
-      className={`rounded-2xl border border-[#e8edf3] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.05)] ${className}`}
+      id={id}
+      className={`rounded-2xl border border-[#e8edf3] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.05)] ${id ? "scroll-mt-24" : ""} ${className}`}
     >
       {title && (
         <h2 className="mb-4 font-display text-lg font-bold text-[#0f172a]">{title}</h2>

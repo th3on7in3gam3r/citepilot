@@ -154,7 +154,7 @@ export function GeoAuditPageClient() {
         )}
       </Panel>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div id="platform-coverage" className="scroll-mt-24 grid gap-4 sm:grid-cols-3">
         <StatCard label="GEO score" value={String(geoScore)} sub="/100" />
         <StatCard
           label="Platforms"
@@ -186,7 +186,7 @@ export function GeoAuditPageClient() {
           </ul>
         </Panel>
       )}
-      <Panel title="Priority fixes" className="mt-6">
+      <Panel title="Priority fixes" className="mt-6" id="priority-fixes">
         <p className="mb-4 text-sm text-muted">
           From your latest audit. Use CitePilot Insights for a plain-language
           explanation of any gap (Pilot+, or one free preview on Free) or click Quick Fix to copy pre-generated code snippets.

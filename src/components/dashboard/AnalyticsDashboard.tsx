@@ -240,7 +240,7 @@ function LLMPanel({
 }) {
   return (
     <>
-      <Panel title="Brand presence" className="mt-6">
+      <Panel title="Brand presence" className="mt-6" id="money-prompts">
         <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.1),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>

@@ -137,6 +137,7 @@ export function MyDashboardOverview() {
     return [
       {
         label: "Cited",
+        href: "/dashboard/analytics#money-prompts",
         value: citedPromptsCount,
         delta: `${Math.round((citedPromptsCount / Math.max(1, trackedCount)) * 100)}% rate`,
         spark: [2, 3, 4, 5, citedPromptsCount],
@@ -152,6 +153,7 @@ export function MyDashboardOverview() {
       },
       {
         label: "Top platforms",
+        href: "/dashboard/geo-audit#platform-coverage",
         value: citedCount,
         delta: `${citedCount}/${PLATFORMS.length} LLMs`,
         spark: [1, 2, citedCount, citedCount, citedCount],
@@ -179,6 +181,7 @@ export function MyDashboardOverview() {
       },
       {
         label: "Tracked",
+        href: "/dashboard/content?section=keywords",
         value: trackedCount,
         delta: "Keywords",
         spark: [1, 2, 3, trackedCount, trackedCount],
@@ -192,6 +195,7 @@ export function MyDashboardOverview() {
       },
       {
         label: "Gaps",
+        href: "/dashboard/geo-audit#priority-fixes",
         value: gapsCount,
         delta: "Needs fix",
         spark: [5, 4, 3, 2, gapsCount],
@@ -319,9 +323,11 @@ export function MyDashboardOverview() {
                 : "bg-rose-50 border-rose-100 text-rose-700";
 
               return (
-                <div
+                <Link
                   key={b.label}
-                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,23,42,0.06)] ${borderClass} ${bgClass}`}
+                  href={b.href}
+                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,23,42,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${borderClass} ${bgClass}`}
+                  aria-label={`${b.label}: ${formatCompact(b.value)} — view details`}
                 >
                   {/* Top accent sliver */}
                   <div
@@ -382,7 +388,7 @@ export function MyDashboardOverview() {
                       className="h-7 w-full"
                     />
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
