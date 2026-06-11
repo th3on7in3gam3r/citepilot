@@ -480,6 +480,29 @@ export async function getCitationSnapshots(
   }));
 }
 
+/** Delete all rows that reference a workspace, in FK-safe order. */
+export async function deleteWorkspaceDependents(id: string): Promise<void> {
+  await dbRun(`DELETE FROM cron_dispatch_log WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM cms_publications WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM cms_connections WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM gsc_connections WHERE workspace_id = ?`, [id]);
+  await dbRun(
+    `DELETE FROM backlink_placements WHERE requester_workspace_id = ? OR partner_workspace_id = ?`,
+    [id, id],
+  );
+  await dbRun(`DELETE FROM backlink_sources WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM backlink_network WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM backlink_profiles WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM audit_shares WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM workspace_content_strategies WHERE workspace_id = ?`, [
+    id,
+  ]);
+  await dbRun(`DELETE FROM audit_runs WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM blog_posts WHERE workspace_id = ?`, [id]);
+}
+
 export async function deleteWorkspace(
   id: string,
   userId: string | null = null,
@@ -501,16 +524,7 @@ export async function adminDeleteWorkspace(id: string): Promise<boolean> {
   );
   if (!row) return false;
 
-  await dbRun(`DELETE FROM cron_dispatch_log WHERE workspace_id = ?`, [id]);
-  await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [
-    id,
-  ]);
-  await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
-  await dbRun(`DELETE FROM workspace_content_strategies WHERE workspace_id = ?`, [
-    id,
-  ]);
-  await dbRun(`DELETE FROM audit_runs WHERE workspace_id = ?`, [id]);
-  await dbRun(`DELETE FROM blog_posts WHERE workspace_id = ?`, [id]);
+  await deleteWorkspaceDependents(id);
   const result = await dbRun(`DELETE FROM workspaces WHERE id = ?`, [id]);
   return result.changes > 0;
 }
@@ -521,6 +535,8 @@ export async function deleteWaitlistEntry(id: string): Promise<boolean> {
 }
 
 export async function deleteAuditRun(id: string): Promise<boolean> {
+  await dbRun(`DELETE FROM platform_citation_checks WHERE audit_id = ?`, [id]);
+  await dbRun(`DELETE FROM audit_shares WHERE audit_id = ?`, [id]);
   const result = await dbRun(`DELETE FROM audit_runs WHERE id = ?`, [id]);
   return result.changes > 0;
 }

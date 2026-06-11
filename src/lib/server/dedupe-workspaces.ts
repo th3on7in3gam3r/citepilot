@@ -1,4 +1,5 @@
 import { dbAll, dbRun } from "@/lib/db";
+import { deleteWorkspaceDependents } from "@/lib/server/workspace";
 
 export type DedupeReport = {
   removed: number;
@@ -50,31 +51,7 @@ export async function dedupeAllWorkspaces(): Promise<DedupeReport> {
     const removedIds: string[] = [];
 
     for (const dup of dupes) {
-      await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [
-        dup.id,
-      ]);
-      await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [
-        dup.id,
-      ]);
-      await dbRun(`DELETE FROM audit_runs WHERE workspace_id = ?`, [dup.id]);
-      await dbRun(`DELETE FROM blog_posts WHERE workspace_id = ?`, [dup.id]);
-      await dbRun(`DELETE FROM backlink_profiles WHERE workspace_id = ?`, [
-        dup.id,
-      ]);
-      await dbRun(`DELETE FROM backlink_sources WHERE workspace_id = ?`, [
-        dup.id,
-      ]);
-      await dbRun(`DELETE FROM backlink_network WHERE workspace_id = ?`, [
-        dup.id,
-      ]);
-      await dbRun(
-        `DELETE FROM backlink_placements WHERE requester_workspace_id = ? OR partner_workspace_id = ?`,
-        [dup.id, dup.id],
-      );
-      await dbRun(`DELETE FROM gsc_connections WHERE workspace_id = ?`, [
-        dup.id,
-      ]);
-      await dbRun(`DELETE FROM audit_shares WHERE workspace_id = ?`, [dup.id]);
+      await deleteWorkspaceDependents(dup.id);
       await dbRun(`DELETE FROM workspaces WHERE id = ?`, [dup.id]);
       removedIds.push(dup.id);
       report.removed += 1;
