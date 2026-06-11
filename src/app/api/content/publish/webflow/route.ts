@@ -8,7 +8,7 @@ import { isWebflowConfigured } from "@/lib/webflow/config";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   if (!isWebflowConfigured()) {
