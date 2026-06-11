@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { DashboardWidgetGrid } from "@/components/dashboard/copilot/DashboardWidgetGrid";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
@@ -11,7 +10,7 @@ import { DashboardOverviewLead } from "@/components/dashboard/overview/Dashboard
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { PLATFORMS } from "@/lib/dashboard";
-import { buildWorkspaceSnapshot } from "@/lib/dashboard";
+import { DashboardWidgetGrid } from "@/components/dashboard/copilot/DashboardWidgetGrid";
 import {
   platformRowsFromWorkspace,
   promptRowsForWorkspace,
@@ -27,6 +26,7 @@ import { RosenHorizontalBarChart } from "@/components/charts/RosenBarChart";
 import { GscConnectCard } from "@/components/dashboard/GscConnectCard";
 import { CHART_COLORS } from "@/lib/charts/theme";
 import { useGscMetrics } from "@/hooks/useGscMetrics";
+import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import {
   auditStatus,
   citationTrendStatus,
@@ -38,12 +38,52 @@ function formatCompact(n: number): string {
   return String(n);
 }
 
-const FALLBACK_WORKSPACE = buildWorkspaceSnapshot({});
+function DashboardNoWorkspace() {
+  return (
+    <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
+      <p className="font-display text-lg font-bold text-ink">No workspace yet</p>
+      <p className="mt-2 text-sm text-muted">
+        Add a site or complete setup to see citation data here — nothing below is
+        real until you connect a domain.
+      </p>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/start"
+          className="inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep"
+        >
+          Start setup →
+        </Link>
+        <Link
+          href="/dashboard/settings"
+          className="inline-flex rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent/40"
+        >
+          Add site in settings
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export function MyDashboardOverview() {
   const { workspace, ready } = useWorkspaceContext();
-  const activeWorkspace = workspace ?? FALLBACK_WORKSPACE;
-  const workspaceId = activeWorkspace.workspaceId ?? activeWorkspace.id;
+
+  if (!ready) {
+    return <DashboardPageSkeleton />;
+  }
+
+  if (!workspace) {
+    return <DashboardNoWorkspace />;
+  }
+
+  return <MyDashboardOverviewContent workspace={workspace} />;
+}
+
+function MyDashboardOverviewContent({
+  workspace,
+}: {
+  workspace: WorkspaceSnapshot;
+}) {
+  const workspaceId = workspace.workspaceId ?? workspace.id;
   const { metrics: gsc, connected: gscConnected } = useGscMetrics(workspaceId);
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
@@ -55,26 +95,26 @@ export function MyDashboardOverview() {
   }
 
   const platformRows = useMemo(
-    () => platformRowsFromWorkspace(activeWorkspace, PLATFORMS),
-    [activeWorkspace],
+    () => platformRowsFromWorkspace(workspace, PLATFORMS),
+    [workspace],
   );
   const promptRows = useMemo(
-    () => promptRowsForWorkspace(activeWorkspace),
-    [activeWorkspace],
+    () => promptRowsForWorkspace(workspace),
+    [workspace],
   );
 
   const citedCount = platformRows.filter((p) => p.cited).length;
-  const history = activeWorkspace.citationHistory ?? [];
+  const history = workspace.citationHistory ?? [];
   const historyValues = useMemo(
     () =>
       history.length > 0
         ? history.map((h) => Math.round(h.visibilityIndex))
         : [
-            activeWorkspace.citationScore - 8,
-            activeWorkspace.citationScore - 4,
-            activeWorkspace.citationScore,
+            workspace.citationScore - 8,
+            workspace.citationScore - 4,
+            workspace.citationScore,
           ],
-    [history, activeWorkspace.citationScore],
+    [history, workspace.citationScore],
   );
 
   const historyLabels = useMemo(() => {
@@ -102,12 +142,12 @@ export function MyDashboardOverview() {
     [gscDaily],
   );
 
-  const auditDataStatus = auditStatus(activeWorkspace);
-  const trendDataStatus = citationTrendStatus(activeWorkspace);
+  const auditDataStatus = auditStatus(workspace);
+  const trendDataStatus = citationTrendStatus(workspace);
 
   const citedPromptsCount = promptRows.filter((r) => r.cited).length;
-  const trackedCount = activeWorkspace.promptsTracked;
-  const gapsCount = activeWorkspace.gaps.length || 3;
+  const trackedCount = workspace.promptsTracked;
+  const gapsCount = workspace.gaps.length || 3;
 
   const citedPlatformNames = useMemo(
     () => platformRows.filter((p) => p.cited).map((p) => p.name),
@@ -119,18 +159,18 @@ export function MyDashboardOverview() {
     [promptRows]
   );
 
-  const firstTrackedQuery = activeWorkspace.buyerQuestion || "best tool for saas";
+  const firstTrackedQuery = workspace.buyerQuestion || "best tool for saas";
 
   const gapsList = useMemo(
     () =>
-      activeWorkspace.gaps.length > 0
-        ? activeWorkspace.gaps
+      workspace.gaps.length > 0
+        ? workspace.gaps
         : [
             "Missing FAQPage schema — high-impact for AI answer extraction",
             "No Organization schema — weakens brand entity recognition",
             "Thin homepage content (<300 words) — add an answer capsule above the fold",
           ],
-    [activeWorkspace.gaps]
+    [workspace.gaps]
   );
 
   const keywordBuckets = useMemo(() => {
@@ -223,19 +263,15 @@ export function MyDashboardOverview() {
   const moneyPromptList = (
     topPrompts.length
       ? topPrompts
-      : [{ prompt: activeWorkspace.buyerQuestion, cited: false }]
+      : [{ prompt: workspace.buyerQuestion, cited: false }]
   ).slice(0, 5);
-
-  if (!ready) {
-    return <DashboardPageSkeleton />;
-  }
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardOverviewLead workspace={activeWorkspace} />
+      <DashboardOverviewLead workspace={workspace} />
 
       {/* First-run CTA — shown prominently before any data cards */}
-      {!activeWorkspace.hasRealAudit && (
+      {!workspace.hasRealAudit && (
         <div className="rounded-2xl border border-dashed border-accent/40 bg-accent/5 p-6 text-center">
           <p className="font-display text-lg font-bold text-ink">Run your first audit for live data</p>
           <p className="mt-2 text-sm text-muted">
@@ -250,10 +286,10 @@ export function MyDashboardOverview() {
         </div>
       )}
 
-      <GettingStartedChecklist workspace={activeWorkspace} welcome={false} />
+      <GettingStartedChecklist workspace={workspace} welcome={false} />
 
       <CopilotDashboardPrompt />
-      <DashboardWidgetGrid workspace={activeWorkspace} />
+      <DashboardWidgetGrid workspace={workspace} />
 
       {/* Position Tracking */}
       <DashboardCard
@@ -267,7 +303,7 @@ export function MyDashboardOverview() {
           {/* Gauge */}
           <div className="flex flex-col items-center justify-center rounded-2xl bg-surface p-5 sm:min-w-[180px]">
             <DashboardGaugeChart
-              value={activeWorkspace.citationScore}
+              value={workspace.citationScore}
               label="Citation health"
               size="lg"
             />
@@ -407,7 +443,7 @@ export function MyDashboardOverview() {
             <tbody className="divide-y divide-[#f1f5f9]">
               {(topPrompts.length
                 ? topPrompts
-                : [{ prompt: activeWorkspace.buyerQuestion, cited: false, leader: "—" }]
+                : [{ prompt: workspace.buyerQuestion, cited: false, leader: "—" }]
               ).map((row) => (
                 <tr key={row.prompt} className="bg-white transition-colors duration-100 hover:bg-[#fafbfd]">
                   <td className="px-4 py-3 pr-2 font-medium text-[#0f172a]">
@@ -445,11 +481,11 @@ export function MyDashboardOverview() {
         <DashboardCard title="Platform overview" dataStatus={auditDataStatus}>
           <div className="flex flex-wrap items-center justify-around gap-4 border-b border-border pb-5">
             <DashboardRingChart
-              value={activeWorkspace.domainRating || activeWorkspace.citationScore}
+              value={workspace.domainRating || workspace.citationScore}
               label="DR"
             />
             <DashboardRingChart
-              value={activeWorkspace.visibilityScore || citedCount * 12}
+              value={workspace.visibilityScore || citedCount * 12}
               label="Visibility"
             />
             <DashboardRingChart
@@ -484,11 +520,11 @@ export function MyDashboardOverview() {
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
             {[
               { label: "Platforms cited", value: `${citedCount}/${PLATFORMS.length}` },
-              { label: "Prompts tracked", value: String(activeWorkspace.promptsTracked) },
-              { label: "Content drafts", value: String(activeWorkspace.contentDrafts) },
-              { label: "Backlink sources", value: String(activeWorkspace.sourceCount) },
-              { label: "Community", value: String(activeWorkspace.communityMentions) },
-              { label: "Weekly lift", value: activeWorkspace.weeklyLiftAvailable ? activeWorkspace.weeklyLift : "—" },
+              { label: "Prompts tracked", value: String(workspace.promptsTracked) },
+              { label: "Content drafts", value: String(workspace.contentDrafts) },
+              { label: "Backlink sources", value: String(workspace.sourceCount) },
+              { label: "Community", value: String(workspace.communityMentions) },
+              { label: "Weekly lift", value: workspace.weeklyLiftAvailable ? workspace.weeklyLift : "—" },
             ].map((m) => (
               <div key={m.label} className="group">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-[#94a3b8]">{m.label}</p>
@@ -557,15 +593,15 @@ export function MyDashboardOverview() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-3xl font-bold text-ink">
-                {(activeWorkspace.visibilityScore || activeWorkspace.citationScore * 0.4).toFixed(1)}%
+                {(workspace.visibilityScore || workspace.citationScore * 0.4).toFixed(1)}%
                 <span className="ml-1 text-sm font-medium text-accent">
-                  {activeWorkspace.weeklyLiftAvailable ? activeWorkspace.weeklyLift : "—"}
+                  {workspace.weeklyLiftAvailable ? workspace.weeklyLift : "—"}
                 </span>
               </p>
               <p className="mt-1 text-xs text-muted">AI answer share</p>
             </div>
             <span className="rounded-full bg-accent/10 px-2 py-1 text-[11px] font-semibold text-accent-deep">
-              Rank ↑ {Math.max(1, 30 - activeWorkspace.citationScore / 3)}
+              Rank ↑ {Math.max(1, 30 - workspace.citationScore / 3)}
             </span>
           </div>
           <div className="mt-4 rounded-xl bg-gradient-to-t from-accent/10 to-transparent p-2">
@@ -634,7 +670,7 @@ export function MyDashboardOverview() {
           title="Priority GEO gaps"
           action="GEO Audit"
           actionHref="/dashboard/geo-audit"
-          dataStatus={activeWorkspace.gaps.length > 0 ? auditDataStatus : "demo"}
+          dataStatus={workspace.gaps.length > 0 ? auditDataStatus : "demo"}
         >
           <ul className="space-y-3 text-xs text-slate-600">
             {gapsList.slice(0, 4).map((gap, idx) => (
@@ -736,10 +772,10 @@ export function MyDashboardOverview() {
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Score</p>
                   <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{activeWorkspace.citationScore}%</span>
-                    {activeWorkspace.weeklyLiftAvailable && (
+                    <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{workspace.citationScore}%</span>
+                    {workspace.weeklyLiftAvailable && (
                       <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
-                        {activeWorkspace.weeklyLift}
+                        {workspace.weeklyLift}
                       </span>
                     )}
                   </div>
@@ -788,7 +824,7 @@ export function MyDashboardOverview() {
         isOpen={isFixOpen}
         onClose={() => setIsFixOpen(false)}
         gap={selectedGap}
-        workspace={activeWorkspace}
+        workspace={workspace}
       />
     </div>
   );

@@ -104,9 +104,9 @@ export function useWorkspace() {
         /* ignore onboarding parse/create errors */
       }
 
-      setWorkspace(buildWorkspaceSnapshot({}));
+      setWorkspace(null);
     } catch {
-      setWorkspace(buildWorkspaceSnapshot({}));
+      setWorkspace(null);
     }
   }, [loadList]);
 
