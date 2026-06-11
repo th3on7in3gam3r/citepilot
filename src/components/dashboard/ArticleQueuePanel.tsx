@@ -248,6 +248,25 @@ export function ArticleQueuePanel({
 
   const scopeError = webflow?.detail?.includes("scopes");
 
+  async function handleDelete(slug: string, title: string) {
+    if (!window.confirm(`Remove "${title}" from the queue? This deletes the draft permanently.`)) return;
+    try {
+      const res = await fetch(`/api/blog/posts/${encodeURIComponent(slug)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(data.error ?? "Failed to delete article");
+        return;
+      }
+      toast.success("Article removed from queue");
+      await load();
+    } catch {
+      toast.error("Network error — try again");
+    }
+  }
+
   function publicationFor(post: QueuePost, provider: CmsProvider) {
     return post.publications.find((item) => item.provider === provider) ?? null;
   }
@@ -272,7 +291,7 @@ export function ArticleQueuePanel({
       <p className="mb-4 text-sm text-muted">
         Generated drafts appear here after you use the generator. Push once to any
         connected CMS, then re-publish updates the same remote item instead of
-        creating duplicates.
+        creating duplicates. Articles stay in the queue until you delete them.
       </p>
 
       {webflow && !webflowConfigured && (
@@ -473,6 +492,16 @@ export function ArticleQueuePanel({
                         </button>
                       );
                     })}
+                  <button
+                    type="button"
+                    disabled={!!publishingKey}
+                    onClick={() => void handleDelete(post.slug, post.title)}
+                    className="rounded-full border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Remove from queue"
+                    aria-label={`Delete ${post.title}`}
+                  >
+                    Delete
+                  </button>
                 </div>
               </li>
             );
