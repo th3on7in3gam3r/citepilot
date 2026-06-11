@@ -64,6 +64,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [auditing, setAuditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [testDigestState, setTestDigestState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [isFleet, setIsFleet] = useState(false);
   const [isPilot, setIsPilot] = useState(false);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(
@@ -150,6 +151,38 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       buyerQuestion,
       referral: "",
     };
+  }
+
+  async function sendTestDigest() {
+    if (!workspaceId) return;
+    const email = preferences.monitoringEmail.trim();
+    if (!email) {
+      toast.error("Add a monitoring email first, then save settings.");
+      return;
+    }
+    setTestDigestState("sending");
+    try {
+      const res = await fetch("/api/notifications/test-digest", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId }),
+      });
+      const data = (await res.json()) as { ok: boolean; error?: string; sentTo?: string };
+      if (data.ok) {
+        setTestDigestState("sent");
+        toast.success(`Test digest sent to ${data.sentTo ?? email}`);
+        setTimeout(() => setTestDigestState("idle"), 4000);
+      } else {
+        setTestDigestState("error");
+        toast.error(data.error ?? "Failed to send test email.");
+        setTimeout(() => setTestDigestState("idle"), 4000);
+      }
+    } catch {
+      setTestDigestState("error");
+      toast.error("Network error — could not send test email.");
+      setTimeout(() => setTestDigestState("idle"), 4000);
+    }
   }
 
   async function savePreferences(
@@ -522,6 +555,41 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               className={inputClass}
             />
           </label>
+          {preferences.monitoringEmail.trim() && (
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                type="button"
+                disabled={testDigestState === "sending"}
+                onClick={() => void sendTestDigest()}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-ink transition hover:bg-slate-100 disabled:opacity-50"
+              >
+                {testDigestState === "sending" ? (
+                  <>
+                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    Sending…
+                  </>
+                ) : testDigestState === "sent" ? (
+                  <>
+                    <svg className="h-3.5 w-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Sent!
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Send test digest
+                  </>
+                )}
+              </button>
+              <span className="text-xs text-muted">Sends a real email now to verify your address</span>
+            </div>
+          )}
           <ul className="mt-4 space-y-3">
             {(
               [

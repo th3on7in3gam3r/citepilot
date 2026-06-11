@@ -15,7 +15,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
   const [open, setOpen] = useState(false);
 
   const main = dashboardNav.filter((item) => item.section !== "footer");
-  const footer = dashboardNav.filter((item) => item.section === "footer");
+  const footer = dashboardNav.filter((item) => item.section === "footer" && item.id !== "settings");
 
   useEffect(() => {
     effectInit(() => setOpen(false));
