@@ -60,7 +60,19 @@ export function parsePlatforms(
 export function parsePromptResults(
   raw: string | number | null | undefined,
 ): PromptResult[] {
-  return parseJsonArray<PromptResult>(raw);
+  return parseJsonArray<PromptResult>(raw)
+    .filter(
+      (row): row is PromptResult =>
+        row != null &&
+        typeof row === "object" &&
+        typeof row.prompt === "string" &&
+        typeof row.cited === "boolean",
+    )
+    .map((row) => ({
+      prompt: row.prompt,
+      cited: row.cited,
+      reason: typeof row.reason === "string" ? row.reason : "",
+    }));
 }
 
 export function parseGaps(raw: string | number | null | undefined): string[] {

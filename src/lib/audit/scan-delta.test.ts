@@ -61,6 +61,21 @@ describe("buildScanDeltaSummary", () => {
     expect(summary.chips).toEqual([]);
   });
 
+  it("tolerates malformed gap arrays", () => {
+    const previous = audit({
+      id: "prev",
+      gaps: undefined as unknown as string[],
+    });
+    const current = audit({
+      id: "curr",
+      gaps: [null, "new gap", 42] as unknown as string[],
+    });
+
+    expect(() =>
+      buildScanDeltaSummary({ current, previous }),
+    ).not.toThrow();
+  });
+
   it("detects lost citations and new gaps", () => {
     const previous = audit({
       id: "prev",

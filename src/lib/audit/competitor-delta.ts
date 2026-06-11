@@ -28,9 +28,20 @@ function gapMentionsCompetitor(gap: string, competitors: string[]): boolean {
   });
 }
 
+function safeGaps(audit: AuditPayload): string[] {
+  return Array.isArray(audit.gaps)
+    ? audit.gaps.filter((g): g is string => typeof g === "string")
+    : [];
+}
+
+function safePlatforms(audit: AuditPayload) {
+  return Array.isArray(audit.platforms) ? audit.platforms : [];
+}
+
 function promptMap(results: PromptResult[]): Map<string, PromptResult> {
   const map = new Map<string, PromptResult>();
   for (const row of results) {
+    if (typeof row?.prompt !== "string") continue;
     map.set(row.prompt.trim().toLowerCase(), row);
   }
   return map;
@@ -43,7 +54,7 @@ export function buildCompetitorMoveDelta(input: {
 }): CompetitorMoveDelta {
   const previous = input.previous;
   if (!previous) {
-    const competitorGaps = input.current.gaps.filter((g) =>
+    const competitorGaps = safeGaps(input.current).filter((g) =>
       gapMentionsCompetitor(g, input.trackedCompetitors),
     );
     return {
@@ -76,14 +87,14 @@ export function buildCompetitorMoveDelta(input: {
     }
   }
 
-  const previousGapSet = new Set(previous.gaps);
-  const newCompetitorGaps = input.current.gaps.filter(
+  const previousGapSet = new Set(safeGaps(previous));
+  const newCompetitorGaps = safeGaps(input.current).filter(
     (g) => !previousGapSet.has(g) && gapMentionsCompetitor(g, input.trackedCompetitors),
   );
 
   const platformLosses: CompetitorMoveDelta["platformLosses"] = [];
-  for (const curr of input.current.platforms) {
-    const prev = previous.platforms.find((p) => p.name === curr.name);
+  for (const curr of safePlatforms(input.current)) {
+    const prev = safePlatforms(previous).find((p) => p.name === curr.name);
     if (prev?.present && !curr.present) {
       platformLosses.push({
         platform: curr.name,

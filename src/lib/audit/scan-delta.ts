@@ -89,17 +89,33 @@ export function buildScanDeltaSummary(input: {
 
   if (!input.previous) return empty;
 
-  const move = buildDeltaFromAudits(
-    input.current,
-    input.previous,
-    input.trackedCompetitors ?? input.current.competitors,
-  );
+  const currentGaps = Array.isArray(input.current.gaps)
+    ? input.current.gaps.filter((g): g is string => typeof g === "string")
+    : [];
+  const previousGaps = Array.isArray(input.previous.gaps)
+    ? input.previous.gaps.filter((g): g is string => typeof g === "string")
+    : [];
+  const trackedCompetitors = Array.isArray(input.trackedCompetitors)
+    ? input.trackedCompetitors
+    : Array.isArray(input.current.competitors)
+      ? input.current.competitors
+      : [];
 
-  const previousGapSet = new Set(input.previous.gaps);
-  const currentGapSet = new Set(input.current.gaps);
-  const newGaps = input.current.gaps.filter((g) => !previousGapSet.has(g)).length;
-  const resolvedGaps = input.previous.gaps.filter((g) => !currentGapSet.has(g))
-    .length;
+  let move;
+  try {
+    move = buildDeltaFromAudits(
+      input.current,
+      input.previous,
+      trackedCompetitors,
+    );
+  } catch {
+    return empty;
+  }
+
+  const previousGapSet = new Set(previousGaps);
+  const currentGapSet = new Set(currentGaps);
+  const newGaps = currentGaps.filter((g) => !previousGapSet.has(g)).length;
+  const resolvedGaps = previousGaps.filter((g) => !currentGapSet.has(g)).length;
 
   const promptsCitedNet = move.promptsWon.length - move.promptsLost.length;
   const scoreDelta = move.scoreDelta;

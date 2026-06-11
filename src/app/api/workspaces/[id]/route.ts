@@ -32,7 +32,6 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({
       id: workspace.id,
       workspace: snapshot,
-      raw: workspace,
     });
   } catch (error) {
     console.error("GET /api/workspaces/[id]", error);

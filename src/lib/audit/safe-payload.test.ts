@@ -23,6 +23,18 @@ describe("safe-payload", () => {
   it("parsePromptResults handles null", () => {
     expect(parsePromptResults(null)).toEqual([]);
   });
+
+  it("parsePromptResults drops malformed rows", () => {
+    const raw = JSON.stringify([
+      { prompt: "valid", cited: true, reason: "ok" },
+      { prompt: 42, cited: true },
+      { cited: false },
+      null,
+    ]);
+    expect(parsePromptResults(raw)).toEqual([
+      { prompt: "valid", cited: true, reason: "ok" },
+    ]);
+  });
 });
 
 describe("buildCopilotContext", () => {

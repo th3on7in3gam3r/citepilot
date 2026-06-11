@@ -153,37 +153,82 @@ export async function enrichSnapshotWithBacklinks(
   snapshot: WorkspaceSnapshotResponse,
   workspaceId: string,
 ): Promise<WorkspaceSnapshotResponse> {
-  const [metrics, citationHistory, contentStrategy, recentAudits, ownerRow] =
-    await Promise.all([
-      getBacklinkMetricsForWorkspace(workspaceId),
-      getCitationSnapshots(workspaceId),
-      getContentStrategy(workspaceId),
-      snapshot.hasRealAudit
-        ? getRecentAuditsForWorkspace(workspaceId, 2)
-        : Promise.resolve([]),
-      dbGet<{ user_id: string | null }>(
-        `SELECT user_id FROM workspaces WHERE id = ?`,
-        [workspaceId],
-      ),
-    ]);
+  const [
+    metricsResult,
+    citationHistoryResult,
+    contentStrategyResult,
+    recentAuditsResult,
+    ownerRowResult,
+  ] = await Promise.allSettled([
+    getBacklinkMetricsForWorkspace(workspaceId),
+    getCitationSnapshots(workspaceId),
+    getContentStrategy(workspaceId),
+    snapshot.hasRealAudit
+      ? getRecentAuditsForWorkspace(workspaceId, 2)
+      : Promise.resolve([]),
+    dbGet<{ user_id: string | null }>(
+      `SELECT user_id FROM workspaces WHERE id = ?`,
+      [workspaceId],
+    ),
+  ]);
 
-  let scanDelta = emptyScanDeltaSummary;
-  if (recentAudits.length >= 2) {
-    scanDelta = buildScanDeltaSummary({
-      current: recentAudits[0]!,
-      previous: recentAudits[1]!,
-      trackedCompetitors: snapshot.competitors,
-    });
-  } else if (recentAudits.length === 1) {
-    scanDelta = buildScanDeltaSummary({
-      current: recentAudits[0]!,
-      previous: null,
-    });
+  if (metricsResult.status === "rejected") {
+    console.error("enrichSnapshot: backlink metrics failed", metricsResult.reason);
+  }
+  if (citationHistoryResult.status === "rejected") {
+    console.error("enrichSnapshot: citation history failed", citationHistoryResult.reason);
+  }
+  if (contentStrategyResult.status === "rejected") {
+    console.error("enrichSnapshot: content strategy failed", contentStrategyResult.reason);
+  }
+  if (recentAuditsResult.status === "rejected") {
+    console.error("enrichSnapshot: recent audits failed", recentAuditsResult.reason);
+  }
+  if (ownerRowResult.status === "rejected") {
+    console.error("enrichSnapshot: owner lookup failed", ownerRowResult.reason);
   }
 
-  const paid = ownerRow?.user_id
-    ? await userHasPilotAccess(ownerRow.user_id)
-    : false;
+  const metrics =
+    metricsResult.status === "fulfilled" ? metricsResult.value : null;
+  const citationHistory =
+    citationHistoryResult.status === "fulfilled"
+      ? citationHistoryResult.value
+      : [];
+  const contentStrategy =
+    contentStrategyResult.status === "fulfilled"
+      ? contentStrategyResult.value
+      : null;
+  const recentAudits =
+    recentAuditsResult.status === "fulfilled" ? recentAuditsResult.value : [];
+  const ownerRow =
+    ownerRowResult.status === "fulfilled" ? ownerRowResult.value : null;
+
+  let scanDelta = emptyScanDeltaSummary;
+  try {
+    if (recentAudits.length >= 2) {
+      scanDelta = buildScanDeltaSummary({
+        current: recentAudits[0]!,
+        previous: recentAudits[1]!,
+        trackedCompetitors: snapshot.competitors,
+      });
+    } else if (recentAudits.length === 1) {
+      scanDelta = buildScanDeltaSummary({
+        current: recentAudits[0]!,
+        previous: null,
+      });
+    }
+  } catch (error) {
+    console.error("enrichSnapshot: scan delta failed", workspaceId, error);
+  }
+
+  let paid = false;
+  if (ownerRow?.user_id) {
+    try {
+      paid = await userHasPilotAccess(ownerRow.user_id);
+    } catch (error) {
+      console.error("enrichSnapshot: pilot access check failed", error);
+    }
+  }
   const freeExplainGapTeaserAvailable =
     snapshot.hasRealAudit &&
     !snapshot.preferences.freeExplainGapUsed &&
