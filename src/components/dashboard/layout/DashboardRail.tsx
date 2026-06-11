@@ -12,7 +12,7 @@ import { isDashboardNavActive } from "@/lib/dashboard-nav";
 export function DashboardRail() {
   const pathname = usePathname();
   const items = dashboardNav.filter((item) => item.section !== "footer");
-  const footer = dashboardNav.filter((item) => item.section === "footer");
+  const footer = dashboardNav.filter((item) => item.section === "footer" && item.id !== "settings");
   const [initial, setInitial] = useState<string | null>(null);
 
   useEffect(() => {

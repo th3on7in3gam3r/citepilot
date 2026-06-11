@@ -272,7 +272,11 @@ function SectionBody({
     case "generate":
       return (
         <div className="space-y-6">
-          <GenerateArticlePanel workspaceId={workspaceId} onGenerated={onGenerated} />
+          <GenerateArticlePanel
+            workspaceId={workspaceId}
+            workspace={workspace}
+            onGenerated={onGenerated}
+          />
           <SiteDetailsFooter
             showSave={false}
             continueLabel="Continue"

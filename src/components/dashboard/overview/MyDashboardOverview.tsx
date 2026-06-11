@@ -144,7 +144,7 @@ export function MyDashboardOverview() {
         theme: "sky",
         info: citedPromptsCount > 0 ? (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
-            Cited on: <strong className="text-sky-600 font-semibold">"{citedPromptsList[0]}"</strong>
+            Cited on: <strong className="text-sky-600 font-semibold">&quot;{citedPromptsList[0]}&quot;</strong>
           </span>
         ) : (
           <span className="text-slate-400 italic font-normal">No queries cited yet</span>
@@ -186,7 +186,7 @@ export function MyDashboardOverview() {
         theme: "emerald",
         info: (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
-            Target: <strong className="text-emerald-600 font-semibold">"{firstTrackedQuery}"</strong>
+            Target: <strong className="text-emerald-600 font-semibold">&quot;{firstTrackedQuery}&quot;</strong>
           </span>
         ),
       },
