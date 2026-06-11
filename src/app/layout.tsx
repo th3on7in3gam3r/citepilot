@@ -27,6 +27,7 @@ export const metadata: Metadata = {
   description: homeDescription,
   icons: {
     icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
       { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/images/branding/citepilot-icon.png", sizes: "512x512", type: "image/png" },
     ],
