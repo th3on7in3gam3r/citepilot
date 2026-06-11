@@ -32,6 +32,7 @@ export type WorkspacePreferences = {
     logoUrl: string;
     hidePoweredBy: boolean;
   };
+  appliedFixes: string[];
 };
 
 export const defaultWorkspacePreferences: WorkspacePreferences = {
@@ -50,6 +51,7 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
     logoUrl: "",
     hidePoweredBy: false,
   },
+  appliedFixes: [],
 };
 
 export function parsePreferences(raw: string | null | undefined): WorkspacePreferences {
@@ -86,6 +88,9 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
         ...defaultWorkspacePreferences.whiteLabel,
         ...(parsed.whiteLabel ?? {}),
       },
+      appliedFixes: Array.isArray(parsed.appliedFixes)
+        ? parsed.appliedFixes.filter((f): f is string => typeof f === "string")
+        : defaultWorkspacePreferences.appliedFixes,
     };
   } catch {
     return { ...defaultWorkspacePreferences };
@@ -106,5 +111,6 @@ export function mergePreferences(
     whiteLabel: patch.whiteLabel
       ? { ...current.whiteLabel, ...patch.whiteLabel }
       : current.whiteLabel,
+    appliedFixes: patch.appliedFixes ?? current.appliedFixes,
   };
 }

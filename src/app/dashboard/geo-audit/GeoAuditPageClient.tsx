@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
 import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
 import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
+import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { getStoredWorkspaceId, runAudit } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { productFeatures } from "@/lib/features";
@@ -27,6 +28,14 @@ export function GeoAuditPageClient() {
   const toast = useToast();
   const [auditing, setAuditing] = useState(false);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(PROMPT_LIMIT_FREE);
+
+  const [selectedGap, setSelectedGap] = useState<string | null>(null);
+  const [isFixOpen, setIsFixOpen] = useState(false);
+
+  function handleOpenFix(gapText: string) {
+    setSelectedGap(gapText);
+    setIsFixOpen(true);
+  }
 
   if (!ready || !workspace) return null;
 
@@ -180,14 +189,23 @@ export function GeoAuditPageClient() {
       <Panel title="Priority fixes" className="mt-6">
         <p className="mb-4 text-sm text-muted">
           From your latest audit. Use CitePilot Insights for a plain-language
-          explanation of any gap (Pilot+, or one free preview on Free).
+          explanation of any gap (Pilot+, or one free preview on Free) or click Quick Fix to copy pre-generated code snippets.
         </p>
         <ul className="space-y-3 text-sm text-muted">
           {gaps.map((g) => (
             <li key={g} className="rounded-xl bg-surface px-4 py-3">
-              <div className="flex gap-3">
-                <span className="text-accent">•</span>
-                <span className="flex-1 text-ink">{g}</span>
+              <div className="flex items-start justify-between gap-3 group/item mb-1">
+                <div className="flex gap-3">
+                  <span className="text-accent mt-0.5 font-bold">•</span>
+                  <span className="flex-1 text-ink font-medium">{g}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenFix(g)}
+                  className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 hover:border-rose-200 transition duration-150 cursor-pointer"
+                >
+                  Quick Fix ✦
+                </button>
               </div>
               {workspaceId && (
                 <CopilotInsight
@@ -219,6 +237,13 @@ export function GeoAuditPageClient() {
         </Panel>
       )}
       <ShareAuditPanel />
+
+      <QuickFixModal
+        isOpen={isFixOpen}
+        onClose={() => setIsFixOpen(false)}
+        gap={selectedGap}
+        workspace={workspace}
+      />
     </>
   );
 }

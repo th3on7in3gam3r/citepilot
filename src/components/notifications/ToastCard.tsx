@@ -32,16 +32,18 @@ export function ToastCard({
       const delta = now - lastTick;
       lastTick = now;
 
-      setRemainingMs((prev) => {
-        const next = Math.max(0, prev - delta);
-        if (next <= 0) dismiss();
-        return next;
-      });
+      setRemainingMs((prev) => Math.max(0, prev - delta));
     };
 
     const id = window.setInterval(tick, 50);
     return () => window.clearInterval(id);
-  }, [toast.duration, paused, dismiss]);
+  }, [toast.duration, paused]);
+
+  useEffect(() => {
+    if (toast.duration > 0 && remainingMs <= 0) {
+      dismiss();
+    }
+  }, [remainingMs, toast.duration, dismiss]);
 
   const secondsLeft = Math.max(1, Math.ceil(remainingMs / 1000));
   const progressPct =

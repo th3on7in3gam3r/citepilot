@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DashboardWidgetGrid } from "@/components/dashboard/copilot/DashboardWidgetGrid";
+import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
@@ -21,6 +22,8 @@ import {
   DashboardRingChart,
   DashboardSparkline,
 } from "@/components/charts/DashboardCharts";
+import { RosenLineChart } from "@/components/charts/RosenLineChart";
+import { RosenHorizontalBarChart } from "@/components/charts/RosenBarChart";
 import { GscConnectCard } from "@/components/dashboard/GscConnectCard";
 import { CHART_COLORS } from "@/lib/charts/theme";
 import { useGscMetrics } from "@/hooks/useGscMetrics";
@@ -42,6 +45,14 @@ export function MyDashboardOverview() {
   const activeWorkspace = workspace ?? FALLBACK_WORKSPACE;
   const workspaceId = activeWorkspace.workspaceId ?? activeWorkspace.id;
   const { metrics: gsc, connected: gscConnected } = useGscMetrics(workspaceId);
+
+  const [selectedGap, setSelectedGap] = useState<string | null>(null);
+  const [isFixOpen, setIsFixOpen] = useState(false);
+
+  function handleOpenFix(gapText: string) {
+    setSelectedGap(gapText);
+    setIsFixOpen(true);
+  }
 
   const platformRows = useMemo(
     () => platformRowsFromWorkspace(activeWorkspace, PLATFORMS),
@@ -94,36 +105,115 @@ export function MyDashboardOverview() {
   const auditDataStatus = auditStatus(activeWorkspace);
   const trendDataStatus = citationTrendStatus(activeWorkspace);
 
-  if (!ready) {
-    return <DashboardPageSkeleton />;
-  }
+  const citedPromptsCount = promptRows.filter((r) => r.cited).length;
+  const trackedCount = activeWorkspace.promptsTracked;
+  const gapsCount = activeWorkspace.gaps.length || 3;
 
-  const keywordBuckets = [
-    {
-      label: "Cited",
-      value: promptRows.filter((r) => r.cited).length,
-      delta: "+",
-      spark: [2, 3, 4, 5, promptRows.filter((r) => r.cited).length],
-    },
-    {
-      label: "Top platforms",
-      value: citedCount,
-      delta: citedCount > 0 ? `+${citedCount}` : "0",
-      spark: [1, 2, citedCount, citedCount, citedCount],
-    },
-    {
-      label: "Tracked",
-      value: activeWorkspace.promptsTracked,
-      delta: String(activeWorkspace.promptsTracked),
-      spark: [1, 2, 3, activeWorkspace.promptsTracked, activeWorkspace.promptsTracked],
-    },
-    {
-      label: "Gaps",
-      value: activeWorkspace.gaps.length || 3,
-      delta: activeWorkspace.gaps.length ? `-${activeWorkspace.gaps.length}` : "-3",
-      spark: [5, 4, 3, 2, activeWorkspace.gaps.length || 3],
-    },
-  ];
+  const citedPlatformNames = useMemo(
+    () => platformRows.filter((p) => p.cited).map((p) => p.name),
+    [platformRows]
+  );
+
+  const citedPromptsList = useMemo(
+    () => promptRows.filter((p) => p.cited).map((p) => p.prompt),
+    [promptRows]
+  );
+
+  const firstTrackedQuery = activeWorkspace.buyerQuestion || "best tool for saas";
+
+  const gapsList = useMemo(
+    () =>
+      activeWorkspace.gaps.length > 0
+        ? activeWorkspace.gaps
+        : [
+            "Missing FAQPage schema — high-impact for AI answer extraction",
+            "No Organization schema — weakens brand entity recognition",
+            "Thin homepage content (<300 words) — add an answer capsule above the fold",
+          ],
+    [activeWorkspace.gaps]
+  );
+
+  const keywordBuckets = useMemo(() => {
+    return [
+      {
+        label: "Cited",
+        value: citedPromptsCount,
+        delta: `${Math.round((citedPromptsCount / Math.max(1, trackedCount)) * 100)}% rate`,
+        spark: [2, 3, 4, 5, citedPromptsCount],
+        color: "#0ea5e9",
+        theme: "sky",
+        info: citedPromptsCount > 0 ? (
+          <span className="line-clamp-2 leading-relaxed text-slate-600">
+            Cited on: <strong className="text-sky-600 font-semibold">"{citedPromptsList[0]}"</strong>
+          </span>
+        ) : (
+          <span className="text-slate-400 italic font-normal">No queries cited yet</span>
+        ),
+      },
+      {
+        label: "Top platforms",
+        value: citedCount,
+        delta: `${citedCount}/${PLATFORMS.length} LLMs`,
+        spark: [1, 2, citedCount, citedCount, citedCount],
+        color: "#8b5cf6",
+        theme: "violet",
+        info: citedCount > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {citedPlatformNames.slice(0, 3).map((name) => (
+              <span
+                key={name}
+                className="px-1.5 py-0.5 rounded bg-violet-50 text-[9px] font-bold text-violet-600 border border-violet-100/50"
+              >
+                {name}
+              </span>
+            ))}
+            {citedPlatformNames.length > 3 && (
+              <span className="px-1 py-0.5 text-[9px] font-semibold text-slate-400">
+                +{citedPlatformNames.length - 3} more
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-slate-400 italic font-normal">No platforms citing yet</span>
+        ),
+      },
+      {
+        label: "Tracked",
+        value: trackedCount,
+        delta: "Keywords",
+        spark: [1, 2, 3, trackedCount, trackedCount],
+        color: "#10b981",
+        theme: "emerald",
+        info: (
+          <span className="line-clamp-2 leading-relaxed text-slate-600">
+            Target: <strong className="text-emerald-600 font-semibold">"{firstTrackedQuery}"</strong>
+          </span>
+        ),
+      },
+      {
+        label: "Gaps",
+        value: gapsCount,
+        delta: "Needs fix",
+        spark: [5, 4, 3, 2, gapsCount],
+        color: "#f43f5e",
+        theme: "rose",
+        info: (
+          <span className="line-clamp-2 leading-relaxed text-slate-600">
+            Fix: <strong className="text-rose-600 font-semibold">{gapsList[0]}</strong>
+          </span>
+        ),
+      },
+    ];
+  }, [
+    citedPromptsCount,
+    trackedCount,
+    citedCount,
+    gapsCount,
+    citedPromptsList,
+    citedPlatformNames,
+    firstTrackedQuery,
+    gapsList,
+  ]);
 
   const topPrompts = promptRows.slice(0, 5);
   const moneyPromptList = (
@@ -131,6 +221,10 @@ export function MyDashboardOverview() {
       ? topPrompts
       : [{ prompt: activeWorkspace.buyerQuestion, cited: false }]
   ).slice(0, 5);
+
+  if (!ready) {
+    return <DashboardPageSkeleton />;
+  }
 
   return (
     <div className="space-y-5 pb-8">
@@ -186,25 +280,107 @@ export function MyDashboardOverview() {
           {/* 4 stat tiles */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {keywordBuckets.map((b) => {
-              const isNegative = b.label === "Gaps";
+              const isRose = b.theme === "rose";
+              const isSky = b.theme === "sky";
+              const isViolet = b.theme === "violet";
+              const isEmerald = b.theme === "emerald";
+              
+              const borderClass = isSky 
+                ? "border-sky-100 hover:border-sky-200" 
+                : isViolet 
+                ? "border-violet-100 hover:border-violet-200" 
+                : isEmerald 
+                ? "border-emerald-100 hover:border-emerald-200" 
+                : "border-rose-100 hover:border-rose-200";
+
+              const bgClass = isSky 
+                ? "bg-gradient-to-br from-sky-50/40 via-white to-white" 
+                : isViolet 
+                ? "bg-gradient-to-br from-violet-50/40 via-white to-white" 
+                : isEmerald 
+                ? "bg-gradient-to-br from-emerald-50/40 via-white to-white" 
+                : "bg-gradient-to-br from-rose-50/40 via-white to-white";
+
+              const textClass = isRose ? "text-rose-700" : "text-slate-900";
+              const accentBar = isSky 
+                ? "bg-gradient-to-r from-sky-400 to-blue-500" 
+                : isViolet 
+                ? "bg-gradient-to-r from-violet-400 to-indigo-500" 
+                : isEmerald 
+                ? "bg-gradient-to-r from-emerald-400 to-teal-500" 
+                : "bg-gradient-to-r from-rose-400 to-pink-500";
+
+              const badgeBg = isSky 
+                ? "bg-sky-50 border-sky-100 text-sky-700" 
+                : isViolet 
+                ? "bg-violet-50 border-violet-100 text-violet-700" 
+                : isEmerald 
+                ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
+                : "bg-rose-50 border-rose-100 text-rose-700";
+
               return (
                 <div
                   key={b.label}
-                  className={`flex flex-col rounded-2xl border p-4 ${
-                    isNegative
-                      ? "border-amber-200/60 bg-amber-50/50"
-                      : "border-border bg-white"
-                  }`}
+                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,23,42,0.06)] ${borderClass} ${bgClass}`}
                 >
-                  <p className="text-[11px] font-medium text-muted">{b.label}</p>
-                  <p className={`mt-1.5 text-2xl font-bold ${isNegative ? "text-amber-700" : "text-ink"}`}>
-                    {formatCompact(b.value)}
-                  </p>
-                  <p className={`text-xs font-semibold ${isNegative ? "text-amber-500" : "text-accent"}`}>
-                    {b.delta}
-                  </p>
-                  <div className="mt-2 flex-1">
-                    <DashboardSparkline values={b.spark} />
+                  {/* Top accent sliver */}
+                  <div
+                    className={`absolute inset-x-0 top-0 h-[3px] transition-all duration-200 ${accentBar}`}
+                    aria-hidden
+                  />
+                  
+                  {/* Card Header (Label + Icon) */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                      {b.label}
+                    </span>
+                    <div className={`flex items-center justify-center p-1.5 rounded-lg border transition-transform duration-200 group-hover:scale-110 ${badgeBg}`}>
+                      {b.theme === "sky" && (
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      )}
+                      {b.theme === "violet" && (
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                      )}
+                      {b.theme === "emerald" && (
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                      {b.theme === "rose" && (
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Card Body (Value + Trend badge) */}
+                  <div className="mt-4 flex items-baseline justify-between">
+                    <span className={`font-display text-[28px] font-extrabold tracking-tight leading-none ${textClass}`}>
+                      {formatCompact(b.value)}
+                    </span>
+                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${badgeBg}`}>
+                      {b.delta}
+                    </span>
+                  </div>
+
+                  {/* Card Info/Details */}
+                  <div className="mt-3 flex items-center min-h-[36px] border-t border-slate-100/40 pt-2 text-[10px]">
+                    {b.info}
+                  </div>
+
+                  {/* Card Footer (Sparkline) */}
+                  <div className="mt-4 pt-3 border-t border-slate-100/50">
+                    <DashboardSparkline
+                      values={b.spark}
+                      color={b.color}
+                      className="h-7 w-full"
+                    />
                   </div>
                 </div>
               );
@@ -213,40 +389,44 @@ export function MyDashboardOverview() {
         </div>
 
         {/* Bottom row: prompt table */}
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-border">
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-[#eef2f6] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
           <table className="w-full min-w-[420px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border bg-surface/60">
-                <th className="px-4 py-3 font-semibold text-muted">Money prompt</th>
-                <th className="px-4 py-3 font-semibold text-muted">Status</th>
-                <th className="px-4 py-3 font-semibold text-muted">Leader</th>
+              <tr className="border-b border-[#eef2f6] bg-[#f8fafc]">
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Money prompt</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Status</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Leader</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-[#f1f5f9]">
               {(topPrompts.length
                 ? topPrompts
                 : [{ prompt: activeWorkspace.buyerQuestion, cited: false, leader: "—" }]
               ).map((row) => (
-                <tr key={row.prompt} className="bg-white transition-colors hover:bg-surface/60">
-                  <td className="px-4 py-3 pr-2 font-medium text-ink">
+                <tr key={row.prompt} className="bg-white transition-colors duration-100 hover:bg-[#fafbfd]">
+                  <td className="px-4 py-3 pr-2 font-medium text-[#0f172a]">
                     {row.prompt.length > 52 ? `${row.prompt.slice(0, 52)}…` : row.prompt}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${
                         row.cited
-                          ? "bg-accent/10 text-accent-deep"
-                          : "bg-amber-50 text-amber-700"
+                          ? "border-[#bae6fd] bg-[#e0f2fe] text-[#0284c7]"
+                          : "border-amber-200 bg-amber-50 text-amber-700"
                       }`}
                     >
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${row.cited ? "bg-accent" : "bg-amber-400"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          row.cited ? "bg-[#0ea5e9]" : "bg-amber-400"
+                        }`}
                         aria-hidden
                       />
                       {row.cited ? "Cited" : "Gap"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted">{row.leader ?? "—"}</td>
+                  <td className="px-4 py-3 text-[#64748b]">
+                    <span className="max-w-[180px] truncate block">{row.leader ?? "—"}</span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -271,23 +451,20 @@ export function MyDashboardOverview() {
               label="Coverage"
             />
           </div>
-          <div className="mt-4">
-            <DashboardLineChart
-              height={112}
-              labels={historyLabels}
-              series={[
-                { label: "Score", values: historyValues, color: CHART_COLORS.primary },
-                ...(history.length < 2
-                  ? [
-                      {
-                        label: "Prior",
-                        values: historyValues.map((v) => Math.max(0, v - 6)),
-                        color: CHART_COLORS.muted,
-                        dashed: true,
-                      },
-                    ]
-                  : []),
-              ]}
+
+          {/* Rosen-style horizontal bar chart — LLM platform citation coverage */}
+          <div className="mt-5">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Engine Coverage</p>
+            <RosenHorizontalBarChart
+              data={platformRows.map((p) => ({
+                label: p.name,
+                // Use real share if available; otherwise derive a stable value from citation status
+                value: p.share != null ? p.share : p.cited ? 65 : 12,
+                color: p.cited ? "#6366f1" : "#cbd5e1",
+              }))}
+              maxValue={100}
+              formatValue={(v) => `${v}%`}
+              height={platformRows.length * 30}
             />
           </div>
         </DashboardCard>
@@ -298,7 +475,7 @@ export function MyDashboardOverview() {
           actionHref="/dashboard/analytics"
           dataStatus={auditDataStatus}
         >
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
             {[
               { label: "Platforms cited", value: `${citedCount}/${PLATFORMS.length}` },
               { label: "Prompts tracked", value: String(activeWorkspace.promptsTracked) },
@@ -307,9 +484,9 @@ export function MyDashboardOverview() {
               { label: "Community", value: String(activeWorkspace.communityMentions) },
               { label: "Weekly lift", value: activeWorkspace.weeklyLiftAvailable ? activeWorkspace.weeklyLift : "—" },
             ].map((m) => (
-              <div key={m.label}>
-                <p className="text-[11px] text-muted">{m.label}</p>
-                <p className="text-lg font-bold text-ink">{m.value}</p>
+              <div key={m.label} className="group">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-[#94a3b8]">{m.label}</p>
+                <p className="mt-0.5 font-display text-xl font-bold tracking-tight text-[#0f172a]">{m.value}</p>
               </div>
             ))}
           </div>
@@ -395,28 +572,6 @@ export function MyDashboardOverview() {
         </DashboardCard>
       </div>
 
-      {/* Row 4 */}
-      <DashboardCard
-        title="Top money prompts"
-        action="View full report"
-        actionHref="/dashboard/content"
-        dataStatus={topPrompts.length > 0 ? auditDataStatus : "demo"}
-      >
-        <ul className="divide-y divide-border">
-          {moneyPromptList.map((row) => (
-            <li key={row.prompt} className="flex items-center justify-between gap-3 py-3 first:pt-0">
-              <span className="text-sm text-ink">{row.prompt}</span>
-              <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                  row.cited ? "bg-accent/10 text-accent-deep" : "bg-amber-50 text-amber-800"
-                }`}
-              >
-                {row.cited ? "Cited" : "Gap"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </DashboardCard>
 
       {/* Row 5 */}
       <div className={`grid gap-5 ${gscConnected ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
@@ -470,54 +625,78 @@ export function MyDashboardOverview() {
         )}
 
         <DashboardCard
-          title={`Related prompts ${promptRows.length || 1}`}
-          action="View full report"
-          actionHref="/dashboard/analytics"
-          dataStatus={topPrompts.length > 0 ? auditDataStatus : "demo"}
+          title="Priority GEO gaps"
+          action="GEO Audit"
+          actionHref="/dashboard/geo-audit"
+          dataStatus={activeWorkspace.gaps.length > 0 ? auditDataStatus : "demo"}
         >
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="text-muted">
-                <th className="pb-2">Prompt</th>
-                <th className="pb-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(topPrompts.length ? topPrompts : [{ prompt: activeWorkspace.buyerQuestion, cited: false }]).slice(0, 4).map((r) => (
-                <tr key={r.prompt} className="border-t border-surface">
-                  <td className="py-2 pr-2 text-ink">{r.prompt.slice(0, 24)}…</td>
-                  <td className="py-2 text-muted">{r.cited ? "Cited" : "Gap"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul className="space-y-3 text-xs text-slate-600">
+            {gapsList.slice(0, 4).map((gap, idx) => (
+              <li key={idx} className="flex items-start justify-between gap-3 group/item">
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100">
+                    {idx + 1}
+                  </span>
+                  <span className="leading-relaxed text-slate-700">{gap}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenFix(gap)}
+                  className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100/50 rounded-lg hover:bg-rose-100/70 hover:border-rose-200 transition duration-150 cursor-pointer opacity-70 group-hover/item:opacity-100"
+                >
+                  Quick Fix ✦
+                </button>
+              </li>
+            ))}
+          </ul>
         </DashboardCard>
       </div>
 
       {/* Row 6 */}
       <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
         <DashboardCard title="Citation trend" action="Last 30 days" dataStatus={trendDataStatus}>
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Rosen-style gradient line chart — Citation Score */}
             <div>
-              <p className="mb-1 text-xs text-muted">Citation score</p>
-              <DashboardLineChart
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Citation Score</p>
+                <span className="text-xs font-bold text-indigo-600">
+                  {historyValues.length > 0 ? historyValues[historyValues.length - 1] : 0}
+                </span>
+              </div>
+              <RosenLineChart
                 labels={historyLabels}
-                series={[{ label: "Score", values: historyValues, color: CHART_COLORS.primary }]}
-                height={100}
+                series={[
+                  {
+                    label: "Score",
+                    values: historyValues,
+                    gradientFrom: "#6366f1",
+                    gradientTo: "#a78bfa",
+                  },
+                ]}
+                height={108}
               />
             </div>
+
+            {/* Rosen-style gradient line chart — Platforms Cited */}
             <div>
-              <p className="mb-1 text-xs text-muted">Platforms cited</p>
-              <DashboardLineChart
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Platforms Cited</p>
+                <span className="text-xs font-bold text-sky-600">
+                  {citedCount}/{PLATFORMS.length}
+                </span>
+              </div>
+              <RosenLineChart
                 labels={historyLabels}
                 series={[
                   {
                     label: "Platforms",
                     values: historyValues.map((v) => Math.round(v / 15)),
-                    color: CHART_COLORS.secondary,
+                    gradientFrom: "#0ea5e9",
+                    gradientTo: "#38bdf8",
                   },
                 ]}
-                height={100}
+                height={108}
               />
             </div>
           </div>
@@ -545,27 +724,66 @@ export function MyDashboardOverview() {
             </DashboardCard>
           )}
           <DashboardCard title="AI citations" dataStatus={auditDataStatus}>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[11px] text-muted">Score</p>
-                <p className="text-xl font-bold text-ink">{activeWorkspace.citationScore}</p>
-                <p className="text-xs text-accent">
-                  {activeWorkspace.weeklyLiftAvailable ? activeWorkspace.weeklyLift : "—"}
-                </p>
+            <div className="flex flex-col h-full justify-between">
+              {/* Summary Stats Row */}
+              <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Score</p>
+                  <div className="flex items-baseline gap-1.5 mt-1">
+                    <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{activeWorkspace.citationScore}%</span>
+                    {activeWorkspace.weeklyLiftAvailable && (
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
+                        {activeWorkspace.weeklyLift}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">LLM Coverage</p>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                      {citedCount}<span className="text-slate-300 font-normal text-xl">/{PLATFORMS.length}</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium ml-1">citing</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] text-muted">Platforms cited</p>
-                <p className="text-xl font-bold text-ink">
-                  {citedCount}/{PLATFORMS.length}
-                </p>
-                <p className="text-xs text-muted">
-                  {activeWorkspace.hasRealAudit ? "From latest audit" : "Run audit"}
-                </p>
+
+              {/* Platform breakdown list */}
+              <div className="mt-4 space-y-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Live Status by Engine</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {platformRows.map((p) => (
+                    <div 
+                      key={p.name} 
+                      className={`flex items-center justify-between rounded-xl border p-2.5 text-xs transition-all duration-150 ${
+                        p.cited 
+                          ? "border-emerald-100 bg-gradient-to-r from-emerald-50/50 to-white text-slate-900 shadow-[0_1px_2px_rgba(16,185,129,0.02)]" 
+                          : "border-slate-100 bg-gradient-to-r from-slate-50/50 to-white text-slate-400"
+                      }`}
+                    >
+                      <span className="font-semibold truncate max-w-[100px]">{p.name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full ${p.cited ? "bg-emerald-500 animate-pulse" : "bg-slate-300"}`} />
+                        <span className={`text-[9px] font-bold uppercase tracking-wider ${p.cited ? "text-emerald-600" : "text-slate-400"}`}>
+                          {p.cited ? "Cited" : "Gap"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </DashboardCard>
         </div>
       </div>
+
+      <QuickFixModal
+        isOpen={isFixOpen}
+        onClose={() => setIsFixOpen(false)}
+        gap={selectedGap}
+        workspace={activeWorkspace}
+      />
     </div>
   );
 }

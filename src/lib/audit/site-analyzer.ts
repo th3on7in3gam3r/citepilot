@@ -84,7 +84,7 @@ function analyzeHtml(html: string): Omit<SiteSignals, "robotsAllows" | "sitemapF
   };
 }
 
-function computeGeoScore(
+export function computeGeoScore(
   signals: Omit<SiteSignals, "geoScore">,
 ): number {
   let score = 0;

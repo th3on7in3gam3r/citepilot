@@ -40,14 +40,15 @@ export function StatCard({
   trend?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+    <div className="group relative overflow-hidden rounded-2xl border border-[#e8edf3] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.05)] transition-shadow hover:shadow-[0_4px_16px_rgba(15,23,42,0.09)]">
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#0ea5e9] to-[#22d3ee] opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94a3b8]">
         {label}
       </p>
-      <p className="font-display mt-2 text-3xl font-bold text-ink">
+      <p className="font-display mt-2 text-3xl font-bold tracking-tight text-[#0f172a]">
         {value}
         {sub && (
-          <span className="ml-1 text-base font-normal text-muted">{sub}</span>
+          <span className="ml-1 text-base font-normal text-[#94a3b8]">{sub}</span>
         )}
       </p>
       {trend && (
@@ -68,10 +69,10 @@ export function Panel({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-border bg-white p-6 shadow-sm ${className}`}
+      className={`rounded-2xl border border-[#e8edf3] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.05)] ${className}`}
     >
       {title && (
-        <h2 className="mb-4 font-display text-lg font-bold text-ink">{title}</h2>
+        <h2 className="mb-4 font-display text-lg font-bold text-[#0f172a]">{title}</h2>
       )}
       {children}
     </section>
