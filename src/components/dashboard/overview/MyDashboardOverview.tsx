@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
@@ -59,6 +60,9 @@ function DashboardNoWorkspace() {
         >
           Add site in settings
         </Link>
+      </div>
+      <div className="mt-8 border-t border-border pt-6">
+        <SignOutButton className="text-sm font-semibold text-muted hover:text-ink disabled:opacity-60" />
       </div>
     </div>
   );

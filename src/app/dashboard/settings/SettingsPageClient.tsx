@@ -1,5 +1,6 @@
 "use client";
 
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { SettingsForm } from "@/components/dashboard/SettingsForm";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
@@ -28,6 +29,10 @@ export function SettingsPageClient() {
         >
           Start setup →
         </a>
+        <div className="mt-8 border-t border-border pt-6">
+          <p className="text-sm text-muted">Signed in? You can sign out anytime.</p>
+          <SignOutButton className="mt-3 rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-60" />
+        </div>
       </div>
     );
   }
