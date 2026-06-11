@@ -192,6 +192,52 @@ export async function markBlogPostWebflowPublish(
   );
 }
 
+export type UpdateBlogPostInput = {
+  title?: string;
+  description?: string;
+  markdown?: string;
+  seoTitle?: string;
+};
+
+export async function updateBlogPost(
+  slug: string,
+  input: UpdateBlogPostInput,
+): Promise<void> {
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+
+  if (input.title !== undefined) {
+    setClauses.push("title = ?");
+    params.push(input.title.trim());
+  }
+  if (input.description !== undefined) {
+    setClauses.push("description = ?");
+    params.push(clampMetaDescription(input.description));
+  }
+  if (input.seoTitle !== undefined) {
+    setClauses.push("seo_title = ?");
+    params.push(clampSeoTitle(input.seoTitle));
+  }
+  if (input.markdown !== undefined) {
+    setClauses.push("markdown = ?");
+    params.push(input.markdown);
+    setClauses.push("reading_minutes = ?");
+    params.push(estimateReadingMinutes(input.markdown));
+  }
+
+  if (setClauses.length === 0) return;
+  params.push(slug);
+  await dbRun(
+    `UPDATE blog_posts SET ${setClauses.join(", ")} WHERE slug = ?`,
+    params,
+  );
+}
+
+export async function deleteBlogPost(slug: string): Promise<void> {
+  await dbRun(`DELETE FROM blog_posts WHERE slug = ?`, [slug]);
+}
+
+
 /** Keep one row per slug — prefer Webflow-published, then newest. */
 export function dedupeBlogPostsBySlug(rows: BlogPostRow[]): BlogPostRow[] {
   const bySlug = new Map<string, BlogPostRow>();

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
+import { BlogManagerPanel } from "@/components/dashboard/BlogManagerPanel";
 import { CmsConnectionsPanel } from "@/components/dashboard/CmsConnectionsPanel";
 import { GenerateArticlePanel } from "@/components/dashboard/GenerateArticlePanel";
 import { CompetitorAnalysisGrid } from "@/components/dashboard/competitors/CompetitorAnalysisGrid";
@@ -291,6 +292,7 @@ function SectionBody({
           <div className="-mx-2">
             <ArticleQueuePanel workspaceId={workspaceId} refreshKey={queueRefreshKey} />
           </div>
+          <BlogManagerPanel workspaceId={workspaceId} />
           <SiteDetailsFooter
             showSave={false}
             continueLabel="Continue"
