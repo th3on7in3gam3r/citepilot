@@ -116,6 +116,21 @@ export function SiteDetailsModule() {
     if (next) goToSection(next.id);
   }, [active, goToSection]);
 
+  const handleSelectOpportunity = useCallback(
+    (params: { topic: string; angle?: string; format?: string; pillar?: string }) => {
+      const search = new URLSearchParams();
+      search.set("section", "generate");
+      if (params.topic) search.set("topic", params.topic);
+      if (params.angle) search.set("angle", params.angle);
+      if (params.format) search.set("format", params.format);
+      if (params.pillar) search.set("pillar", params.pillar);
+
+      setActive("generate");
+      router.replace(`/dashboard/content?${search.toString()}`, { scroll: false });
+    },
+    [router],
+  );
+
   if (!ready) {
     return (
       <div className="animate-pulse space-y-4">
@@ -182,6 +197,7 @@ export function SiteDetailsModule() {
                   void refreshCompletionCtx(workspaceId);
                 }}
                 onContinue={advanceSection}
+                onSelectOpportunity={handleSelectOpportunity}
               />
             </div>
           </div>
@@ -199,6 +215,7 @@ function SectionBody({
   onSaved,
   onGenerated,
   onContinue,
+  onSelectOpportunity,
 }: {
   section: SiteDetailsSectionId;
   workspace: WorkspaceSnapshot;
@@ -207,6 +224,12 @@ function SectionBody({
   onSaved: (updated?: WorkspaceSnapshotResponse) => void;
   onGenerated: () => void;
   onContinue: () => void;
+  onSelectOpportunity: (params: {
+    topic: string;
+    angle?: string;
+    format?: string;
+    pillar?: string;
+  }) => void;
 }) {
   switch (section) {
     case "domain-info":
@@ -219,7 +242,13 @@ function SectionBody({
         />
       );
     case "pages":
-      return <PagesSection onContinue={onContinue} workspace={workspace} />;
+      return (
+        <PagesSection
+          onContinue={onContinue}
+          workspace={workspace}
+          onSelectOpportunity={onSelectOpportunity}
+        />
+      );
     case "google-data":
       return (
         <GoogleDataSection
@@ -303,9 +332,16 @@ function SectionBody({
 function PagesSection({
   workspace,
   onContinue,
+  onSelectOpportunity,
 }: {
   workspace: WorkspaceSnapshot;
   onContinue: () => void;
+  onSelectOpportunity: (params: {
+    topic: string;
+    angle?: string;
+    format?: string;
+    pillar?: string;
+  }) => void;
 }) {
   const persistedStrategy =
     workspace.contentStrategy && workspace.contentStrategy.length > 0
@@ -314,6 +350,7 @@ function PagesSection({
   const calendar: ContentCalendarItem[] =
     persistedStrategy ?? buildContentCalendar(workspace);
   const editorialWeek = buildWeeklyEditorialMix();
+  const primaryKeyword = workspace.buyerQuestion || "your primary keyword";
 
   return (
     <div className="space-y-8">
@@ -324,12 +361,29 @@ function PagesSection({
         </p>
         <ul className="mt-4 divide-y divide-[#eef2f6] text-sm">
           {editorialWeek.map((slot) => (
-            <li key={slot.day} className="flex flex-col gap-1 py-3 sm:flex-row sm:justify-between">
+            <li key={slot.day} className="flex flex-col gap-1 py-3 sm:flex-row sm:justify-between sm:items-center">
               <div>
                 <span className="font-semibold text-[#0f172a]">{slot.day}</span>
                 <span className="text-[#64748b]"> · {slot.pillarTitle}</span>
               </div>
-              <span className="text-xs font-medium text-[#0ea5e9]">{slot.contentType}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-[#0ea5e9] bg-[#0ea5e9]/5 border border-[#0ea5e9]/10 px-2 py-0.5 rounded-md">
+                  {slot.contentType}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onSelectOpportunity({
+                      topic: slot.topicTemplate.replace("[primary keyword]", primaryKeyword),
+                      format: slot.contentType,
+                      pillar: slot.pillarId,
+                    })
+                  }
+                  className="px-2.5 py-1 text-[11px] font-bold text-[#0ea5e9] bg-[#0ea5e9]/5 hover:bg-[#0ea5e9]/10 border border-[#0ea5e9]/20 hover:border-[#0ea5e9]/30 rounded-lg transition-all duration-150 cursor-pointer shadow-sm hover:shadow"
+                >
+                  Use Template ✦
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -338,10 +392,26 @@ function PagesSection({
         <h3 className="text-sm font-semibold text-[#0f172a]">30-day content calendar</h3>
         <ul className="mt-4 divide-y divide-[#eef2f6]">
           {calendar.map((c) => (
-            <li key={c.week} className="py-4 first:pt-0">
-              <p className="text-xs font-semibold text-[#64748b]">{c.week}</p>
-              <p className="font-medium text-[#0f172a]">{c.topic}</p>
-              <p className="mt-1 text-xs text-[#64748b]">{c.rationale}</p>
+            <li key={c.week} className="py-4 first:pt-0 flex flex-col justify-between sm:flex-row sm:items-center gap-3">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-[#64748b]">{c.week}</p>
+                <p className="font-medium text-[#0f172a]">{c.topic}</p>
+                <p className="mt-1 text-xs text-[#64748b]">{c.rationale}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  onSelectOpportunity({
+                    topic: c.topic,
+                    angle: `Rationale: ${c.rationale}`,
+                    format: c.format.toLowerCase() === "pillar" ? "pillar" : c.format.toLowerCase() === "comparison" ? "comparison" : "tutorial",
+                    pillar: "geo",
+                  })
+                }
+                className="shrink-0 self-start sm:self-center px-3.5 py-1.5 text-xs font-bold text-white bg-[#0f172a] hover:bg-[#1e293b] border border-[#0f172a] rounded-full transition-all duration-150 cursor-pointer shadow-sm hover:shadow"
+              >
+                Generate Article ✦
+              </button>
             </li>
           ))}
         </ul>

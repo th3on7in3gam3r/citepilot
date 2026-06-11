@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import {
@@ -41,6 +42,7 @@ export function GenerateArticlePanel({
   workspace?: WorkspaceSnapshot;
   onGenerated?: () => void;
 }) {
+  const searchParams = useSearchParams();
   const [topic, setTopic] = useState("");
   const [angle, setAngle] = useState("");
   const [audience, setAudience] = useState<AudienceSegment>("solo-founder");
@@ -53,6 +55,28 @@ export function GenerateArticlePanel({
 
   const [connectedCms, setConnectedCms] = useState<{ provider: string; label: string } | null>(null);
   const [autoPublish, setAutoPublish] = useState(true);
+
+  // Load configuration from URL query params when they change
+  useEffect(() => {
+    const pTopic = searchParams.get("topic");
+    const pAngle = searchParams.get("angle");
+    const pFormat = searchParams.get("format");
+    const pPillar = searchParams.get("pillar");
+
+    if (!pTopic && !pAngle && !pFormat && !pPillar) return;
+
+    const t = setTimeout(() => {
+      if (pTopic) setTopic(pTopic);
+      if (pAngle) setAngle(pAngle);
+      if (pFormat && pFormat in CONTENT_TYPE_LABELS) {
+        setContentType(pFormat as ContentType);
+      }
+      if (pPillar && EDITORIAL_PILLARS.some((p) => p.id === pPillar)) {
+        setPillar(pPillar as EditorialPillarId);
+      }
+    }, 0);
+    return () => clearTimeout(t);
+  }, [searchParams]);
 
   // Fetch CMS connection statuses on mount to check if any CMS is active
   useEffect(() => {
