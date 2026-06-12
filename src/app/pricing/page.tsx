@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PricingTierActions } from "@/components/billing/PricingTierActions";
 import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
 import { Footer } from "@/components/layout/Footer";
@@ -158,6 +159,42 @@ export default function PricingPage() {
                   </div>
                 </article>
               ))}
+            </div>
+          </section>
+
+          <section
+            className="mx-auto mt-14 max-w-3xl text-center"
+            aria-labelledby="pricing-tools"
+          >
+            <h2
+              id="pricing-tools"
+              className="font-display text-xl font-bold text-white md:text-2xl"
+            >
+              Not sure where you stand?
+            </h2>
+            <p className="mt-3 text-sm text-white/55">
+              Use free tools before you upgrade — then measure citation lift in
+              Pilot.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/citation-checker"
+                className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-accent/40"
+              >
+                Citation checker
+              </Link>
+              <Link
+                href="/tools/citation-gap"
+                className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-accent/40"
+              >
+                Citation gap calculator
+              </Link>
+              <Link
+                href="/agency"
+                className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-accent/40"
+              >
+                Agency & Fleet
+              </Link>
             </div>
           </section>
 

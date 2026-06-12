@@ -11,7 +11,9 @@ export type AnalyticsEvent =
   | "cms_published"
   | "second_audit_completed"
   | "insights_completed"
-  | "autopilot_run";
+  | "autopilot_run"
+  | "citation_checker_started"
+  | "citation_checker_completed";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

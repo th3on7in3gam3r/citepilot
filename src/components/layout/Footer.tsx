@@ -46,7 +46,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-border bg-ink text-white">
       <Container className="py-12 md:py-14">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5 lg:gap-8">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-2">
             <Logo light />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
@@ -76,8 +76,16 @@ export function Footer() {
             <FooterLinks links={nav.footer.tools} />
           </FooterColumn>
 
+          <FooterColumn title="Compare">
+            <FooterLinks links={nav.footer.compare} />
+          </FooterColumn>
+
           <FooterColumn title="Learn">
             <FooterLinks links={nav.footer.learn} />
+          </FooterColumn>
+
+          <FooterColumn title="Company">
+            <FooterLinks links={nav.footer.company} />
           </FooterColumn>
         </div>
 

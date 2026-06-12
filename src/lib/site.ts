@@ -29,7 +29,19 @@ export const nav = {
     ],
     tools: [
       { label: "Citation audit", href: "/audit" },
+      { label: "Citation checker", href: "/citation-checker" },
+      { label: "Citation gap calculator", href: "/tools/citation-gap" },
       { label: "Start analysis", href: "/start" },
+    ],
+    compare: [
+      { label: "vs Semrush", href: "/vs/semrush" },
+      { label: "vs Ahrefs", href: "/vs/ahrefs" },
+      { label: "vs Moz", href: "/vs/moz" },
+    ],
+    company: [
+      { label: "Changelog", href: "/changelog" },
+      { label: "API docs", href: "/docs/api" },
+      { label: "Agencies", href: "/agency" },
     ],
     learn: [
       { label: "GEO Playbook", href: "/geo-playbook" },
