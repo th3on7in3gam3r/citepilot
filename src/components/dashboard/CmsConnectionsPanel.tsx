@@ -494,31 +494,31 @@ export function CmsConnectionsPanel({
               label="Collection ID"
               value={forms.framer.collectionId}
               onChange={(value) => updateForm("framer", "collectionId", value)}
-              placeholder="collection id"
-              help="This is the collection that should receive published articles."
+              placeholder="Blog Posts"
+              help="Collection name or internal ID — e.g. Blog Posts"
             />
             <div className="grid gap-3 md:grid-cols-2">
               <Field
-                label="Title field ID"
+                label="Title field"
                 value={forms.framer.titleFieldId}
                 onChange={(value) => updateForm("framer", "titleFieldId", value)}
-                placeholder="title field"
-                help="Field ID where the article title should be written."
+                placeholder="title"
+                help="Field name or ID for the article title."
               />
               <Field
-                label="Body field ID"
+                label="Body field"
                 value={forms.framer.bodyFieldId}
                 onChange={(value) => updateForm("framer", "bodyFieldId", value)}
-                placeholder="body field"
-                help="Formatted-text field ID for the article body."
+                placeholder="body"
+                help="Field name or ID for article content (formatted text preferred)."
               />
             </div>
             <Field
-              label="Summary field ID (optional)"
+              label="Summary field (optional)"
               value={forms.framer.summaryFieldId}
               onChange={(value) => updateForm("framer", "summaryFieldId", value)}
-              placeholder="summary field"
-              help="Optional short-text field for the article summary or excerpt."
+              placeholder="summary"
+              help="Optional field name or ID for excerpt/summary."
             />
           </div>
         </ProviderCard>
