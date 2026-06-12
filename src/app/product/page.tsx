@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { FreeToolsSection } from "@/components/marketing/FreeToolsSection";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
+import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
 import { productLanding } from "@/lib/marketing/product-landing";
 import { positioning } from "@/lib/content";
@@ -60,6 +61,7 @@ export default function ProductPage() {
           </div>
         </MarketingDarkHero>
 
+        <ProductTransparencySection variant="dark" showFaqs />
         <FeatureSuite />
         <Pillars />
         <StickyProductShowcase />
@@ -71,7 +73,8 @@ export default function ProductPage() {
               Ready to see where you&apos;re cited?
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm text-white/60 md:text-base">
-              Run a free 60-second audit across eight AI engines — no credit card.
+              Run a free 60-second audit — live probes where configured, plus GEO
+              estimates across eight engines. No credit card.
             </p>
             <Link
               href="/audit"

@@ -148,4 +148,8 @@ export const auditLandingFaqs = [
     q: "What should I do after the audit?",
     a: "Fix top gaps (schema, FAQ, answer capsules), create a CitePilot workspace for weekly rescans, or read the GEO Playbook for Perplexity and ChatGPT optimization frameworks.",
   },
+  {
+    q: "Does this audit guarantee I'll get cited?",
+    a: "No. The audit measures current signals and likely citation alignment — it does not guarantee future AI citations. Use it to find gaps, ship fixes yourself, then re-scan to measure change.",
+  },
 ] as const;

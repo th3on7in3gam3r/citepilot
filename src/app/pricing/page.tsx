@@ -4,6 +4,7 @@ import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
+import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
 import { pricingTiers } from "@/lib/content";
 import { pricingFaqs, pricingLanding } from "@/lib/marketing/pricing-landing";
@@ -161,6 +162,8 @@ export default function PricingPage() {
               ))}
             </div>
           </section>
+
+          <ProductTransparencySection variant="dark" />
 
           <section
             className="mx-auto mt-14 max-w-3xl text-center"

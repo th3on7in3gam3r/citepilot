@@ -103,6 +103,14 @@ export const faq = [
     q: "How does ongoing monitoring work?",
     a: "Pilot and Fleet re-scan your monitored prompts on a weekly schedule, store citation history for trend charts, and email digests or score-drop alerts when configured in Settings.",
   },
+  {
+    q: "Does CitePilot guarantee I'll get cited in AI answers?",
+    a: "No. CitePilot monitors citation presence, recommends fixes, and measures change after you ship them. We do not control what any AI engine cites, and audit scores are informational — not outcome guarantees.",
+  },
+  {
+    q: "What does Autopilot automate?",
+    a: "Weekly re-scans, optional Insights action plans, and optional email reports with citation deltas. It does not edit your live site or auto-publish to CMS — you remain in control of every change.",
+  },
 ] as const;
 
 export const pricingTiers = [
@@ -113,7 +121,7 @@ export const pricingTiers = [
     description: "One-time citation snapshot for your domain.",
     features: [
       "Up to 10 money prompts",
-      "8 AI platform scan",
+      "8 AI platforms (live + estimated)",
       "Gap summary & competitor mentions",
       "Shareable report link",
     ],

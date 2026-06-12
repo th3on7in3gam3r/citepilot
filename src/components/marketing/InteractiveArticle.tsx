@@ -94,8 +94,8 @@ const CITE_PILOT_FEATURES = [
     body: "Pinpoint exactly why you were excluded and which sources the LLM trusted instead.",
   },
   {
-    title: "Automated Remediation",
-    body: "Get clear, actionable workflows to update your digital footprint so LLMs reference your product on autopilot.",
+    title: "Prioritized remediation",
+    body: "Get clear, actionable workflows to update your digital footprint — then re-scan to verify whether citation signals improved.",
   },
 ] as const;
 

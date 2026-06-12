@@ -11,6 +11,7 @@ import { AnswerCapsuleSection } from "@/components/home/AnswerCapsuleSection";
 import { Testimonials } from "@/components/home/Testimonials";
 import { BottomCTA } from "@/components/home/BottomCTA";
 import { FAQ } from "@/components/home/FAQ";
+import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 
 /** Home sections — ordered for narrative flow, no duplicate loops. */
 export function HomePage() {
@@ -27,6 +28,7 @@ export function HomePage() {
       <Differentiators />
       <AnswerCapsuleSection />
       <Testimonials />
+      <ProductTransparencySection />
       <BottomCTA />
       <FAQ />
     </>

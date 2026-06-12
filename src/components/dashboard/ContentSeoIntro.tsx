@@ -137,9 +137,9 @@ export function ContentSeoIntro({ section = "header" }: ContentSeoIntroProps) {
       </h1>
       <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted md:text-base">
         The CitePilot content workspace turns citation audit gaps into branded
-        articles, editorial calendars, and CMS publishes that help you get cited
-        in ChatGPT, Perplexity, Google AI Overviews, and other generative answer
-        surfaces. Instead of generic AI blog volume, every piece is tied to money
+        articles, editorial calendars, and CMS publishes that target citation
+        gaps on ChatGPT, Perplexity, Google AI Overviews, and other generative
+        answer surfaces. Instead of generic AI blog volume, every piece is tied to money
         prompts — the buyer questions that actually drive pipeline.
       </p>
       <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted md:text-base">

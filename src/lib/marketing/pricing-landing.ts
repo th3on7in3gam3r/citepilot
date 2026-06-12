@@ -15,7 +15,7 @@ export const pricingFaqs = [
   },
   {
     q: "What does Pilot add over the free audit?",
-    a: "Pilot monitors up to 25 prompts on a weekly cadence, tracks citation deltas, sends competitor-move alerts, generates prioritized action plans, and publishes fixes to Webflow, WordPress, Ghost, Shopify, or Framer.",
+    a: "Pilot monitors up to 25 prompts on a weekly cadence, tracks citation deltas, sends competitor-move alerts, generates prioritized action plans, and lets you publish generated content to Webflow, WordPress, Ghost, Shopify, or Framer from the article queue — you approve every publish.",
   },
   {
     q: "When should an agency choose Fleet?",
@@ -24,5 +24,9 @@ export const pricingFaqs = [
   {
     q: "Which AI engines does CitePilot monitor?",
     a: "Every plan maps presence across ChatGPT, Perplexity, Google AI Overviews, Gemini, Copilot, Claude, Grok, and DeepSeek. Live API probes run where keys are configured; remaining engines use GEO-informed inference from your site signals.",
+  },
+  {
+    q: "Does paying guarantee more AI citations?",
+    a: "No. Paid plans add monitoring, planning, publishing tools, and agency scale — not guaranteed placement in LLM answers. Results depend on your site, content, authority, and each engine's retrieval behavior.",
   },
 ] as const;

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { AuditDiagnosticExplorer } from "@/components/audit/AuditDiagnosticExplorer";
 import { AuditForm } from "@/components/audit/AuditForm";
 import { AuditSeoIntro } from "@/components/audit/AuditSeoIntro";
+import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
@@ -150,6 +151,8 @@ export default function AuditPage() {
 
           </Container>
         </div>
+
+        <ProductTransparencySection variant="light" />
       </main>
       <Footer />
     </>
