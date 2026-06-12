@@ -1,6 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { HeroProductBanner } from "@/components/home/HeroProductBanner";
-import { AnswerCapsule } from "@/components/home/AnswerCapsule";
+import { HeroSocialProof } from "@/components/home/HeroSocialProof";
 import Link from "next/link";
 
 export function Hero() {
@@ -20,47 +20,46 @@ export function Hero() {
             Citation intelligence for AI search
           </div>
 
-          <h1 className="font-display mt-5 text-[2.125rem] font-bold leading-[1.08] tracking-[-0.02em] sm:mt-6 sm:text-5xl md:text-[3.5rem] lg:text-[3.75rem]">
-            Grow SEO + LLM traffic
-            <span className="mt-0.5 block text-shimmer">on autopilot</span>
+          <h1 className="font-display mt-5 text-[2rem] font-bold leading-[1.1] tracking-[-0.02em] sm:mt-6 sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.5rem]">
+            Get cited by ChatGPT, Perplexity, and Google AI
+            <span className="mt-1 block text-shimmer sm:mt-1.5">automatically</span>
           </h1>
 
           <p className="mx-auto mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-white/60 sm:mt-5 sm:max-w-2xl sm:text-lg">
-            CitePilot audits your money prompts, tracks citation changes, and
-            sends weekly action plans + proof reports so you can grow organic and
-            AI visibility without constant manual work.
+            Audit your money prompts, track when citations change, and get weekly
+            fixes with proof reports — without manual GEO busywork.
           </p>
 
-          <AnswerCapsule variant="hero" />
+          <HeroSocialProof />
 
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row">
+          <div className="mt-8 flex flex-col items-center sm:mt-10">
             <Link
               href="/audit"
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-5 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(107,140,255,0.3)] transition hover:opacity-95 sm:text-base"
+              className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-8 py-3.5 text-base font-bold text-white shadow-[0_8px_32px_rgba(14,165,233,0.45)] transition hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(14,165,233,0.5)] sm:w-auto sm:min-w-[15rem]"
             >
               Start free audit
             </Link>
             <Link
               href="/dashboard/settings"
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.04] px-5 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/[0.08] sm:text-base"
+              className="mt-4 text-sm font-medium text-white/45 underline decoration-white/15 underline-offset-4 transition hover:text-white/70 hover:decoration-white/30"
             >
-              See how Autopilot works
+              See how Autopilot works →
             </Link>
           </div>
-          <p className="mt-4 text-sm text-white/55">
+
+          <p className="mt-5 text-sm text-white/45">
             New —{" "}
             <Link
               href="/geo-playbook"
-              className="font-semibold text-white/85 underline decoration-white/25 underline-offset-4 transition hover:text-glow hover:decoration-glow"
+              className="font-medium text-white/65 underline decoration-white/20 underline-offset-4 transition hover:text-glow hover:decoration-glow/50"
             >
               Read the complete GEO Playbook
             </Link>
-            , including our Perplexity citation guide.
           </p>
 
-          <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-medium tracking-wide text-white/45 sm:text-xs">
+          <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-medium tracking-wide text-white/35 sm:text-xs">
             Weekly rescans • Citation delta tracking • Client-ready proof reports •
-            No CMS auto-publish
+            No credit card
           </p>
         </header>
 

@@ -34,7 +34,7 @@ export function AnswerCapsule({ variant = "hero" }: AnswerCapsuleProps) {
   return (
     <aside
       aria-label="CitePilot answer capsule for AI search engines"
-      className={isHero ? "mx-auto mt-6 max-w-3xl text-left sm:mt-8" : undefined}
+          className={isHero ? "mx-auto max-w-3xl text-left sm:mt-8" : "mx-auto max-w-4xl"}
     >
       <div
         className={

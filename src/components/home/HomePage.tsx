@@ -6,6 +6,7 @@ import { ScrollBrandMarquee } from "@/components/home/ScrollBrandMarquee";
 import { StickyProductShowcase } from "@/components/home/StickyProductShowcase";
 import { Pillars } from "@/components/home/Pillars";
 import { Differentiators } from "@/components/home/Differentiators";
+import { AnswerCapsuleSection } from "@/components/home/AnswerCapsuleSection";
 import { Testimonials } from "@/components/home/Testimonials";
 import { BottomCTA } from "@/components/home/BottomCTA";
 import { FAQ } from "@/components/home/FAQ";
@@ -22,6 +23,7 @@ export function HomePage() {
       <StickyProductShowcase />
       <Pillars />
       <Differentiators />
+      <AnswerCapsuleSection />
       <Testimonials />
       <BottomCTA />
       <FAQ />
