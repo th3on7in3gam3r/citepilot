@@ -16,9 +16,33 @@ export const nav = {
   main: [
     { label: "How it works", href: "/#journey" },
     { label: "Product", href: "/product" },
+    {
+      label: "Free tools",
+      href: "/citation-checker",
+      children: [
+        {
+          label: "Citation checker",
+          href: "/citation-checker",
+          description: "One prompt · instant verdict · no account",
+        },
+        {
+          label: "Full citation audit",
+          href: "/audit",
+          description: "10 prompts · 8 AI engines · shareable report",
+        },
+        {
+          label: "Citation gap calculator",
+          href: "/tools/citation-gap",
+          description: "Estimate ROI gap by industry & competitors",
+        },
+      ],
+    },
+    { label: "Agencies", href: "/agency" },
+    { label: "Pricing", href: "/pricing" },
+  ],
+  secondary: [
     { label: "Blog", href: "/blog" },
     { label: "GEO Playbook", href: "/geo-playbook" },
-    { label: "Pricing", href: "/pricing" },
   ],
   footer: {
     product: [

@@ -25,11 +25,18 @@ export function HomeActionBar() {
             {nav.startAnalysis.label}
           </PillButton>
           <ProductCTA
+            href="/citation-checker"
+            variant="accent"
+            sublabel="One prompt · no account"
+          >
+            Citation checker
+          </ProductCTA>
+          <ProductCTA
             href={nav.cta.href}
             variant="outline"
-            sublabel="Skip setup · ~60 sec"
+            sublabel="10 prompts · ~60 sec"
           >
-            Quick citation audit
+            Full citation audit
           </ProductCTA>
           <ProductCTA
             href="/#journey"

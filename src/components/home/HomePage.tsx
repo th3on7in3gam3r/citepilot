@@ -1,3 +1,4 @@
+import { FreeToolsSection } from "@/components/marketing/FreeToolsSection";
 import { FeatureSuite } from "@/components/home/FeatureSuite";
 import { GeoPlaybookPromo } from "@/components/home/GeoPlaybookPromo";
 import { Hero } from "@/components/home/Hero";
@@ -17,6 +18,7 @@ export function HomePage() {
     <>
       <Hero />
       <HomeActionBar />
+      <FreeToolsSection />
       <FeatureSuite />
       <GeoPlaybookPromo />
       <ScrollBrandMarquee />

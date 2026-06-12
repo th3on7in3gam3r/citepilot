@@ -2,6 +2,7 @@
 
 import { Container } from "@/components/ui/Container";
 import { HeaderAuthLinks } from "@/components/layout/HeaderAuthLinks";
+import { HeaderNavDropdown } from "@/components/layout/HeaderNavDropdown";
 import { HeaderStartButton } from "@/components/layout/HeaderStartButton";
 import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
@@ -37,20 +38,30 @@ export function Header({
     >
       <Container className="flex h-16 items-center justify-between gap-6 md:h-[4.5rem]">
         <Logo light={onDark} />
-        <nav className="hidden items-center gap-10 md:flex">
-          {nav.main.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`text-sm font-medium transition ${
-                onDark
-                  ? "text-white/75 hover:text-white"
-                  : "text-muted hover:text-ink"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-8 lg:flex">
+          {nav.main.map((item) =>
+            "children" in item && item.children ? (
+              <HeaderNavDropdown
+                key={item.label}
+                label={item.label}
+                href={item.href}
+                items={item.children}
+                onDark={onDark}
+              />
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`text-sm font-medium transition ${
+                  onDark
+                    ? "text-white/75 hover:text-white"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
         <div className="flex shrink-0 items-center gap-4 sm:gap-6">
           <HeaderAuthLinks onDark={onDark} />

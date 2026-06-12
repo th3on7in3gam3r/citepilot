@@ -3,6 +3,7 @@ import { Pillars } from "@/components/home/Pillars";
 import { StickyProductShowcase } from "@/components/home/StickyProductShowcase";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { FreeToolsSection } from "@/components/marketing/FreeToolsSection";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { Container } from "@/components/ui/Container";
 import { productLanding } from "@/lib/marketing/product-landing";
@@ -45,10 +46,16 @@ export default function ProductPage() {
               Start free audit
             </Link>
             <Link
-              href="/pricing"
+              href="/citation-checker"
               className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.04] px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/[0.08]"
             >
-              View pricing
+              Try citation checker
+            </Link>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center justify-center rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-white/55 transition hover:text-white/80"
+            >
+              Pricing
             </Link>
           </div>
         </MarketingDarkHero>
@@ -56,6 +63,7 @@ export default function ProductPage() {
         <FeatureSuite />
         <Pillars />
         <StickyProductShowcase />
+        <FreeToolsSection variant="dark" />
 
         <section className="border-t border-white/[0.06] bg-ink py-16 text-white md:py-20">
           <Container className="text-center">

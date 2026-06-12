@@ -39,12 +39,23 @@ export function Hero() {
             >
               Start free audit
             </Link>
-            <Link
-              href="/dashboard/settings"
-              className="mt-4 text-sm font-medium text-white/45 underline decoration-white/15 underline-offset-4 transition hover:text-white/70 hover:decoration-white/30"
-            >
-              See how Autopilot works →
-            </Link>
+            <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+              <Link
+                href="/citation-checker"
+                className="text-sm font-semibold text-glow underline decoration-glow/30 underline-offset-4 transition hover:text-white hover:decoration-white/40"
+              >
+                Try free citation checker →
+              </Link>
+              <span className="hidden text-white/25 sm:inline" aria-hidden>
+                ·
+              </span>
+              <Link
+                href="/dashboard/settings"
+                className="text-sm font-medium text-white/45 underline decoration-white/15 underline-offset-4 transition hover:text-white/70 hover:decoration-white/30"
+              >
+                See how Autopilot works
+              </Link>
+            </div>
           </div>
 
           <p className="mt-5 text-sm text-white/45">
