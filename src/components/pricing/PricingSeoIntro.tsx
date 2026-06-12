@@ -75,7 +75,7 @@ export function PricingSeoIntro() {
         </p>
         <p className="mt-3">
           New to GEO? Start with the{" "}
-          <Link href="/nurture" className="font-semibold text-accent">
+          <Link href="/geo-playbook" className="font-semibold text-accent">
             GEO Playbook
           </Link>
           , map buyer intent with the{" "}

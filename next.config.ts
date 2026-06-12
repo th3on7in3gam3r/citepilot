@@ -10,9 +10,14 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/dashboard/admin/login",
-        destination: "/admin/login",
-        permanent: false,
+        source: "/nurture",
+        destination: "/geo-playbook",
+        permanent: true,
+      },
+      {
+        source: "/nurture/:path*",
+        destination: "/geo-playbook/:path*",
+        permanent: true,
       },
     ];
   },

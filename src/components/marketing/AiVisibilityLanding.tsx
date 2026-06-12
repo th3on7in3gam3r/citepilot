@@ -204,7 +204,7 @@ export function AiVisibilityLanding() {
               Run free citation audit
             </Link>
             <Link
-              href="/nurture"
+              href="/geo-playbook"
               className="inline-flex rounded-full border border-white/25 px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               Read GEO Playbook

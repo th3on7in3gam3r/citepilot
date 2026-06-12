@@ -50,7 +50,7 @@ export function Hero() {
           <p className="mt-4 text-sm text-white/55">
             New —{" "}
             <Link
-              href="/nurture"
+              href="/geo-playbook"
               className="font-semibold text-white/85 underline decoration-white/25 underline-offset-4 transition hover:text-glow hover:decoration-glow"
             >
               Read the complete GEO Playbook

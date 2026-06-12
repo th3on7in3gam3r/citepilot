@@ -51,7 +51,7 @@ export function OverviewSeoIntro({ section = "header" }: OverviewSeoIntroProps) 
               </p>
               <p className="mt-2">
                 New to GEO? Start with the{" "}
-                <Link href="/nurture" className="font-semibold text-accent">
+                <Link href="/geo-playbook" className="font-semibold text-accent">
                   GEO Playbook
                 </Link>
                 , map buyer intent via{" "}

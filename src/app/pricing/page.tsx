@@ -1,9 +1,9 @@
 import { PricingTierActions } from "@/components/billing/PricingTierActions";
 import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
-import { Container } from "@/components/ui/Container";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
+import { Container } from "@/components/ui/Container";
 import { pricingTiers } from "@/lib/content";
 import { pricingFaqs, pricingLanding } from "@/lib/marketing/pricing-landing";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
@@ -28,62 +28,60 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <>
-      <Header />
-      <main className="bg-cream pt-16 md:pt-[4.5rem]">
-        <Container className="py-16 md:py-24 lg:py-28">
-          <SectionHeading
-            headingLevel="h1"
-            eyebrow="Pricing"
-            title="GEO and AI citation monitoring pricing"
-            description="Start free. Scale when citations move. Free includes 1 workspace and a citation audit. Upgrade to Pilot for 3 workspaces plus monitoring, content generation, and CMS publish, or Fleet for unlimited client workspaces."
-            align="center"
-          />
+      <Header light overlay />
+      <main className="bg-[#04060c]">
+        <MarketingDarkHero
+          eyebrow="Pricing"
+          title="GEO and AI citation monitoring pricing"
+          description="Start free. Scale when citations move. Free includes 1 workspace and a citation audit. Upgrade to Pilot for 3 workspaces plus monitoring, content generation, and CMS publish, or Fleet for unlimited client workspaces."
+        />
 
+        <Container className="py-14 md:py-20 lg:py-24">
           <section
-            className="mx-auto mt-10 max-w-5xl"
+            className="mx-auto max-w-5xl"
             aria-labelledby="pricing-overview"
           >
             <h2
               id="pricing-overview"
-              className="font-display text-center text-xl font-bold text-ink md:text-2xl"
+              className="font-display text-center text-xl font-bold text-white md:text-2xl"
             >
               Plan comparison at a glance
             </h2>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-glow">
                   Free
                 </p>
-                <p className="mt-2 font-semibold text-ink">
+                <p className="mt-2 font-semibold text-white">
                   Start with 1 workspace
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
+                <p className="mt-2 text-sm leading-relaxed text-white/55">
                   Run a free citation audit with up to 10 money prompts, 8 AI
                   platforms, competitor mentions, and a shareable report link.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-accent/20 bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98))] p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              <div className="rounded-2xl border border-accent/30 bg-[linear-gradient(180deg,rgba(14,165,233,0.12),rgba(255,255,255,0.04))] p-5 shadow-[0_0_40px_rgba(14,165,233,0.08)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-glow">
                   Pilot
                 </p>
-                <p className="mt-2 font-semibold text-ink">
+                <p className="mt-2 font-semibold text-white">
                   Upgrade for 3 workspaces
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
+                <p className="mt-2 text-sm leading-relaxed text-white/55">
                   Add monitoring, weekly action plans, article generation, CMS
                   publishing, and email alerts when competitor movement matters.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-glow">
                   Fleet
                 </p>
-                <p className="mt-2 font-semibold text-ink">
+                <p className="mt-2 font-semibold text-white">
                   Scale to unlimited clients
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
+                <p className="mt-2 text-sm leading-relaxed text-white/55">
                   Built for agencies that need unlimited workspaces, white-label
                   reporting, API access, bulk imports, and priority support.
                 </p>
@@ -97,7 +95,7 @@ export default function PricingPage() {
           >
             <h2
               id="pricing-tiers"
-              className="font-display text-center text-xl font-bold text-ink md:text-2xl"
+              className="font-display text-center text-xl font-bold text-white md:text-2xl"
             >
               Choose your plan
             </h2>
@@ -107,22 +105,18 @@ export default function PricingPage() {
                   key={tier.name}
                   className={`flex flex-col rounded-2xl border p-8 md:p-10 ${
                     tier.highlighted
-                      ? "border-accent bg-ink text-white shadow-xl shadow-accent/20"
-                      : "border-border bg-white"
+                      ? "border-accent/40 bg-gradient-to-b from-accent/20 to-white/[0.06] text-white shadow-xl shadow-accent/10"
+                      : "border-white/10 bg-white/[0.04] text-white backdrop-blur-sm"
                   }`}
                 >
-                  <h3
-                    className={`font-display text-lg font-bold ${
-                      tier.highlighted ? "text-white" : "text-ink"
-                    }`}
-                  >
+                  <h3 className="font-display text-lg font-bold text-white">
                     {tier.name}
                   </h3>
                   <p className="mt-5 font-display text-4xl font-bold">
                     {tier.price}
                     <span
                       className={`text-base font-normal ${
-                        tier.highlighted ? "text-white/60" : "text-muted"
+                        tier.highlighted ? "text-white/60" : "text-white/50"
                       }`}
                     >
                       {tier.period}
@@ -130,7 +124,7 @@ export default function PricingPage() {
                   </p>
                   <p
                     className={`mt-3 text-sm leading-relaxed ${
-                      tier.highlighted ? "text-white/65" : "text-muted"
+                      tier.highlighted ? "text-white/65" : "text-white/55"
                     }`}
                   >
                     {tier.description}
@@ -140,10 +134,10 @@ export default function PricingPage() {
                       <li
                         key={f}
                         className={`flex gap-3 text-sm leading-relaxed ${
-                          tier.highlighted ? "text-white/80" : "text-muted"
+                          tier.highlighted ? "text-white/80" : "text-white/70"
                         }`}
                       >
-                        <span className="shrink-0 text-accent">✓</span>
+                        <span className="shrink-0 text-glow">✓</span>
                         {f}
                       </li>
                     ))}
@@ -167,7 +161,9 @@ export default function PricingPage() {
             </div>
           </section>
 
-          <PricingSeoIntro />
+          <div className="mt-14 text-white [&_h2]:text-white [&_h3]:text-white [&_p]:text-white/60 [&_a]:text-glow">
+            <PricingSeoIntro />
+          </div>
 
           <section
             className="mx-auto mt-14 max-w-3xl"
@@ -175,7 +171,7 @@ export default function PricingPage() {
           >
             <h2
               id="pricing-faq"
-              className="font-display text-center text-xl font-bold text-ink md:text-2xl"
+              className="font-display text-center text-xl font-bold text-white md:text-2xl"
             >
               Pricing FAQ
             </h2>
@@ -183,10 +179,10 @@ export default function PricingPage() {
               {pricingFaqs.map((faq) => (
                 <div
                   key={faq.q}
-                  className="rounded-2xl border border-border bg-white p-6 shadow-sm"
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm"
                 >
-                  <dt className="font-display font-bold text-ink">{faq.q}</dt>
-                  <dd className="mt-2 text-sm leading-relaxed text-muted">
+                  <dt className="font-display font-bold text-white">{faq.q}</dt>
+                  <dd className="mt-2 text-sm leading-relaxed text-white/60">
                     {faq.a}
                   </dd>
                 </div>

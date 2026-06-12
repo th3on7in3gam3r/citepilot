@@ -58,7 +58,7 @@ export function GeoAuditSeoIntro({ section = "header" }: GeoAuditSeoIntroProps) 
                 Analytics
               </Link>
               . For structured data and entity optimization, follow the{" "}
-              <Link href="/nurture" className="font-semibold text-accent">
+              <Link href="/geo-playbook" className="font-semibold text-accent">
                 GEO Playbook
               </Link>{" "}
               or the{" "}

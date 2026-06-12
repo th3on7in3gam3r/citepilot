@@ -64,7 +64,7 @@ export function ContentSeoIntro({ section = "header" }: ContentSeoIntroProps) {
                 ChatGPT money prompts guide
               </Link>{" "}
               or deepen GEO strategy in the{" "}
-              <Link href="/nurture" className="font-semibold text-accent">
+              <Link href="/geo-playbook" className="font-semibold text-accent">
                 GEO Playbook
               </Link>
               .

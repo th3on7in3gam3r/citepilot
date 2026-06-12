@@ -63,7 +63,7 @@ export function DiscussionsSeoIntro({
                 free citation audit
               </Link>
               , and deepen GEO strategy in the{" "}
-              <Link href="/nurture" className="font-semibold text-accent">
+              <Link href="/geo-playbook" className="font-semibold text-accent">
                 GEO Playbook
               </Link>
               . For Reddit-specific workflows, open the{" "}

@@ -119,7 +119,7 @@ export function downloadGeoPlaybook(): void {
 }
 
 export const geoPlaybook = {
-  path: "/nurture",
+  path: "/geo-playbook",
   title:
     "The Complete GEO Playbook: Money Prompts, RAG Citations & Share of Model",
   shortTitle: "GEO Playbook — Complete Guide",
