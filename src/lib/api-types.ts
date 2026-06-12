@@ -104,7 +104,7 @@ export type RedditThread = DiscussionThread;
 export type DiscussionThread = {
   id: string;
   title: string;
-  source: "hackernews" | "stackexchange" | "serper" | "tavily";
+  source: "hackernews" | "stackexchange" | "serper" | "serpapi" | "tavily";
   sourceLabel: string;
   url: string;
   score: number;

@@ -1,4 +1,9 @@
 import type { BacklinkSource } from "@/lib/backlinks/types";
+import {
+  googleSearchConfigured,
+  searchGoogle,
+  webDiscoveryConfigured,
+} from "@/lib/search/google";
 
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
@@ -27,43 +32,27 @@ function dedupeSources(items: BacklinkSource[]): BacklinkSource[] {
   return out;
 }
 
-async function fetchSerperBacklinks(domain: string): Promise<BacklinkSource[]> {
-  const key = process.env.SERPER_API_KEY;
-  if (!key) return [];
+async function fetchGoogleBacklinks(domain: string): Promise<BacklinkSource[]> {
+  if (!googleSearchConfigured()) return [];
 
-  const queries = [
-    `"${domain}" -site:${domain}`,
-    `link:${domain}`,
-  ];
-
+  const queries = [`"${domain}" -site:${domain}`, `link:${domain}`];
   const results: BacklinkSource[] = [];
 
   for (const q of queries) {
-    const res = await fetch("https://google.serper.dev/search", {
-      method: "POST",
-      headers: {
-        "X-API-KEY": key,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ q, num: 10 }),
-      cache: "no-store",
-    });
-    if (!res.ok) continue;
+    const data = await searchGoogle(q, { num: 10 });
+    if (!data) continue;
 
-    const data = (await res.json()) as {
-      organic?: { title?: string; link?: string }[];
-    };
-
-    for (const item of data.organic ?? []) {
+    const sourceTag = data.provider;
+    for (const item of data.organic) {
       if (!item.link) continue;
       const sourceDomain = hostFromUrl(item.link);
       if (sourceDomain === domain.replace(/^www\./, "")) continue;
       results.push({
-        id: `serper-${encodeURIComponent(item.link)}`,
+        id: `${sourceTag}-${encodeURIComponent(item.link)}`,
         url: item.link,
         title: item.title ?? sourceDomain,
         sourceDomain,
-        discoverySource: "serper",
+        discoverySource: sourceTag,
       });
     }
   }
@@ -185,22 +174,20 @@ export async function discoverBacklinkSources(input: {
   domain: string;
   competitors: string[];
 }): Promise<BacklinkSource[]> {
-  const [serper, tavily] = await Promise.all([
-    fetchSerperBacklinks(input.domain),
+  const [google, tavily] = await Promise.all([
+    fetchGoogleBacklinks(input.domain),
     fetchTavilyBacklinks(input.domain),
   ]);
 
   return dedupeSources([
-    ...serper,
+    ...google,
     ...tavily,
     ...competitorSources(input.domain, input.competitors),
   ]).slice(0, 30);
 }
 
 export function searchConfigured(): boolean {
-  return Boolean(
-    process.env.SERPER_API_KEY?.trim() || process.env.TAVILY_API_KEY?.trim(),
-  );
+  return webDiscoveryConfigured();
 }
 
 export function openPageRankConfigured(): boolean {

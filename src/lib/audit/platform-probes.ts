@@ -2,6 +2,11 @@ import { PLATFORMS } from "@/lib/dashboard";
 import { brandFromDomain } from "@/lib/audit/site-analyzer";
 import type { BillingPlan } from "@/lib/billing/types";
 import type { SiteSignals } from "@/lib/api-types";
+import {
+  googleSearchConfigured,
+  googleSearchContextText,
+  searchGoogle,
+} from "@/lib/search/google";
 
 export type PlatformCheckMode = "live" | "inferred";
 
@@ -19,12 +24,12 @@ export type PlatformPresenceRow = {
   share: number;
 };
 
-type LiveProvider = "openai" | "perplexity" | "serper";
+type LiveProvider = "openai" | "perplexity" | "google";
 
 const LIVE_PLATFORM_PROVIDERS: Record<string, LiveProvider | null> = {
   ChatGPT: "openai",
   Perplexity: "perplexity",
-  "Google AI Overviews": "serper",
+  "Google AI Overviews": "google",
   Gemini: null,
   Copilot: null,
   Claude: null,
@@ -134,32 +139,13 @@ async function fetchPerplexityAnswer(prompt: string): Promise<string | null> {
   return data.choices?.[0]?.message?.content ?? null;
 }
 
-async function fetchSerperContext(prompt: string): Promise<string | null> {
-  const key = process.env.SERPER_API_KEY;
-  if (!key) return null;
-
-  const res = await fetchWithTimeout("https://google.serper.dev/search", {
-    method: "POST",
-    headers: {
-      "X-API-KEY": key,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ q: prompt, num: 8 }),
+async function fetchGoogleSearchContext(prompt: string): Promise<string | null> {
+  const result = await searchGoogle(prompt, {
+    num: 8,
+    signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
   });
-  if (!res?.ok) return null;
-  const data = (await res.json()) as {
-    answerBox?: { snippet?: string; title?: string };
-    organic?: { title?: string; snippet?: string; link?: string }[];
-  };
-  const parts: string[] = [];
-  if (data.answerBox?.snippet) parts.push(data.answerBox.snippet);
-  if (data.answerBox?.title) parts.push(data.answerBox.title);
-  for (const row of data.organic ?? []) {
-    if (row.title) parts.push(row.title);
-    if (row.snippet) parts.push(row.snippet);
-    if (row.link) parts.push(row.link);
-  }
-  return parts.join("\n") || null;
+  if (!result) return null;
+  return googleSearchContextText(result) || null;
 }
 
 async function fetchLiveAnswer(
@@ -168,7 +154,7 @@ async function fetchLiveAnswer(
 ): Promise<string | null> {
   if (provider === "openai") return fetchOpenAiAnswer(prompt);
   if (provider === "perplexity") return fetchPerplexityAnswer(prompt);
-  return fetchSerperContext(prompt);
+  return fetchGoogleSearchContext(prompt);
 }
 
 async function runPool<T>(
@@ -199,7 +185,7 @@ function probeBudget(plan: BillingPlan): {
     if (!provider) return false;
     if (provider === "openai") return Boolean(process.env.OPENAI_API_KEY);
     if (provider === "perplexity") return Boolean(process.env.PERPLEXITY_API_KEY);
-    if (provider === "serper") return Boolean(process.env.SERPER_API_KEY);
+    if (provider === "google") return googleSearchConfigured();
     return false;
   });
 

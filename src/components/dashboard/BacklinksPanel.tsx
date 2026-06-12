@@ -212,7 +212,8 @@ export function BacklinksPanel() {
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           <p className="font-semibold">Web search not configured</p>
           <p className="mt-1 text-amber-900">
-            Add <code className="text-xs">SERPER_API_KEY</code> or{" "}
+            Add <code className="text-xs">SERPER_API_KEY</code>,{" "}
+            <code className="text-xs">SERPAPI_API_KEY</code>, or{" "}
             <code className="text-xs">TAVILY_API_KEY</code> to discover referring
             pages. Competitors from Settings still appear as peer targets.
           </p>

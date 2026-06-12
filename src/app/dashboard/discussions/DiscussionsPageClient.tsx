@@ -15,6 +15,7 @@ const sourceStyle: Record<DiscussionThread["source"], string> = {
   hackernews: "bg-orange-50 text-orange-800",
   stackexchange: "bg-amber-50 text-amber-900",
   serper: "bg-sky-50 text-sky-900",
+  serpapi: "bg-sky-50 text-sky-900",
   tavily: "bg-violet-50 text-violet-900",
 };
 
@@ -55,7 +56,8 @@ export function DiscussionsPageClient() {
           Threads from <strong className="text-ink">Hacker News</strong>,{" "}
           <strong className="text-ink">Stack Overflow</strong>, and{" "}
           <strong className="text-ink">web search</strong> (
-          <code className="text-xs">SERPER_API_KEY</code> or{" "}
+          <code className="text-xs">SERPER_API_KEY</code>,{" "}
+          <code className="text-xs">SERPAPI_API_KEY</code>, or{" "}
           <code className="text-xs">TAVILY_API_KEY</code>) for &ldquo;
           {workspace.buyerQuestion || workspace.domain}&rdquo;.
         </p>

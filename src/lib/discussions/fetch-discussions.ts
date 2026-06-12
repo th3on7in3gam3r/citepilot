@@ -1,4 +1,5 @@
 import type { DiscussionThread } from "@/lib/api-types";
+import { searchGoogle } from "@/lib/search/google";
 
 async function fetchHackerNews(query: string): Promise<DiscussionThread[]> {
   const url = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=6`;
@@ -69,42 +70,23 @@ async function fetchStackExchange(query: string): Promise<DiscussionThread[]> {
   }));
 }
 
-async function fetchSerper(query: string): Promise<DiscussionThread[]> {
-  const key = process.env.SERPER_API_KEY;
-  if (!key) return [];
-
-  const res = await fetch("https://google.serper.dev/search", {
-    method: "POST",
-    headers: {
-      "X-API-KEY": key,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      q: `${query} forum OR discussion OR review`,
-      num: 6,
-    }),
-    next: { revalidate: 3600 },
+async function fetchGoogleWeb(query: string): Promise<DiscussionThread[]> {
+  const data = await searchGoogle(`${query} forum OR discussion OR review`, {
+    num: 6,
+    revalidate: 3600,
   });
-  if (!res.ok) {
-    console.error("Serper search failed", res.status);
-    return [];
-  }
+  if (!data) return [];
 
-  const data = (await res.json()) as {
-    organic?: {
-      title?: string;
-      link?: string;
-      position?: number;
-    }[];
-  };
+  const label =
+    data.provider === "serpapi" ? "Web (SerpAPI)" : "Web (Serper)";
 
-  return (data.organic ?? []).map((item, i) => {
+  return data.organic.map((item, i) => {
     const position = item.position ?? i + 1;
     return {
-      id: `serper-${encodeURIComponent(item.link ?? String(i))}`,
+      id: `${data.provider}-${encodeURIComponent(item.link ?? String(i))}`,
       title: item.title ?? "Untitled",
-      source: "serper" as const,
-      sourceLabel: "Web (Serper)",
+      source: data.provider,
+      sourceLabel: label,
       url: item.link ?? "#",
       score: Math.max(1, 12 - position),
       comments: 0,
@@ -153,10 +135,10 @@ async function fetchTavily(query: string): Promise<DiscussionThread[]> {
   }));
 }
 
-/** Serper first; Tavily fills in if Serper missing or returns nothing */
+/** Google (Serper or SerpAPI) first; Tavily fills in if missing or empty */
 async function fetchWebSearch(query: string): Promise<DiscussionThread[]> {
-  const serper = await fetchSerper(query);
-  if (serper.length > 0) return serper;
+  const google = await fetchGoogleWeb(query);
+  if (google.length > 0) return google;
   return fetchTavily(query);
 }
 

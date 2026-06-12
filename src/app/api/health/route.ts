@@ -20,6 +20,7 @@ export async function GET() {
     perplexity: { ok: hasKey("PERPLEXITY_API_KEY") },
     stackexchange: { ok: hasKey("STACKEXCHANGE_KEY") },
     serper: { ok: hasKey("SERPER_API_KEY") },
+    serpapi: { ok: hasKey("SERPAPI_API_KEY") },
     tavily: { ok: hasKey("TAVILY_API_KEY") },
     openPageRank: { ok: hasKey("OPEN_PAGERANK_API_KEY") },
     admin: {

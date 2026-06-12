@@ -24,7 +24,7 @@
    | `CMS_ENCRYPTION_KEY` | Encrypts saved workspace CMS credentials (set an explicit stable secret in production) |
    | `ADMIN_SECRET` | Protects `/admin` and `/api/admin/*` |
    | `STACKEXCHANGE_KEY` | Discussions (Stack Overflow) |
-   | `SERPER_API_KEY` or `TAVILY_API_KEY` | Discussions + backlink discovery |
+   | `SERPER_API_KEY`, `SERPAPI_API_KEY`, or `TAVILY_API_KEY` | Discussions + backlink discovery + Google AI probes |
    | `OPEN_PAGERANK_API_KEY` | Optional — third-party domain authority on Backlinks |
    | `RESEND_API_KEY` | Weekly digest + audit/score-drop emails |
    | `EMAIL_FROM` | Verified sender in Resend (e.g. `CitePilot <alerts@getcitepilot.com>`) |
