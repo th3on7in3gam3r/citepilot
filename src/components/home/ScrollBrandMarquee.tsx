@@ -40,7 +40,7 @@ export function ScrollBrandMarquee() {
               Platforms &amp; ecosystems
             </p>
             <p className="font-display mt-2 text-xl font-bold text-ink md:text-2xl">
-              Get cited everywhere AI is used
+              Monitor citations across AI platforms
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export function ScrollBrandMarquee() {
               className="font-display text-2xl font-bold leading-tight text-ink md:text-4xl lg:text-[2.75rem]"
               style={{ animation: "brand-swap 0.4s ease-out" }}
             >
-              Get cited on{" "}
+              Track citations on{" "}
               <span style={{ color: active.color }}>{active.name}</span>
             </p>
           </div>

@@ -1,6 +1,6 @@
 export const site = {
   name: "CitePilot",
-  tagline: "Get cited in AI answers — then prove it moved.",
+  tagline: "Track citations in AI answers — then prove what moved.",
   homeTitle: "CitePilot | Generative Engine Optimization (GEO) Platform",
   description:
     "Getcitepilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.",

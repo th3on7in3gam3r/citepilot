@@ -21,13 +21,16 @@ export function Hero() {
           </div>
 
           <h1 className="font-display mt-5 text-[2rem] font-bold leading-[1.1] tracking-[-0.02em] sm:mt-6 sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.5rem]">
-            Get cited by ChatGPT, Perplexity, and Google AI
-            <span className="mt-1 block text-shimmer sm:mt-1.5">automatically</span>
+            Track when ChatGPT, Perplexity, and Google AI cite you
+            <span className="mt-1 block text-shimmer sm:mt-1.5">
+              then close the gap weekly
+            </span>
           </h1>
 
           <p className="mx-auto mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-white/60 sm:mt-5 sm:max-w-2xl sm:text-lg">
-            Audit your money prompts, track when citations change, and get weekly
-            fixes with proof reports — without manual GEO busywork.
+            Audit money prompts, monitor citation changes, and get prioritized
+            weekly fixes with proof reports. You ship the changes — CitePilot
+            automates monitoring and measurement.
           </p>
 
           <HeroSocialProof />

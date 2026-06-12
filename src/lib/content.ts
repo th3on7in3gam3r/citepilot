@@ -43,7 +43,7 @@ export const differentiators = [
 
 /** Sales deck + landing subcopy — import where needed */
 export const positioning = {
-  tagline: "Get cited in AI answers — then prove it moved.",
+  tagline: "Track citations in AI answers — then prove what moved.",
   oneLiner:
     "Most GEO tools report visibility. CitePilot closes the loop: audit gaps, ship fixes, publish content, measure citation lift per prompt.",
   audience:
