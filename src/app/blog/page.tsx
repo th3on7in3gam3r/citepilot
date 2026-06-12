@@ -1,15 +1,19 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { Container } from "@/components/ui/Container";
-import { getAllPosts } from "@/lib/blog";
-import { clampMetaDescription } from "@/lib/seo/meta";
 import {
-  AUDIENCE_LABELS,
-  CONTENT_TYPE_LABELS,
-  EDITORIAL_PILLARS,
-} from "@/lib/content-strategy";
+  BlogCategoryGrid,
+  BlogPillarChips,
+} from "@/components/blog/BlogCategoryGrid";
+import { BlogLayout } from "@/components/blog/BlogLayout";
+import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
+import { BlogPostCard } from "@/components/blog/BlogPostCard";
+import { BlogSearch } from "@/components/blog/BlogSearch";
+import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
+import { Container } from "@/components/ui/Container";
+import {
+  countPostsByPillar,
+  getAllPosts,
+  getPillarsForCategoryGrid,
+} from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -21,73 +25,57 @@ export const metadata: Metadata = {
 
 export default async function BlogIndexPage() {
   const posts = await getAllPosts();
+  const counts = countPostsByPillar(posts);
+  const gridPillars = getPillarsForCategoryGrid(posts);
+  const featured = posts[0];
 
   return (
-    <>
-      <Header />
-      <main className="bg-cream pt-24 pb-16">
-        <Container>
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-            CitePilot editorial
-          </p>
-          <h1 className="font-display mt-2 max-w-2xl text-4xl font-bold text-ink md:text-5xl">
-            SEO &amp; AI visibility, explained like a mentor — not a content farm
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-muted">
-            Practical guides on Google rankings, LLM citations, technical SEO, and
-            agency growth. Built for extractability in ChatGPT and clarity in search.
-          </p>
+    <BlogLayout>
+      <MarketingDarkHero
+        eyebrow="CitePilot editorial"
+        title="GEO & SEO guides for teams who measure citations"
+        description="Practical playbooks on Google rankings, LLM citations, and technical SEO — written for clarity in search and AI answers."
+      />
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {EDITORIAL_PILLARS.map((p) => (
-              <div
-                key={p.id}
-                className="rounded-xl border border-border bg-white px-4 py-3 text-sm"
-              >
-                <p className="font-semibold text-ink">{p.title}</p>
-                <p className="mt-1 text-xs text-muted">{p.description}</p>
-              </div>
-            ))}
-          </div>
+      <Container className="py-14 md:py-20">
+        <BlogPillarChips />
 
-          <div className="mt-14 space-y-6">
-            {posts.map((post) => (
-              <article
-                key={post.slug}
-                className="rounded-2xl border border-border bg-white p-6 shadow-sm transition hover:border-accent/40"
-              >
-                <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className="rounded-full bg-accent/10 px-3 py-1 text-accent">
-                    {EDITORIAL_PILLARS.find((p) => p.id === post.pillar)?.title ??
-                      post.pillar}
-                  </span>
-                  <span className="rounded-full bg-surface px-3 py-1 text-muted">
-                    {AUDIENCE_LABELS[post.audience]}
-                  </span>
-                  <span className="rounded-full bg-surface px-3 py-1 text-muted">
-                    {CONTENT_TYPE_LABELS[post.contentType]}
-                  </span>
-                </div>
-                <h2 className="font-display mt-4 text-2xl font-bold text-ink">
-                  <Link href={`/blog/${post.slug}`} className="hover:text-accent">
-                    {post.title}
-                  </Link>
-                </h2>
-                <p className="mt-2 text-muted">
-                  {clampMetaDescription(post.description)}
-                </p>
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="mt-4 inline-block text-sm font-semibold text-accent"
-                >
-                  Read article →
-                </Link>
-              </article>
-            ))}
+        {gridPillars.length > 0 ? (
+          <BlogCategoryGrid pillars={gridPillars} counts={counts} />
+        ) : (
+          <p className="mt-8 text-sm text-white/45">
+            More topic sections unlock as we publish — browse all articles below
+            or filter by topic above.
+          </p>
+        )}
+
+        {featured && (
+          <div className="mt-12">
+            <BlogPostCard post={featured} featured />
           </div>
-        </Container>
-      </main>
-      <Footer />
-    </>
+        )}
+
+        {posts.length > 1 ? (
+          <div className="mt-12">
+            <h2 className="font-display text-lg font-bold text-white">
+              All articles
+            </h2>
+            <div className="mt-6">
+              <BlogSearch posts={posts} featuredSlug={featured?.slug} />
+            </div>
+          </div>
+        ) : (
+          !featured && (
+            <p className="mt-12 text-center text-white/50">
+              New guides publishing soon.
+            </p>
+          )
+        )}
+
+        <div className="mt-14">
+          <BlogNewsletterSignup variant="card" />
+        </div>
+      </Container>
+    </BlogLayout>
   );
 }

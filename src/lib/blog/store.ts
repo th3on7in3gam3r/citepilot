@@ -6,7 +6,7 @@ import type {
 } from "@/lib/content-strategy";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
-import type { BlogPost } from "./types";
+import { DEFAULT_BLOG_AUTHOR, type BlogPost } from "./types";
 
 export type BlogPostRow = {
   id: string;
@@ -269,6 +269,7 @@ export function rowToBlogPost(row: BlogPostRow): BlogPost {
     pillar: row.pillar as EditorialPillarId,
     audience: row.audience as AudienceSegment,
     contentType: row.content_type as ContentType,
+    author: DEFAULT_BLOG_AUTHOR,
     publishedAt: row.published_at,
     readingMinutes: row.reading_minutes,
     seoTitle: row.seo_title,

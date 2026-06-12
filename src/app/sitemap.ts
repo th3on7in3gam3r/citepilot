@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getAllPosts } from "@/lib/blog";
+import { countPostsByPillar, getAllPosts } from "@/lib/blog";
+import { EDITORIAL_PILLARS } from "@/lib/content-strategy";
 import { DASHBOARD_SEO_HUB_PATHS } from "@/lib/dashboard-seo-hubs";
 import { vsCompetitors } from "@/lib/marketing/vs-competitors";
 import { site } from "@/lib/site";
@@ -50,5 +51,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticEntries, ...postEntries];
+  const pillarCounts = countPostsByPillar(posts);
+  const categoryEntries = EDITORIAL_PILLARS.filter(
+    (p) => (pillarCounts[p.id] ?? 0) > 0,
+  ).map((p) => ({
+    url: `${base}/blog/category/${p.id}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.55,
+  }));
+
+  return [...staticEntries, ...postEntries, ...categoryEntries];
 }

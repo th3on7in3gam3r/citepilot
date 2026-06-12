@@ -11,7 +11,11 @@ export function ArticleJsonLd({ post }: { post: BlogPost }) {
     headline: post.title,
     description,
     datePublished: post.publishedAt,
-    author: { "@type": "Organization", name: site.name },
+    author: {
+      "@type": "Person",
+      name: post.author.name,
+      ...(post.author.role ? { jobTitle: post.author.role } : {}),
+    },
     publisher: {
       "@type": "Organization",
       name: site.name,

@@ -1,5 +1,15 @@
 import type { AudienceSegment, ContentType, EditorialPillarId } from "@/lib/content-strategy";
 
+export type BlogAuthor = {
+  name: string;
+  role?: string;
+};
+
+export const DEFAULT_BLOG_AUTHOR: BlogAuthor = {
+  name: "CitePilot Editorial",
+  role: "GEO & SEO team",
+};
+
 export type BlogPost = {
   slug: string;
   title: string;
@@ -7,6 +17,7 @@ export type BlogPost = {
   pillar: EditorialPillarId;
   audience: AudienceSegment;
   contentType: ContentType;
+  author: BlogAuthor;
   publishedAt: string;
   readingMinutes: number;
   seoTitle: string;
