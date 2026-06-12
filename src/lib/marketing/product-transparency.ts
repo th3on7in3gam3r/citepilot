@@ -37,7 +37,7 @@ export const productDoesNot = [
   },
   {
     title: "Edit your live website for you",
-    body: "Quick-fix and in-app “auto-fix” update audit scoring and recommendations. They do not inject schema or change your production site unless you implement or publish.",
+    body: "GEO Snippets add optional JSON-LD via one script tag you paste in site head (or Framer Custom Code). Other fixes use Manual Code or Ask AI — nothing changes on your site until you implement it.",
   },
   {
     title: "Auto-publish without you",

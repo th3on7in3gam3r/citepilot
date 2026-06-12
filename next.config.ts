@@ -21,6 +21,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/geo/:workspaceId.js",
+        destination: "/geo/:workspaceId",
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {
