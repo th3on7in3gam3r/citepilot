@@ -28,7 +28,11 @@ const initial: OnboardingAnswers = {
   referral: "",
 };
 
-export function OnboardingFlow() {
+export function OnboardingFlow({
+  initialDomain,
+}: {
+  initialDomain?: string;
+}) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<OnboardingAnswers>(initial);
@@ -47,6 +51,17 @@ export function OnboardingFlow() {
       sessionStorage.setItem("citepilot_signup_tracked", "1");
     });
   }, []);
+
+  useEffect(() => {
+    if (!initialDomain) return;
+    const clean = initialDomain
+      .replace(/^https?:\/\//, "")
+      .replace(/\/$/, "")
+      .trim()
+      .toLowerCase();
+    if (!clean) return;
+    setAnswers((prev) => (prev.domain ? prev : { ...prev, domain: clean }));
+  }, [initialDomain]);
 
   function next() {
     if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);

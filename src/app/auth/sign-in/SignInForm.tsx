@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
+import { AuthDivider } from "@/components/auth/AuthDivider";
+import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import { authInputClass } from "@/components/auth/auth-styles";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { signInWithEmail } from "./actions";
 
 export function SignInForm() {
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") ?? "/dashboard";
+  const from = searchParams.get("from") ?? searchParams.get("redirect") ?? "/dashboard";
   const oauthError = searchParams.get("error") === "google";
   const [state, formAction, pending] = useActionState(signInWithEmail, null);
 
@@ -17,9 +21,7 @@ export function SignInForm() {
       <p className="text-xs font-semibold uppercase tracking-wider text-accent">
         CitePilot account
       </p>
-      <h1 className="font-display mt-2 text-2xl font-bold text-white">
-        Sign in
-      </h1>
+      <h1 className="font-display mt-2 text-2xl font-bold text-white">Sign in</h1>
       <p className="mt-2 text-sm text-white/60">
         Access your citation dashboard and saved workspaces.
       </p>
@@ -28,13 +30,7 @@ export function SignInForm() {
         <GoogleSignInButton variant="dark" />
       </div>
 
-      <div className="my-6 flex items-center gap-3">
-        <span className="h-px flex-1 bg-white/[0.12]" />
-        <span className="text-xs font-medium uppercase tracking-wide text-white/50">
-          or email
-        </span>
-        <span className="h-px flex-1 bg-white/[0.12]" />
-      </div>
+      <AuthDivider />
 
       {oauthError && (
         <p className="mb-4 rounded-xl border border-red-500/40 bg-red-900/30 px-4 py-3 text-sm text-red-300">
@@ -52,30 +48,40 @@ export function SignInForm() {
             required
             autoComplete="email"
             suppressHydrationWarning
-            className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20"
+            className={authInputClass}
           />
         </label>
-        <label className="block text-sm font-semibold text-white/70">
-          Password
-          <input
-            name="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            suppressHydrationWarning
-            className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20"
-          />
-        </label>
+
+        <div>
+          <PasswordField label="Password" autoComplete="current-password" />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-white/60">
+              <input
+                type="checkbox"
+                name="rememberMe"
+                defaultChecked
+                className="h-4 w-4 rounded border-white/20 bg-white/10 text-accent focus:ring-accent/30"
+              />
+              Stay signed in
+            </label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm font-semibold text-glow hover:text-white"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        </div>
+
         {state?.error && (
-          <p className="text-sm text-red-600">{state.error}</p>
+          <p className="text-sm text-red-300">{state.error}</p>
         )}
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-full bg-[#10b981] py-3 text-sm font-semibold text-white disabled:opacity-60"
-        >
-          {pending ? "Signing in…" : "Sign in"}
-        </button>
+
+        <AuthSubmitButton
+          pending={pending}
+          pendingLabel="Signing in…"
+          label="Sign in"
+        />
       </form>
 
       <p className="mt-6 text-center text-sm text-white/60">

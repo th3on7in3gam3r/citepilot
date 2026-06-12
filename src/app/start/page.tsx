@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function StartPage({
   searchParams,
 }: {
-  searchParams: Promise<{ full?: string }>;
+  searchParams: Promise<{ full?: string; domain?: string }>;
 }) {
   const params = await searchParams;
   const userId = await getSessionUserId();
@@ -25,5 +25,5 @@ export default async function StartPage({
     }
   }
 
-  return <OnboardingFlow />;
+  return <OnboardingFlow initialDomain={params.domain} />;
 }

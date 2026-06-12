@@ -11,9 +11,12 @@ export async function signInWithEmail(
     return { error: "Neon Auth is not configured on this server" };
   }
 
+  const rememberMe = formData.get("rememberMe") === "on";
+
   const { error } = await auth.signIn.email({
     email: formData.get("email") as string,
     password: formData.get("password") as string,
+    rememberMe,
   });
 
   if (error) {
