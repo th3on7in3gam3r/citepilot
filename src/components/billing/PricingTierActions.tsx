@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PilotCheckoutButton } from "@/components/billing/PilotCheckoutButton";
 import { ProductCTA } from "@/components/ui/ProductCTA";
+import { authClient } from "@/lib/auth/client";
 
 export function PricingTierActions({
   tierName,
@@ -18,9 +19,18 @@ export function PricingTierActions({
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
-    void fetch("/api/billing/status", { credentials: "include" })
-      .then((r) => setSignedIn(r.ok))
-      .catch(() => setSignedIn(false));
+    let cancelled = false;
+    authClient
+      .getSession()
+      .then(({ data }) => {
+        if (!cancelled) setSignedIn(Boolean(data?.session));
+      })
+      .catch(() => {
+        if (!cancelled) setSignedIn(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (tierName === "Pilot") {

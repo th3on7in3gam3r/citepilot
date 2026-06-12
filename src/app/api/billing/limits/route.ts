@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { optionalApiUser } from "@/lib/auth/api";
 import { workspaceLimitMessage } from "@/lib/billing/limits";
 import { promptLimitMessage } from "@/lib/billing/prompt-limits";
 import {
@@ -11,9 +11,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const user = await requireApiUser(request);
-    if (user instanceof NextResponse) return user;
-    const userId = apiUserId(user);
+    const { userId } = await optionalApiUser(request);
 
     const [workspaceLimits, promptLimits] = await Promise.all([
       getWorkspaceLimitsForUser(userId),

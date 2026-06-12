@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { optionalApiUser } from "@/lib/auth/api";
 import { getBillingByUserId } from "@/lib/billing/store";
 import { isFleetPlan, isPaidPlan, isPilotPlan, planDisplayName } from "@/lib/billing/types";
 import { isStripeConfigured } from "@/lib/stripe/config";
@@ -8,9 +8,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const user = await requireApiUser(request);
-    if (user instanceof NextResponse) return user;
-    const userId = apiUserId(user);
+    const { userId, signedIn } = await optionalApiUser(request);
 
     if (!userId) {
       return NextResponse.json({
@@ -21,6 +19,7 @@ export async function GET(request: Request) {
         isFleet: false,
         isPaid: false,
         planLabel: "Free (Audit)",
+        signedIn,
       });
     }
 
@@ -37,6 +36,7 @@ export async function GET(request: Request) {
       planLabel: planDisplayName(billing?.plan ?? "free", paid),
       currentPeriodEnd: billing?.currentPeriodEnd ?? null,
       hasCustomer: Boolean(billing?.stripeCustomerId),
+      signedIn: true,
     });
   } catch (error) {
     console.error("GET /api/billing/status", error);
