@@ -2,6 +2,7 @@
 
 import { Container } from "@/components/ui/Container";
 import { HeaderAuthLinks } from "@/components/layout/HeaderAuthLinks";
+import { HeaderMobileNav } from "@/components/layout/HeaderMobileNav";
 import { HeaderNavDropdown } from "@/components/layout/HeaderNavDropdown";
 import { HeaderStartButton } from "@/components/layout/HeaderStartButton";
 import { Logo } from "@/components/ui/Logo";
@@ -63,9 +64,12 @@ export function Header({
             ),
           )}
         </nav>
-        <div className="flex shrink-0 items-center gap-4 sm:gap-6">
-          <HeaderAuthLinks onDark={onDark} />
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+          <div className="hidden sm:contents">
+            <HeaderAuthLinks onDark={onDark} />
+          </div>
           <HeaderStartButton onDark={onDark} />
+          <HeaderMobileNav onDark={onDark} />
         </div>
       </Container>
     </header>
