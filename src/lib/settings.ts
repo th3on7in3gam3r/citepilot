@@ -32,7 +32,10 @@ export type WorkspacePreferences = {
     logoUrl: string;
     hidePoweredBy: boolean;
   };
+  /** @deprecated Use geoSnippetFixes — kept for migration only */
   appliedFixes: string[];
+  /** JSON-LD blocks included in the hosted GEO snippet script */
+  geoSnippetFixes: string[];
 };
 
 export const defaultWorkspacePreferences: WorkspacePreferences = {
@@ -52,6 +55,7 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
     hidePoweredBy: false,
   },
   appliedFixes: [],
+  geoSnippetFixes: [],
 };
 
 export function parsePreferences(raw: string | null | undefined): WorkspacePreferences {
@@ -91,6 +95,11 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
       appliedFixes: Array.isArray(parsed.appliedFixes)
         ? parsed.appliedFixes.filter((f): f is string => typeof f === "string")
         : defaultWorkspacePreferences.appliedFixes,
+      geoSnippetFixes: Array.isArray(parsed.geoSnippetFixes)
+        ? parsed.geoSnippetFixes.filter((f): f is string => typeof f === "string")
+        : Array.isArray(parsed.appliedFixes)
+          ? parsed.appliedFixes.filter((f): f is string => typeof f === "string")
+          : defaultWorkspacePreferences.geoSnippetFixes,
     };
   } catch {
     return { ...defaultWorkspacePreferences };
@@ -112,5 +121,6 @@ export function mergePreferences(
       ? { ...current.whiteLabel, ...patch.whiteLabel }
       : current.whiteLabel,
     appliedFixes: patch.appliedFixes ?? current.appliedFixes,
+    geoSnippetFixes: patch.geoSnippetFixes ?? current.geoSnippetFixes,
   };
 }
