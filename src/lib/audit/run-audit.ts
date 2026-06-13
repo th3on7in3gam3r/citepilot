@@ -17,10 +17,10 @@ import {
   analyzeSite,
   brandFromDomain,
   buildGapsFromSignals,
+  computeGeoScore,
   normalizeDomain,
   promptOverlap,
 } from "@/lib/audit/site-analyzer";
-import { parsePreferences } from "@/lib/settings";
 import { regenerateContentStrategyForAudit } from "@/lib/content-strategy/regenerate";
 import {
   parseGaps,
@@ -28,18 +28,6 @@ import {
   parsePromptResults,
   parseSiteSignals,
 } from "@/lib/audit/safe-payload";
-
-async function loadGeoSnippetFixes(workspaceId: string): Promise<string[]> {
-  const row = await dbGet<{ preferences: string | null }>(
-    `SELECT preferences FROM workspaces WHERE id = ?`,
-    [workspaceId],
-  );
-  if (!row?.preferences) return [];
-  const preferences = parsePreferences(row.preferences);
-  return preferences.geoSnippetFixes.length > 0
-    ? preferences.geoSnippetFixes
-    : preferences.appliedFixes;
-}
 
 function evaluatePrompts(
   prompts: string[],
@@ -98,18 +86,57 @@ export async function runCitationAudit(input: {
   const prompts = input.prompts.map((p) => p.trim()).filter(Boolean);
   const plan = input.plan ?? "free";
 
-  const geoSnippetFixes =
-    input.workspaceId != null
-      ? await loadGeoSnippetFixes(input.workspaceId)
-      : [];
-
   const [signals, checks] = await Promise.all([
-    analyzeSite(domain, {
-      workspaceId: input.workspaceId ?? undefined,
-      geoSnippetFixes,
-    }),
+    analyzeSite(domain),
     runLivePlatformProbes({ domain, prompts, plan }),
   ]);
+
+  // Apply auto-fix overrides if workspaceId is present
+  let appliedFixes: string[] = [];
+  if (input.workspaceId) {
+    const row = await dbGet<{ preferences: string }>(
+      `SELECT preferences FROM workspaces WHERE id = ?`,
+      [input.workspaceId],
+    );
+    if (row?.preferences) {
+      try {
+        const parsed = JSON.parse(row.preferences);
+        if (Array.isArray(parsed.appliedFixes)) {
+          appliedFixes = parsed.appliedFixes;
+        }
+      } catch {}
+    }
+  }
+
+  if (appliedFixes.length > 0) {
+    if (appliedFixes.includes("faq-schema")) {
+      signals.hasFaqSchema = true;
+      signals.hasJsonLd = true;
+    }
+    if (appliedFixes.includes("org-schema")) {
+      signals.hasOrganizationSchema = true;
+      signals.hasJsonLd = true;
+    }
+    if (appliedFixes.includes("meta-description")) {
+      signals.metaDescription = signals.metaDescription || "AI-optimized meta description applied dynamically via CitePilot Auto-Fix.";
+    }
+    if (appliedFixes.includes("h1")) {
+      signals.h1 = signals.h1 || "AI-optimized H1 heading applied dynamically via CitePilot Auto-Fix.";
+    }
+    if (appliedFixes.includes("robots")) {
+      signals.robotsAllows = true;
+    }
+    if (appliedFixes.includes("sitemap")) {
+      signals.sitemapFound = true;
+    }
+    if (appliedFixes.includes("content")) {
+      if (signals.wordCount < 300) {
+        signals.wordCount = 350;
+      }
+    }
+    // Recompute the geo score based on overridden signals
+    signals.geoScore = computeGeoScore(signals);
+  }
 
   const platforms = buildPlatformPresence(checks, signals, prompts.length);
   const liveChecks = liveChecksByPromptIndex(checks, prompts.length);

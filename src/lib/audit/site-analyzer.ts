@@ -1,5 +1,4 @@
 import type { SiteSignals } from "@/lib/api-types";
-import { applyGeoSnippetSignals } from "@/lib/geo/snippet";
 
 export function normalizeDomain(input: string): string {
   return input
@@ -117,13 +116,7 @@ async function checkSitemap(domain: string): Promise<boolean> {
   return ok;
 }
 
-export async function analyzeSite(
-  domainInput: string,
-  options?: {
-    workspaceId?: string;
-    geoSnippetFixes?: string[];
-  },
-): Promise<SiteSignals> {
+export async function analyzeSite(domainInput: string): Promise<SiteSignals> {
   const domain = normalizeDomain(domainInput);
   const homepage = await fetchText(`https://${domain}`);
   const httpFallback =
@@ -132,16 +125,7 @@ export async function analyzeSite(
       : await fetchText(`http://${domain}`);
 
   const html = httpFallback.text;
-  let parsed = analyzeHtml(html);
-
-  if (options?.workspaceId && options.geoSnippetFixes?.length) {
-    parsed = applyGeoSnippetSignals({
-      signals: parsed,
-      html,
-      workspaceId: options.workspaceId,
-      enabledFixes: options.geoSnippetFixes,
-    });
-  }
+  const parsed = analyzeHtml(html);
 
   const [robotsAllows, sitemapFound] = await Promise.all([
     checkRobots(domain),
