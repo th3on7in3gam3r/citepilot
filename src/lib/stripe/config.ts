@@ -18,6 +18,14 @@ export function stripeFleetPriceId(): string | null {
   return process.env.STRIPE_FLEET_PRICE_ID?.trim() || null;
 }
 
+export function stripePilotAnnualPriceId(): string | null {
+  return process.env.STRIPE_PILOT_ANNUAL_PRICE_ID?.trim() || null;
+}
+
+export function stripeFleetAnnualPriceId(): string | null {
+  return process.env.STRIPE_FLEET_ANNUAL_PRICE_ID?.trim() || null;
+}
+
 export function isStripeConfigured(): boolean {
   return Boolean(stripeSecretKey() && stripePilotPriceId());
 }

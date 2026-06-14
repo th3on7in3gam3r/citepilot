@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { PricingTierActions } from "@/components/billing/PricingTierActions";
+import { PricingPlanCards } from "@/components/pricing/PricingPlanCards";
 import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
-import { pricingTiers } from "@/lib/content";
 import { pricingFaqs, pricingLanding } from "@/lib/marketing/pricing-landing";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
@@ -101,66 +100,7 @@ export default function PricingPage() {
             >
               Choose your plan
             </h2>
-            <div className="mt-10 grid gap-8 lg:grid-cols-3 lg:gap-6">
-              {pricingTiers.map((tier) => (
-                <article
-                  key={tier.name}
-                  className={`flex flex-col rounded-2xl border p-8 md:p-10 ${
-                    tier.highlighted
-                      ? "border-accent/40 bg-gradient-to-b from-accent/20 to-white/[0.06] text-white shadow-xl shadow-accent/10"
-                      : "border-white/10 bg-white/[0.04] text-white backdrop-blur-sm"
-                  }`}
-                >
-                  <h3 className="font-display text-lg font-bold text-white">
-                    {tier.name}
-                  </h3>
-                  <p className="mt-5 font-display text-4xl font-bold">
-                    {tier.price}
-                    <span
-                      className={`text-base font-normal ${
-                        tier.highlighted ? "text-white/60" : "text-white/50"
-                      }`}
-                    >
-                      {tier.period}
-                    </span>
-                  </p>
-                  <p
-                    className={`mt-3 text-sm leading-relaxed ${
-                      tier.highlighted ? "text-white/65" : "text-white/55"
-                    }`}
-                  >
-                    {tier.description}
-                  </p>
-                  <ul className="mt-8 flex-1 space-y-4">
-                    {tier.features.map((f) => (
-                      <li
-                        key={f}
-                        className={`flex gap-3 text-sm leading-relaxed ${
-                          tier.highlighted ? "text-white/80" : "text-white/70"
-                        }`}
-                      >
-                        <span className="shrink-0 text-glow">✓</span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-10 w-full">
-                    <PricingTierActions
-                      tierName={tier.name}
-                      href={tier.href}
-                      cta={tier.cta}
-                      variant={
-                        tier.highlighted
-                          ? "dark"
-                          : tier.name === "Audit"
-                            ? "accent"
-                            : "primary"
-                      }
-                    />
-                  </div>
-                </article>
-              ))}
-            </div>
+            <PricingPlanCards />
           </section>
 
           <ProductTransparencySection variant="dark" />

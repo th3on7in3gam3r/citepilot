@@ -109,10 +109,10 @@ export function Footer() {
             aria-label="Legal"
           >
             <Link href="/terms" className="transition hover:text-white/70">
-              Terms
+              Terms of Service
             </Link>
             <Link href="/privacy" className="transition hover:text-white/70">
-              Privacy
+              Privacy Policy
             </Link>
           </nav>
         </div>

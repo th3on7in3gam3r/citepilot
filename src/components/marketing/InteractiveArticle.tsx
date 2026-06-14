@@ -239,7 +239,7 @@ function EmailMeta({
         <span className="rounded-md bg-ink/5 px-2 py-0.5 font-medium text-ink">
           Inbox
         </span>
-        <span>Cite Pilot</span>
+        <span>CitePilot</span>
         <span aria-hidden>·</span>
         <span>to you</span>
       </div>
@@ -255,7 +255,7 @@ function EmailSignature() {
   return (
     <div className="border-t border-border/60 pt-5 text-sm text-muted">
       <p>Best,</p>
-      <p className="mt-2 font-medium text-ink">The Cite Pilot Team</p>
+      <p className="mt-2 font-medium text-ink">The CitePilot Team</p>
     </div>
   );
 }
@@ -375,7 +375,7 @@ function EmailOneBody() {
         don&apos;t exist to those buyers.
       </p>
       <p>
-        At <strong className="text-ink">Cite Pilot</strong>, we don&apos;t track
+        At <strong className="text-ink">CitePilot</strong>, we don&apos;t track
         blue links. We optimize for{" "}
         <strong className="text-ink">money prompts</strong>—the exact queries
         driving high-value pipelines. To get you started, we&apos;ve put together
@@ -425,7 +425,7 @@ function EmailTwoBody() {
         and third-party reviews. If your GEO strategy isn&apos;t actively feeding
         these models the right data structures, you get left out.
       </p>
-      <p className="font-medium text-ink">Here is how Cite Pilot solves this:</p>
+      <p className="font-medium text-ink">Here is how CitePilot solves this:</p>
       <ul className="space-y-3">
         {CITE_PILOT_FEATURES.map((feature) => (
           <li
@@ -441,7 +441,7 @@ function EmailTwoBody() {
       </ul>
       <blockquote className="rounded-2xl border border-border bg-ink px-5 py-5 text-white">
         <p className="text-sm leading-relaxed italic text-white/90">
-          &ldquo;Within 30 days of deploying Cite Pilot, our SaaS brand went from
+          &ldquo;Within 30 days of deploying CitePilot, our SaaS brand went from
           8% share-of-voice in ChatGPT recommendations to 42% on our top 15 money
           prompts. The inbound pipeline growth has been immediate.&rdquo;
         </p>

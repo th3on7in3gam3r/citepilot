@@ -32,6 +32,7 @@ export type OpsReportStats = {
 
 export function opsReportRecipient(): string | null {
   return (
+    process.env.OPS_REPORT_EMAIL?.trim() ||
     process.env.ADMIN_OPS_EMAIL?.trim() ||
     process.env.EMAIL_FROM?.match(/<([^>]+)>/)?.[1]?.trim() ||
     site.supportEmail
@@ -193,7 +194,7 @@ export async function sendWeeklyOpsReport(): Promise<{
 
   const to = opsReportRecipient();
   if (!to) {
-    return { ok: false, error: "ADMIN_OPS_EMAIL not configured" };
+    return { ok: false, error: "OPS_REPORT_EMAIL not configured" };
   }
 
   const stats = await gatherOpsReportStats(7);

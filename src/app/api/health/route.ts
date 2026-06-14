@@ -13,7 +13,21 @@ function hasKey(name: string): boolean {
   return Boolean(process.env[name]?.trim());
 }
 
-export async function GET() {
+function opsReportConfigured(): boolean {
+  return Boolean(
+    process.env.OPS_REPORT_EMAIL?.trim() ||
+      process.env.ADMIN_OPS_EMAIL?.trim() ||
+      isEmailConfigured(),
+  );
+}
+
+function isAuthorizedHealthRequest(request: Request): boolean {
+  const secret = process.env.HEALTH_SECRET?.trim();
+  if (!secret) return false;
+  return request.headers.get("x-health-secret") === secret;
+}
+
+function buildDetailedChecks(): Record<string, Check> {
   const checks: Record<string, Check> = {
     database: { ok: false },
     openai: { ok: hasKey("OPENAI_API_KEY") },
@@ -85,14 +99,22 @@ export async function GET() {
         : "Set CRON_SECRET for /api/cron/weekly-digest",
     },
     opsReport: {
-      ok: Boolean(process.env.ADMIN_OPS_EMAIL?.trim() || isEmailConfigured()),
-      detail: process.env.ADMIN_OPS_EMAIL?.trim()
-        ? `Weekly ops report → ${process.env.ADMIN_OPS_EMAIL.trim()}`
-        : isEmailConfigured()
-          ? "Weekly ops report uses EMAIL_FROM address"
-          : "Set ADMIN_OPS_EMAIL + RESEND_API_KEY for ops report",
+      ok: opsReportConfigured(),
+      detail: opsReportConfigured()
+        ? "Weekly ops report recipient configured"
+        : "Set OPS_REPORT_EMAIL + RESEND_API_KEY for ops report",
     },
   };
+
+  return checks;
+}
+
+export async function GET(request: Request) {
+  if (!isAuthorizedHealthRequest(request)) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const checks = buildDetailedChecks();
 
   try {
     await ensureDb();

@@ -37,7 +37,7 @@ export function CitationDashboardMock({
           <div className="min-w-0">
             <p className={`text-white/45 ${compact ? "text-[10px]" : "text-xs"}`}>Domain</p>
             <p className={`truncate font-semibold tracking-tight text-white ${compact ? "text-sm" : ""}`}>
-              acme.com
+              brightlayer.io
             </p>
           </div>
           {!compact && (

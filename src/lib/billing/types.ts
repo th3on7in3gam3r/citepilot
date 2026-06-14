@@ -1,5 +1,7 @@
 export type BillingPlan = "free" | "pilot" | "fleet";
 
+export type BillingInterval = "monthly" | "annual";
+
 export type BillingStatus =
   | "inactive"
   | "active"

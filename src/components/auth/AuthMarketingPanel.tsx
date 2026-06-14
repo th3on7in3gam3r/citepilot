@@ -40,7 +40,7 @@ export function AuthMarketingPanel() {
             </figcaption>
           </figure>
           <p className="mt-4 text-xs text-muted">
-            From Pilot &amp; Fleet teams in private beta — illustrative social proof, not paid endorsements.
+            From CitePilot customers — illustrative social proof, not paid endorsements.
           </p>
         </div>
       ) : (

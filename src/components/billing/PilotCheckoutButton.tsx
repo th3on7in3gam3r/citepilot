@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { BillingInterval } from "@/lib/billing/types";
 import { trackEvent } from "@/lib/analytics/track";
 import type { BillingPlan } from "@/lib/billing/types";
 
@@ -10,6 +11,7 @@ type Props = {
   className?: string;
   children: React.ReactNode;
   signedIn?: boolean;
+  billingInterval?: BillingInterval;
 };
 
 export function PilotCheckoutButton({
@@ -18,6 +20,7 @@ export function PilotCheckoutButton({
   className = "",
   children,
   signedIn = false,
+  billingInterval = "monthly",
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +39,7 @@ export function PilotCheckoutButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, interval: billingInterval }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !data.url) {

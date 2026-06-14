@@ -1,9 +1,37 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { authClient } from "@/lib/auth/client";
 import { productFeatures } from "@/lib/features";
 
+function publicDemoHref(featureId: string): string {
+  if (featureId === "geo-audit" || featureId === "llm-tracking") {
+    return "/audit";
+  }
+  return "/start";
+}
+
 export function FeatureSuite() {
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    authClient
+      .getSession()
+      .then(({ data }) => {
+        if (!cancelled) setSignedIn(Boolean(data?.session));
+      })
+      .catch(() => {
+        if (!cancelled) setSignedIn(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <Section id="features" className="bg-cream">
       <SectionHeading
@@ -13,23 +41,34 @@ export function FeatureSuite() {
         align="center"
       />
       <div className="mt-14 grid gap-6 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
-        {productFeatures.map((f) => (
-          <article
-            key={f.id}
-            className="rounded-2xl border border-border bg-white p-8 transition hover:border-accent/40 hover:shadow-md"
-          >
-            <h3 className="font-display text-lg font-bold text-ink">{f.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted">{f.description}</p>
-            {f.dashboardHref && (
-              <Link
-                href={f.dashboardHref}
-                className="mt-5 inline-block text-sm font-semibold text-accent hover:text-accent-deep"
-              >
-                Open in dashboard →
-              </Link>
-            )}
-          </article>
-        ))}
+        {productFeatures.map((f) => {
+          const href = signedIn
+            ? (f.dashboardHref ?? "/dashboard")
+            : publicDemoHref(f.id);
+          const cta = signedIn ? "Open in dashboard →" : "See it in action →";
+
+          return (
+            <article
+              key={f.id}
+              className="rounded-2xl border border-border bg-white p-8 transition hover:border-accent/40 hover:shadow-md"
+            >
+              <h3 className="font-display text-lg font-bold text-ink">
+                {f.title}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                {f.description}
+              </p>
+              {href && (
+                <Link
+                  href={href}
+                  className="mt-5 inline-block text-sm font-semibold text-accent hover:text-accent-deep"
+                >
+                  {cta}
+                </Link>
+              )}
+            </article>
+          );
+        })}
       </div>
       <div className="mt-12 text-center">
         <Link

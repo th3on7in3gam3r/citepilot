@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PilotCheckoutButton } from "@/components/billing/PilotCheckoutButton";
 import { ProductCTA } from "@/components/ui/ProductCTA";
+import type { BillingInterval } from "@/lib/billing/types";
 import { authClient } from "@/lib/auth/client";
 
 export function PricingTierActions({
@@ -10,11 +11,13 @@ export function PricingTierActions({
   href,
   cta,
   variant,
+  billingInterval = "monthly",
 }: {
   tierName: string;
   href: string;
   cta: string;
   variant: "accent" | "primary" | "dark";
+  billingInterval?: BillingInterval;
 }) {
   const [signedIn, setSignedIn] = useState(false);
 
@@ -35,7 +38,13 @@ export function PricingTierActions({
 
   if (tierName === "Pilot") {
     return (
-      <PilotCheckoutButton variant={variant} className="w-full" signedIn={signedIn} plan="pilot">
+      <PilotCheckoutButton
+        variant={variant}
+        className="w-full"
+        signedIn={signedIn}
+        plan="pilot"
+        billingInterval={billingInterval}
+      >
         {signedIn ? "Subscribe to Pilot" : "Sign in to subscribe"}
       </PilotCheckoutButton>
     );
@@ -43,7 +52,13 @@ export function PricingTierActions({
 
   if (tierName === "Fleet") {
     return (
-      <PilotCheckoutButton variant={variant} className="w-full" signedIn={signedIn} plan="fleet">
+      <PilotCheckoutButton
+        variant={variant}
+        className="w-full"
+        signedIn={signedIn}
+        plan="fleet"
+        billingInterval={billingInterval}
+      >
         {signedIn ? "Subscribe to Fleet" : "Sign in to subscribe"}
       </PilotCheckoutButton>
     );

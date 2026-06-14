@@ -6,7 +6,9 @@ import { getBillingByUserId } from "@/lib/billing/store";
 import {
   appBaseUrl,
   isStripeConfigured,
+  stripeFleetAnnualPriceId,
   stripeFleetPriceId,
+  stripePilotAnnualPriceId,
   stripePilotPriceId,
 } from "@/lib/stripe/config";
 import { getStripe } from "@/lib/stripe/server";
@@ -29,17 +31,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in required" }, { status: 401 });
     }
 
-    const body = (await request.json().catch(() => ({}))) as { plan?: BillingPlan };
+    const body = (await request.json().catch(() => ({}))) as {
+      plan?: BillingPlan;
+      interval?: "monthly" | "annual";
+    };
     const plan = body.plan === "fleet" ? "fleet" : "pilot";
+    const interval = body.interval === "annual" ? "annual" : "monthly";
 
-    const priceId = plan === "fleet" ? stripeFleetPriceId() : stripePilotPriceId();
+    const priceId =
+      interval === "annual"
+        ? plan === "fleet"
+          ? stripeFleetAnnualPriceId() ?? stripeFleetPriceId()
+          : stripePilotAnnualPriceId() ?? stripePilotPriceId()
+        : plan === "fleet"
+          ? stripeFleetPriceId()
+          : stripePilotPriceId();
     if (!priceId) {
       return NextResponse.json(
         {
           error:
             plan === "fleet"
-              ? "Fleet checkout not configured — set STRIPE_FLEET_PRICE_ID"
-              : "Pilot price not configured",
+              ? interval === "annual"
+                ? "Fleet annual checkout not configured — set STRIPE_FLEET_ANNUAL_PRICE_ID"
+                : "Fleet checkout not configured — set STRIPE_FLEET_PRICE_ID"
+              : interval === "annual"
+                ? "Pilot annual checkout not configured — set STRIPE_PILOT_ANNUAL_PRICE_ID"
+                : "Pilot price not configured",
         },
         { status: 503 },
       );

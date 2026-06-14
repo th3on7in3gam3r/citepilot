@@ -26,7 +26,9 @@ export function Logo({
         aria-hidden
       />
       {showWordmark && (
-        <span className={light ? "text-white" : "text-ink"}>
+        <span
+          className={`whitespace-nowrap ${light ? "text-white" : "text-ink"}`}
+        >
           {site.name.slice(0, 4)}
           <span className="text-accent">{site.name.slice(4)}</span>
         </span>

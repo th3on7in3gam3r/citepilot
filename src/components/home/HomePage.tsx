@@ -1,4 +1,6 @@
 import { FreeToolsSection } from "@/components/marketing/FreeToolsSection";
+import { CustomerLogosBar } from "@/components/home/CustomerLogosBar";
+import { SocialProofStats } from "@/components/home/SocialProofStats";
 import { FeatureSuite } from "@/components/home/FeatureSuite";
 import { GeoPlaybookPromo } from "@/components/home/GeoPlaybookPromo";
 import { Hero } from "@/components/home/Hero";
@@ -18,6 +20,8 @@ export function HomePage() {
   return (
     <>
       <Hero />
+      <SocialProofStats />
+      <CustomerLogosBar />
       <HomeActionBar />
       <FreeToolsSection />
       <FeatureSuite />
