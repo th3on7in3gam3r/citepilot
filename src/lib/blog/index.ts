@@ -1,5 +1,7 @@
 import type { BlogPost } from "./types";
 import { getCitedByChatgptPost } from "./posts/get-cited-by-chatgpt";
+import { purgeRemovedBlogPosts } from "./purge";
+import { isRemovedBlogSlug } from "./removed-slugs";
 import {
   getGeneratedPostBySlug,
   listGeneratedPosts,
@@ -10,22 +12,31 @@ const staticPosts: BlogPost[] = [
   { ...getCitedByChatgptPost, source: "static" },
 ];
 
+function isPublicPost(post: BlogPost): boolean {
+  return !isRemovedBlogSlug(post.slug);
+}
+
 export async function getAllPosts(): Promise<BlogPost[]> {
+  await purgeRemovedBlogPosts();
   const generated = (await listGeneratedPosts()).map(rowToBlogPost);
   const staticSlugs = new Set(staticPosts.map((p) => p.slug));
   const merged = [
     ...staticPosts,
     ...generated.filter((p) => !staticSlugs.has(p.slug)),
   ];
-  return merged.sort(
-    (a, b) =>
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-  );
+  return merged
+    .filter(isPublicPost)
+    .sort(
+      (a, b) =>
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+    );
 }
 
 export async function getPostBySlug(
   slug: string,
 ): Promise<BlogPost | undefined> {
+  if (isRemovedBlogSlug(slug)) return undefined;
+  await purgeRemovedBlogPosts();
   const staticPost = staticPosts.find((p) => p.slug === slug);
   if (staticPost) return staticPost;
   const row = await getGeneratedPostBySlug(slug);
@@ -33,9 +44,8 @@ export async function getPostBySlug(
 }
 
 export async function getAllSlugs(): Promise<string[]> {
-  const generated = (await listGeneratedPosts()).map((r) => r.slug);
-  const staticSlugs = staticPosts.map((p) => p.slug);
-  return [...new Set([...staticSlugs, ...generated])];
+  const posts = await getAllPosts();
+  return posts.map((p) => p.slug);
 }
 
 export {

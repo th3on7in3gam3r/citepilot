@@ -8,12 +8,13 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { auditLanding, auditLandingFaqs } from "@/lib/marketing/audit-landing";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
+import { site } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: clampSeoTitle(auditLanding.shortTitle),
   description: clampMetaDescription(auditLanding.description),
-  alternates: { canonical: auditLanding.path },
+  alternates: { canonical: `${site.url}${auditLanding.path}` },
   openGraph: {
     title: auditLanding.title,
     description: clampMetaDescription(auditLanding.description),

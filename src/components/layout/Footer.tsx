@@ -90,20 +90,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-7 text-sm text-white/40 md:flex-row md:items-center md:justify-between">
-          <p>
-            © {year} {site.name}
-            <span className="mx-2 text-white/20" aria-hidden>
-              ·
-            </span>
-            <a
-              href={site.studio.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition hover:text-white/70"
-            >
-              {site.studio.name}
-            </a>
-          </p>
+          <p>© {year} {site.name}</p>
           <nav
             className="flex flex-wrap items-center gap-x-5 gap-y-2"
             aria-label="Legal"

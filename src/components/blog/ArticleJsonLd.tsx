@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { site, siteLogoUrl } from "@/lib/site";
 import type { BlogPost } from "@/lib/blog/types";
 import { clampMetaDescription } from "@/lib/seo/meta";
 
@@ -19,7 +19,7 @@ export function ArticleJsonLd({ post }: { post: BlogPost }) {
     publisher: {
       "@type": "Organization",
       name: site.name,
-      logo: { "@type": "ImageObject", url: `${site.url}/logo-mark.svg` },
+      logo: { "@type": "ImageObject", url: siteLogoUrl() },
     },
     mainEntityOfPage: url,
   };

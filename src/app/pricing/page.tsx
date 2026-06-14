@@ -8,12 +8,13 @@ import { ProductTransparencySection } from "@/components/marketing/ProductTransp
 import { Container } from "@/components/ui/Container";
 import { pricingFaqs, pricingLanding } from "@/lib/marketing/pricing-landing";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
+import { site } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: clampSeoTitle(pricingLanding.shortTitle),
   description: clampMetaDescription(pricingLanding.description),
-  alternates: { canonical: pricingLanding.path },
+  alternates: { canonical: `${site.url}${pricingLanding.path}` },
   openGraph: {
     title: pricingLanding.title,
     description: clampMetaDescription(pricingLanding.description),

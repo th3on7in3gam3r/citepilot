@@ -21,6 +21,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
+  alternates: { canonical: site.url },
   title: {
     default: site.homeTitle,
     template: `%s · ${site.name}`,
@@ -41,20 +42,11 @@ export const metadata: Metadata = {
     url: site.url,
     siteName: site.name,
     locale: "en_US",
-    images: [
-      {
-        url: "/images/branding/citepilot-logo-full.png",
-        width: 1200,
-        height: 630,
-        alt: `${site.name} — citation tracking for AI search`,
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: site.homeTitle,
     description: homeDescription,
-    images: ["/images/branding/citepilot-logo-full.png"],
   },
   robots: {
     index: true,

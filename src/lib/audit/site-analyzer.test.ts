@@ -10,7 +10,7 @@ describe("audit prompt signals", () => {
   });
 
   it("scores high overlap for GEO prompt alternatives to top competitor", () => {
-    const description = "Getcitepilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.";
+    const description = "CitePilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.";
     const title = "CitePilot | Generative Engine Optimization (GEO) Platform";
     const h1 = "Grow SEO + LLM traffic on autopilot";
     const brand = "getcitepilot";

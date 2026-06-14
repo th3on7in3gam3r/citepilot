@@ -11,6 +11,7 @@ import { Container } from "@/components/ui/Container";
 import { getPostBySlug } from "@/lib/blog";
 import { pillarHref } from "@/lib/blog/utils";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
+import { site } from "@/lib/site";
 import { EDITORIAL_PILLARS } from "@/lib/content-strategy";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -23,9 +24,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return {};
   const description = clampMetaDescription(post.description);
   const title = clampSeoTitle(post.seoTitle);
+  const canonical = `${site.url}/blog/${post.slug}`;
   return {
     title,
     description,
+    alternates: { canonical },
     openGraph: {
       title: post.title,
       description,

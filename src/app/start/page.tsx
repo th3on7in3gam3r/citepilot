@@ -4,10 +4,13 @@ import { countWorkspacesForUser } from "@/lib/server/workspace";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { site } from "@/lib/site";
+
 export const metadata: Metadata = {
   title: "Start GEO & AI Citation Analysis",
   description:
     "Start your free GEO citation analysis in minutes. Add your domain, money prompts, and competitors — get audited on ChatGPT, Perplexity & AI Overviews.",
+  alternates: { canonical: `${site.url}/start` },
 };
 
 export default async function StartPage({

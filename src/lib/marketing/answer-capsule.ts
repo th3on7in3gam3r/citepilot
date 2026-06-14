@@ -3,10 +3,10 @@
 export const answerCapsulePrimary = {
   id: "what-is-citepilot",
   question: "What is CitePilot?",
-  heading: "What is Getcitepilot?",
+  heading: "What is CitePilot?",
   /** ~48 words — within 40–60 word extractability band */
   answer:
-    "CitePilot (Getcitepilot) is a B2B generative engine optimization platform that audits AI citations, tracks money prompts, and delivers weekly GEO action plans across ChatGPT, Perplexity, Gemini, and Google AI Overviews.",
+    "CitePilot is a B2B generative engine optimization platform that audits AI citations, tracks money prompts, and delivers weekly GEO action plans across ChatGPT, Perplexity, Gemini, and Google AI Overviews.",
 } as const;
 
 export const answerCapsuleAlternatives = {

@@ -3,13 +3,25 @@ export const site = {
   tagline: "Track citations in AI answers — then prove what moved.",
   homeTitle: "CitePilot | Generative Engine Optimization (GEO) Platform",
   description:
-    "Getcitepilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.",
+    "CitePilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.",
   url: "https://getcitepilot.com",
+  /** Apex redirects static assets to www — use for OG images and logos in metadata. */
+  wwwUrl: "https://www.getcitepilot.com",
   supportEmail: "hello@getcitepilot.com",
-  studio: {
-    name: "Biblefunland Studios",
-    url: "https://biblefunlandstudios.com",
+  foundingDate: "2025",
+  social: {
+    twitter: "https://twitter.com/citepilot",
+    linkedin: "https://linkedin.com/company/citepilot",
   },
+  /** Full logo for schema (1200×630 social preview served via /opengraph-image). */
+  logoPath: "/images/branding/citepilot-logo-full.png",
+  knowsAbout: [
+    "Generative Engine Optimization",
+    "AI citation tracking",
+    "LLM visibility",
+    "ChatGPT citations",
+    "Perplexity citations",
+  ],
 } as const;
 
 export const nav = {
@@ -78,3 +90,11 @@ export const nav = {
   startAnalysis: { label: "Start Analysis", href: "/start" },
   cta: { label: "Free citation audit", href: "/audit" },
 } as const;
+
+export function siteLogoUrl(): string {
+  return `${site.wwwUrl.replace(/\/$/, "")}${site.logoPath}`;
+}
+
+export function siteSocialProfiles(): string[] {
+  return [site.social.twitter, site.social.linkedin];
+}

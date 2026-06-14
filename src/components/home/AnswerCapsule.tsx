@@ -54,7 +54,7 @@ export function AnswerCapsule({ variant = "hero" }: AnswerCapsuleProps) {
           </h2>
           <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
             <p className={bodyClass} itemProp="text">
-              <strong className={strongClass}>CitePilot</strong> (Getcitepilot) is a B2B{" "}
+              <strong className={strongClass}>CitePilot</strong> is a B2B{" "}
               <strong className={strongClass}>generative engine optimization</strong> platform
               that audits AI citations, tracks money prompts, and delivers weekly GEO action
               plans across ChatGPT, Perplexity, Gemini, and Google AI Overviews.

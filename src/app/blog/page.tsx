@@ -14,6 +14,7 @@ import {
   getAllPosts,
   getPillarsForCategoryGrid,
 } from "@/lib/blog";
+import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
   title: "GEO, SEO & AI Citation Guides",
   description:
     "SEO, GEO, and AI citation playbooks for founders, agencies, and SaaS teams — from CitePilot.",
+  alternates: { canonical: `${site.url}/blog` },
 };
 
 export default async function BlogIndexPage() {
