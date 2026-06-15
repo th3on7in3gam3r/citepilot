@@ -1,41 +1,44 @@
 import { NextResponse } from "next/server";
-import { requireApiUser } from "@/lib/auth/api";
-import { getWorkspaceById } from "@/lib/server/workspace";
+import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { isEmailConfigured } from "@/lib/email/config";
 import { sendWeeklyDigestEmail } from "@/lib/email/notifications";
-import { parsePreferences } from "@/lib/settings";
-import { dbAll, dbGet } from "@/lib/db";
+import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
+import { dbAll } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-type WorkspaceRow = {
-  id: string;
-  domain: string;
-  buyer_question: string | null;
-  competitors: string;
-  preferences: string;
-  user_id: string | null;
-};
-
 /**
  * POST /api/notifications/test-digest
- * Body: { workspaceId: string }
+ * Body: { workspaceId: string; email?: string }
  *
- * Sends a one-off weekly digest email to the monitoring email configured for
- * the given workspace. Requires authentication.
+ * Sends a one-off weekly digest email. Uses `email` from the body when
+ * provided (e.g. unsaved Settings form value), otherwise the saved monitoring email.
  */
 export const POST = withApiLogging(async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (auth instanceof NextResponse) return auth;
+  const userId = apiUserId(auth);
 
-  let body: { workspaceId?: string };
+  if (!isEmailConfigured()) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Email is not configured on the server (RESEND_API_KEY). Add it in production env vars.",
+      },
+      { status: 503 },
+    );
+  }
+
+  let body: { workspaceId?: string; email?: string };
   try {
-    body = (await request.json()) as { workspaceId?: string };
+    body = (await request.json()) as { workspaceId?: string; email?: string };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { workspaceId } = body;
+  const workspaceId = body.workspaceId?.trim();
   if (!workspaceId) {
     return NextResponse.json(
       { error: "workspaceId is required" },
@@ -43,24 +46,20 @@ export const POST = withApiLogging(async function POST(request: Request) {
     );
   }
 
-  const row = await dbGet<WorkspaceRow>(
-    `SELECT id, domain, buyer_question, competitors, preferences, user_id FROM workspaces WHERE id = ?`,
-    [workspaceId],
-  );
-
-  if (!row) {
+  const ws = await getWorkspaceById(workspaceId, userId);
+  if (!ws) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const prefs = parsePreferences(row.preferences);
-  const to = prefs.monitoringEmail?.trim();
+  const to =
+    body.email?.trim() || ws.preferences.monitoringEmail?.trim() || "";
 
   if (!to) {
     return NextResponse.json(
       {
         ok: false,
         error:
-          "No monitoring email configured. Add one in Settings → Notifications.",
+          "No monitoring email configured. Add one in Settings → Alerts and save, or enter an address first.",
       },
       { status: 422 },
     );
@@ -71,31 +70,30 @@ export const POST = withApiLogging(async function POST(request: Request) {
     [workspaceId],
   );
 
-  if (audits.length === 0) {
-    return NextResponse.json(
-      { ok: false, error: "No audits found for this workspace yet." },
-      { status: 422 },
-    );
-  }
-
-  const ws = await getWorkspaceById(workspaceId, row.user_id);
-  const gaps = ws?.latestAudit?.gaps ?? [];
-  const competitors = JSON.parse(row.competitors || "[]") as string[];
+  const latest = ws.latestAudit;
+  const score = audits[0]?.score ?? latest?.score ?? 0;
+  const previousScore = audits[1]?.score ?? null;
+  const gaps = latest?.gaps?.length
+    ? latest.gaps
+    : ["Run a GEO audit to populate real gap data in digests."];
 
   const result = await sendWeeklyDigestEmail({
-    domain: row.domain,
-    buyerQuestion: row.buyer_question ?? "",
-    competitors,
-    score: audits[0]!.score,
-    previousScore: audits[1]?.score ?? null,
+    domain: ws.domain,
+    buyerQuestion: ws.buyerQuestion ?? "",
+    competitors: ws.competitors,
+    score,
+    previousScore,
     gaps,
     to,
   });
 
   if (!result.ok) {
     return NextResponse.json(
-      { ok: false, error: result.error ?? "Send failed" },
-      { status: 500 },
+      {
+        ok: false,
+        error: result.error ?? "Send failed",
+      },
+      { status: result.error === "Email not configured" ? 503 : 502 },
     );
   }
 
