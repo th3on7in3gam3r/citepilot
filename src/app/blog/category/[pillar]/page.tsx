@@ -76,8 +76,12 @@ export default async function BlogCategoryPage({ params }: Props) {
               </Link>
             </div>
           ) : (
-            posts.map((post) => <BlogPostCard key={post.slug} post={post} />)
-          )}
+          <div className="mt-10 grid gap-6 md:grid-cols-2">
+            {posts.map((post) => (
+              <BlogPostCard key={post.slug} post={post} />
+            ))}
+          </div>
+        )}
         </div>
 
         <div className="mt-14">

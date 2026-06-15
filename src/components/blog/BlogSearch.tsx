@@ -52,9 +52,9 @@ export function BlogSearch({
         />
       </label>
 
-      <div className="mt-8 space-y-5">
+      <div className="mt-8 grid gap-6 md:grid-cols-2">
         {listPosts.length === 0 ? (
-          <p className="text-center text-sm text-white/50">
+          <p className="col-span-full text-center text-sm text-white/50">
             No articles match &ldquo;{query}&rdquo;.
           </p>
         ) : (

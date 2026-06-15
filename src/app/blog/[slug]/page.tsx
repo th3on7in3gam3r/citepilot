@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleBody } from "@/components/blog/ArticleBody";
 import { ArticleJsonLd } from "@/components/blog/ArticleJsonLd";
+import { ArticleReadingProgress } from "@/components/blog/ArticleReadingProgress";
+import { BlogArticleCta } from "@/components/blog/BlogPostCover";
 import { BlogLayout } from "@/components/blog/BlogLayout";
 import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
 import { BlogPostMeta } from "@/components/blog/BlogPostMeta";
@@ -53,6 +55,7 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <>
       <ArticleJsonLd post={post} />
+      <ArticleReadingProgress />
       <BlogLayout>
         <Container className="px-4 pt-28 pb-16 md:pt-32">
           <Link
@@ -82,7 +85,7 @@ export default async function BlogPostPage({ params }: Props) {
             </p>
           </header>
 
-          <div className="mt-10">
+          <div id="blog-article-content" className="mt-10">
             {post.markdown ? (
               <MarkdownArticle markdown={post.markdown} dark />
             ) : (
@@ -90,24 +93,9 @@ export default async function BlogPostPage({ params }: Props) {
             )}
           </div>
 
-          <div className="mx-auto mt-12 max-w-3xl">
+          <div className="mx-auto mt-12 max-w-3xl space-y-8">
+            <BlogArticleCta />
             <BlogNewsletterSignup variant="card" />
-          </div>
-
-          <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
-            <p className="font-display text-lg font-bold text-white">
-              See if AI already cites you
-            </p>
-            <p className="mt-2 text-sm text-white/55">
-              Run a free citation audit on your domain — baseline, act, prove
-              lift.
-            </p>
-            <Link
-              href="/audit"
-              className="mt-4 inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep"
-            >
-              Run free audit
-            </Link>
           </div>
         </Container>
       </BlogLayout>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { joinWaitlist } from "@/lib/client/api";
 
 export function BlogNewsletterSignup({
   variant = "inline",
@@ -12,13 +11,31 @@ export function BlogNewsletterSignup({
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
     "idle",
   );
+  const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setStatus("loading");
-    const ok = await joinWaitlist(email.trim());
-    setStatus(ok ? "done" : "error");
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = (await res.json()) as { ok?: boolean; message?: string; error?: string };
+      if (res.ok && data.ok) {
+        setStatus("done");
+        return;
+      }
+      setErrorMsg(data.error ?? "Something went wrong — try again.");
+      setStatus("error");
+    } catch {
+      setErrorMsg("Something went wrong — try again.");
+      setStatus("error");
+    }
   }
 
   const card = variant === "card";
@@ -60,7 +77,7 @@ export function BlogNewsletterSignup({
             card ? "text-mint" : "text-accent"
           }`}
         >
-          You&apos;re on the list — first brief coming soon.
+          You&apos;re in — check your inbox.
         </p>
       ) : (
         <form
@@ -89,7 +106,7 @@ export function BlogNewsletterSignup({
         </form>
       )}
       {status === "error" && (
-        <p className="mt-2 text-xs text-red-400">Something went wrong — try again.</p>
+        <p className="mt-2 text-xs text-red-400">{errorMsg}</p>
       )}
     </div>
   );

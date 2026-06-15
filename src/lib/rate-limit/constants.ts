@@ -15,3 +15,6 @@ export const WORKSPACES_RATE_LIMIT_PER_HOUR = 120;
 
 /** Waitlist signups per IP per hour. */
 export const WAITLIST_RATE_LIMIT_PER_HOUR = 10;
+
+/** Blog newsletter signups per IP per hour. */
+export const SUBSCRIBE_RATE_LIMIT_PER_HOUR = 1;
