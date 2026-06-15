@@ -15,7 +15,7 @@ export async function SocialProofStats() {
 
   return (
     <section
-      className="border-b border-border bg-white py-10 md:py-12"
+      className="border-b border-border bg-background py-10 dark:bg-card md:py-12"
       aria-label="Platform stats"
     >
       <Container>

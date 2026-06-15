@@ -5,7 +5,7 @@ import { nav, site } from "@/lib/site";
 
 export function BottomCTA() {
   return (
-    <section className="relative overflow-hidden bg-ink py-24 text-white md:py-32 lg:py-36">
+    <section className="relative overflow-hidden bg-ink py-24 text-white dark:bg-[#050505] md:py-32 lg:py-36">
       <div
         className="pointer-events-none absolute inset-0 opacity-50"
         aria-hidden

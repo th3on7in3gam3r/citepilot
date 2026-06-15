@@ -28,7 +28,7 @@ export function Logo({
       />
       {showWordmark && (
         <span
-          className={`whitespace-nowrap ${light ? "text-white" : "text-ink"}`}
+          className={`whitespace-nowrap ${light ? "text-white" : "text-ink dark:text-white"}`}
           aria-hidden
         >
           {site.name.slice(0, 4)}

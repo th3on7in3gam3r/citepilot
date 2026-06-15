@@ -6,7 +6,7 @@ import type { FaqItem } from "@/lib/marketing/site-faq";
 function Chevron({ open }: { open: boolean }) {
   return (
     <svg
-      className={`h-5 w-5 shrink-0 text-white/45 transition-transform duration-200 ${
+      className={`h-5 w-5 shrink-0 text-muted transition-transform duration-200 dark:text-white/45 ${
         open ? "rotate-180" : ""
       }`}
       viewBox="0 0 20 20"
@@ -36,7 +36,7 @@ export function PricingFaqAccordion({ items }: { items: FaqItem[] }) {
         return (
           <div
             key={item.q}
-            className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm"
+            className="overflow-hidden rounded-2xl border border-border bg-card backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]"
           >
             <button
               id={buttonId}
@@ -44,9 +44,9 @@ export function PricingFaqAccordion({ items }: { items: FaqItem[] }) {
               aria-expanded={open}
               aria-controls={panelId}
               onClick={() => setOpenIndex(open ? null : index)}
-              className="flex w-full items-start justify-between gap-4 px-6 py-5 text-left transition hover:bg-white/[0.03]"
+              className="flex w-full items-start justify-between gap-4 px-6 py-5 text-left transition hover:bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:hover:bg-white/[0.03]"
             >
-              <span className="font-display font-bold text-white">{item.q}</span>
+              <span className="font-display font-bold text-foreground dark:text-white">{item.q}</span>
               <Chevron open={open} />
             </button>
             <div
@@ -54,9 +54,9 @@ export function PricingFaqAccordion({ items }: { items: FaqItem[] }) {
               role="region"
               aria-labelledby={buttonId}
               hidden={!open}
-              className="border-t border-white/10 px-6 pb-5 pt-1"
+              className="border-t border-border px-6 pb-5 pt-1 dark:border-white/10"
             >
-              <p className="text-sm leading-relaxed text-white/60">{item.a}</p>
+              <p className="text-sm leading-relaxed text-muted dark:text-white/60">{item.a}</p>
             </div>
           </div>
         );

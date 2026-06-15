@@ -26,7 +26,7 @@ export function FeatureSuite() {
   }, []);
 
   return (
-    <Section id="features" className="bg-cream">
+    <Section id="features" className="bg-cream dark:bg-background">
       <SectionHeading
         eyebrow="Product"
         title="A powerful suite of features — all in one place."
@@ -43,7 +43,7 @@ export function FeatureSuite() {
           return (
             <article
               key={f.id}
-              className="rounded-2xl border border-border bg-white p-8 transition hover:border-accent/40 hover:shadow-md"
+              className="rounded-2xl border border-border bg-card p-8 shadow-sm transition hover:border-accent/40 hover:shadow-md dark:border-[#222] dark:bg-card dark:shadow-black/20 dark:hover:border-accent/40"
             >
               <h3 className="font-display text-lg font-bold text-ink">
                 {f.title}

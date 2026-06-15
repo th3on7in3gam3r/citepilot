@@ -9,6 +9,7 @@ import { GlobalFilterModal } from "@/components/dashboard/filters/GlobalFilterMo
 import { DashboardCommandPalette } from "@/components/dashboard/DashboardCommandPalette";
 import { DashboardRail } from "@/components/dashboard/layout/DashboardRail";
 import { DashboardTopBar } from "@/components/dashboard/layout/DashboardTopBar";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { WorkspaceProvider, useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { dashboardNav } from "@/lib/dashboard";
 
@@ -48,20 +49,21 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   const { title, backHref, backLabel } = pageHeader(pathname);
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[#f4f6f8]">
+    <div className="flex h-[100dvh] overflow-hidden bg-[var(--dashboard-bg)]">
       <div className="hidden shrink-0 lg:block">
         <DashboardRail />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex h-14 shrink-0 items-center gap-3 border-b border-[#e8edf3] bg-white px-4 lg:hidden">
+        <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4 lg:hidden dark:border-[#222]">
           <DashboardMobileNav ready={ready} />
-          <span className="font-display min-w-0 flex-1 truncate text-lg font-bold text-[#0f172a]">
+          <span className="font-display min-w-0 flex-1 truncate text-lg font-bold text-ink">
             {title}
           </span>
+          <ThemeToggle />
           <button
             type="button"
             onClick={openCopilot}
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#0ea5e9]/30 bg-[#e0f2fe] px-2.5 py-1.5 text-[10px] font-semibold text-[#0284c7]"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1.5 text-[10px] font-semibold text-accent-deep dark:text-accent"
           >
             ✦ Copilot
           </button>

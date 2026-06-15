@@ -36,7 +36,7 @@ function AnimatedPrice({
   muted: boolean;
 }) {
   return (
-    <p className="mt-5 font-display text-4xl font-bold">
+    <p className="mt-5 font-display text-4xl font-bold text-foreground dark:text-white">
       <span
         key={`${price}${period}`}
         className="pricing-price-animate inline-flex items-baseline"
@@ -44,7 +44,9 @@ function AnimatedPrice({
         {price}
         <span
           className={`text-base font-normal ${
-            muted ? "text-white/60" : "text-white/50"
+            muted
+              ? "text-muted dark:text-white/60"
+              : "text-muted dark:text-white/50"
           }`}
         >
           {period}
@@ -61,17 +63,17 @@ export function PricingPlanCards() {
     <>
       <div className="mt-8 flex flex-col items-center gap-3">
         <div
-          className="inline-flex rounded-full border border-white/15 bg-white/[0.04] p-1"
+          className="inline-flex rounded-full border border-border bg-surface p-1 dark:border-white/15 dark:bg-white/[0.04]"
           role="group"
           aria-label="Billing interval"
         >
           <button
             type="button"
             onClick={() => setInterval("monthly")}
-            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
               interval === "monthly"
-                ? "bg-white text-ink"
-                : "text-white/65 hover:text-white"
+                ? "bg-foreground text-background dark:bg-white dark:text-ink"
+                : "text-muted hover:text-foreground dark:text-white/65 dark:hover:text-white"
             }`}
           >
             Monthly
@@ -79,10 +81,10 @@ export function PricingPlanCards() {
           <button
             type="button"
             onClick={() => setInterval("annual")}
-            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
               interval === "annual"
-                ? "bg-white text-ink"
-                : "text-white/65 hover:text-white"
+                ? "bg-foreground text-background dark:bg-white dark:text-ink"
+                : "text-muted hover:text-foreground dark:text-white/65 dark:hover:text-white"
             }`}
           >
             Annual
@@ -102,8 +104,8 @@ export function PricingPlanCards() {
               key={tier.name}
               className={`relative flex flex-col rounded-2xl border p-8 md:p-10 ${
                 tier.highlighted
-                  ? "border-accent/40 bg-gradient-to-b from-accent/20 to-white/[0.06] text-white shadow-xl shadow-accent/10"
-                  : "border-white/10 bg-white/[0.04] text-white backdrop-blur-sm"
+                  ? "border-accent/40 bg-gradient-to-b from-accent/10 to-card text-foreground shadow-lg shadow-accent/5 dark:from-accent/20 dark:to-white/[0.06] dark:text-white dark:shadow-xl dark:shadow-accent/10"
+                  : "border-border bg-card text-foreground shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:backdrop-blur-sm"
               }`}
             >
               {isPilot && (
@@ -112,7 +114,7 @@ export function PricingPlanCards() {
                 </span>
               )}
 
-              <h3 className="font-display text-lg font-bold text-white">
+              <h3 className="font-display text-lg font-bold text-foreground dark:text-white">
                 {tier.name}
               </h3>
 
@@ -125,7 +127,7 @@ export function PricingPlanCards() {
               {shown.note && (
                 <p
                   key={shown.note}
-                  className="pricing-price-animate mt-1 text-xs text-white/45"
+                  className="pricing-price-animate mt-1 text-xs text-muted dark:text-white/45"
                 >
                   {shown.note}
                 </p>
@@ -133,7 +135,9 @@ export function PricingPlanCards() {
 
               <p
                 className={`mt-3 text-sm leading-relaxed ${
-                  tier.highlighted ? "text-white/65" : "text-white/55"
+                  tier.highlighted
+                    ? "text-muted dark:text-white/65"
+                    : "text-muted dark:text-white/55"
                 }`}
               >
                 {tier.description}
@@ -143,10 +147,12 @@ export function PricingPlanCards() {
                   <li
                     key={f}
                     className={`flex gap-3 text-sm leading-relaxed ${
-                      tier.highlighted ? "text-white/80" : "text-white/70"
+                      tier.highlighted
+                        ? "text-foreground/80 dark:text-white/80"
+                        : "text-muted dark:text-white/70"
                     }`}
                   >
-                    <span className="shrink-0 text-glow">✓</span>
+                    <span className="shrink-0 text-accent dark:text-glow">✓</span>
                     {f}
                   </li>
                 ))}
@@ -167,7 +173,7 @@ export function PricingPlanCards() {
                 />
               </div>
               {isFree && (
-                <p className="mt-4 text-center text-xs leading-relaxed text-white/45">
+                <p className="mt-4 text-center text-xs leading-relaxed text-muted dark:text-white/45">
                   Free audits are one-time snapshots. Upgrade to Pilot for weekly
                   rescans.
                 </p>

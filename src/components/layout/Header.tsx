@@ -6,6 +6,8 @@ import { HeaderMobileNav } from "@/components/layout/HeaderMobileNav";
 import { HeaderNavDropdown } from "@/components/layout/HeaderNavDropdown";
 import { HeaderStartButton } from "@/components/layout/HeaderStartButton";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { nav } from "@/lib/site";
@@ -18,6 +20,7 @@ export function Header({
   overlay?: boolean;
 }) {
   const [scrolled, setScrolled] = useState(false);
+  const { resolved } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -27,13 +30,13 @@ export function Header({
   }, []);
 
   const solid = scrolled || !overlay;
-  const onDark = light && !solid;
+  const onDark = light && !solid && resolved === "dark";
 
   return (
     <header
       className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
         solid
-          ? "border-b border-border bg-white/95 shadow-sm backdrop-blur-md"
+          ? "border-b border-border bg-background/95 shadow-sm backdrop-blur-md dark:border-[#222] dark:bg-[#0a0a0a]/95 dark:shadow-black/20"
           : "border-b border-transparent bg-transparent"
       }`}
     >
@@ -53,10 +56,10 @@ export function Header({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium transition ${
+                className={`text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   onDark
                     ? "text-white/75 hover:text-white"
-                    : "text-muted hover:text-ink"
+                    : "text-muted hover:text-ink dark:text-[#94a3b8] dark:hover:text-white"
                 }`}
               >
                 {item.label}
@@ -64,7 +67,10 @@ export function Header({
             ),
           )}
         </nav>
-        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="hidden lg:block">
+            <ThemeToggle onDark={onDark} />
+          </div>
           <div className="hidden sm:contents">
             <HeaderAuthLinks onDark={onDark} />
           </div>

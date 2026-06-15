@@ -6,6 +6,7 @@ import { ReferralRefCapture } from "@/components/referrals/ReferralRefCapture";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
+import { themeInitScript } from "@/lib/theme";
 import "./globals.css";
 
 const homeDescription = clampMetaDescription(site.description);
@@ -88,13 +89,14 @@ export default function RootLayout({
       className={`${inter.variable} ${plusJakarta.variable} h-full scroll-smooth antialiased`}
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="preconnect" href="https://plausible.io" />
         <link rel="preconnect" href="https://us.i.posthog.com" />
         <link rel="dns-prefetch" href="https://api.stripe.com" />
         <link rel="dns-prefetch" href="https://js.stripe.com" />
         <link rel="dns-prefetch" href="https://checkout.stripe.com" />
       </head>
-      <body className="flex min-h-full flex-col bg-white text-ink">
+      <body className="flex min-h-full flex-col bg-background text-foreground">
         <AnalyticsScripts />
         <ReferralRefCapture />
         <AppProviders>{children}</AppProviders>

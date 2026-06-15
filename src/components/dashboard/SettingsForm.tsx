@@ -10,6 +10,7 @@ import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
 import { ReferralPanel } from "@/components/dashboard/ReferralPanel";
+import { ThemeSettingsPanel } from "@/components/theme/ThemeSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
   deleteWorkspace,
@@ -36,7 +37,7 @@ import { useToast } from "@/components/notifications/ToastProvider";
 import { effectInit } from "@/lib/react/effect-init";
 
 const inputClass =
-  "mt-2 w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20";
+  "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-[#333] dark:bg-[#141414]";
 
 type SettingsFormProps = {
   workspace: WorkspaceSnapshot;
@@ -339,6 +340,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           ) : undefined
         }
       />
+
+      <ThemeSettingsPanel />
 
       <form
         onSubmit={(e) => {

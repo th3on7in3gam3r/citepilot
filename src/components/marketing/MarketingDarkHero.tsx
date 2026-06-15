@@ -13,7 +13,7 @@ export function MarketingDarkHero({
   children?: ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden border-b border-white/[0.06]">
+    <div className="hero-premium relative overflow-hidden border-b border-border dark:border-white/[0.06]">
       <div className="hero-premium-orb hero-premium-orb--cyan" aria-hidden />
       <div
         className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[rgba(16,185,129,0.08)] blur-[80px]"
@@ -28,10 +28,10 @@ export function MarketingDarkHero({
             {eyebrow}
           </div>
         )}
-        <h1 className="font-display mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+        <h1 className="font-display mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight text-foreground dark:text-white md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
           {title}
         </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/60 md:text-lg">
+        <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted dark:text-white/60 md:text-lg">
           {description}
         </p>
         {children}

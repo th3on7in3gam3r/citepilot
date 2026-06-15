@@ -15,7 +15,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/35">
         {title}
       </p>
       <div className="mt-3.5">{children}</div>
@@ -30,7 +30,7 @@ function FooterLinks({ links }: { links: readonly FooterLink[] }) {
         <li key={link.href}>
           <Link
             href={link.href}
-            className="text-sm text-white/70 transition hover:text-white"
+            className="text-sm text-muted transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:text-white/70 dark:hover:text-white"
           >
             {link.label}
           </Link>
@@ -44,24 +44,24 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto border-t border-border bg-ink text-white">
+    <footer className="mt-auto border-t border-border bg-surface text-ink dark:border-[#222] dark:bg-ink dark:text-white">
       <Container className="py-12 md:py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-2">
-            <Logo light />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
+            <Logo />
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted dark:text-white/55">
               {site.tagline}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
                 href={nav.cta.href}
-                className="inline-flex items-center justify-center rounded-full border border-accent/60 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/20"
+                className="inline-flex items-center justify-center rounded-full border border-accent/60 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {nav.cta.label}
               </Link>
               <a
                 href={`mailto:${site.supportEmail}`}
-                className="text-sm text-white/55 transition hover:text-white"
+                className="text-sm text-muted transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:text-white/55 dark:hover:text-white"
               >
                 {site.supportEmail}
               </a>
@@ -89,16 +89,22 @@ export function Footer() {
           </FooterColumn>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-7 text-sm text-white/40 md:flex-row md:items-center md:justify-between">
+        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-7 text-sm text-muted dark:border-white/10 dark:text-white/40 md:flex-row md:items-center md:justify-between">
           <p>© {year} {site.name}</p>
           <nav
             className="flex flex-wrap items-center gap-x-5 gap-y-2"
             aria-label="Legal"
           >
-            <Link href="/terms" className="transition hover:text-white/70">
+            <Link
+              href="/terms"
+              className="transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:hover:text-white/70"
+            >
               Terms of Service
             </Link>
-            <Link href="/privacy" className="transition hover:text-white/70">
+            <Link
+              href="/privacy"
+              className="transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:hover:text-white/70"
+            >
               Privacy Policy
             </Link>
           </nav>

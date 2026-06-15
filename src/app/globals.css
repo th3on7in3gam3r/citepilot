@@ -1,24 +1,51 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 :root {
-  --color-ink: #070b14;
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-border: #e5e7eb;
+  --muted: #6b7280;
+  --primary: #0ea5e9;
+  --color-ink: #1a1a1a;
   --color-slate: #1a2332;
-  --color-muted: #64748b;
+  --color-muted: #6b7280;
   --color-surface: #f8fafc;
   --color-cream: #fafbfc;
-  --color-border: #e8edf3;
+  --color-border: #e5e7eb;
   --color-accent: #0ea5e9;
   --color-accent-deep: #0284c7;
   --color-glow: #22d3ee;
   --color-mint: #10b981;
-  --background: #ffffff;
-  --foreground: var(--color-ink);
   --hero-bg: #04060c;
+  --dashboard-bg: #f4f6f8;
+  --dashboard-panel: #ffffff;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #111111;
+  --card-border: #222222;
+  --muted: #9ca3af;
+  --primary: #0ea5e9;
+  --color-ink: #fafafa;
+  --color-slate: #1e293b;
+  --color-muted: #9ca3af;
+  --color-surface: #141414;
+  --color-cream: #0a0a0a;
+  --color-border: #222222;
+  --dashboard-bg: #0a0a0a;
+  --dashboard-panel: #111111;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-primary: var(--primary);
   --color-ink: var(--color-ink);
   --color-slate: var(--color-slate);
   --color-muted: var(--color-muted);
@@ -155,12 +182,35 @@ body {
 
 /* Premium production hero */
 .hero-premium {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -30%, rgba(14, 165, 233, 0.12), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 20%, rgba(34, 211, 238, 0.06), transparent),
+    radial-gradient(ellipse 40% 35% at 0% 60%, rgba(16, 185, 129, 0.04), transparent),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%);
+  color: var(--foreground);
+}
+
+.dark .hero-premium {
   background-color: var(--hero-bg);
   background-image:
     radial-gradient(ellipse 90% 60% at 50% -30%, rgba(14, 165, 233, 0.22), transparent 55%),
     radial-gradient(ellipse 50% 40% at 100% 20%, rgba(34, 211, 238, 0.08), transparent),
     radial-gradient(ellipse 40% 35% at 0% 60%, rgba(16, 185, 129, 0.06), transparent),
     linear-gradient(180deg, #050810 0%, #070b12 50%, #060910 100%);
+  color: #ffffff;
+}
+
+.dark .hero-premium-grid {
+  opacity: 1;
+}
+
+html:not(.dark) .hero-premium-grid {
+  opacity: 0.35;
+}
+
+html:not(.dark) .hero-premium-orb {
+  opacity: 0.5;
 }
 
 .hero-premium-grid {
@@ -264,6 +314,22 @@ body {
 .text-shimmer {
   background: linear-gradient(
     105deg,
+    #0284c7 0%,
+    #0ea5e9 35%,
+    #22d3ee 50%,
+    #0ea5e9 65%,
+    #0284c7 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+.dark .text-shimmer {
+  background: linear-gradient(
+    105deg,
     #ffffff 0%,
     #a5f3fc 35%,
     #22d3ee 50%,
@@ -271,10 +337,6 @@ body {
     #ffffff 100%
   );
   background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shimmer 5s linear infinite;
 }
 
 .mockup-shadow {

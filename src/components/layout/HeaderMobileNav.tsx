@@ -102,7 +102,7 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
             aria-label="Close menu"
             onClick={() => setOpen(false)}
           />
-          <aside className="absolute top-0 right-0 flex h-full w-[min(100%,20rem)] flex-col border-l border-border bg-white shadow-xl">
+          <aside className="absolute top-0 right-0 flex h-full w-[min(100%,20rem)] flex-col border-l border-border bg-background shadow-xl dark:border-[#222] dark:bg-[#111]">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
               <Logo className="text-base" />
               <button
