@@ -68,6 +68,11 @@ const nextConfig: NextConfig = {
         destination: "/geo-playbook/:path*",
         permanent: true,
       },
+      {
+        source: "/agencies",
+        destination: "/agency",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
