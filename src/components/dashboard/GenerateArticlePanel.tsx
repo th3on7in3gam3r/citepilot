@@ -6,11 +6,13 @@ import { useSearchParams } from "next/navigation";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import {
+  buildGenerateContentOpportunities,
+  editorialWeekLabel,
+} from "@/lib/content-strategy/opportunities";
+import {
   AUDIENCE_LABELS,
   CONTENT_TYPE_LABELS,
   EDITORIAL_PILLARS,
-  editorialPillarTitle,
-  pickDiverseByPillar,
 } from "@/lib/content-strategy";
 import type {
   AudienceSegment,
@@ -19,21 +21,11 @@ import type {
 } from "@/lib/content-strategy";
 import { useToast } from "@/components/notifications/ToastProvider";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
-import { buildContentCalendar, buildMoneyPromptIdeas } from "@/lib/dashboard-data";
 
 type GenerateResult = {
   post: { slug: string; title: string; url: string };
   cmsUrl?: string | null;
 };
-
-function mapBusinessTypeToAudience(businessType: string): AudienceSegment {
-  const normalized = businessType.toLowerCase();
-  if (normalized.includes("saas")) return "saas";
-  if (normalized.includes("ecommerce") || normalized.includes("shop")) return "ecommerce";
-  if (normalized.includes("agency")) return "agency";
-  if (normalized.includes("founder") || normalized.includes("solo")) return "solo-founder";
-  return "growth-marketing";
-}
 
 export function GenerateArticlePanel({
   workspaceId,
@@ -130,54 +122,13 @@ export function GenerateArticlePanel({
     };
   }, [workspaceId]);
 
-  // Extract suggestions from Content Calendar and Money Prompts
-  const suggestions = useMemo(() => {
-    if (!workspace) return [];
-
-    const calendar = buildContentCalendar(workspace);
-    const moneyPrompts = buildMoneyPromptIdeas(workspace);
-
-    const list: Array<{
-      topic: string;
-      intent: string;
-      format: ContentType;
-      pillar: EditorialPillarId;
-      angle: string;
-      badge: string;
-    }> = [];
-
-    calendar.forEach((item) => {
-      let format: ContentType = "tutorial";
-      if (item.format.toLowerCase().includes("pillar")) format = "pillar";
-      if (item.format.toLowerCase().includes("comparison")) format = "comparison";
-
-      list.push({
-        topic: item.topic,
-        intent: item.format,
-        format,
-        pillar: item.pillar,
-        angle: `Target focus: ${item.rationale}`,
-        badge: `${editorialPillarTitle(item.pillar)} · ${item.format}`,
-      });
-    });
-
-    moneyPrompts.forEach((item) => {
-      let format: ContentType = "tutorial";
-      if (item.intent === "comparison" || item.intent === "alternatives") {
-        format = "comparison";
-      }
-
-      list.push({
-        topic: item.prompt,
-        intent: item.intent,
-        format,
-        pillar: item.pillar,
-        angle: `Target intent: ${item.intent}. ${item.reason}`,
-        badge: `${editorialPillarTitle(item.pillar)} · ${item.intent}`,
-      });
-    });
-
-    return pickDiverseByPillar(list, 6);
+  // Rotating editorial opportunities — workspace + weekly + audience/format/pillar mix
+  const { suggestions, weekLabel } = useMemo(() => {
+    if (!workspace) return { suggestions: [], weekLabel: "" };
+    return {
+      suggestions: buildGenerateContentOpportunities(workspace),
+      weekLabel: editorialWeekLabel(),
+    };
   }, [workspace]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -280,31 +231,32 @@ export function GenerateArticlePanel({
 
       {suggestions.length > 0 && (
         <div className="mb-6">
-          <span className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">
-            Suggested content opportunities (click to pre-fill)
-          </span>
-          <div className="flex flex-wrap gap-2.5">
-            {suggestions.map((s, idx) => (
+          <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
+            <span className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Suggested content opportunities (click to pre-fill)
+            </span>
+            <span className="text-[11px] text-muted">{weekLabel} · refreshes daily</span>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {suggestions.map((s) => (
               <button
-                key={idx}
+                key={`${s.audience}-${s.format}-${s.pillar}-${s.topic}`}
                 type="button"
                 onClick={() => {
                   setTopic(s.topic);
                   setAngle(s.angle);
                   setContentType(s.format);
                   setPillar(s.pillar);
-                  if (workspace?.businessType) {
-                    setAudience(mapBusinessTypeToAudience(workspace.businessType));
-                  }
+                  setAudience(s.audience);
                   toast.success("Suggested configuration pre-filled!");
                 }}
-                className="flex flex-col items-start rounded-xl border border-border bg-white p-3 text-left transition hover:border-accent hover:bg-surface max-w-[240px]"
+                className="flex flex-col items-start rounded-xl border border-border bg-white p-3 text-left transition hover:border-accent hover:bg-surface"
                 disabled={loading}
               >
                 <span className="rounded bg-surface px-1.5 py-0.5 text-[9px] font-bold text-muted uppercase tracking-wide border border-border">
                   {s.badge}
                 </span>
-                <span className="mt-2 text-xs font-semibold text-ink line-clamp-2 leading-relaxed">
+                <span className="mt-2 text-xs font-semibold text-ink line-clamp-3 leading-relaxed">
                   {s.topic}
                 </span>
               </button>
