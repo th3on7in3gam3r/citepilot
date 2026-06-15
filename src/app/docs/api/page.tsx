@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { ApiDocsContent } from "@/components/marketing/ApiDocsContent";
+import { ApiDocsPageContent } from "@/components/docs/ApiDocsPageContent";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { Container } from "@/components/ui/Container";
-import { apiDocsLanding } from "@/lib/marketing/api-docs-content";
+import { apiDocsLanding } from "@/lib/marketing/api-docs-data";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 
@@ -31,15 +31,19 @@ export default function ApiDocsPage() {
           description={apiDocsLanding.description}
         >
           <p className="mt-6 text-sm text-white/45">
-            Fleet plan required.{" "}
+            Base URL:{" "}
+            <code className="rounded bg-white/10 px-1.5 py-0.5 text-glow">
+              https://getcitepilot.com/api/v1
+            </code>
+            {" · "}
             <Link href="/agency" className="text-glow hover:underline">
-              Agency & Fleet overview →
+              Fleet overview →
             </Link>
           </p>
         </MarketingDarkHero>
 
         <Container className="py-14 md:py-20">
-          <ApiDocsContent />
+          <ApiDocsPageContent />
         </Container>
       </main>
       <Footer />

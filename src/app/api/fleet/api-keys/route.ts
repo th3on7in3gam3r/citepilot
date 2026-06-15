@@ -23,7 +23,10 @@ export const GET = withApiLogging(async function GET(request: Request) {
     );
   }
 
-  const keys = await listFleetApiKeys(userId);
+  const keys = await listFleetApiKeys(
+    userId,
+    new URL(request.url).searchParams.get("workspaceId") ?? undefined,
+  );
   return NextResponse.json({ keys });
 });
 
@@ -41,8 +44,15 @@ export const POST = withApiLogging(async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json().catch(() => ({}))) as { name?: string };
-  const created = await createFleetApiKey(userId, body.name ?? "API key");
+  const body = (await request.json().catch(() => ({}))) as {
+    name?: string;
+    workspaceId?: string;
+  };
+  const created = await createFleetApiKey(
+    userId,
+    body.name ?? "API key",
+    body.workspaceId ?? null,
+  );
   if ("error" in created) {
     return NextResponse.json(
       { error: "Maximum API keys reached", code: "KEY_LIMIT" },

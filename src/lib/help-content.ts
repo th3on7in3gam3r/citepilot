@@ -115,7 +115,7 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
   },
   {
     q: "What does Fleet add beyond Pilot?",
-    a: "Unlimited client workspaces, unlimited monitored prompts, white-label proof reports, workspace JSON export, Fleet API keys with rate limits, and CSV bulk import of prompts from Settings. Use the proof report page for client-ready branding.",
+    a: "Unlimited client workspaces, unlimited monitored prompts, white-label proof reports, workspace JSON export, Fleet REST API (100 req/min, 1000/hour) with workspace-scoped keys, and CSV bulk import of prompts from Settings. See /docs/api for integration docs.",
   },
   {
     q: "Where is the getting-started checklist?",

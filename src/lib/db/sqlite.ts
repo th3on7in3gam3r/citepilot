@@ -100,6 +100,7 @@ function initSchema(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS fleet_api_keys (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
+      workspace_id TEXT,
       name TEXT NOT NULL,
       key_prefix TEXT NOT NULL,
       key_hash TEXT NOT NULL UNIQUE,
@@ -286,6 +287,13 @@ function migrateSchema(db: Database.Database): void {
     db.exec(`ALTER TABLE blog_posts ADD COLUMN cover_image_alt TEXT`);
   }
 
+  const fleetKeyCols = db
+    .prepare(`PRAGMA table_info(fleet_api_keys)`)
+    .all() as { name: string }[];
+  if (fleetKeyCols.length > 0 && !fleetKeyCols.some((c) => c.name === "workspace_id")) {
+    db.exec(`ALTER TABLE fleet_api_keys ADD COLUMN workspace_id TEXT`);
+  }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS backlink_profiles (
       workspace_id TEXT PRIMARY KEY,
@@ -367,6 +375,7 @@ function migrateSchema(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS fleet_api_keys (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
+      workspace_id TEXT,
       name TEXT NOT NULL,
       key_prefix TEXT NOT NULL,
       key_hash TEXT NOT NULL UNIQUE,

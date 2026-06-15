@@ -54,6 +54,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/api-docs",
+        destination: "/docs/api",
+        permanent: true,
+      },
+      {
         source: "/dashboard/admin",
         destination: "/admin",
         permanent: false,

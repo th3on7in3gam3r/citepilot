@@ -68,6 +68,9 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image_alt TEXT`,
       );
+      await pool.query(
+        `ALTER TABLE fleet_api_keys ADD COLUMN IF NOT EXISTS workspace_id TEXT`,
+      );
     })();
   }
   await globalForPg.citepilotPgReady;
