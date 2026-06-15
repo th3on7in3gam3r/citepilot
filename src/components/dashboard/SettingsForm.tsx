@@ -172,15 +172,22 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workspaceId, email }),
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string; sentTo?: string };
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        hint?: string;
+        sentTo?: string;
+      };
       if (res.ok && data.ok) {
         setTestDigestState("sent");
         toast.success(`Test digest sent to ${data.sentTo ?? email}`);
         setTimeout(() => setTestDigestState("idle"), 4000);
       } else {
         setTestDigestState("error");
-        toast.error(data.error ?? `Failed to send test email (${res.status}).`);
-        setTimeout(() => setTestDigestState("idle"), 4000);
+        toast.error(data.error ?? `Failed to send test email (${res.status}).`, {
+          description: data.hint,
+        });
+        setTimeout(() => setTestDigestState("idle"), 6000);
       }
     } catch {
       setTestDigestState("error");

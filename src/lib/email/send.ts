@@ -41,22 +41,28 @@ export function formatResendError(message: string): string {
 async function sendViaResend(
   input: SendEmailInput,
   from: string,
-): Promise<{ ok: boolean; error?: string; id?: string }> {
+): Promise<{ ok: boolean; error?: string; rawError?: string; id?: string }> {
   const resend = new Resend(resendApiKey()!);
-  const { data, error } = await resend.emails.send({
-    from,
-    to: input.to,
-    subject: input.subject,
-    html: input.html,
-    text: input.text,
-  });
+  try {
+    const { data, error } = await resend.emails.send({
+      from,
+      to: input.to,
+      subject: input.subject,
+      html: input.html,
+      text: input.text,
+    });
 
-  if (error) {
-    const message = error.message ?? "Resend send failed";
-    console.error("[email] Resend error", { from, to: input.to, message });
-    return { ok: false, error: formatResendError(message) };
+    if (error) {
+      const raw = error.message ?? JSON.stringify(error);
+      console.error("[email] Resend error", { from, to: input.to, raw });
+      return { ok: false, rawError: raw, error: formatResendError(raw) };
+    }
+    return { ok: true, id: data?.id };
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : "Resend request failed";
+    console.error("[email] Resend exception", { from, to: input.to, raw });
+    return { ok: false, rawError: raw, error: formatResendError(raw) };
   }
-  return { ok: true, id: data?.id };
 }
 
 export async function sendEmail(
@@ -73,8 +79,8 @@ export async function sendEmail(
 
   const shouldRetryWithTestFrom =
     isLocalDevelopment() &&
-    primary.error &&
-    (isDomainVerificationError(primary.error) ||
+    primary.rawError &&
+    (isDomainVerificationError(primary.rawError) ||
       process.env.RESEND_USE_TEST_FROM === "1");
 
   if (!shouldRetryWithTestFrom) {

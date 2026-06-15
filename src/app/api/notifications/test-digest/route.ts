@@ -85,32 +85,42 @@ export const POST = withApiLogging(async function POST(request: Request) {
     ? latest.gaps
     : ["Run a GEO audit to populate real gap data in digests."];
 
-  const result = await sendWeeklyDigestEmail({
-    domain: ws.domain,
-    buyerQuestion: ws.buyerQuestion ?? "",
-    competitors: ws.competitors,
-    score,
-    previousScore,
-    gaps,
-    to,
-  });
+  try {
+    const result = await sendWeeklyDigestEmail({
+      domain: ws.domain,
+      buyerQuestion: ws.buyerQuestion ?? "",
+      competitors: ws.competitors,
+      score,
+      previousScore,
+      gaps,
+      to,
+    });
 
-  if (!result.ok) {
-    const status =
-      result.error === "Email not configured"
-        ? 503
-        : result.error?.includes("Invalid email") ||
-            result.error?.includes("only go to")
-          ? 422
-          : 502;
+    if (!result.ok) {
+      const hint =
+        "If you just updated .env.local, restart the dev server. On getcitepilot.com, set RESEND_API_KEY and EMAIL_FROM in Vercel → Environment Variables, then redeploy.";
+      return NextResponse.json(
+        {
+          ok: false,
+          error: result.error ?? "Send failed",
+          hint,
+        },
+        { status: result.error === "Email not configured" ? 503 : 422 },
+      );
+    }
+
+    return NextResponse.json({ ok: true, sentTo: to });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected send error";
+    console.error("[test-digest]", err);
     return NextResponse.json(
       {
         ok: false,
-        error: result.error ?? "Send failed",
+        error: message,
+        hint:
+          "Restart the dev server after changing .env.local, or redeploy Vercel after updating production env vars.",
       },
-      { status },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true, sentTo: to });
 });
