@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PricingFaqAccordion } from "@/components/pricing/PricingFaqAccordion";
 import { PricingPlanCards } from "@/components/pricing/PricingPlanCards";
 import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
 import { Footer } from "@/components/layout/Footer";
@@ -6,7 +7,8 @@ import { Header } from "@/components/layout/Header";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
-import { pricingFaqs, pricingLanding } from "@/lib/marketing/pricing-landing";
+import { pricingLanding } from "@/lib/marketing/pricing-landing";
+import { pricingPageFaqItems } from "@/lib/marketing/site-faq";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
@@ -89,6 +91,25 @@ export default function PricingPage() {
                 </p>
               </div>
             </div>
+            <p className="mx-auto mt-6 max-w-3xl text-center text-sm leading-relaxed text-white/45">
+              All plans include: HTTPS, Vercel edge hosting, SOC2-grade
+              infrastructure via Neon and Vercel, and email support.
+            </p>
+          </section>
+
+          <section
+            className="mx-auto mt-14 max-w-3xl md:mt-16"
+            aria-labelledby="pricing-faq"
+          >
+            <h2
+              id="pricing-faq"
+              className="font-display text-center text-xl font-bold text-white md:text-2xl"
+            >
+              Frequently asked questions
+            </h2>
+            <div className="mt-8">
+              <PricingFaqAccordion items={pricingPageFaqItems()} />
+            </div>
           </section>
 
           <section
@@ -145,31 +166,6 @@ export default function PricingPage() {
           <div className="mt-14 text-white [&_h2]:text-white [&_h3]:text-white [&_p]:text-white/60 [&_a]:text-glow">
             <PricingSeoIntro />
           </div>
-
-          <section
-            className="mx-auto mt-14 max-w-3xl"
-            aria-labelledby="pricing-faq"
-          >
-            <h2
-              id="pricing-faq"
-              className="font-display text-center text-xl font-bold text-white md:text-2xl"
-            >
-              Pricing FAQ
-            </h2>
-            <dl className="mt-8 space-y-4">
-              {pricingFaqs.map((faq) => (
-                <div
-                  key={faq.q}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm"
-                >
-                  <dt className="font-display font-bold text-white">{faq.q}</dt>
-                  <dd className="mt-2 text-sm leading-relaxed text-white/60">
-                    {faq.a}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </section>
         </Container>
       </main>
       <Footer />

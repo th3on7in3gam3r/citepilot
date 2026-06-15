@@ -122,6 +122,21 @@ body {
   50% { opacity: 0.7; }
 }
 
+@keyframes pricing-price-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pricing-price-animate {
+  animation: pricing-price-in 0.28s ease-out;
+}
+
 .animate-float { animation: float 6s ease-in-out infinite; }
 .animate-float-delayed { animation: float 6s ease-in-out 1.5s infinite; }
 .animate-pulse-ring { animation: pulse-ring 3s ease-in-out infinite; }

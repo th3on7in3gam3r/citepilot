@@ -6,8 +6,8 @@ import { PricingTierActions } from "@/components/billing/PricingTierActions";
 import { pricingTiers } from "@/lib/content";
 
 const ANNUAL_PRICES: Record<string, { price: string; note: string }> = {
-  Pilot: { price: "$63", note: "billed annually ($756/yr)" },
-  Fleet: { price: "$199", note: "billed annually ($2,388/yr)" },
+  Pilot: { price: "$63", note: "billed annually as $756/yr" },
+  Fleet: { price: "$199", note: "billed annually as $2,388/yr" },
 };
 
 function displayPrice(
@@ -24,6 +24,34 @@ function displayPrice(
     };
   }
   return { price: monthlyPrice, period: tierName === "Audit" ? "" : "/mo" };
+}
+
+function AnimatedPrice({
+  price,
+  period,
+  muted,
+}: {
+  price: string;
+  period: string;
+  muted: boolean;
+}) {
+  return (
+    <p className="mt-5 font-display text-4xl font-bold">
+      <span
+        key={`${price}${period}`}
+        className="pricing-price-animate inline-flex items-baseline"
+      >
+        {price}
+        <span
+          className={`text-base font-normal ${
+            muted ? "text-white/60" : "text-white/50"
+          }`}
+        >
+          {period}
+        </span>
+      </span>
+    </p>
+  );
 }
 
 export function PricingPlanCards() {
@@ -61,43 +89,48 @@ export function PricingPlanCards() {
             <span className="ml-1.5 text-xs font-bold text-mint">Save 20%</span>
           </button>
         </div>
-        {interval === "annual" && (
-          <p className="text-center text-xs text-white/45">
-            {/* TODO: wire STRIPE_PILOT_ANNUAL_PRICE_ID + STRIPE_FLEET_ANNUAL_PRICE_ID in Stripe */}
-            Annual checkout uses Stripe annual price IDs when configured.
-          </p>
-        )}
       </div>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-3 lg:gap-6">
+      <div className="mt-10 grid gap-8 pt-2 lg:grid-cols-3 lg:gap-6">
         {pricingTiers.map((tier) => {
           const shown = displayPrice(tier.name, tier.price, interval);
+          const isPilot = tier.name === "Pilot";
+          const isFree = tier.name === "Audit";
 
           return (
             <article
               key={tier.name}
-              className={`flex flex-col rounded-2xl border p-8 md:p-10 ${
+              className={`relative flex flex-col rounded-2xl border p-8 md:p-10 ${
                 tier.highlighted
                   ? "border-accent/40 bg-gradient-to-b from-accent/20 to-white/[0.06] text-white shadow-xl shadow-accent/10"
                   : "border-white/10 bg-white/[0.04] text-white backdrop-blur-sm"
               }`}
             >
+              {isPilot && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-accent/40 bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_0_20px_rgba(14,165,233,0.35)]">
+                  Most popular
+                </span>
+              )}
+
               <h3 className="font-display text-lg font-bold text-white">
                 {tier.name}
               </h3>
-              <p className="mt-5 font-display text-4xl font-bold">
-                {shown.price}
-                <span
-                  className={`text-base font-normal ${
-                    tier.highlighted ? "text-white/60" : "text-white/50"
-                  }`}
-                >
-                  {shown.period}
-                </span>
-              </p>
+
+              <AnimatedPrice
+                price={shown.price}
+                period={shown.period}
+                muted={tier.highlighted}
+              />
+
               {shown.note && (
-                <p className="mt-1 text-xs text-white/45">{shown.note}</p>
+                <p
+                  key={shown.note}
+                  className="pricing-price-animate mt-1 text-xs text-white/45"
+                >
+                  {shown.note}
+                </p>
               )}
+
               <p
                 className={`mt-3 text-sm leading-relaxed ${
                   tier.highlighted ? "text-white/65" : "text-white/55"
@@ -127,12 +160,18 @@ export function PricingPlanCards() {
                   variant={
                     tier.highlighted
                       ? "dark"
-                      : tier.name === "Audit"
+                      : isFree
                         ? "accent"
                         : "primary"
                   }
                 />
               </div>
+              {isFree && (
+                <p className="mt-4 text-center text-xs leading-relaxed text-white/45">
+                  Free audits are one-time snapshots. Upgrade to Pilot for weekly
+                  rescans.
+                </p>
+              )}
             </article>
           );
         })}
