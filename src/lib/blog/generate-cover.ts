@@ -1,3 +1,4 @@
+import { updateBlogPost, type BlogPostRow } from "./store";
 import { captureServerException } from "@/lib/observability/sentry";
 
 export type GenerateCoverInput = {
@@ -69,4 +70,30 @@ export async function generateBlogCoverDataUrl(
     captureServerException(err, { tags: { area: "blog-cover-generate" } });
     return { error: "Image generation request failed." };
   }
+}
+
+/** Generate and persist a cover when the post has none (non-fatal on failure). */
+export async function ensureBlogCoverForPost(
+  row: Pick<
+    BlogPostRow,
+    "slug" | "title" | "description" | "pillar" | "cover_image_url"
+  >,
+): Promise<{ coverImageUrl: string; coverImageAlt: string } | null> {
+  if (row.cover_image_url?.trim()) return null;
+
+  const result = await generateBlogCoverDataUrl({
+    title: row.title,
+    description: row.description,
+    pillar: row.pillar,
+  });
+  if ("error" in result) {
+    console.warn(`[blog-cover] ${row.slug}: ${result.error}`);
+    return null;
+  }
+
+  await updateBlogPost(row.slug, {
+    coverImageUrl: result.coverImageUrl,
+    coverImageAlt: result.coverImageAlt,
+  });
+  return result;
 }

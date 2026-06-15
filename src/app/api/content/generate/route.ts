@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { buildPostFromMarkdown } from "@/lib/blog/store";
+import { ensureBlogCoverForPost } from "@/lib/blog/generate-cover";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import {
   CONTENT_GENERATION_SYSTEM_PROMPT,
@@ -16,7 +17,7 @@ import { captureServerException } from "@/lib/observability/sentry";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 export const POST = withApiLogging(async function POST(request: Request) {
   const key = process.env.OPENAI_API_KEY;
@@ -120,7 +121,7 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
       return NextResponse.json({ brief, markdown });
     }
 
-    const { post } = await buildPostFromMarkdown(markdown, {
+    const { post, row } = await buildPostFromMarkdown(markdown, {
       pillar,
       audience: input.audience,
       contentType: input.contentType,
@@ -130,6 +131,8 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
       workspaceId: input.workspaceId,
     });
 
+    const cover = await ensureBlogCoverForPost(row);
+
     return NextResponse.json({
       brief,
       markdown,
@@ -137,6 +140,7 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
         slug: post.slug,
         title: post.title,
         url: `/blog/${post.slug}`,
+        coverImageUrl: cover?.coverImageUrl ?? post.coverImageUrl ?? null,
       },
     });
   } catch (error) {
