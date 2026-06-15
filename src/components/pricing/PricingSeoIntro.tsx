@@ -86,7 +86,19 @@ export function PricingSeoIntro() {
           <Link href="/audit" className="font-semibold text-accent">
             free 60-second citation audit
           </Link>{" "}
-          before choosing a plan. For metric definitions and schema automation,
+          before choosing a plan. Compare CitePilot to{" "}
+          <Link href="/compare/semrush" className="font-semibold text-accent">
+            Semrush
+          </Link>
+          ,{" "}
+          <Link href="/compare/ahrefs" className="font-semibold text-accent">
+            Ahrefs
+          </Link>
+          , and{" "}
+          <Link href="/compare/moz" className="font-semibold text-accent">
+            Moz
+          </Link>{" "}
+          for AI citation tracking. For metric definitions and schema automation,
           see the{" "}
           <Link href="/ai-visibility" className="font-semibold text-accent">
             AI visibility service

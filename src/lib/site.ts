@@ -70,9 +70,11 @@ export const nav = {
       { label: "Start analysis", href: "/start" },
     ],
     compare: [
-      { label: "vs Semrush", href: "/vs/semrush" },
-      { label: "vs Ahrefs", href: "/vs/ahrefs" },
-      { label: "vs Moz", href: "/vs/moz" },
+      { label: "vs Semrush", href: "/compare/semrush" },
+      { label: "vs Ahrefs", href: "/compare/ahrefs" },
+      { label: "vs Moz", href: "/compare/moz" },
+      { label: "vs BrightEdge", href: "/compare/brightedge" },
+      { label: "vs Conductor", href: "/compare/conductor" },
     ],
     company: [
       { label: "System Status", href: "/status" },

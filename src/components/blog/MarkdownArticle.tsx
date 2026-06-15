@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { linkCompetitorNamesInMarkdown } from "@/lib/blog/competitor-links";
 
 export function MarkdownArticle({
   markdown,
@@ -17,6 +18,8 @@ export function MarkdownArticle({
     .replace(/^(#{1,6}\s+)TL;DR\b/gm, "$1Quick Summary")
     .replace(/^(?:\*\*)?TL;DR(?:\*\*)?([:\s—-]+)/gm, "Quick Summary$1")
     .trim();
+
+  const linked = linkCompetitorNamesInMarkdown(body);
 
   const ink = dark ? "text-white" : "text-ink";
   const muted = dark ? "text-white/65" : "text-muted";
@@ -103,7 +106,7 @@ export function MarkdownArticle({
           ),
         }}
       >
-        {body}
+        {linked}
       </ReactMarkdown>
     </article>
   );

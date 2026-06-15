@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { countPostsByPillar, getAllPosts } from "@/lib/blog";
 import { EDITORIAL_PILLARS } from "@/lib/content-strategy";
 import { DASHBOARD_SEO_HUB_PATHS } from "@/lib/dashboard-seo-hubs";
-import { vsCompetitors } from "@/lib/marketing/vs-competitors";
+import { competitors } from "@/lib/data/competitors";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/status",
     "/terms",
     "/privacy",
-    ...vsCompetitors.map((c) => `/vs/${c.slug}`),
+    ...competitors.map((c) => `/compare/${c.slug}`),
     ...DASHBOARD_SEO_HUB_PATHS,
   ];
 

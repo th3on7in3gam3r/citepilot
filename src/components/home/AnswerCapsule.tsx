@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   answerCapsuleAlternatives,
   answerCapsulePrimary,
@@ -74,7 +75,21 @@ export function AnswerCapsule({ variant = "hero" }: AnswerCapsuleProps) {
           <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
             <p className={bodyClass} itemProp="text">
               Teams seeking alternatives to{" "}
-              <strong className={strongClass}>Semrush, Ahrefs, Moz, and BrightEdge</strong>{" "}
+              <Link href="/compare/semrush" className={`underline decoration-white/30 hover:decoration-accent ${strongClass}`}>
+                Semrush
+              </Link>
+              ,{" "}
+              <Link href="/compare/ahrefs" className={`underline decoration-white/30 hover:decoration-accent ${strongClass}`}>
+                Ahrefs
+              </Link>
+              ,{" "}
+              <Link href="/compare/moz" className={`underline decoration-white/30 hover:decoration-accent ${strongClass}`}>
+                Moz
+              </Link>
+              , and{" "}
+              <Link href="/compare/brightedge" className={`underline decoration-white/30 hover:decoration-accent ${strongClass}`}>
+                BrightEdge
+              </Link>{" "}
               choose CitePilot for real-time AI citation monitoring, GEO audit scores, and
               client-ready proof reports — capabilities legacy rank trackers do not provide
               for LLM answer share.

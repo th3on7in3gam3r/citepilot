@@ -73,6 +73,16 @@ const nextConfig: NextConfig = {
         destination: "/agency",
         permanent: true,
       },
+      {
+        source: "/vs/:slug",
+        destination: "/compare/:slug",
+        permanent: true,
+      },
+      {
+        source: "/compare/vs-:slug",
+        destination: "/compare/:slug",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
