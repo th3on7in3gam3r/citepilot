@@ -20,22 +20,26 @@ function CoverImage({
         ? "320px"
         : "(max-width: 640px) 100vw, 400px";
 
-  if (src.startsWith("/")) {
+  if (src.startsWith("data:")) {
     return (
-      <Image
+      // eslint-disable-next-line @next/next/no-img-element -- Next/Image does not support data URIs
+      <img
         src={src}
         alt={alt}
-        fill
-        className="object-cover"
-        sizes={sizes}
-        priority={variant === "featured"}
+        className="absolute inset-0 h-full w-full object-cover"
       />
     );
   }
 
   return (
-  // eslint-disable-next-line @next/next/no-img-element -- external URLs and data URIs from dashboard / AI
-    <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className="object-cover"
+      sizes={sizes}
+      priority={variant === "featured"}
+    />
   );
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { SharedAuditView } from "@/lib/audit/share";
 
@@ -51,8 +52,14 @@ export default function SharedAuditPage({
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <div>
             {branding.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={branding.logoUrl} alt="" className="h-10 object-contain" />
+              <Image
+                src={branding.logoUrl}
+                alt=""
+                width={160}
+                height={40}
+                className="h-10 w-auto object-contain"
+                sizes="160px"
+              />
             ) : (
               <p className="font-display text-xl font-bold text-ink">
                 {branding.agencyName}

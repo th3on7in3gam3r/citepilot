@@ -9,7 +9,7 @@ export function AnalyticsScripts() {
     <>
       {plausibleDomain && (
         <Script
-          defer
+          id="plausible-analytics"
           data-domain={plausibleDomain}
           src="https://plausible.io/js/script.js"
           strategy="afterInteractive"
