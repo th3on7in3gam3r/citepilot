@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
 import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
 import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
+import { ShareAuditResultsCard } from "@/components/dashboard/ShareAuditResultsCard";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { getStoredWorkspaceId, runAudit } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -27,6 +28,7 @@ export function GeoAuditPageClient() {
   const { workspace, ready, refresh } = useWorkspaceContext();
   const toast = useToast();
   const [auditing, setAuditing] = useState(false);
+  const [showShareBanner, setShowShareBanner] = useState(false);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(PROMPT_LIMIT_FREE);
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export function GeoAuditPageClient() {
       await runAudit({ domain: ws.domain, prompts, workspaceId });
       trackAuditCompleted(workspaceId, { isSecond: ws.hasRealAudit, source: "geo-audit" });
       await refresh();
+      setShowShareBanner(true);
       toast.success("Audit complete — results updated.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Audit failed. Try again.");
@@ -153,6 +156,11 @@ export function GeoAuditPageClient() {
           </div>
         )}
       </Panel>
+
+      <ShareAuditResultsCard
+        visible={showShareBanner}
+        onDismiss={() => setShowShareBanner(false)}
+      />
 
       <div id="platform-coverage" className="scroll-mt-24 grid gap-4 sm:grid-cols-3">
         <StatCard label="GEO score" value={String(geoScore)} sub="/100" />

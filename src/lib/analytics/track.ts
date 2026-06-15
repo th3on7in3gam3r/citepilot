@@ -34,7 +34,11 @@ export type AnalyticsEvent =
   | "badge_referral_signup"
   | "tool_used"
   | "tool_result_viewed"
-  | "tool_upgrade_cta_clicked";
+  | "tool_upgrade_cta_clicked"
+  | "proof_report_viewed"
+  | "proof_report_cta_clicked"
+  | "proof_report_share_clicked"
+  | "audit_share_created";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

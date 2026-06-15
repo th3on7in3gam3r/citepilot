@@ -358,6 +358,7 @@ function migrateSchema(db: Database.Database): void {
       workspace_id TEXT NOT NULL,
       created_at TEXT NOT NULL,
       expires_at TEXT,
+      password_hash TEXT,
       FOREIGN KEY (audit_id) REFERENCES audit_runs(id),
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     );
@@ -586,6 +587,13 @@ function migrateSchema(db: Database.Database): void {
     db.exec(
       `ALTER TABLE audit_runs ADD COLUMN trigger TEXT NOT NULL DEFAULT 'manual'`,
     );
+  }
+
+  const shareCols = db
+    .prepare(`PRAGMA table_info(audit_shares)`)
+    .all() as { name: string }[];
+  if (shareCols.length > 0 && !shareCols.some((c) => c.name === "password_hash")) {
+    db.exec(`ALTER TABLE audit_shares ADD COLUMN password_hash TEXT`);
   }
 }
 

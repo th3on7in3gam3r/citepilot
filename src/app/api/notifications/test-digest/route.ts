@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { isEmailConfigured } from "@/lib/email/config";
 import { sendWeeklyDigestEmail } from "@/lib/email/notifications";
+import { isValidRecipientEmail } from "@/lib/email/send";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
 import { dbAll } from "@/lib/db";
@@ -65,6 +66,13 @@ export const POST = withApiLogging(async function POST(request: Request) {
     );
   }
 
+  if (!isValidRecipientEmail(to)) {
+    return NextResponse.json(
+      { ok: false, error: `Invalid email address: ${to}` },
+      { status: 422 },
+    );
+  }
+
   const audits = await dbAll<{ score: number; created_at: string }>(
     `SELECT score, created_at FROM audit_runs WHERE workspace_id = ? ORDER BY created_at DESC LIMIT 2`,
     [workspaceId],
@@ -88,12 +96,19 @@ export const POST = withApiLogging(async function POST(request: Request) {
   });
 
   if (!result.ok) {
+    const status =
+      result.error === "Email not configured"
+        ? 503
+        : result.error?.includes("Invalid email") ||
+            result.error?.includes("only go to")
+          ? 422
+          : 502;
     return NextResponse.json(
       {
         ok: false,
         error: result.error ?? "Send failed",
       },
-      { status: result.error === "Email not configured" ? 503 : 502 },
+      { status },
     );
   }
 

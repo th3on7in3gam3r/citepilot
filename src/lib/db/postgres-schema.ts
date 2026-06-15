@@ -182,7 +182,8 @@ CREATE TABLE IF NOT EXISTS audit_shares (
   audit_id TEXT NOT NULL REFERENCES audit_runs(id),
   workspace_id TEXT NOT NULL REFERENCES workspaces(id),
   created_at TEXT NOT NULL,
-  expires_at TEXT
+  expires_at TEXT,
+  password_hash TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_shares_workspace ON audit_shares(workspace_id);

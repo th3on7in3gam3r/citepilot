@@ -67,11 +67,20 @@ export const metadata: Metadata = {
     url: site.url,
     siteName: site.name,
     locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "CitePilot — track citations in AI answers",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: site.homeTitle,
     description: homeDescription,
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,

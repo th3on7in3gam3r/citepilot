@@ -502,8 +502,23 @@ html.dark .text-\[\#94a3b8\] {
     break-inside: avoid;
   }
 
-  .citepilot-no-print {
+  .citepilot-no-print,
+  nav,
+  aside,
+  footer:not(.citepilot-print-only-watermark) {
     display: none !important;
+  }
+
+  .citepilot-print-watermark {
+    display: block !important;
+  }
+
+  .citepilot-print-report {
+    font-size: 11pt;
+  }
+
+  .citepilot-print-report table {
+    font-size: 9pt;
   }
 
   header.citepilot-no-print {

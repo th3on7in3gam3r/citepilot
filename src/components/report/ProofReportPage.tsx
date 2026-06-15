@@ -12,8 +12,10 @@ import {
   ReportBrandingHeader,
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
+import { ProofReportGetOwnCta } from "@/components/report/ProofReportGetOwnCta";
 import { defaultWorkspacePreferences } from "@/lib/settings";
 import { site } from "@/lib/site";
+import { trackEvent } from "@/lib/analytics/track";
 
 export function ProofReportPage() {
   return (
@@ -41,6 +43,10 @@ function ProofReportInner() {
 
   useEffect(() => {
     if (!workspace) return;
+    trackEvent("proof_report_viewed", {
+      domain: workspace.domain,
+      public: false,
+    });
     void fetch("/api/onboarding/checklist", {
       method: "PATCH",
       credentials: "include",
@@ -332,6 +338,7 @@ function ProofReportInner() {
             </table>
           </div>
         </section>
+        <ProofReportGetOwnCta domainHint={workspace.domain} />
       </main>
       <div className="mx-auto max-w-5xl px-6 pb-10">
         <ReportPoweredByFooter hidePoweredBy={whiteLabel.hidePoweredBy} />
