@@ -1,7 +1,19 @@
 import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import { buildContentCalendar } from "@/lib/dashboard-data";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
+import { pillarForCalendarFormat } from "@/lib/content-strategy/suggestions";
 import { dbGet, dbRun } from "@/lib/db";
+
+function normalizeCalendarItems(items: ContentCalendarItem[]): ContentCalendarItem[] {
+  return items.map((item) =>
+    item.pillar
+      ? item
+      : {
+          ...item,
+          pillar: pillarForCalendarFormat(item.format, item.rationale),
+        },
+  );
+}
 
 export type WorkspaceContentStrategy = {
   workspaceId: string;
@@ -48,7 +60,9 @@ export async function getContentStrategy(
   let items: ContentCalendarItem[] = [];
   try {
     const parsed = JSON.parse(row.items) as unknown;
-    items = Array.isArray(parsed) ? (parsed as ContentCalendarItem[]) : [];
+    items = Array.isArray(parsed)
+      ? normalizeCalendarItems(parsed as ContentCalendarItem[])
+      : [];
   } catch {
     items = [];
   }

@@ -9,6 +9,8 @@ import {
   AUDIENCE_LABELS,
   CONTENT_TYPE_LABELS,
   EDITORIAL_PILLARS,
+  editorialPillarTitle,
+  pickDiverseByPillar,
 } from "@/lib/content-strategy";
 import type {
   AudienceSegment,
@@ -153,9 +155,9 @@ export function GenerateArticlePanel({
         topic: item.topic,
         intent: item.format,
         format,
-        pillar: "geo",
+        pillar: item.pillar,
         angle: `Target focus: ${item.rationale}`,
-        badge: `Calendar: ${item.format}`,
+        badge: `${editorialPillarTitle(item.pillar)} · ${item.format}`,
       });
     });
 
@@ -169,18 +171,13 @@ export function GenerateArticlePanel({
         topic: item.prompt,
         intent: item.intent,
         format,
-        pillar: "geo",
+        pillar: item.pillar,
         angle: `Target intent: ${item.intent}. ${item.reason}`,
-        badge: `Money Prompt: ${item.intent}`,
+        badge: `${editorialPillarTitle(item.pillar)} · ${item.intent}`,
       });
     });
 
-    const seen = new Set<string>();
-    return list.filter((item) => {
-      if (seen.has(item.topic.toLowerCase())) return false;
-      seen.add(item.topic.toLowerCase());
-      return true;
-    }).slice(0, 5);
+    return pickDiverseByPillar(list, 6);
   }, [workspace]);
 
   async function handleSubmit(e: React.FormEvent) {

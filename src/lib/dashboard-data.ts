@@ -2,6 +2,11 @@ import type { PromptResult } from "@/lib/api-types";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { domainSeed, PLATFORMS } from "@/lib/dashboard";
 import { buildPromptRows, type PromptRow } from "@/lib/features";
+import type { EditorialPillarId } from "@/lib/content-strategy";
+import {
+  pillarForCalendarFormat,
+  pillarForMoneyPromptIntent,
+} from "@/lib/content-strategy/suggestions";
 
 export type BenchmarkBrandRow = {
   brand: string;
@@ -31,6 +36,7 @@ export type MoneyPromptIdea = {
   prompt: string;
   intent: "comparison" | "alternatives" | "pricing" | "roi" | "buyer-fit" | "implementation";
   reason: string;
+  pillar: EditorialPillarId;
 };
 
 export type DashboardAlertItem = {
@@ -220,31 +226,37 @@ export function buildMoneyPromptIdeas(
       prompt: buyerQuestion,
       intent: "buyer-fit",
       reason: "Closest to the question your ideal buyer is already asking before a shortlist forms.",
+      pillar: pillarForMoneyPromptIntent("buyer-fit"),
     },
     {
       prompt: `alternatives to ${competitor}`,
       intent: "alternatives",
       reason: "Captures buyers who are actively comparing vendors and ready to switch.",
+      pillar: pillarForMoneyPromptIntent("alternatives"),
     },
     {
       prompt: `${yourBrand} vs ${competitor}`,
       intent: "comparison",
       reason: "Shows whether you are winning high-intent head-to-head prompts against a tracked competitor.",
+      pillar: pillarForMoneyPromptIntent("comparison"),
     },
     {
       prompt: `${yourBrand} pricing`,
       intent: "pricing",
       reason: "Pricing prompts reveal bottom-funnel intent and usually influence conversion quality fast.",
+      pillar: pillarForMoneyPromptIntent("pricing"),
     },
     {
       prompt: `is ${yourBrand} worth it for ${audience}`,
       intent: "roi",
       reason: "Targets ROI skepticism prompts that often appear just before purchase or demo requests.",
+      pillar: pillarForMoneyPromptIntent("roi"),
     },
     {
       prompt: `how to choose ${phrase} for ${audience}`,
       intent: "implementation",
       reason: "Useful for educational buying journeys where the user needs criteria before picking a vendor.",
+      pillar: pillarForMoneyPromptIntent("implementation"),
     },
   ];
 }
@@ -472,6 +484,7 @@ export type ContentCalendarItem = {
   topic: string;
   format: string;
   rationale: string;
+  pillar: EditorialPillarId;
 };
 
 export function buildContentCalendar(workspace: WorkspaceSnapshot): ContentCalendarItem[] {
@@ -485,12 +498,14 @@ export function buildContentCalendar(workspace: WorkspaceSnapshot): ContentCalen
       topic: `Answer guide: ${q}`,
       format: "Pillar",
       rationale: "Closes your primary citation gap",
+      pillar: pillarForCalendarFormat("Pillar", "Closes your primary citation gap"),
     },
     {
       week: "Week 2",
       topic: `${workspace.domain} vs ${comp}`,
       format: "Comparison",
       rationale: "Captures alternative-intent prompts",
+      pillar: pillarForCalendarFormat("Comparison", "Captures alternative-intent prompts"),
     },
     {
       week: "Week 3",
@@ -499,12 +514,14 @@ export function buildContentCalendar(workspace: WorkspaceSnapshot): ContentCalen
         : "FAQ: pricing, implementation, and ROI",
       format: "FAQ",
       rationale: "Targets GEO schema and answer capsules",
+      pillar: pillarForCalendarFormat("FAQ", "Targets GEO schema and answer capsules"),
     },
     {
       week: "Week 4",
       topic: `Case study — results with ${workspace.domain}`,
       format: "Proof",
       rationale: "Builds entity trust for AI citations",
+      pillar: pillarForCalendarFormat("Proof", "Builds entity trust for AI citations"),
     },
   ];
 
