@@ -27,6 +27,7 @@ export type DashboardNavItem = {
     | "backlinks"
     | "audit"
     | "discussions"
+    | "alerts"
     | "settings"
     | "help";
   section?: "main" | "footer";
@@ -79,6 +80,14 @@ export const dashboardNav: DashboardNavItem[] = [
     href: "/dashboard/discussions",
     description: "Hacker News & Stack Overflow buyer-intent threads",
     icon: "discussions",
+    section: "main",
+  },
+  {
+    id: "alerts",
+    label: "Alerts",
+    href: "/dashboard/alerts",
+    description: "Slack, webhook, and email alert history",
+    icon: "alerts",
     section: "main",
   },
   {

@@ -13,11 +13,17 @@ export const defaultAutopilotPreferences: AutopilotPreferences = {
   autoInsights: true,
 };
 
+export type ScoreDropThresholdPercent = 5 | 10 | 20;
+
 export type WorkspacePreferences = {
   weeklyDigest: boolean;
+  /** 0=Sunday … 6=Saturday (UTC) — when weekly digest email/Slack fires */
+  weeklyDigestDay: number;
   auditCompleteEmail: boolean;
   discussionAlerts: boolean;
   scoreDropAlerts: boolean;
+  /** Percentage-point drop in citation score that triggers an alert */
+  scoreDropThresholdPercent: ScoreDropThresholdPercent;
   competitorMoveAlerts: boolean;
   /** Email proof report + client share link after weekly re-scan (Pilot+) */
   proofReportEmail: boolean;
@@ -40,9 +46,11 @@ export type WorkspacePreferences = {
 
 export const defaultWorkspacePreferences: WorkspacePreferences = {
   weeklyDigest: true,
+  weeklyDigestDay: 1,
   auditCompleteEmail: true,
   discussionAlerts: false,
   scoreDropAlerts: true,
+  scoreDropThresholdPercent: 5,
   competitorMoveAlerts: true,
   proofReportEmail: true,
   monitoringEmail: "",
@@ -73,6 +81,17 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
         defaultWorkspacePreferences.discussionAlerts,
       scoreDropAlerts:
         parsed.scoreDropAlerts ?? defaultWorkspacePreferences.scoreDropAlerts,
+      scoreDropThresholdPercent: [5, 10, 20].includes(
+        parsed.scoreDropThresholdPercent as number,
+      )
+        ? (parsed.scoreDropThresholdPercent as ScoreDropThresholdPercent)
+        : defaultWorkspacePreferences.scoreDropThresholdPercent,
+      weeklyDigestDay:
+        typeof parsed.weeklyDigestDay === "number" &&
+        parsed.weeklyDigestDay >= 0 &&
+        parsed.weeklyDigestDay <= 6
+          ? parsed.weeklyDigestDay
+          : defaultWorkspacePreferences.weeklyDigestDay,
       competitorMoveAlerts:
         parsed.competitorMoveAlerts ??
         defaultWorkspacePreferences.competitorMoveAlerts,

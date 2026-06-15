@@ -263,14 +263,51 @@ await fetch("${API_BASE}/workspaces/${WS}/prompts/import", {
   {
     id: "webhooks",
     title: "Webhooks",
-    badge: "coming-soon",
     intro:
-      "Webhook delivery for audit completion and citation changes is on the roadmap. Register endpoints in Fleet settings (coming soon).",
+      "Fleet plan — register webhook endpoints in Dashboard → Settings → Alerts. CitePilot POSTs signed JSON when citation changes are detected after a re-scan.",
     bullets: [
-      "audit.completed — fired when a workspace audit finishes",
-      "citation.change_detected — score or platform coverage moved after a re-scan",
-      "prompt.limit_reached — monitored prompt count hit plan cap",
+      "citation.change_detected — prompt gained or lost citation coverage",
+      "X-CitePilot-Signature: sha256=HMAC-SHA256(secret, raw body)",
+      "Content-Type: application/json",
     ],
+    jsonExample: `{
+  "event": "citation.change_detected",
+  "workspace": "brightlayer.io",
+  "timestamp": "2026-06-14T00:00:00Z",
+  "data": {
+    "prompt": "best CRM for agencies",
+    "platform": "chatgpt",
+    "change": "gained",
+    "citation_rate_before": 0.50,
+    "citation_rate_after": 0.58
+  }
+}`,
+    body: "Verify signatures with your signing secret (set when adding the endpoint). Reject requests when the signature does not match.",
+    samples: {
+      curl: `# Raw body bytes must match what you verify
+BODY='{"event":"citation.change_detected",...}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "YOUR_SECRET" | awk '{print "sha256="$2}')
+
+curl -X POST https://hooks.example.com/citepilot \\
+  -H "Content-Type: application/json" \\
+  -H "X-CitePilot-Signature: $SIG" \\
+  -d "$BODY"`,
+      node: `import crypto from "crypto";
+
+function verify(secret: string, rawBody: string, header: string | null) {
+  const expected =
+    "sha256=" +
+    crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+  return header === expected;
+}`,
+      python: `import hmac, hashlib
+
+def verify(secret: str, raw_body: bytes, header: str | None) -> bool:
+    expected = "sha256=" + hmac.new(
+        secret.encode(), raw_body, hashlib.sha256
+    ).hexdigest()
+    return header == expected`,
+    },
   },
   {
     id: "rate-limits",

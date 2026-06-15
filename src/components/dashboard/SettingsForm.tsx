@@ -6,6 +6,8 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
 import { EmailAlertsSettingsPanel } from "@/components/dashboard/EmailAlertsSettingsPanel";
+import { SlackAlertsPanel } from "@/components/dashboard/SlackAlertsPanel";
+import { WebhookAlertsPanel } from "@/components/dashboard/WebhookAlertsPanel";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
@@ -523,7 +525,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </div>
         </Panel>
 
-        <Panel title="Notifications" className="border-l-4 border-l-mint">
+        <Panel title="Alerts" className="border-l-4 border-l-mint" id="alerts">
           {(isPilot || isFleet) &&
             (!preferences.monitoringEmail.trim() ||
               !preferences.whiteLabel.agencyName.trim()) && (
@@ -589,6 +591,12 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               ) : undefined
             }
           />
+          {workspaceId && (
+            <>
+              <SlackAlertsPanel workspaceId={workspaceId} />
+              <WebhookAlertsPanel workspaceId={workspaceId} />
+            </>
+          )}
         </Panel>
 
         {workspaceId && (
