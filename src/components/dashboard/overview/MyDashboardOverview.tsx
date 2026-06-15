@@ -27,6 +27,7 @@ import {
 import { RosenLineChart } from "@/components/charts/RosenLineChart";
 import { RosenHorizontalBarChart } from "@/components/charts/RosenBarChart";
 import { GscConnectCard } from "@/components/dashboard/GscConnectCard";
+import { WeeklyMonitoringPanel } from "@/components/dashboard/WeeklyMonitoringPanel";
 import { CHART_COLORS } from "@/lib/charts/theme";
 import { useGscMetrics } from "@/hooks/useGscMetrics";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
@@ -289,6 +290,8 @@ function MyDashboardOverviewContent({
       ) : (
         <>
       <GettingStartedChecklist workspace={workspace} />
+
+      <WeeklyMonitoringPanel workspace={workspace} />
 
       <CopilotDashboardPrompt />
       <DashboardWidgetGrid workspace={workspace} />

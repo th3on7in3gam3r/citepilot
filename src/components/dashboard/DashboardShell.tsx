@@ -11,6 +11,7 @@ import { DashboardRail } from "@/components/dashboard/layout/DashboardRail";
 import { DashboardTopBar } from "@/components/dashboard/layout/DashboardTopBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { WorkspaceProvider, useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { BillingProvider } from "@/contexts/BillingContext";
 import { dashboardNav } from "@/lib/dashboard";
 
 function pageHeader(pathname: string): {
@@ -81,15 +82,17 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
-    <WorkspaceProvider>
-      <GridFilterProvider>
-        <CopilotProvider>
-          <DashboardShellInner>{children}</DashboardShellInner>
-          <CopilotPanel />
-          <GlobalFilterModal />
-          <DashboardCommandPalette />
-        </CopilotProvider>
-      </GridFilterProvider>
-    </WorkspaceProvider>
+    <BillingProvider>
+      <WorkspaceProvider>
+        <GridFilterProvider>
+          <CopilotProvider>
+            <DashboardShellInner>{children}</DashboardShellInner>
+            <CopilotPanel />
+            <GlobalFilterModal />
+            <DashboardCommandPalette />
+          </CopilotProvider>
+        </GridFilterProvider>
+      </WorkspaceProvider>
+    </BillingProvider>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { FeatureGate } from "@/components/billing/FeatureGate";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { LiquidToggle } from "@/components/ui/liquid-toggle";
@@ -99,10 +99,17 @@ export function AutopilotSettingsPanel({
       </p>
 
       {!isPilot ? (
-        <UpgradePrompt
+        <FeatureGate
+          feature="autopilot"
           compact
           title="Autopilot (Pilot+)"
           description="Turn on weekly automated scans, Insights plans, and Autopilot emails for this workspace."
+          cta="Upgrade to Pilot →"
+          highlights={[
+            "Monday re-scans with citation delta summary",
+            "AI-prioritized 7-day action plan",
+            "Client-ready email reports",
+          ]}
         />
       ) : (
         <>

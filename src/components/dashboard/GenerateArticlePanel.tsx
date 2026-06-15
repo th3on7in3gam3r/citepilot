@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { FeatureGate } from "@/components/billing/FeatureGate";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { useBilling } from "@/contexts/BillingContext";
 import {
   buildGenerateContentOpportunities,
   editorialWeekLabel,
@@ -43,6 +45,7 @@ export function GenerateArticlePanel({
   const [contentType, setContentType] = useState<ContentType>("tutorial");
   const [pillar, setPillar] = useState<EditorialPillarId>("geo");
   const toast = useToast();
+  const { isPaid, ready: billingReady } = useBilling();
   const [loading, setLoading] = useState(false);
   const [publishingToCms, setPublishingToCms] = useState(false);
   const [result, setResult] = useState<GenerateResult | null>(null);
@@ -223,6 +226,22 @@ export function GenerateArticlePanel({
 
   return (
     <Panel title="Generate article" className="mt-6">
+      {!billingReady ? (
+        <div className="h-40 animate-pulse rounded-xl bg-surface" />
+      ) : !isPaid ? (
+        <FeatureGate
+          feature="article_generation"
+          title="AI article generation"
+          description="Turn citation gaps into publish-ready posts with OpenAI — tailored to your audience, format, and GEO pillar."
+          cta="Upgrade to Pilot →"
+          highlights={[
+            "One-click drafts from your content calendar",
+            "Auto-publish to your site blog",
+            "Push to WordPress, Webflow, Ghost, and more",
+          ]}
+        />
+      ) : (
+        <>
       <p className="mb-4 text-sm text-muted">
         Draft a CitePilot-style post with OpenAI and publish it to the public blog
         automatically. Generation takes 30–90 seconds. New posts appear in the
@@ -415,6 +434,8 @@ export function GenerateArticlePanel({
           )}
         </button>
       </form>
+        </>
+      )}
     </Panel>
   );
 }

@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FeatureGate } from "@/components/billing/FeatureGate";
 import { effectInit } from "@/lib/react/effect-init";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { useBilling } from "@/contexts/BillingContext";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { cmsPlatforms } from "@/lib/features";
 import type { CmsProvider } from "@/lib/cms/types";
@@ -142,6 +144,7 @@ export function CmsConnectionsPanel({
   embedded?: boolean;
 }) {
   const toast = useToast();
+  const { isPaid, ready: billingReady } = useBilling();
   const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
   const [providers, setProviders] = useState<CmsProviderStatus[]>([]);
   const [forms, setForms] = useState<ProviderForms>(emptyForms);
@@ -250,6 +253,38 @@ export function CmsConnectionsPanel({
     } finally {
       setRemoving(null);
     }
+  }
+
+  if (!billingReady) {
+    const skeleton = <div className="h-48 animate-pulse rounded-2xl bg-surface" />;
+    if (embedded) return skeleton;
+    return (
+      <Panel title="CMS connections" className="mt-6">
+        {skeleton}
+      </Panel>
+    );
+  }
+
+  if (!isPaid) {
+    const gate = (
+      <FeatureGate
+        feature="cms_publish"
+        title="CMS publishing"
+        description="Connect WordPress, Webflow, Ghost, Shopify, or Framer and push generated articles live in one click."
+        cta="Upgrade to Pilot →"
+        highlights={[
+          "Workspace-level CMS credentials",
+          "Auto-publish after generation",
+          "Keep drafts in sync with your marketing site",
+        ]}
+      />
+    );
+    if (embedded) return gate;
+    return (
+      <Panel title="CMS connections" className="mt-6">
+        {gate}
+      </Panel>
+    );
   }
 
   const body = (

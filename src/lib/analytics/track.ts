@@ -18,7 +18,9 @@ export type AnalyticsEvent =
   | "referral_signup_completed"
   | "referral_converted_to_paid"
   | "referral_credit_applied"
-  | "referral_share_clicked";
+  | "referral_share_clicked"
+  | "upgrade_prompt_viewed"
+  | "upgrade_prompt_clicked";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

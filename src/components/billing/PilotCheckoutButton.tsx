@@ -12,6 +12,8 @@ type Props = {
   children: React.ReactNode;
   signedIn?: boolean;
   billingInterval?: BillingInterval;
+  /** PostHog feature gate id when checkout started from an upgrade prompt */
+  feature?: string;
 };
 
 export function PilotCheckoutButton({
@@ -21,6 +23,7 @@ export function PilotCheckoutButton({
   children,
   signedIn = false,
   billingInterval = "monthly",
+  feature,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +36,9 @@ export function PilotCheckoutButton({
 
     setLoading(true);
     setError(null);
-    trackEvent(plan === "fleet" ? "fleet_checkout_started" : "pilot_checkout_started");
+    trackEvent(plan === "fleet" ? "fleet_checkout_started" : "pilot_checkout_started", {
+      feature,
+    });
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
