@@ -62,6 +62,12 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS webflow_live_url TEXT`,
       );
+      await pool.query(
+        `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image_url TEXT`,
+      );
+      await pool.query(
+        `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image_alt TEXT`,
+      );
     })();
   }
   await globalForPg.citepilotPgReady;

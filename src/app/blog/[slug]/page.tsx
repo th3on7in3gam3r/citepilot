@@ -11,6 +11,7 @@ import { BlogPostMeta } from "@/components/blog/BlogPostMeta";
 import { MarkdownArticle } from "@/components/blog/MarkdownArticle";
 import { Container } from "@/components/ui/Container";
 import { getPostBySlug } from "@/lib/blog";
+import { blogPostImageUrl } from "@/lib/blog/covers";
 import { pillarHref } from "@/lib/blog/utils";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = clampMetaDescription(post.description);
   const title = clampSeoTitle(post.seoTitle);
   const canonical = `${site.url}/blog/${post.slug}`;
+  const ogImage = blogPostImageUrl(post);
   return {
     title,
     description,
@@ -37,10 +39,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: post.publishedAt,
       authors: [post.author.name],
+      images: [{ url: ogImage, alt: post.coverImageAlt ?? post.title }],
     },
     twitter: {
+      card: "summary_large_image",
       title: post.title,
       description,
+      images: [ogImage],
     },
   };
 }

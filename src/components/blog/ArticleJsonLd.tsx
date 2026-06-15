@@ -8,7 +8,7 @@ const homeUrl = site.url.replace(/\/$/, "");
 export function ArticleJsonLd({ post }: { post: BlogPost }) {
   const url = `${homeUrl}/blog/${post.slug}`;
   const description = clampMetaDescription(post.description);
-  const image = blogPostImageUrl(post.slug);
+  const image = blogPostImageUrl(post);
 
   const article = {
     "@context": "https://schema.org",

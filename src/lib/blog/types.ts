@@ -28,6 +28,9 @@ export type BlogPost = {
   /** Full markdown body for AI-generated posts */
   markdown?: string;
   source?: "static" | "generated";
+  /** Hero cover for cards and social — absolute URL or site-relative path */
+  coverImageUrl?: string;
+  coverImageAlt?: string;
 };
 
 export type BlogSection =

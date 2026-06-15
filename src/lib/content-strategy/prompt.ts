@@ -17,6 +17,7 @@ RULES:
 
 OUTPUT (markdown):
 - SEO title + meta description at top as HTML comments <!-- seo-title: ... --> <!-- meta-description: ... -->
+- Optional cover image URL as HTML comment <!-- cover-image: https://... --> (use a royalty-free image URL relevant to the topic, or omit)
 - Full article body with proper hierarchy
 - FAQ section (min 4 Q&As)
 - Key Takeaways section

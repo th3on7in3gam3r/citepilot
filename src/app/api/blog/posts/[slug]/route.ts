@@ -48,9 +48,18 @@ export async function PATCH(request: Request, { params }: Context) {
     description?: string;
     seoTitle?: string;
     markdown?: string;
+    coverImageUrl?: string | null;
+    coverImageAlt?: string | null;
   };
 
-  if (!body.title && !body.description && !body.seoTitle && !body.markdown) {
+  if (
+    !body.title &&
+    !body.description &&
+    !body.seoTitle &&
+    !body.markdown &&
+    body.coverImageUrl === undefined &&
+    body.coverImageAlt === undefined
+  ) {
     return NextResponse.json(
       { error: "Provide at least one field to update" },
       { status: 400 },
@@ -62,6 +71,8 @@ export async function PATCH(request: Request, { params }: Context) {
     description: body.description,
     seoTitle: body.seoTitle,
     markdown: body.markdown,
+    coverImageUrl: body.coverImageUrl,
+    coverImageAlt: body.coverImageAlt,
   });
 
   return NextResponse.json({ ok: true, slug });

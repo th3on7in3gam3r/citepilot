@@ -1,4 +1,5 @@
 import type { EditorialPillarId } from "@/lib/content-strategy";
+import type { BlogPost } from "@/lib/blog/types";
 import { site } from "@/lib/site";
 
 /** Gradient placeholders for blog cards when no cover image exists. */
@@ -44,7 +45,18 @@ export const PILLAR_GRADIENTS: Record<
   },
 };
 
-export function blogPostImageUrl(_slug: string): string {
+export function blogPostImageUrl(
+  post: Pick<BlogPost, "slug" | "coverImageUrl">,
+): string {
+  const cover = post.coverImageUrl?.trim();
+  if (cover) {
+    if (cover.startsWith("/")) {
+      return `${site.url.replace(/\/$/, "")}${cover}`;
+    }
+    if (/^https?:\/\//i.test(cover) || cover.startsWith("data:image/")) {
+      return cover;
+    }
+  }
   return `${site.url.replace(/\/$/, "")}/opengraph-image`;
 }
 

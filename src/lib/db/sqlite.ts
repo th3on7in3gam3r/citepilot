@@ -144,6 +144,8 @@ function initSchema(db: Database.Database): void {
       webflow_item_id TEXT,
       webflow_published_at TEXT,
       webflow_live_url TEXT,
+      cover_image_url TEXT,
+      cover_image_alt TEXT,
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     );
 
@@ -276,6 +278,12 @@ function migrateSchema(db: Database.Database): void {
   }
   if (!blogCols.some((c) => c.name === "webflow_live_url")) {
     db.exec(`ALTER TABLE blog_posts ADD COLUMN webflow_live_url TEXT`);
+  }
+  if (!blogCols.some((c) => c.name === "cover_image_url")) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN cover_image_url TEXT`);
+  }
+  if (!blogCols.some((c) => c.name === "cover_image_alt")) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN cover_image_alt TEXT`);
   }
 
   db.exec(`

@@ -103,7 +103,9 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   created_at TEXT NOT NULL,
   webflow_item_id TEXT,
   webflow_published_at TEXT,
-  webflow_live_url TEXT
+  webflow_live_url TEXT,
+  cover_image_url TEXT,
+  cover_image_alt TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_workspace ON audit_runs(workspace_id);

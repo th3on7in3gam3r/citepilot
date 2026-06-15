@@ -6,6 +6,7 @@ import type {
 } from "@/lib/content-strategy";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
+import { parseCoverImageMeta } from "./cover-meta";
 import { DEFAULT_BLOG_AUTHOR, type BlogPost } from "./types";
 
 export type BlogPostRow = {
@@ -26,6 +27,8 @@ export type BlogPostRow = {
   webflow_item_id: string | null;
   webflow_published_at: string | null;
   webflow_live_url: string | null;
+  cover_image_url: string | null;
+  cover_image_alt: string | null;
 };
 
 export type SaveBlogPostInput = {
@@ -67,6 +70,8 @@ export function parseMarkdownMeta(markdown: string): {
   description?: string;
   title?: string;
   tldr?: string;
+  coverImageUrl?: string;
+  coverImageAlt?: string;
 } {
   const seoTitle = markdown.match(/<!--\s*seo-title:\s*(.+?)\s*-->/)?.[1]?.trim();
   const description = markdown
@@ -77,7 +82,21 @@ export function parseMarkdownMeta(markdown: string): {
     /(?:^|\n)(?:#{1,6}\s+)?(?:\*\*)?(?:TL;DR|Quick Summary)(?:\*\*)?[:\s—-]+\s*([\s\S]+?)(?=\n\n|\n#)/i,
   );
   const tldr = tldrMatch?.[1]?.replace(/\*\*/g, "").trim();
-  return { seoTitle, description, title, tldr };
+  const cover = parseCoverImageMeta(markdown);
+  return { seoTitle, description, title, tldr, ...cover };
+}
+
+function resolveRowCover(row: BlogPostRow): {
+  coverImageUrl?: string;
+  coverImageAlt?: string;
+} {
+  if (row.cover_image_url) {
+    return {
+      coverImageUrl: row.cover_image_url,
+      ...(row.cover_image_alt ? { coverImageAlt: row.cover_image_alt } : {}),
+    };
+  }
+  return parseCoverImageMeta(row.markdown);
 }
 
 function estimateReadingMinutes(markdown: string): number {
@@ -126,6 +145,7 @@ export async function saveGeneratedPost(
 ): Promise<BlogPostRow> {
   const id = randomUUID();
   const now = new Date().toISOString();
+  const cover = parseCoverImageMeta(input.markdown);
   const row: BlogPostRow = {
     id,
     slug: input.slug,
@@ -144,13 +164,16 @@ export async function saveGeneratedPost(
     webflow_item_id: null,
     webflow_published_at: null,
     webflow_live_url: null,
+    cover_image_url: cover.coverImageUrl ?? null,
+    cover_image_alt: cover.coverImageAlt ?? null,
   };
 
   await dbRun(
     `INSERT INTO blog_posts (
       id, slug, title, description, pillar, audience, content_type,
-      published_at, seo_title, tldr, markdown, reading_minutes, workspace_id, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      published_at, seo_title, tldr, markdown, reading_minutes, workspace_id, created_at,
+      cover_image_url, cover_image_alt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.id,
       row.slug,
@@ -166,6 +189,8 @@ export async function saveGeneratedPost(
       row.reading_minutes,
       row.workspace_id,
       row.created_at,
+      row.cover_image_url,
+      row.cover_image_alt,
     ],
   );
 
@@ -197,6 +222,8 @@ export type UpdateBlogPostInput = {
   description?: string;
   markdown?: string;
   seoTitle?: string;
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
 };
 
 export async function updateBlogPost(
@@ -223,6 +250,23 @@ export async function updateBlogPost(
     params.push(input.markdown);
     setClauses.push("reading_minutes = ?");
     params.push(estimateReadingMinutes(input.markdown));
+    const cover = parseCoverImageMeta(input.markdown);
+    if (cover.coverImageUrl) {
+      setClauses.push("cover_image_url = ?");
+      params.push(cover.coverImageUrl);
+    }
+    if (cover.coverImageAlt) {
+      setClauses.push("cover_image_alt = ?");
+      params.push(cover.coverImageAlt);
+    }
+  }
+  if (input.coverImageUrl !== undefined) {
+    setClauses.push("cover_image_url = ?");
+    params.push(input.coverImageUrl);
+  }
+  if (input.coverImageAlt !== undefined) {
+    setClauses.push("cover_image_alt = ?");
+    params.push(input.coverImageAlt);
   }
 
   if (setClauses.length === 0) return;
@@ -262,6 +306,7 @@ export function dedupeBlogPostsBySlug(rows: BlogPostRow[]): BlogPostRow[] {
 }
 
 export function rowToBlogPost(row: BlogPostRow): BlogPost {
+  const cover = resolveRowCover(row);
   return {
     slug: row.slug,
     title: row.title,
@@ -279,6 +324,7 @@ export function rowToBlogPost(row: BlogPostRow): BlogPost {
     takeaways: [],
     markdown: row.markdown,
     source: "generated",
+    ...cover,
   };
 }
 

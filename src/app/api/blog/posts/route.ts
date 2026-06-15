@@ -65,6 +65,8 @@ export async function GET(request: Request) {
       readingMinutes: r.reading_minutes,
       workspaceId: r.workspace_id,
       url: `/blog/${r.slug}`,
+      coverImageUrl: r.cover_image_url,
+      coverImageAlt: r.cover_image_alt,
       webflow: r.webflow_published_at
         ? {
             publishedAt: r.webflow_published_at,

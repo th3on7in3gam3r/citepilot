@@ -11,6 +11,8 @@ type BlogPost = {
   title: string;
   description: string;
   seoTitle?: string;
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
   publishedAt: string;
   url: string;
   readingMinutes: number;
@@ -21,6 +23,8 @@ type EditState = {
   title: string;
   description: string;
   seoTitle: string;
+  coverImageUrl: string;
+  coverImageAlt: string;
 };
 
 function EditModal({
@@ -37,8 +41,11 @@ function EditModal({
     title: post.title,
     description: post.description,
     seoTitle: post.seoTitle ?? post.title,
+    coverImageUrl: post.coverImageUrl ?? "",
+    coverImageAlt: post.coverImageAlt ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
 
   async function handleSave() {
     setSaving(true);
@@ -47,7 +54,11 @@ function EditModal({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(fields),
+        body: JSON.stringify({
+          ...fields,
+          coverImageUrl: fields.coverImageUrl.trim() || null,
+          coverImageAlt: fields.coverImageAlt.trim() || null,
+        }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
@@ -61,6 +72,43 @@ function EditModal({
       toast.error("Network error");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleGenerateCover() {
+    setGeneratingCover(true);
+    try {
+      const res = await fetch(
+        `/api/blog/posts/${encodeURIComponent(post.slug)}/cover`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            title: fields.title,
+            description: fields.description,
+          }),
+        },
+      );
+      const data = (await res.json()) as {
+        error?: string;
+        coverImageUrl?: string;
+        coverImageAlt?: string;
+      };
+      if (!res.ok) {
+        toast.error(data.error ?? "Cover generation failed");
+        return;
+      }
+      setFields((f) => ({
+        ...f,
+        coverImageUrl: data.coverImageUrl ?? f.coverImageUrl,
+        coverImageAlt: data.coverImageAlt ?? f.coverImageAlt,
+      }));
+      toast.success("Cover image generated");
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setGeneratingCover(false);
     }
   }
 
@@ -126,6 +174,53 @@ function EditModal({
               className="mt-1 w-full resize-none rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-accent"
             />
             <p className="mt-1 text-xs text-muted">{fields.description.length}/160 characters</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-ink" htmlFor="edit-cover-url">
+              Cover image URL{" "}
+              <span className="font-normal text-muted">(https://… or /images/blog/…)</span>
+            </label>
+            <input
+              id="edit-cover-url"
+              type="url"
+              value={fields.coverImageUrl}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, coverImageUrl: e.target.value }))
+              }
+              placeholder="https://example.com/cover.jpg"
+              className="mt-1 w-full rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-accent"
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void handleGenerateCover()}
+                disabled={generatingCover || saving}
+                className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-ink hover:bg-surface transition disabled:opacity-60"
+              >
+                {generatingCover ? "Generating…" : "Generate with AI"}
+              </button>
+              {fields.coverImageUrl && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFields((f) => ({ ...f, coverImageUrl: "", coverImageAlt: "" }))
+                  }
+                  className="text-xs font-medium text-muted hover:text-ink"
+                >
+                  Remove cover
+                </button>
+              )}
+            </div>
+            {fields.coverImageUrl && (
+              <div className="mt-3 overflow-hidden rounded-xl border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={fields.coverImageUrl}
+                  alt={fields.coverImageAlt || "Cover preview"}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -212,6 +307,8 @@ export function BlogManagerPanel({ workspaceId }: { workspaceId: string }) {
               title: fields.title ?? p.title,
               description: fields.description ?? p.description,
               seoTitle: fields.seoTitle ?? p.seoTitle,
+              coverImageUrl: fields.coverImageUrl || null,
+              coverImageAlt: fields.coverImageAlt || null,
             }
           : p,
       ),

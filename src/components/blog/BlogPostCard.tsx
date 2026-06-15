@@ -84,7 +84,13 @@ export function BlogPostCard({
     return (
       <article className="overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/10 to-white/[0.04] backdrop-blur-sm transition hover:border-accent/40 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <Link href={`/blog/${post.slug}`} className="block md:min-h-[16rem]">
-          <BlogPostCover pillarId={post.pillar} variant="featured" />
+          <BlogPostCover
+            pillarId={post.pillar}
+            coverImageUrl={post.coverImageUrl}
+            coverImageAlt={post.coverImageAlt}
+            title={post.title}
+            variant="featured"
+          />
         </Link>
         <CardBody post={post} featured />
       </article>
@@ -94,7 +100,13 @@ export function BlogPostCard({
   return (
     <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm transition hover:border-accent/30">
       <Link href={`/blog/${post.slug}`} className="block">
-        <BlogPostCover pillarId={post.pillar} variant="card" />
+        <BlogPostCover
+          pillarId={post.pillar}
+          coverImageUrl={post.coverImageUrl}
+          coverImageAlt={post.coverImageAlt}
+          title={post.title}
+          variant="card"
+        />
       </Link>
       <CardBody post={post} />
     </article>
