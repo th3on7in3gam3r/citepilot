@@ -13,7 +13,7 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.vercel-scripts.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.vercel-scripts.com https://*.i.posthog.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self' data:",
@@ -22,8 +22,7 @@ const securityHeaders = [
         "https://plausible.io",
         "https://*.neon.tech",
         "https://*.supabase.co",
-        "https://us.i.posthog.com",
-        "https://eu.i.posthog.com",
+        "https://*.i.posthog.com",
         "https://*.ingest.sentry.io",
         "https://api.stripe.com",
         "https://checkout.stripe.com",
