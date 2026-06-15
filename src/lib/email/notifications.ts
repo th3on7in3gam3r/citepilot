@@ -375,7 +375,8 @@ export async function sendWeeklyDigestEmail(input: {
   whiteLabel?: WorkspacePreferences["whiteLabel"];
   workspaceId?: string;
   fleetBranding?: boolean;
-}): Promise<{ ok: boolean; error?: string }> {
+  allowTestFromFallback?: boolean;
+}): Promise<{ ok: boolean; error?: string; usedTestFrom?: boolean }> {
   const delta =
     input.previousScore != null
       ? input.score - input.previousScore
@@ -416,6 +417,7 @@ ${
       isValidRecipientEmail(wl.replyToEmail)
         ? wl.replyToEmail.trim()
         : undefined,
+    allowTestFromFallback: input.allowTestFromFallback,
   });
 }
 

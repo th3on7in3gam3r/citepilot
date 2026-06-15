@@ -2,6 +2,8 @@ import { Resend } from "resend";
 import { isLocalDevelopment } from "@/lib/env/runtime";
 import {
   emailFromAddress,
+  emailFromMisconfigurationError,
+  emailFromParts,
   isEmailConfigured,
   resendApiKey,
   resendTestFromAddress,
@@ -14,6 +16,8 @@ export type SendEmailInput = {
   text?: string;
   fromName?: string;
   replyTo?: string;
+  /** Retry with onboarding@resend.dev when the primary domain is unverified (test sends). */
+  allowTestFromFallback?: boolean;
 };
 
 const DOMAIN_VERIFY_PATTERNS = [
@@ -35,7 +39,14 @@ export function formatResendError(message: string): string {
     return `Until your sending domain is verified in Resend, test emails can only go to ${allowedRecipient}. Verify getcitepilot.com at resend.com/domains, or use that address for "Send test digest".`;
   }
   if (isDomainVerificationError(message)) {
-    return `Resend rejected the send: your EMAIL_FROM domain is not verified yet. Add and verify the domain at resend.com/domains (Dashboard → Domains), then retry. Details: ${message}`;
+    const configured = emailFromParts();
+    const misconfigured = emailFromMisconfigurationError();
+    if (misconfigured) return misconfigured;
+    return (
+      `Resend rejected the send: "${configured.email}" is not verified. ` +
+      `Add and verify ${configured.domain} at resend.com/domains, update EMAIL_FROM in Vercel if needed, then redeploy. ` +
+      `Details: ${message}`
+    );
   }
   return message;
 }
@@ -82,21 +93,39 @@ async function sendViaResend(
 
 export async function sendEmail(
   input: SendEmailInput,
-): Promise<{ ok: boolean; error?: string; id?: string }> {
+): Promise<{ ok: boolean; error?: string; id?: string; usedTestFrom?: boolean }> {
   if (!isEmailConfigured()) {
     console.warn("Email skipped — RESEND_API_KEY not set");
     return { ok: false, error: "Email not configured" };
   }
 
+  const misconfigured = emailFromMisconfigurationError();
+  if (misconfigured && !input.allowTestFromFallback) {
+    return { ok: false, error: misconfigured };
+  }
+
   const primaryFrom = emailFromAddress();
-  const primary = await sendViaResend(input, primaryFrom);
+  const primary =
+    misconfigured && input.allowTestFromFallback
+      ? {
+          ok: false as const,
+          rawError: misconfigured,
+          error: misconfigured,
+        }
+      : await sendViaResend(input, primaryFrom);
   if (primary.ok) return primary;
 
+  const domainBlocked =
+    Boolean(misconfigured) ||
+    (primary.rawError ? isDomainVerificationError(primary.rawError) : false);
+
   const shouldRetryWithTestFrom =
-    isLocalDevelopment() &&
-    primary.rawError &&
-    (isDomainVerificationError(primary.rawError) ||
-      process.env.RESEND_USE_TEST_FROM === "1");
+    domainBlocked &&
+    (input.allowTestFromFallback ||
+      process.env.RESEND_USE_TEST_FROM === "1" ||
+      (isLocalDevelopment() &&
+        primary.rawError &&
+        isDomainVerificationError(primary.rawError)));
 
   if (!shouldRetryWithTestFrom) {
     return primary;
@@ -110,7 +139,14 @@ export async function sendEmail(
   console.warn(
     `[email] Retrying with Resend test sender (${testFrom}) — verify EMAIL_FROM domain for production.`,
   );
-  return sendViaResend(input, testFrom);
+  const fallback = await sendViaResend(input, testFrom);
+  if (fallback.ok) {
+    return {
+      ...fallback,
+      usedTestFrom: true,
+    };
+  }
+  return fallback;
 }
 
 /** Basic RFC-style check — Resend validates further. */

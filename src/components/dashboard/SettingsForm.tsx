@@ -191,11 +191,17 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         error?: string;
         hint?: string;
         sentTo?: string;
+        usedTestFrom?: boolean;
         details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
       };
       if (res.ok && data.ok) {
         setTestDigestState("sent");
-        toast.success(`Test digest sent to ${data.sentTo ?? email}`);
+        toast.success(`Test digest sent to ${data.sentTo ?? email}`, {
+          description: data.usedTestFrom
+            ? data.hint ??
+              "Sent via Resend test sender — verify getcitepilot.com in Resend and update EMAIL_FROM in Vercel."
+            : undefined,
+        });
         setTimeout(() => setTestDigestState("idle"), 4000);
       } else {
         setTestDigestState("error");
