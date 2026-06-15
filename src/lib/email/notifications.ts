@@ -27,7 +27,7 @@ import {
 } from "@/lib/cron/dispatch-log";
 import { appBaseUrl } from "@/lib/stripe/config";
 import { dashboardUrl } from "@/lib/email/config";
-import { sendEmail, isValidRecipientEmail } from "@/lib/email/send";
+import { sendEmail, type SendEmailResult, isValidRecipientEmail } from "@/lib/email/send";
 import { dbAll, dbGet } from "@/lib/db";
 import { parsePreferences, type WorkspacePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
@@ -376,7 +376,7 @@ export async function sendWeeklyDigestEmail(input: {
   workspaceId?: string;
   fleetBranding?: boolean;
   allowTestFromFallback?: boolean;
-}): Promise<{ ok: boolean; error?: string; usedTestFrom?: boolean }> {
+}): Promise<SendEmailResult> {
   const delta =
     input.previousScore != null
       ? input.score - input.previousScore

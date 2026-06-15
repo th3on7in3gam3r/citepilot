@@ -190,17 +190,20 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         ok?: boolean;
         error?: string;
         hint?: string;
+        warning?: string;
         sentTo?: string;
         usedTestFrom?: boolean;
+        correctedFrom?: boolean;
         details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
       };
-      if (res.ok && data.ok) {
+      const delivered = res.ok && data.ok !== false && Boolean(data.sentTo);
+      if (delivered) {
         setTestDigestState("sent");
+        const note = data.warning ?? (data.usedTestFrom
+          ? "Sent via Resend test sender — update EMAIL_FROM in Vercel when ready."
+          : undefined);
         toast.success(`Test digest sent to ${data.sentTo ?? email}`, {
-          description: data.usedTestFrom
-            ? data.hint ??
-              "Sent via Resend test sender — verify getcitepilot.com in Resend and update EMAIL_FROM in Vercel."
-            : undefined,
+          description: note,
         });
         setTimeout(() => setTestDigestState("idle"), 4000);
       } else {

@@ -2,8 +2,9 @@ import { Resend } from "resend";
 import { isLocalDevelopment } from "@/lib/env/runtime";
 import {
   emailFromAddress,
-  emailFromMisconfigurationError,
+  emailFromMisconfigurationWarning,
   emailFromParts,
+  emailFromUsesPlaceholderFallback,
   isEmailConfigured,
   resendApiKey,
   resendTestFromAddress,
@@ -18,6 +19,14 @@ export type SendEmailInput = {
   replyTo?: string;
   /** Retry with onboarding@resend.dev when the primary domain is unverified (test sends). */
   allowTestFromFallback?: boolean;
+};
+
+export type SendEmailResult = {
+  ok: boolean;
+  error?: string;
+  id?: string;
+  usedTestFrom?: boolean;
+  correctedFrom?: boolean;
 };
 
 const DOMAIN_VERIFY_PATTERNS = [
@@ -40,8 +49,8 @@ export function formatResendError(message: string): string {
   }
   if (isDomainVerificationError(message)) {
     const configured = emailFromParts();
-    const misconfigured = emailFromMisconfigurationError();
-    if (misconfigured) return misconfigured;
+    const warning = emailFromMisconfigurationWarning();
+    if (warning) return warning;
     return (
       `Resend rejected the send: "${configured.email}" is not verified. ` +
       `Add and verify ${configured.domain} at resend.com/domains, update EMAIL_FROM in Vercel if needed, then redeploy. ` +
@@ -80,52 +89,36 @@ async function sendViaResend(
 
     if (error) {
       const raw = error.message ?? JSON.stringify(error);
-      console.error("[email] Resend error", { from, to: input.to, raw });
+      console.error("[email] Resend error", { from: fromHeader, to: input.to, raw });
       return { ok: false, rawError: raw, error: formatResendError(raw) };
     }
     return { ok: true, id: data?.id };
   } catch (err) {
     const raw = err instanceof Error ? err.message : "Resend request failed";
-    console.error("[email] Resend exception", { from, to: input.to, raw });
+    console.error("[email] Resend exception", { from: fromHeader, to: input.to, raw });
     return { ok: false, rawError: raw, error: formatResendError(raw) };
   }
 }
 
-export async function sendEmail(
-  input: SendEmailInput,
-): Promise<{ ok: boolean; error?: string; id?: string; usedTestFrom?: boolean }> {
+export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
   if (!isEmailConfigured()) {
     console.warn("Email skipped — RESEND_API_KEY not set");
     return { ok: false, error: "Email not configured" };
   }
 
-  const misconfigured = emailFromMisconfigurationError();
-  if (misconfigured && !input.allowTestFromFallback) {
-    return { ok: false, error: misconfigured };
+  const correctedFrom = emailFromUsesPlaceholderFallback();
+  const primaryFrom = emailFromAddress();
+  const primary = await sendViaResend(input, primaryFrom);
+  if (primary.ok) {
+    return { ...primary, correctedFrom: correctedFrom || undefined };
   }
 
-  const primaryFrom = emailFromAddress();
-  const primary =
-    misconfigured && input.allowTestFromFallback
-      ? {
-          ok: false as const,
-          rawError: misconfigured,
-          error: misconfigured,
-        }
-      : await sendViaResend(input, primaryFrom);
-  if (primary.ok) return primary;
-
-  const domainBlocked =
-    Boolean(misconfigured) ||
-    (primary.rawError ? isDomainVerificationError(primary.rawError) : false);
-
   const shouldRetryWithTestFrom =
-    domainBlocked &&
+    primary.rawError &&
+    isDomainVerificationError(primary.rawError) &&
     (input.allowTestFromFallback ||
       process.env.RESEND_USE_TEST_FROM === "1" ||
-      (isLocalDevelopment() &&
-        primary.rawError &&
-        isDomainVerificationError(primary.rawError)));
+      isLocalDevelopment());
 
   if (!shouldRetryWithTestFrom) {
     return primary;
@@ -141,10 +134,7 @@ export async function sendEmail(
   );
   const fallback = await sendViaResend(input, testFrom);
   if (fallback.ok) {
-    return {
-      ...fallback,
-      usedTestFrom: true,
-    };
+    return { ...fallback, usedTestFrom: true };
   }
   return fallback;
 }

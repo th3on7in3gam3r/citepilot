@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { userHasFleetAccess } from "@/lib/billing/access";
-import { emailFromMisconfigurationError, isEmailConfigured } from "@/lib/email/config";
+import { emailFromMisconfigurationWarning, isEmailConfigured } from "@/lib/email/config";
 import { sendWeeklyDigestEmail } from "@/lib/email/notifications";
 import { isValidRecipientEmail } from "@/lib/email/send";
 import { parseTestDigestRequest } from "@/lib/notifications/test-digest-schema";
@@ -117,10 +117,9 @@ export const POST = withApiLogging(async function POST(request: Request) {
     });
 
     if (!result.ok) {
-      const misconfigured = emailFromMisconfigurationError();
-      const hint = misconfigured
-        ? "Fix EMAIL_FROM in Vercel (Production + Preview), verify getcitepilot.com at resend.com/domains, redeploy, then retry."
-        : "If you just updated .env.local, restart the dev server. On getcitepilot.com, set RESEND_API_KEY and EMAIL_FROM in Vercel → Environment Variables, then redeploy.";
+      const hint =
+        emailFromMisconfigurationWarning() ??
+        "If you just updated .env.local, restart the dev server. On getcitepilot.com, set RESEND_API_KEY and EMAIL_FROM in Vercel → Environment Variables, then redeploy.";
       return NextResponse.json(
         {
           ok: false,
@@ -131,16 +130,18 @@ export const POST = withApiLogging(async function POST(request: Request) {
       );
     }
 
+    const warning =
+      emailFromMisconfigurationWarning() ??
+      (result.usedTestFrom
+        ? "Sent via Resend test sender (onboarding@resend.dev). Set EMAIL_FROM=CitePilot <alerts@getcitepilot.com> in Vercel for production sends."
+        : undefined);
+
     return NextResponse.json({
       ok: true,
       sentTo: to,
       usedTestFrom: result.usedTestFrom ?? false,
-      ...(result.usedTestFrom
-        ? {
-            hint:
-              "Sent via Resend test sender (onboarding@resend.dev). Verify getcitepilot.com and set EMAIL_FROM=CitePilot <alerts@getcitepilot.com> in Vercel for production sends.",
-          }
-        : {}),
+      correctedFrom: result.correctedFrom ?? false,
+      ...(warning ? { warning } : {}),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected send error";
