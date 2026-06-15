@@ -20,8 +20,8 @@ export function HomePage() {
   return (
     <>
       <Hero />
-      <SocialProofStats />
       <CustomerLogosBar />
+      <SocialProofStats />
       <HomeActionBar />
       <FreeToolsSection />
       <FeatureSuite />

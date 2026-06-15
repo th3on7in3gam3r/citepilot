@@ -88,35 +88,6 @@ body {
   }
 }
 
-@keyframes customer-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.customer-marquee-mask {
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 12%,
-    black 88%,
-    transparent
-  );
-}
-
-.customer-marquee-track {
-  animation: customer-marquee 42s linear infinite;
-  will-change: transform;
-}
-
-.customer-marquee-track--reverse {
-  animation-direction: reverse;
-  animation-duration: 48s;
-}
-
 @keyframes hero-glow-pulse {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 0.7; }
@@ -270,8 +241,7 @@ body {
   .animate-float-delayed,
   .animate-pulse-ring,
   .hero-rise,
-  .hero-premium-orb,
-  .customer-marquee-track {
+  .hero-premium-orb {
     animation: none;
   }
 }

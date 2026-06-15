@@ -59,15 +59,6 @@ export const testimonials: Testimonial[] = [
   },
 ];
 
-const AVATAR_COLORS = [
-  "bg-accent/15 text-accent",
-  "bg-mint/15 text-mint",
-  "bg-violet-500/15 text-violet-600",
-  "bg-amber-500/15 text-amber-700",
-  "bg-rose-500/15 text-rose-600",
-  "bg-sky-500/15 text-sky-700",
-] as const;
-
 export function testimonialInitials(author: string): string {
   const parts = author.replace(/\./g, "").trim().split(/\s+/);
   if (parts.length >= 2) {
@@ -76,10 +67,18 @@ export function testimonialInitials(author: string): string {
   return author.charAt(0).toUpperCase();
 }
 
-export function testimonialAvatarColor(author: string): string {
+/** Stable HSL background from author name — white initials on colored circle. */
+export function testimonialAvatarHue(author: string): number {
   let hash = 0;
   for (let i = 0; i < author.length; i++) {
     hash = author.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]!;
+  return Math.abs(hash) % 360;
+}
+
+export function testimonialAvatarStyle(author: string): {
+  backgroundColor: string;
+} {
+  const hue = testimonialAvatarHue(author);
+  return { backgroundColor: `hsl(${hue} 52% 42%)` };
 }

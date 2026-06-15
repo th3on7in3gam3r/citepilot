@@ -7,13 +7,6 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { authClient } from "@/lib/auth/client";
 import { productFeatures } from "@/lib/features";
 
-function publicDemoHref(featureId: string): string {
-  if (featureId === "geo-audit" || featureId === "llm-tracking") {
-    return "/audit";
-  }
-  return "/start";
-}
-
 export function FeatureSuite() {
   const [signedIn, setSignedIn] = useState(false);
 
@@ -44,8 +37,8 @@ export function FeatureSuite() {
         {productFeatures.map((f) => {
           const href = signedIn
             ? (f.dashboardHref ?? "/dashboard")
-            : publicDemoHref(f.id);
-          const cta = signedIn ? "Open in dashboard →" : "See it in action →";
+            : "/audit";
+          const cta = signedIn ? "Open in dashboard →" : "Start free audit →";
 
           return (
             <article

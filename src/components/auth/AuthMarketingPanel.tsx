@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CitationDashboardMock } from "@/components/home/mockups/CitationDashboardMock";
 import { Logo } from "@/components/ui/Logo";
-import { testimonials } from "@/lib/testimonials";
+import { testimonials } from "@/lib/data/testimonials";
 
 const signUpQuote =
   testimonials.find((t) => t.verified) ?? testimonials[0]!;

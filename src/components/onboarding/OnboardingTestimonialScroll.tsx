@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { testimonials } from "@/lib/testimonials";
+import { TestimonialAvatar } from "@/components/ui/TestimonialAvatar";
+import { testimonials } from "@/lib/data/testimonials";
 
 const CARD_WIDTH = 300;
 const CARD_GAP = 24;
@@ -56,9 +57,7 @@ function TestimonialCard({
           dark ? "border-white/10" : "border-border/60"
         }`}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/20 font-display text-sm font-bold text-glow">
-          {author.charAt(0)}
-        </div>
+        <TestimonialAvatar author={author} size="sm" />
         <div className="min-w-0">
           <p
             className={`truncate text-sm font-semibold ${

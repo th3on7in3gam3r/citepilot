@@ -1,18 +1,12 @@
 import { Section } from "@/components/ui/Section";
-import {
-  testimonialAvatarColor,
-  testimonialInitials,
-  testimonials,
-} from "@/lib/testimonials";
+import { TestimonialAvatar } from "@/components/ui/TestimonialAvatar";
+import { testimonials } from "@/lib/data/testimonials";
 
 function TestimonialCard({
   review,
 }: {
   review: (typeof testimonials)[number];
 }) {
-  const initials = testimonialInitials(review.author);
-  const avatarColor = testimonialAvatarColor(review.author);
-
   return (
     <article className="flex h-full flex-col rounded-2xl border border-border bg-white p-7 md:p-8">
       <div className="flex gap-1 text-amber-400">
@@ -26,12 +20,7 @@ function TestimonialCard({
         &ldquo;{review.text}&rdquo;
       </p>
       <footer className="mt-8 flex items-center gap-4 border-t border-border pt-6">
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold ${avatarColor}`}
-          aria-hidden
-        >
-          {initials}
-        </div>
+        <TestimonialAvatar author={review.author} />
         <div className="min-w-0">
           <p className="font-semibold text-ink">{review.author}</p>
           <p className="text-sm font-medium text-accent">{review.company}</p>
@@ -46,26 +35,19 @@ function TestimonialCard({
 }
 
 export function Testimonials() {
-  const featured = testimonials.slice(0, 3);
-
   return (
     <Section className="bg-cream">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-4xl lg:text-[2.75rem]">
           From CitePilot customers
         </h2>
-        <p className="mt-3 text-lg text-muted">
-          Not paid endorsements — quotes from teams using Pilot and Fleet.
-        </p>
       </div>
 
-      <div className="mx-auto mt-14 grid max-w-6xl gap-6 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
-        {featured.map((review) => (
+      <div className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-6 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
+        {testimonials.map((review) => (
           <TestimonialCard key={review.author} review={review} />
         ))}
       </div>
-
-      {/* TODO: replace illustrative quotes with verified customer stories + photos */}
     </Section>
   );
 }
