@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { OnboardingAside } from "@/components/onboarding/OnboardingAside";
 import { OnboardingContinue } from "@/components/onboarding/OnboardingContinue";
 import {
+  OnboardingDomainInput,
+  type DomainInputStatus,
+} from "@/components/onboarding/OnboardingDomainInput";
+import { OnboardingExitIntent } from "@/components/onboarding/OnboardingExitIntent";
+import { OnboardingMobileTestimonial } from "@/components/onboarding/OnboardingMobileTestimonial";
+import { OnboardingStepProgress } from "@/components/onboarding/OnboardingStepProgress";
+import {
   businessTypes,
   ONBOARDING_STORAGE_KEY,
+  ONBOARDING_WELCOME_TOAST_KEY,
   stepMeta,
   TOTAL_STEPS,
   type OnboardingAnswers,
@@ -28,6 +36,17 @@ const initial: OnboardingAnswers = {
   referral: "",
 };
 
+function syncStepUrl(stepIndex: number, mode: "push" | "replace") {
+  const url = new URL(window.location.href);
+  if (stepIndex === 0) url.searchParams.delete("step");
+  else url.searchParams.set("step", String(stepIndex + 1));
+  window.history[mode === "push" ? "pushState" : "replaceState"](
+    { onboardingStep: stepIndex },
+    "",
+    url,
+  );
+}
+
 export function OnboardingFlow({
   initialDomain,
 }: {
@@ -38,11 +57,12 @@ export function OnboardingFlow({
   const [answers, setAnswers] = useState<OnboardingAnswers>(initial);
   const [audienceInput, setAudienceInput] = useState("");
   const [competitorInput, setCompetitorInput] = useState("");
+  const [domainStatus, setDomainStatus] = useState<DomainInputStatus>("idle");
+  const [submitting, setSubmitting] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   const meta = stepMeta[step];
   const isLast = step === TOTAL_STEPS - 1;
-
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     effectInit(() => {
@@ -63,18 +83,55 @@ export function OnboardingFlow({
     setAnswers((prev) => (prev.domain ? prev : { ...prev, domain: clean }));
   }, [initialDomain]);
 
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("step");
+    let initialStep = 0;
+    if (param) {
+      const n = parseInt(param, 10);
+      if (n >= 1 && n <= TOTAL_STEPS) initialStep = n - 1;
+      setStep(initialStep);
+    }
+    syncStepUrl(initialStep, "replace");
+  }, []);
+
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const fromState = (e.state as { onboardingStep?: number } | null)
+        ?.onboardingStep;
+      if (typeof fromState === "number") {
+        setStep(fromState);
+        return;
+      }
+      const param = new URLSearchParams(window.location.search).get("step");
+      setStep(param ? Math.max(0, parseInt(param, 10) - 1) : 0);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const handleDomainStatus = useCallback((status: DomainInputStatus) => {
+    setDomainStatus(status);
+  }, []);
+
   function next() {
-    if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);
-    else finish();
+    if (step < TOTAL_STEPS - 1) {
+      const nextStep = step + 1;
+      setStep(nextStep);
+      syncStepUrl(nextStep, "push");
+    } else {
+      void finish();
+    }
   }
 
   function back() {
-    setStep((s) => Math.max(0, s - 1));
+    if (step > 0) window.history.back();
   }
 
   async function finish() {
     setSubmitting(true);
+    setCompleted(true);
     sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
+    sessionStorage.setItem(ONBOARDING_WELCOME_TOAST_KEY, "1");
 
     try {
       const res = await fetch("/api/workspaces", {
@@ -92,12 +149,13 @@ export function OnboardingFlow({
         const prompts = [answers.buyerQuestion].filter(Boolean);
         if (prompts.length > 0) {
           trackEvent("audit_started", { workspaceId: data.id });
-          await runAudit({
+          void runAudit({
             domain: answers.domain,
             prompts,
             workspaceId: data.id,
-          }).catch(() => undefined);
-          trackAuditCompleted(data.id);
+          })
+            .then(() => trackAuditCompleted(data.id))
+            .catch(() => undefined);
         }
       }
     } catch {
@@ -110,7 +168,7 @@ export function OnboardingFlow({
   function canContinue(): boolean {
     switch (step) {
       case 0:
-        return answers.domain.trim().length > 2;
+        return domainStatus === "valid" || domainStatus === "unreachable";
       case 1:
         return answers.businessType.length > 0;
       case 2:
@@ -158,7 +216,6 @@ export function OnboardingFlow({
 
   return (
     <div className="min-h-[100dvh] bg-cream lg:flex">
-      {/* Left: form — matches home light sections (cream + white) */}
       <div className="flex min-h-[100dvh] flex-1 flex-col bg-white lg:border-r lg:border-border">
         <header className="flex h-16 items-center justify-between border-b border-border px-6 md:h-[4.5rem] md:px-10 lg:border-b-0 lg:px-12">
           <Logo />
@@ -172,37 +229,16 @@ export function OnboardingFlow({
 
         <main className="flex flex-1 flex-col px-6 pb-10 md:px-10 lg:px-14 lg:pb-14">
           <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center py-6 lg:py-10">
-            {/* Progress bar */}
-            <div className="mb-8">
-              <div className="mb-2.5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-1 shrink-0 rounded-full bg-gradient-to-b from-glow to-accent" />
-                  <span className="text-sm font-bold text-ink">{meta.stepLabel}</span>
-                  {meta.optional && (
-                    <span className="rounded-md bg-surface px-2 py-0.5 text-xs font-medium text-muted">
-                      Optional
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs font-medium text-muted">
-                  {step + 1} / {TOTAL_STEPS}
+            <OnboardingStepProgress step={step} />
+
+            <div className="mb-6 flex items-center gap-2">
+              <span className="h-4 w-1 shrink-0 rounded-full bg-gradient-to-b from-glow to-accent" />
+              <span className="text-sm font-bold text-ink">{meta.stepLabel}</span>
+              {meta.optional && (
+                <span className="rounded-md bg-surface px-2 py-0.5 text-xs font-medium text-muted">
+                  Optional
                 </span>
-              </div>
-              <div className="flex gap-1.5">
-                {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                      i < step
-                        ? "bg-accent"
-                        : i === step
-                          ? "bg-accent opacity-100"
-                          : "bg-border"
-                    }`}
-                    style={i === step ? { backgroundImage: "linear-gradient(90deg, var(--color-accent), var(--color-glow))" } : undefined}
-                  />
-                ))}
-              </div>
+              )}
             </div>
 
             <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-[2rem]">
@@ -213,21 +249,15 @@ export function OnboardingFlow({
             </p>
 
             <div className="mt-8 md:mt-10">
-              {/* Step 1: Website */}
               {step === 0 && (
-                <input
-                  type="text"
+                <OnboardingDomainInput
                   value={answers.domain}
-                  onChange={(e) =>
-                    setAnswers((a) => ({ ...a, domain: e.target.value }))
-                  }
-                  placeholder="yourwebsite.com"
-                  className="w-full rounded-full border border-border bg-white px-6 py-4 text-lg text-ink outline-none transition placeholder:text-muted/50 focus:border-accent focus:ring-2 focus:ring-accent/15"
-                  onKeyDown={(e) => e.key === "Enter" && canContinue() && next()}
+                  onChange={(domain) => setAnswers((a) => ({ ...a, domain }))}
+                  onStatusChange={handleDomainStatus}
+                  onEnter={() => canContinue() && next()}
                 />
               )}
 
-              {/* Step 2: Business type grid */}
               {step === 1 && (
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {businessTypes.map((opt) => {
@@ -255,7 +285,6 @@ export function OnboardingFlow({
                 </div>
               )}
 
-              {/* Step 3: Description + audiences */}
               {step === 2 && (
                 <div className="space-y-8">
                   <div>
@@ -339,7 +368,6 @@ export function OnboardingFlow({
                 </div>
               )}
 
-              {/* Step 4: Competitors */}
               {step === 3 && (
                 <div className="space-y-6">
                   <div className="rounded-2xl border border-border bg-surface px-5 py-4 text-sm leading-relaxed text-ink">
@@ -405,7 +433,6 @@ export function OnboardingFlow({
                 </div>
               )}
 
-              {/* Step 5: Buyer question */}
               {step === 4 && (
                 <div>
                   <h3 className="text-sm font-bold text-ink">Buyer question</h3>
@@ -432,14 +459,14 @@ export function OnboardingFlow({
               disabled={!canContinue() || submitting}
               label={
                 submitting
-                  ? "Saving workspace…"
+                  ? "Starting your audit…"
                   : isLast
                     ? "Run my analysis"
                     : "Continue"
               }
             />
 
-            {step > 0 && (
+            {step > 0 && !submitting && (
               <button
                 type="button"
                 onClick={back}
@@ -448,11 +475,14 @@ export function OnboardingFlow({
                 Back
               </button>
             )}
+
+            <OnboardingMobileTestimonial />
           </div>
         </main>
       </div>
 
       <OnboardingAside />
+      <OnboardingExitIntent active={!completed} completed={completed} />
     </div>
   );
 }
