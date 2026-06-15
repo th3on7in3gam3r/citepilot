@@ -33,6 +33,7 @@ import { parsePreferences, type WorkspacePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { userHasFleetAccess } from "@/lib/billing/access";
 import { buildWeeklyDigestEmail } from "@/lib/email/templates/weekly-digest";
+import { resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
 import { whiteLabelFromName } from "@/lib/white-label/email-layout";
 
 const DIGEST_JOB = "weekly-digest";
@@ -375,6 +376,14 @@ export async function sendWeeklyDigestEmail(input: {
   fleetBranding?: boolean;
   allowTestFromFallback?: boolean;
 }): Promise<SendEmailResult> {
+  const headerLogoSrc =
+    input.fleetBranding && input.whiteLabel
+      ? await resolveEmailLogoSrc({
+          workspaceId: input.workspaceId,
+          logoUrl: input.whiteLabel.logoUrl,
+        })
+      : undefined;
+
   const rendered = buildWeeklyDigestEmail({
     domain: input.domain,
     buyerQuestion: input.buyerQuestion,
@@ -385,6 +394,7 @@ export async function sendWeeklyDigestEmail(input: {
     whiteLabel: input.whiteLabel,
     workspaceId: input.workspaceId,
     fleetBranding: input.fleetBranding,
+    headerLogoSrc,
   });
 
   const wl = input.whiteLabel;

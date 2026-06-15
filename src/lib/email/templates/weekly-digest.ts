@@ -1,4 +1,5 @@
 import { dashboardUrl } from "@/lib/email/config";
+import { agencyDisplayName, resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
 import { site, siteLogoUrl } from "@/lib/site";
 import {
   buildEmailShell,
@@ -12,11 +13,9 @@ import {
 import type { WhiteLabelPreferences } from "@/lib/settings";
 import {
   brandingFromPreferences,
-  logoSrcForWorkspace,
   normalizePrimaryColor,
   poweredByFooterLines,
 } from "@/lib/white-label/theme";
-import { appBaseUrl } from "@/lib/stripe/config";
 
 export type WeeklyDigestEmailInput = {
   domain: string;
@@ -28,15 +27,9 @@ export type WeeklyDigestEmailInput = {
   whiteLabel?: WhiteLabelPreferences;
   workspaceId?: string;
   fleetBranding?: boolean;
+  /** Pre-resolved logo for email `<img>` — omit API routes that may 404. */
+  headerLogoSrc?: string;
 };
-
-function absoluteAssetUrl(pathOrUrl: string): string {
-  const trimmed = pathOrUrl.trim();
-  if (!trimmed) return "";
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  const base = appBaseUrl().replace(/\/$/, "");
-  return `${base}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
-}
 
 function scoreDeltaHint(score: number, previousScore: number | null): {
   hint?: string;
@@ -156,12 +149,11 @@ export function buildWeeklyDigestEmail(input: WeeklyDigestEmailInput): {
       : `${input.domain}: citation score ${input.score}/100`;
 
   if (useFleet && branding) {
-    const agency = branding.agencyName.trim() || "Your agency";
-    const footer = poweredByFooterLines(branding);
-    const logoUrl = absoluteAssetUrl(
-      branding.logoUrl.trim() ||
-        (input.workspaceId ? logoSrcForWorkspace(input.workspaceId, "") : ""),
-    );
+    const agency = agencyDisplayName(branding.agencyName, input.domain);
+    const footer = poweredByFooterLines({ ...branding, agencyName: agency });
+    const headerLogoSrc = input.headerLogoSrc;
+    const logoUrl = headerLogoSrc ?? (agency !== "Your agency" ? undefined : siteLogoUrl());
+    const logoAlt = headerLogoSrc || !logoUrl ? agency : site.name;
 
     return {
       subject: weeklyDigestSubject(input.domain, input.score),
@@ -172,8 +164,8 @@ export function buildWeeklyDigestEmail(input: WeeklyDigestEmailInput): {
         headerEyebrow: "Weekly citation digest",
         bodyHtml,
         primaryColor: normalizePrimaryColor(primaryColor),
-        logoUrl: logoUrl || undefined,
-        logoAlt: agency,
+        logoUrl,
+        logoAlt,
         footerPrimary: footer.primary,
         footerSecondary: footer.secondary ?? undefined,
         cta: {

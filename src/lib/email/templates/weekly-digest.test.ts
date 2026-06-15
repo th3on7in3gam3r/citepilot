@@ -26,7 +26,7 @@ describe("buildWeeklyDigestEmail", () => {
     expect(text).toContain("1. Add FAQ schema");
   });
 
-  it("applies fleet white-label branding", () => {
+  it("applies fleet white-label branding without broken logo URLs", () => {
     const { html } = buildWeeklyDigestEmail({
       domain: "client.com",
       buyerQuestion: "Best CRM?",
@@ -50,7 +50,34 @@ describe("buildWeeklyDigestEmail", () => {
     });
 
     expect(html).toContain("Growth Agency");
+    expect(html).not.toContain("/api/white-label/logo");
     expect(html).toContain("#6366f1");
     expect(html).toContain("Powered by Growth Agency via CitePilot");
+  });
+
+  it("falls back to domain name when agency name is empty", () => {
+    const { html } = buildWeeklyDigestEmail({
+      domain: "biblefunlandstudios.com",
+      buyerQuestion: "test",
+      competitors: [],
+      score: 45,
+      previousScore: null,
+      gaps: [],
+      fleetBranding: true,
+      whiteLabel: {
+        agencyName: "",
+        logoUrl: "",
+        hidePoweredBy: false,
+        poweredByMode: "agency_via_citepilot",
+        primaryColor: "#0ea5e9",
+        customReportDomain: "",
+        customDomainVerified: false,
+        emailFromName: "",
+        replyToEmail: "",
+      },
+    });
+
+    expect(html).not.toContain("/api/white-label/logo");
+    expect(html).toContain("Powered by Biblefunlandstudios via CitePilot");
   });
 });
