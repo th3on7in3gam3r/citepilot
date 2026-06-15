@@ -86,6 +86,7 @@ export function useWorkspace() {
           const created = await createWorkspaceFromOnboarding(answers);
           if (created) {
             setWorkspace(normalizeSnapshot(created.workspace, created.id));
+            sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
             const prompts = [answers.buyerQuestion].filter(Boolean);
             if (prompts.length > 0) {
               await runAudit({

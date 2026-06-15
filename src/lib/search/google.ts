@@ -20,6 +20,23 @@ type SearchOptions = {
   revalidate?: number;
 };
 
+/** Per-request Serper disable (e.g. after 403) — pass through audit probe runs. */
+export type GoogleSearchRunContext = {
+  serperDisabled?: boolean;
+  serperWarned?: boolean;
+};
+
+function disableSerper(ctx: GoogleSearchRunContext | undefined, status: number): void {
+  if (!ctx) return;
+  ctx.serperDisabled = true;
+  if (!ctx.serperWarned) {
+    ctx.serperWarned = true;
+    console.warn(
+      `Serper API rejected (${status}) — skipping Serper for this run; check SERPER_API_KEY or use SERPAPI_API_KEY`,
+    );
+  }
+}
+
 export function serperConfigured(): boolean {
   return Boolean(process.env.SERPER_API_KEY?.trim());
 }
@@ -61,39 +78,48 @@ function extractSerpApiAiOverview(raw: unknown): string | undefined {
 async function fetchSerper(
   q: string,
   options: SearchOptions,
+  ctx?: GoogleSearchRunContext,
 ): Promise<GoogleSearchResponse | null> {
   const key = process.env.SERPER_API_KEY?.trim();
-  if (!key) return null;
+  if (!key || ctx?.serperDisabled) return null;
 
-  const res = await fetch("https://google.serper.dev/search", {
-    method: "POST",
-    headers: {
-      "X-API-KEY": key,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ q, num: options.num ?? 8 }),
-    cache: options.revalidate != null ? "force-cache" : "no-store",
-    ...(options.revalidate != null
-      ? { next: { revalidate: options.revalidate } }
-      : {}),
-    ...(options.signal ? { signal: options.signal } : {}),
-  });
-  if (!res.ok) {
-    console.error("Serper search failed", res.status);
+  try {
+    const res = await fetch("https://google.serper.dev/search", {
+      method: "POST",
+      headers: {
+        "X-API-KEY": key,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ q, num: options.num ?? 8 }),
+      cache: options.revalidate != null ? "force-cache" : "no-store",
+      ...(options.revalidate != null
+        ? { next: { revalidate: options.revalidate } }
+        : {}),
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        disableSerper(ctx, res.status);
+      } else {
+        console.error("Serper search failed", res.status);
+      }
+      return null;
+    }
+
+    const data = (await res.json()) as {
+      answerBox?: { snippet?: string; title?: string };
+      organic?: GoogleOrganicHit[];
+    };
+
+    return {
+      provider: "serper",
+      organic: data.organic ?? [],
+      answerBoxSnippet: data.answerBox?.snippet,
+      answerBoxTitle: data.answerBox?.title,
+    };
+  } catch {
     return null;
   }
-
-  const data = (await res.json()) as {
-    answerBox?: { snippet?: string; title?: string };
-    organic?: GoogleOrganicHit[];
-  };
-
-  return {
-    provider: "serper",
-    organic: data.organic ?? [],
-    answerBoxSnippet: data.answerBox?.snippet,
-    answerBoxTitle: data.answerBox?.title,
-  };
 }
 
 async function fetchSerpApi(
@@ -103,74 +129,83 @@ async function fetchSerpApi(
   const key = process.env.SERPAPI_API_KEY?.trim();
   if (!key) return null;
 
-  const params = new URLSearchParams({
-    engine: "google",
-    q,
-    api_key: key,
-    num: String(options.num ?? 8),
-  });
+  try {
+    const params = new URLSearchParams({
+      engine: "google",
+      q,
+      api_key: key,
+      num: String(options.num ?? 8),
+    });
 
-  const res = await fetch(`https://serpapi.com/search.json?${params}`, {
-    cache: options.revalidate != null ? "force-cache" : "no-store",
-    ...(options.revalidate != null
-      ? { next: { revalidate: options.revalidate } }
-      : {}),
-    ...(options.signal ? { signal: options.signal } : {}),
-  });
-  if (!res.ok) {
-    console.error("SerpAPI search failed", res.status);
+    const res = await fetch(`https://serpapi.com/search.json?${params}`, {
+      cache: options.revalidate != null ? "force-cache" : "no-store",
+      ...(options.revalidate != null
+        ? { next: { revalidate: options.revalidate } }
+        : {}),
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
+    if (!res.ok) {
+      console.error("SerpAPI search failed", res.status);
+      return null;
+    }
+
+    const data = (await res.json()) as {
+      error?: string;
+      answer_box?: { snippet?: string; title?: string };
+      ai_overview?: unknown;
+      organic_results?: {
+        position?: number;
+        title?: string;
+        link?: string;
+        snippet?: string;
+      }[];
+    };
+
+    if (data.error) {
+      console.error("SerpAPI search error", data.error);
+      return null;
+    }
+
+    return {
+      provider: "serpapi",
+      organic: (data.organic_results ?? []).map((row) => ({
+        position: row.position,
+        title: row.title,
+        link: row.link,
+        snippet: row.snippet,
+      })),
+      answerBoxSnippet: data.answer_box?.snippet,
+      answerBoxTitle: data.answer_box?.title,
+      aiOverviewText: extractSerpApiAiOverview(data.ai_overview),
+    };
+  } catch {
     return null;
   }
-
-  const data = (await res.json()) as {
-    error?: string;
-    answer_box?: { snippet?: string; title?: string };
-    ai_overview?: unknown;
-    organic_results?: {
-      position?: number;
-      title?: string;
-      link?: string;
-      snippet?: string;
-    }[];
-  };
-
-  if (data.error) {
-    console.error("SerpAPI search error", data.error);
-    return null;
-  }
-
-  return {
-    provider: "serpapi",
-    organic: (data.organic_results ?? []).map((row) => ({
-      position: row.position,
-      title: row.title,
-      link: row.link,
-      snippet: row.snippet,
-    })),
-    answerBoxSnippet: data.answer_box?.snippet,
-    answerBoxTitle: data.answer_box?.title,
-    aiOverviewText: extractSerpApiAiOverview(data.ai_overview),
-  };
 }
 
 /** Google organic search — prefers Serper when both keys are set. */
 export async function searchGoogle(
   q: string,
   options: SearchOptions = {},
+  ctx?: GoogleSearchRunContext,
 ): Promise<GoogleSearchResponse | null> {
-  if (serperConfigured()) {
-    const result = await fetchSerper(q, options);
-    if (result && result.organic.length > 0) return result;
-    if (result && (result.answerBoxSnippet || result.answerBoxTitle)) {
-      return result;
+  try {
+    if (serperConfigured() && !ctx?.serperDisabled) {
+      const result = await fetchSerper(q, options, ctx);
+      if (result && result.organic.length > 0) return result;
+      if (result && (result.answerBoxSnippet || result.answerBoxTitle)) {
+        return result;
+      }
     }
-  }
 
-  if (serpApiConfigured()) {
-    return fetchSerpApi(q, options);
-  }
+    if (serpApiConfigured()) {
+      return fetchSerpApi(q, options);
+    }
 
-  return null;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export function googleSearchContextText(result: GoogleSearchResponse): string {

@@ -187,7 +187,11 @@ async function persistAudit(
        VALUES (?, ?, ?, ?)`,
       [uuidv4(), audit.workspaceId, audit.score, audit.createdAt],
     );
-    await regenerateContentStrategyForAudit(audit.workspaceId, audit);
+    try {
+      await regenerateContentStrategyForAudit(audit.workspaceId, audit);
+    } catch (err) {
+      console.error("[audit] content strategy regeneration failed", err);
+    }
   }
 }
 

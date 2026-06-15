@@ -6,6 +6,7 @@ import {
   googleSearchConfigured,
   googleSearchContextText,
   searchGoogle,
+  type GoogleSearchRunContext,
 } from "@/lib/search/google";
 
 export type PlatformCheckMode = "live" | "inferred";
@@ -38,7 +39,9 @@ const LIVE_PLATFORM_PROVIDERS: Record<string, LiveProvider | null> = {
 };
 
 /** Per external LLM/search call — keeps audits inside Vercel time limits. */
-const PROBE_TIMEOUT_MS = 12_000;
+const PROBE_TIMEOUT_MS = 8_000;
+/** Hard stop for all live probes in one audit (parallel with site fetch). */
+const LIVE_PROBE_WALL_MS = 20_000;
 /** Max concurrent live probes (OpenAI + Perplexity + Serper). */
 const PROBE_CONCURRENCY = 5;
 
@@ -139,22 +142,34 @@ async function fetchPerplexityAnswer(prompt: string): Promise<string | null> {
   return data.choices?.[0]?.message?.content ?? null;
 }
 
-async function fetchGoogleSearchContext(prompt: string): Promise<string | null> {
-  const result = await searchGoogle(prompt, {
-    num: 8,
-    signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-  });
-  if (!result) return null;
-  return googleSearchContextText(result) || null;
+async function fetchGoogleSearchContext(
+  prompt: string,
+  ctx: GoogleSearchRunContext,
+): Promise<string | null> {
+  try {
+    const result = await searchGoogle(
+      prompt,
+      {
+        num: 8,
+        signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+      },
+      ctx,
+    );
+    if (!result) return null;
+    return googleSearchContextText(result) || null;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchLiveAnswer(
   provider: LiveProvider,
   prompt: string,
+  searchCtx: GoogleSearchRunContext,
 ): Promise<string | null> {
   if (provider === "openai") return fetchOpenAiAnswer(prompt);
   if (provider === "perplexity") return fetchPerplexityAnswer(prompt);
-  return fetchGoogleSearchContext(prompt);
+  return fetchGoogleSearchContext(prompt, searchCtx);
 }
 
 async function runPool<T>(
@@ -273,16 +288,24 @@ export async function runLivePlatformProbes(input: {
   }
 
   const checks: PlatformProbeResult[] = [];
+  const searchCtx: GoogleSearchRunContext = {};
+  const probeStarted = Date.now();
+
   await runPool(tasks, PROBE_CONCURRENCY, async (task) => {
-    const answer = await fetchLiveAnswer(task.provider, task.prompt);
-    if (answer === null) return;
-    checks.push({
-      platform: task.platform,
-      prompt: task.prompt,
-      promptIndex: task.promptIndex,
-      cited: textMentionsBrand(answer, domain, brand),
-      checkMode: "live",
-    });
+    if (Date.now() - probeStarted > LIVE_PROBE_WALL_MS) return;
+    try {
+      const answer = await fetchLiveAnswer(task.provider, task.prompt, searchCtx);
+      if (answer === null) return;
+      checks.push({
+        platform: task.platform,
+        prompt: task.prompt,
+        promptIndex: task.promptIndex,
+        cited: textMentionsBrand(answer, domain, brand),
+        checkMode: "live",
+      });
+    } catch {
+      /* Individual probe failure — continue with partial live checks */
+    }
   });
 
   return checks;

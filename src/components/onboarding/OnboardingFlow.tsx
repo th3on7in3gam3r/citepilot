@@ -162,6 +162,7 @@ export function OnboardingFlow({
       if (res.ok) {
         const data = (await res.json()) as { id: string };
         localStorage.setItem(WORKSPACE_STORAGE_KEY, data.id);
+        sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
 
         trackEvent("workspace_created", { domain: answers.domain });
 

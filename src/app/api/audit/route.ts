@@ -173,6 +173,17 @@ export const POST = withApiLogging(async function POST(request: Request) {
   } catch (error) {
     captureServerException(error, { route: "POST /api/audit" });
     console.error("POST /api/audit", error);
-    return NextResponse.json({ error: "Audit failed" }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Audit failed";
+    return NextResponse.json(
+      {
+        error:
+          process.env.NODE_ENV === "development"
+            ? message
+            : "Audit failed. Try again in a minute or run a shorter prompt list.",
+        code: "AUDIT_FAILED",
+      },
+      { status: 500 },
+    );
   }
 });
