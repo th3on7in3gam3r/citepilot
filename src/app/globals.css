@@ -312,7 +312,10 @@ html:not(.dark) .hero-premium-orb {
 }
 
 .text-shimmer {
-  background: linear-gradient(
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  background-image: linear-gradient(
     105deg,
     #0284c7 0%,
     #0ea5e9 35%,
@@ -323,20 +326,25 @@ html:not(.dark) .hero-premium-orb {
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
   animation: shimmer 5s linear infinite;
 }
 
 .dark .text-shimmer {
-  background: linear-gradient(
+  background-image: linear-gradient(
     105deg,
-    #ffffff 0%,
-    #a5f3fc 35%,
-    #22d3ee 50%,
-    #a5f3fc 65%,
-    #ffffff 100%
+    #67e8f9 0%,
+    #22d3ee 35%,
+    #6ee7b7 50%,
+    #22d3ee 65%,
+    #67e8f9 100%
   );
   background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .mockup-shadow {

@@ -29,11 +29,11 @@ export function ScrollBrandMarquee() {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-white"
+      className="relative bg-white dark:bg-background"
       style={{ height: "125vh" }}
       aria-label="Platforms and ecosystems"
     >
-      <div className="sticky top-16 border-y border-border bg-white">
+      <div className="sticky top-16 border-y border-border bg-white dark:border-[#222] dark:bg-background">
         <Container className="flex flex-col items-center py-16 md:py-20 lg:py-24">
           <div className="mb-10 text-center md:mb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">

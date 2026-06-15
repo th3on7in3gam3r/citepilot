@@ -7,7 +7,7 @@ export function AnswerCapsuleSection() {
   return (
     <section
       id="geo-answers"
-      className="scroll-mt-24 border-t border-border bg-cream py-14 md:py-16"
+      className="scroll-mt-24 border-t border-border bg-cream py-14 dark:bg-background md:py-16"
       aria-label="GEO answer capsule for AI search engines"
     >
       <Container>

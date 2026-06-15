@@ -66,7 +66,7 @@ export function FeatureSuite() {
       <div className="mt-12 text-center">
         <Link
           href="/#get-started"
-          className="inline-flex rounded-full border-2 border-accent/30 bg-white px-8 py-3.5 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/5"
+          className="inline-flex rounded-full border-2 border-accent/30 bg-white px-8 py-3.5 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/5 dark:border-accent/40 dark:bg-card dark:hover:bg-accent/10"
         >
           Get started →
         </Link>

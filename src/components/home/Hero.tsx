@@ -13,7 +13,7 @@ export function Hero() {
         <header className="hero-rise mx-auto max-w-3xl text-center lg:max-w-4xl">
           <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.02em] text-foreground dark:text-white sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.5rem]">
             Track when ChatGPT, Perplexity, and Google AI cite you
-            <span className="mt-1 block text-shimmer sm:mt-1.5">
+            <span className="mt-1 inline-block text-shimmer sm:mt-1.5">
               then close the gap weekly
             </span>
           </h1>
@@ -25,7 +25,7 @@ export function Hero() {
           <div className="mt-7 flex flex-col items-center sm:mt-8">
             <Link
               href="/audit"
-              className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-8 py-3.5 text-base font-bold text-white shadow-[0_8px_32px_rgba(14,165,233,0.45)] transition hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(14,165,233,0.5)] sm:w-auto sm:min-w-[15rem]"
+              className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-8 py-3.5 text-base font-bold text-white shadow-[0_4px_20px_rgba(14,165,233,0.3)] transition hover:scale-[1.02] hover:shadow-[0_6px_24px_rgba(14,165,233,0.35)] dark:shadow-[0_4px_24px_rgba(14,165,233,0.25)] dark:hover:shadow-[0_6px_28px_rgba(14,165,233,0.3)] sm:w-auto sm:min-w-[15rem]"
             >
               Start free audit
             </Link>

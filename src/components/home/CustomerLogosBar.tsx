@@ -20,7 +20,7 @@ function MarqueeRow({
         {track.map((name, i) => (
           <span
             key={`${name}-${i}`}
-            className="shrink-0 font-display text-base font-semibold tracking-tight text-ink/35 md:text-lg"
+            className="shrink-0 font-display text-base font-semibold tracking-tight text-ink/35 dark:text-white/30 md:text-lg"
           >
             {name}
           </span>
@@ -36,7 +36,7 @@ export function CustomerLogosBar() {
 
   return (
     <section
-      className="border-b border-border bg-cream py-8 md:py-10"
+      className="border-b border-border bg-cream py-8 dark:bg-background md:py-10"
       aria-label="Trusted by teams using CitePilot"
     >
       <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted">
@@ -52,7 +52,7 @@ export function CustomerLogosBar() {
         {customerMarqueeNames.map((name) => (
           <li
             key={name}
-            className="font-display text-base font-semibold tracking-tight text-ink/35 md:text-lg"
+            className="font-display text-base font-semibold tracking-tight text-ink/35 dark:text-white/30 md:text-lg"
           >
             {name}
           </li>

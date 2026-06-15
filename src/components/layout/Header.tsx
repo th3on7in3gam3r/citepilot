@@ -58,7 +58,7 @@ export function Header({
                 href={item.href}
                 className={`text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   onDark
-                    ? "text-white/75 hover:text-white"
+                    ? "text-white/85 hover:text-white"
                     : "text-muted hover:text-ink dark:text-[#94a3b8] dark:hover:text-white"
                 }`}
               >

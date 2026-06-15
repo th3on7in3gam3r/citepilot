@@ -4,7 +4,7 @@ import { faq } from "@/lib/content";
 
 export function FAQ() {
   return (
-    <Section id="faq" className="bg-white">
+    <Section id="faq" className="bg-white dark:bg-background">
       <SectionHeading
         eyebrow="FAQ"
         title="Questions teams ask before switching"
@@ -14,7 +14,7 @@ export function FAQ() {
         {faq.map((item) => (
           <div
             key={item.q}
-            className="rounded-2xl border border-border bg-cream p-6 md:p-8"
+            className="rounded-2xl border border-border bg-cream p-6 dark:border-[#222] dark:bg-card md:p-8"
           >
             <dt className="font-display text-lg font-bold text-ink md:text-xl">
               {item.q}

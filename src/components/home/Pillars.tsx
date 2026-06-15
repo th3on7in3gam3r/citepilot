@@ -26,7 +26,7 @@ const icons: Record<string, ReactNode> = {
 
 export function Pillars() {
   return (
-    <Section id="pillars" className="bg-white">
+    <Section id="pillars" className="bg-white dark:bg-background">
       <SectionHeading
         eyebrow="Product"
         title="Three pillars. One outcome: more citations."
@@ -37,7 +37,7 @@ export function Pillars() {
         {pillars.map((pillar) => (
           <article
             key={pillar.id}
-            className="rounded-2xl border border-border bg-cream p-8 md:p-10 transition hover:border-accent/40 hover:shadow-md"
+            className="rounded-2xl border border-border bg-cream p-8 transition hover:border-accent/40 hover:shadow-md dark:border-[#222] dark:bg-card md:p-10"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
               {icons[pillar.icon]}

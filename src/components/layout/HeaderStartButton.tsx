@@ -31,7 +31,7 @@ export function HeaderStartButton({ onDark }: { onDark: boolean }) {
           className="absolute inset-0 rounded-full bg-gradient-to-r from-glow/70 via-accent to-mint/70 opacity-90 blur-[2px] transition-opacity group-hover:opacity-100"
           aria-hidden
         />
-        <span className="relative flex items-center gap-2 rounded-full border border-white/10 bg-[#0a0f1a]/90 px-3.5 py-2 text-sm font-semibold text-white shadow-[0_8px_32px_rgba(14,165,233,0.25)] backdrop-blur-md sm:gap-2.5 sm:px-4 sm:py-2.5">
+        <span className="relative flex items-center gap-2 rounded-full border border-white/10 bg-[#0a0f1a]/90 px-3.5 py-2 text-sm font-semibold text-white shadow-[0_4px_20px_rgba(14,165,233,0.18)] backdrop-blur-md sm:gap-2.5 sm:px-4 sm:py-2.5">
           <span className="hidden sm:inline">{label}</span>
           <span className="sm:hidden">Start</span>
           <span className="hidden rounded-md bg-mint/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint lg:inline">

@@ -22,7 +22,7 @@ export function ProductTransparencySection({
       className={
         dark
           ? "border-t border-white/[0.06] py-16 md:py-20"
-          : "border-t border-border bg-white py-14 md:py-16"
+          : "border-t border-border bg-white py-14 dark:bg-background md:py-16"
       }
       aria-labelledby="product-transparency-heading"
     >

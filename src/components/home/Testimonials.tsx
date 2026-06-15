@@ -8,7 +8,7 @@ function TestimonialCard({
   review: (typeof testimonials)[number];
 }) {
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-border bg-white p-7 md:p-8">
+    <article className="flex h-full flex-col rounded-2xl border border-border bg-white p-7 dark:border-[#222] dark:bg-card md:p-8">
       <div className="flex gap-1 text-amber-400">
         {Array.from({ length: 5 }).map((_, i) => (
           <svg key={i} className="h-4 w-4 fill-current" viewBox="0 0 20 20">
@@ -36,7 +36,7 @@ function TestimonialCard({
 
 export function Testimonials() {
   return (
-    <Section className="bg-cream">
+    <Section className="bg-cream dark:bg-background">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-4xl lg:text-[2.75rem]">
           From CitePilot customers
