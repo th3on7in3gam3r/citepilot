@@ -30,11 +30,11 @@ export const nav = {
     { label: "Product", href: "/product" },
     {
       label: "Free tools",
-      href: "/citation-checker",
+      href: "/tools/citation-checker",
       children: [
         {
           label: "Citation checker",
-          href: "/citation-checker",
+          href: "/tools/citation-checker",
           description: "One prompt · instant verdict · no account",
         },
         {
@@ -44,8 +44,13 @@ export const nav = {
         },
         {
           label: "Citation gap calculator",
-          href: "/tools/citation-gap",
+          href: "/tools/citation-gap-calculator",
           description: "Estimate ROI gap by industry & competitors",
+        },
+        {
+          label: "GEO Playbook",
+          href: "/tools/geo-playbook",
+          description: "42-item interactive checklist + PDF guide",
         },
       ],
     },
@@ -54,7 +59,7 @@ export const nav = {
   ],
   secondary: [
     { label: "Blog", href: "/blog" },
-    { label: "GEO Playbook", href: "/geo-playbook" },
+    { label: "GEO Playbook", href: "/tools/geo-playbook" },
   ],
   footer: {
     product: [
@@ -64,9 +69,10 @@ export const nav = {
       { label: "Dashboard", href: "/dashboard" },
     ],
     tools: [
+      { label: "Citation checker", href: "/tools/citation-checker" },
       { label: "Citation audit", href: "/audit" },
-      { label: "Citation checker", href: "/citation-checker" },
-      { label: "Citation gap calculator", href: "/tools/citation-gap" },
+      { label: "Citation gap calculator", href: "/tools/citation-gap-calculator" },
+      { label: "GEO Playbook", href: "/tools/geo-playbook" },
       { label: "Start analysis", href: "/start" },
     ],
     compare: [
@@ -82,8 +88,8 @@ export const nav = {
       { label: "API docs", href: "/docs/api" },
       { label: "Agencies", href: "/agency" },
     ],
-    learn: [
-      { label: "GEO Playbook", href: "/geo-playbook" },
+      learn: [
+      { label: "GEO Playbook", href: "/tools/geo-playbook" },
       { label: "ChatGPT prompts", href: "/chatgpt-prompts" },
       { label: "AI visibility", href: "/ai-visibility" },
       { label: "Blog", href: "/blog" },

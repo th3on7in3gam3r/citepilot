@@ -1,10 +1,35 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import type { AuditPayload } from "@/lib/api-types";
-import { joinWaitlist, runAudit } from "@/lib/client/api";
+import { PilotCheckoutButton } from "@/components/billing/PilotCheckoutButton";
+import { PLATFORMS } from "@/lib/dashboard";
+import { runAudit } from "@/lib/client/api";
 import { trackEvent } from "@/lib/analytics/track";
+
+function excerptForPlatform(
+  platform: string,
+  result: AuditPayload,
+  prompt: string,
+): string | null {
+  const platformRow = result.platforms.find((p) => p.name === platform);
+  if (!platformRow?.present) return null;
+
+  const promptResult = result.promptResults[0];
+  if (promptResult?.cited && promptResult.reason) {
+    return promptResult.reason;
+  }
+
+  const signals = result.siteSignals;
+  if (signals?.metaDescription) {
+    return `Homepage signals support "${prompt.slice(0, 48)}${prompt.length > 48 ? "…" : ""}" — ${signals.metaDescription.slice(0, 120)}${signals.metaDescription.length > 120 ? "…" : ""}`;
+  }
+  if (signals?.title) {
+    return `Entity match on ${platform}: ${signals.title}`;
+  }
+  return `Brand presence detected on ${platform} for this prompt.`;
+}
 
 export function CitationCheckerTool() {
   const [domain, setDomain] = useState("");
@@ -12,8 +37,21 @@ export function CitationCheckerTool() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AuditPayload | null>(null);
-  const [email, setEmail] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
+
+  const citedCount = useMemo(
+    () => result?.platforms.filter((p) => p.present).length ?? 0,
+    [result],
+  );
+
+  useEffect(() => {
+    if (result) {
+      trackEvent("tool_result_viewed", {
+        tool_name: "citation-checker",
+        cited_platforms: citedCount,
+        score: result.score,
+      });
+    }
+  }, [result, citedCount]);
 
   async function handleCheck(e: React.FormEvent) {
     e.preventDefault();
@@ -24,6 +62,7 @@ export function CitationCheckerTool() {
     setLoading(true);
     setError(null);
     setResult(null);
+    trackEvent("tool_used", { tool_name: "citation-checker", domain: cleanDomain });
     trackEvent("citation_checker_started", { domain: cleanDomain });
 
     try {
@@ -43,32 +82,20 @@ export function CitationCheckerTool() {
     }
   }
 
-  async function handleEmail(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.trim()) return;
-    const ok = await joinWaitlist(email.trim());
-    if (ok) setEmailSent(true);
+  function trackUpgradeClick() {
+    trackEvent("tool_upgrade_cta_clicked", {
+      tool_name: "citation-checker",
+      plan: "pilot",
+    });
   }
 
-  const promptResult = result?.promptResults?.[0];
-  const citedPlatforms =
-    result?.platforms?.filter((p) => p.present).map((p) => p.name) ?? [];
-
   return (
-    <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+    <div className="mx-auto max-w-4xl">
       <form
         onSubmit={handleCheck}
         className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm md:p-8"
       >
-        <h2 className="font-display text-lg font-bold text-white">
-          Check one prompt
-        </h2>
-        <p className="mt-1 text-sm text-white/55">
-          Enter your domain and a buyer question. We scan on-site signals and AI
-          engine presence — free, no account.
-        </p>
-
-        <div className="mt-6 space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-semibold text-white/90">
             Domain
             <input
@@ -81,7 +108,7 @@ export function CitationCheckerTool() {
             />
           </label>
           <label className="block text-sm font-semibold text-white/90">
-            Buyer question
+            Buyer question (money prompt)
             <input
               type="text"
               required
@@ -98,7 +125,7 @@ export function CitationCheckerTool() {
           disabled={loading}
           className="mt-6 w-full rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-6 py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(14,165,233,0.35)] transition hover:opacity-95 disabled:opacity-60"
         >
-          {loading ? "Checking citation…" : "Check citation"}
+          {loading ? "Checking citations…" : "Check citation"}
         </button>
 
         {error && (
@@ -108,117 +135,104 @@ export function CitationCheckerTool() {
         )}
       </form>
 
-      <div className="min-h-[280px]">
-        {!result && !loading && (
-          <div className="flex h-full flex-col justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
-            <p className="font-display text-lg font-bold text-white">
-              Instant citation verdict
-            </p>
-            <p className="mt-2 text-sm text-white/50">
-              See if your site supports this prompt and which AI engines likely
-              cite you.
-            </p>
-          </div>
-        )}
+      {(loading || result) && (
+        <div className="mt-8 space-y-6 rounded-2xl border border-white/10 bg-white/[0.06] p-6 md:p-8">
+          {loading && !result && (
+            <p className="text-sm text-white/60">Analyzing across AI platforms… ~30–60 seconds</p>
+          )}
 
-        {loading && (
-          <div className="flex h-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-8">
-            <p className="text-sm text-white/60">Analyzing… ~30–60 seconds</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-5 rounded-2xl border border-white/10 bg-white/[0.06] p-6 md:p-8">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-glow">
-                  Citation check
-                </p>
-                <p className="mt-1 font-display text-3xl font-bold text-white">
-                  {promptResult?.cited ? "Likely cited" : "Not cited yet"}
-                </p>
-                <p className="mt-2 text-sm text-white/55">
-                  GEO score {result.score}/100 · {result.cited}/{result.total}{" "}
-                  prompts on full audit
-                </p>
-              </div>
-              <span
-                className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                  promptResult?.cited
-                    ? "bg-mint/20 text-mint"
-                    : "bg-amber-500/20 text-amber-200"
-                }`}
-              >
-                {promptResult?.cited ? "✓ Cited" : "Gap"}
-              </span>
-            </div>
-
-            {citedPlatforms.length > 0 ? (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
-                  Platforms with presence
-                </p>
-                <p className="mt-2 text-sm text-white/75">
-                  {citedPlatforms.join(" · ")}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-white/55">
-                No strong platform presence detected for this prompt yet.
-              </p>
-            )}
-
-            {result.gaps[0] && (
-              <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/70">
-                <span className="font-semibold text-white/90">Top fix: </span>
-                {result.gaps[0]}
-              </div>
-            )}
-
-            <Link
-              href={`/audit?domain=${encodeURIComponent(result.domain)}&prompt=${encodeURIComponent(query)}`}
-              className="inline-flex w-full items-center justify-center rounded-full border border-white/20 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              Run full free audit (10 prompts) →
-            </Link>
-
-            {!emailSent ? (
-              <form
-                onSubmit={handleEmail}
-                className="border-t border-white/10 pt-5"
-              >
-                <p className="text-sm font-semibold text-white">
-                  Get weekly citation alerts
-                </p>
-                <p className="mt-1 text-xs text-white/45">
-                  Join the list — we&apos;ll notify you when monitoring opens for
-                  your domain.
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <input
-                    type="email"
-                    required
-                    placeholder="you@company.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="min-w-0 flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-accent"
-                  />
-                  <button
-                    type="submit"
-                    className="shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-ink"
-                  >
-                    Notify me
-                  </button>
+          {(loading || result) && (
+            <>
+              {result && (
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-glow">
+                    Citation score for this prompt
+                  </p>
+                  <p className="font-display mt-1 text-4xl font-bold text-white">
+                    {citedCount}/{PLATFORMS.length}{" "}
+                    <span className="text-lg font-semibold text-white/50">platforms</span>
+                  </p>
                 </div>
-              </form>
-            ) : (
-              <p className="text-sm font-semibold text-mint">
-                You&apos;re on the list — we&apos;ll be in touch.
-              </p>
-            )}
+                <p className="text-sm text-white/55">
+                  GEO score {result.score}/100 · {result.mode === "live" ? "Live checks" : "Technical signals"}
+                </p>
+              </div>
+              )}
+
+              <ul className="space-y-3">
+                {PLATFORMS.map((name) => {
+                  const row = result?.platforms.find((p) => p.name === name);
+                  const cited = row?.present ?? false;
+                  const excerpt =
+                    result && cited ? excerptForPlatform(name, result, query) : null;
+                  return (
+                    <li
+                      key={name}
+                      className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-semibold text-white">{name}</span>
+                        <span
+                          className={`text-xs font-bold ${
+                            loading && !result
+                              ? "text-white/45"
+                              : cited
+                                ? "text-mint"
+                                : "text-red-300"
+                          }`}
+                        >
+                          {loading && !result
+                            ? "Checking…"
+                            : cited
+                              ? "Cited ✓"
+                              : "Not cited ✗"}
+                        </span>
+                      </div>
+                      {excerpt && (
+                        <p className="mt-2 text-xs leading-relaxed text-white/55">{excerpt}</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {result?.gaps[0] && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                  <span className="font-semibold">Top fix: </span>
+                  {result.gaps[0]}
+                </div>
+              )}
+
+              {result && (
+              <Link
+                href={`/audit?domain=${encodeURIComponent(result.domain)}&prompt=${encodeURIComponent(query)}`}
+                className="inline-flex w-full items-center justify-center rounded-full border border-white/20 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Run full free audit (10 prompts) →
+              </Link>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {result && (
+        <div className="mt-10 rounded-2xl border border-accent/30 bg-accent/10 p-6 text-center">
+          <p className="font-display text-lg font-bold text-white">
+            Want to track 25 prompts weekly?
+          </p>
+          <p className="mt-2 text-sm text-white/65">
+            Pilot monitors your money prompts across all major AI engines with citation
+            alerts and proof reports.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3" onClick={trackUpgradeClick}>
+            <PilotCheckoutButton signedIn={false} plan="pilot" source="tool_citation_checker">
+              Upgrade to Pilot →
+            </PilotCheckoutButton>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

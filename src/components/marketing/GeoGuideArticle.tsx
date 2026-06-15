@@ -145,7 +145,7 @@ function StickyTabNav({ activeId }: { activeId: string | null }) {
   );
 }
 
-export function GeoGuideArticle() {
+export function GeoGuideArticle({ emailGate }: { emailGate?: React.ReactNode }) {
   const articleRef = useRef<HTMLElement>(null);
   const tracker = useReadTimeFromRef(articleRef, {
     sections: [...geoGuideNavSections],
@@ -207,7 +207,7 @@ export function GeoGuideArticle() {
               </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {[
-                  { stat: "6", label: "Deep-dive modules" },
+                  { stat: "42", label: "Checklist items" },
                   { stat: "5", label: "GEO frameworks" },
                   { stat: "7", label: "Day rollout plan" },
                 ].map((item) => (
@@ -342,6 +342,7 @@ export function GeoGuideArticle() {
             <GeoGuideFaq />
           </section>
 
+          {emailGate}
           <GeoGuideCapture />
         </article>
       </div>

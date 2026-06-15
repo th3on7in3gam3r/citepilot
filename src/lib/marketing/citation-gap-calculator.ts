@@ -1,73 +1,116 @@
 import { domainSeed } from "@/lib/dashboard";
 
 export const calculatorIndustries = [
-  { id: "saas", label: "B2B SaaS", trafficMultiplier: 1.4 },
-  { id: "agency", label: "Agency / Consultant", trafficMultiplier: 1.1 },
-  { id: "ecommerce", label: "Ecommerce / D2C", trafficMultiplier: 1.25 },
-  { id: "devtools", label: "DevTools / API", trafficMultiplier: 1.35 },
-  { id: "health", label: "Health / Wellness", trafficMultiplier: 1.15 },
-  { id: "other", label: "Other", trafficMultiplier: 1.0 },
+  { id: "saas", label: "B2B SaaS" },
+  { id: "agency", label: "Agency" },
+  { id: "ecommerce", label: "Ecommerce" },
+  { id: "local", label: "Local" },
+  { id: "other", label: "Other" },
 ] as const;
+
+export type CalculatorIndustryId = (typeof calculatorIndustries)[number]["id"];
+
+type IndustryBenchmark = {
+  /** Typical share of industry brands cited on ≥1 major AI platform */
+  avgCitationRate: number;
+  /** Estimated share of discovery queries answered by AI assistants */
+  aiSearchShare: number;
+};
+
+const INDUSTRY_BENCHMARKS: Record<CalculatorIndustryId, IndustryBenchmark> = {
+  saas: { avgCitationRate: 0.44, aiSearchShare: 0.15 },
+  agency: { avgCitationRate: 0.38, aiSearchShare: 0.12 },
+  ecommerce: { avgCitationRate: 0.36, aiSearchShare: 0.14 },
+  local: { avgCitationRate: 0.28, aiSearchShare: 0.18 },
+  other: { avgCitationRate: 0.35, aiSearchShare: 0.13 },
+};
 
 export type CitationGapEstimate = {
   estimatedCurrentRate: number;
   estimatedGap: number;
   monthlyOpportunityVisits: number;
+  gapVsCategoryPct: number;
+  projectedLift90d: number;
   competitorPressure: "low" | "medium" | "high";
   topFix: string;
 };
 
-/** Deterministic illustrative estimate — not a live audit. */
+/**
+ * Illustrative ROI model — not a live audit.
+ *
+ * Formula:
+ *   user_citation_rate = platforms_cited / 8
+ *   gap_rate = max(0, industry_avg_citation_rate - user_citation_rate)
+ *   missed_visitors = monthly_traffic × ai_search_share × (gap_rate / industry_avg_citation_rate)
+ *   gap_vs_category_pct = round((gap_rate / industry_avg_citation_rate) × 100)
+ *   projected_lift_90d = min(round(gap_vs_category_pct × 0.45), 45)
+ *
+ * Competitor domain adds deterministic pressure modifier via domain hash.
+ */
 export function estimateCitationGap(input: {
-  domain: string;
   industryId: string;
-  competitors: string;
+  monthlyTraffic: number;
+  platformsCited: number;
+  competitorDomain?: string;
 }): CitationGapEstimate {
-  const cleanDomain = input.domain
-    .replace(/^https?:\/\//, "")
+  const industryId = (calculatorIndustries.some((i) => i.id === input.industryId)
+    ? input.industryId
+    : "other") as CalculatorIndustryId;
+
+  const bench = INDUSTRY_BENCHMARKS[industryId];
+  const traffic = Math.max(0, input.monthlyTraffic);
+  const platforms = Math.min(8, Math.max(0, Math.round(input.platformsCited)));
+
+  const userRate = platforms / 8;
+  const gapRate = Math.max(0, bench.avgCitationRate - userRate);
+  const gapVsCategoryPct = Math.round(
+    (gapRate / Math.max(bench.avgCitationRate, 0.01)) * 100,
+  );
+
+  const competitor = input.competitorDomain
+    ?.replace(/^https?:\/\//, "")
     .replace(/\/$/, "")
     .trim()
     .toLowerCase();
-  const hash = cleanDomain ? domainSeed(cleanDomain) : 42;
+  const compHash = competitor ? domainSeed(competitor) % 5 : 0;
+  const competitorPressure =
+    competitor && compHash >= 3 ? "high" : competitor ? "medium" : "low";
 
-  const competitorList = input.competitors
-    .split(/[,\n]/)
-    .map((c) => c.trim())
-    .filter(Boolean);
-  const compCount = competitorList.length;
-
-  const industry =
-    calculatorIndustries.find((i) => i.id === input.industryId) ??
-    calculatorIndustries.find((i) => i.id === "other")!;
-
-  const estimatedCurrentRate = Math.min(
-    72,
-    Math.max(8, 18 + (hash % 28) - compCount * 3),
-  );
-  const estimatedGap = Math.min(
-    88,
-    Math.max(12, 78 - estimatedCurrentRate + compCount * 6),
-  );
+  const pressureMultiplier =
+    competitorPressure === "high" ? 1.12 : competitorPressure === "medium" ? 1.06 : 1;
 
   const monthlyOpportunityVisits = Math.round(
-    estimatedGap * industry.trafficMultiplier * (90 + (hash % 160)),
+    traffic *
+      bench.aiSearchShare *
+      (gapRate / Math.max(bench.avgCitationRate, 0.01)) *
+      pressureMultiplier,
   );
 
-  const competitorPressure =
-    compCount >= 4 ? "high" : compCount >= 2 ? "medium" : "low";
+  const estimatedCurrentRate = Math.round(userRate * 100);
+  const estimatedGap = gapVsCategoryPct;
+  const projectedLift90d = Math.min(Math.round(gapVsCategoryPct * 0.45), 45);
 
   const topFix =
-    estimatedCurrentRate < 25
-      ? "Add an answer capsule + FAQPage schema on your homepage"
-      : estimatedCurrentRate < 45
-        ? "Publish comparison content for your top money prompt"
-        : "Earn third-party mentions on trusted industry sources";
+    platforms <= 1
+      ? "Add FAQPage schema + a 40–60 word answer capsule on your homepage"
+      : platforms <= 3
+        ? "Publish a comparison page for your top money prompt"
+        : "Earn third-party mentions on G2, Reddit, and industry directories";
 
   return {
     estimatedCurrentRate,
     estimatedGap,
     monthlyOpportunityVisits,
+    gapVsCategoryPct,
+    projectedLift90d,
     competitorPressure,
     topFix,
   };
 }
+
+export const citationGapFormulaExplanation = [
+  "We compare your self-reported platform count (0–8) to an industry-average citation rate benchmark.",
+  "Missed AI discovery = monthly traffic × AI search share × your gap vs the category average.",
+  "90-day lift projection assumes closing ~45% of the gap with weekly GEO monitoring and content fixes.",
+  "Competitor domain adds a small pressure modifier — run a free audit for live citation data.",
+] as const;

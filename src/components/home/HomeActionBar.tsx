@@ -25,7 +25,7 @@ export function HomeActionBar() {
             {nav.startAnalysis.label}
           </PillButton>
           <ProductCTA
-            href="/citation-checker"
+            href="/tools/citation-checker"
             variant="accent"
             sublabel="One prompt · no account"
           >

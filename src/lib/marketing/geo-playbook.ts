@@ -15,6 +15,7 @@ export {
   geoPlaybookCurriculum,
   geoSevenDayPlan,
   perplexityCitationPlaybook,
+  buildFullPlaybookChecklist,
 } from "./geo-playbook-content";
 export type {
   GeoChecklistItem,
@@ -119,7 +120,7 @@ export function downloadGeoPlaybook(): void {
 }
 
 export const geoPlaybook = {
-  path: "/geo-playbook",
+  path: "/tools/geo-playbook",
   title:
     "The Complete GEO Playbook: Money Prompts, RAG Citations & Share of Model",
   shortTitle: "GEO Playbook — Complete Guide",

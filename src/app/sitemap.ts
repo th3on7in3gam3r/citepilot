@@ -16,11 +16,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/start",
     "/blog",
     "/product",
-    "/geo-playbook",
+    "/tools/citation-checker",
+    "/tools/citation-gap-calculator",
+    "/tools/geo-playbook",
     "/chatgpt-prompts",
     "/ai-visibility",
-    "/citation-checker",
-    "/tools/citation-gap",
     "/agency",
     "/docs/api",
     "/changelog",
@@ -31,11 +31,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...DASHBOARD_SEO_HUB_PATHS,
   ];
 
+  const toolPaths = new Set([
+    "/tools/citation-checker",
+    "/tools/citation-gap-calculator",
+    "/tools/geo-playbook",
+  ]);
+
   const staticEntries = routes.map((path) => ({
     url: `${base}${path}`,
     lastModified: new Date(),
     changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),
-    priority: path === "" ? 1 : path === "/audit" ? 0.9 : 0.7,
+    priority: path === "" ? 1 : toolPaths.has(path) || path === "/audit" ? 0.9 : 0.7,
   }));
 
   let posts: Awaited<ReturnType<typeof getAllPosts>> = [];

@@ -52,7 +52,7 @@ export function GeoPlaybookPromo() {
               ))}
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <ProductCTA href="/geo-playbook" sublabel="35 min · interactive">
+              <ProductCTA href="/tools/geo-playbook" sublabel="35 min · interactive">
                 Read the GEO Playbook
               </ProductCTA>
               <ProductCTA
@@ -80,7 +80,7 @@ export function GeoPlaybookPromo() {
               ranking.
             </p>
             <Link
-              href="/geo-playbook#geo-perplexity"
+              href="/tools/geo-playbook#geo-perplexity"
               className="mt-6 inline-flex text-sm font-semibold text-accent hover:underline"
             >
               Open the Perplexity playbook →

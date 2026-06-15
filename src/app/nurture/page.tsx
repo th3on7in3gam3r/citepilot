@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Legacy URL — canonical GEO Playbook lives at /geo-playbook */
+/** Legacy URL — canonical GEO Playbook lives at /tools/geo-playbook */
 export default function NurtureRedirectPage() {
-  redirect("/geo-playbook");
+  redirect("/tools/geo-playbook");
 }

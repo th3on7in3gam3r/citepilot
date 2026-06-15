@@ -55,6 +55,7 @@ function TopicPanel({ topic, index }: { topic: GeoModuleTopic; index: number }) 
 }
 
 function ModuleBlock({ mod }: { mod: GeoModule }) {
+  const readMin = Math.max(3, mod.topics.length * 3);
   return (
     <section id={mod.id} className="scroll-mt-28">
       <div className="flex items-start gap-4">
@@ -62,9 +63,14 @@ function ModuleBlock({ mod }: { mod: GeoModule }) {
           {mod.number}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-2xl font-bold leading-tight text-ink sm:text-3xl">
-            {mod.title}
-          </h3>
+          <div className="flex flex-wrap items-center gap-3">
+            <h3 className="font-display text-2xl font-bold leading-tight text-ink sm:text-3xl">
+              {mod.title}
+            </h3>
+            <span className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-medium text-muted">
+              ~{readMin} min read
+            </span>
+          </div>
           <p className="mt-3 text-base leading-relaxed text-muted">{mod.summary}</p>
           <div className="mt-5 space-y-3">
             {mod.topics.map((topic, i) => (

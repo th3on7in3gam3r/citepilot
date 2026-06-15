@@ -32,7 +32,7 @@ export function Hero() {
             <p className="mt-3 text-xs text-muted dark:text-white/40">
               No credit card ·{" "}
               <Link
-                href="/citation-checker"
+                href="/tools/citation-checker"
                 className="text-muted underline decoration-border underline-offset-2 hover:text-ink dark:text-white/55 dark:decoration-white/20 dark:hover:text-white/75"
               >
                 Or try one prompt

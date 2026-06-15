@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  geoImplementationChecklist,
+  buildFullPlaybookChecklist,
   type GeoChecklistItem,
 } from "@/lib/marketing/geo-playbook";
 
-const STORAGE_KEY = "citepilot-geo-checklist-v1";
+const STORAGE_KEY = "citepilot-geo-checklist-v2";
+
+const playbookChecklist = buildFullPlaybookChecklist();
 
 function loadChecked(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -51,10 +53,12 @@ export function GeoGuideChecklist() {
     });
   }, []);
 
-  const total = geoImplementationChecklist.length;
-  const done = checked.size;
+  const total = playbookChecklist.length;
+  const done = [...checked].filter((id) =>
+    playbookChecklist.some((item) => item.id === id),
+  ).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const groups = groupByCategory(geoImplementationChecklist);
+  const groups = groupByCategory(playbookChecklist);
 
   return (
     <div className="space-y-6">
@@ -65,7 +69,7 @@ export function GeoGuideChecklist() {
               Interactive checklist
             </p>
             <p className="font-display mt-1 text-2xl font-bold text-ink">
-              {hydrated ? `${done} / ${total}` : "—"} complete
+              {hydrated ? `${done} of ${total}` : "—"} items complete
             </p>
           </div>
           <p className="text-sm text-muted">

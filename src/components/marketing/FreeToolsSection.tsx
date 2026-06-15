@@ -48,8 +48,8 @@ export function FreeToolsSection({
         <div className="mx-auto mt-10 grid max-w-5xl gap-5 md:grid-cols-3">
           {freeTools.map((tool) => (
             <Link
-              key={tool.href}
-              href={tool.href}
+              key={tool.path}
+              href={tool.path}
               className={`group flex flex-col rounded-2xl border p-6 transition hover:-translate-y-0.5 ${
                 tool.featured
                   ? dark

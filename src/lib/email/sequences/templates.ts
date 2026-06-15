@@ -56,7 +56,7 @@ export function renderSequenceEmail(
   const auditUrl = `${appBaseUrl()}/audit`;
   const pricingUrl = `${appBaseUrl()}/pricing`;
   const dashboard = dashboardUrl("/dashboard");
-  const geoPlaybook = `${appBaseUrl()}/geo-playbook`;
+  const geoPlaybook = `${appBaseUrl()}/tools/geo-playbook`;
   const portalUrl = dashboardUrl("/dashboard/settings");
 
   if (sequence === "free_onboarding") {

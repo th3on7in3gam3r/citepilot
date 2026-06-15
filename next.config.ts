@@ -64,12 +64,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/nurture",
-        destination: "/geo-playbook",
+        destination: "/tools/geo-playbook",
         permanent: true,
       },
       {
         source: "/nurture/:path*",
-        destination: "/geo-playbook/:path*",
+        destination: "/tools/geo-playbook/:path*",
         permanent: true,
       },
       {
