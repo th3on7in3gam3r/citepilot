@@ -333,4 +333,12 @@ body {
   .citepilot-print-report section {
     break-inside: avoid;
   }
+
+  .citepilot-no-print {
+    display: none !important;
+  }
+
+  header.citepilot-no-print {
+    display: none !important;
+  }
 }

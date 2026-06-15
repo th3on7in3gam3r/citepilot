@@ -6,7 +6,6 @@ import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import type { DiscussionThread } from "@/lib/api-types";
-import { markGettingStartedStep } from "@/lib/getting-started";
 import { productFeatures } from "@/lib/features";
 
 const feature = productFeatures.find((f) => f.id === "discussions")!;
@@ -25,7 +24,6 @@ export function DiscussionsPageClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    markGettingStartedStep("visitedDiscussions");
     notifyChecklistUpdate();
   }, []);
 

@@ -107,7 +107,7 @@ export function FleetSettingsPanel({
 
   return (
     <>
-      <Panel title="Fleet — bulk prompt import" className="mt-6">
+      <Panel title="Fleet — bulk prompt import" className="mt-6" id="fleet-import">
         <p className="mb-4 text-sm text-muted">
           Upload a CSV with a <code className="text-xs">prompt</code> column or one
           prompt per line. Imports replace your monitored prompt list.

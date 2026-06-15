@@ -8,7 +8,6 @@ import { useToast } from "@/components/notifications/ToastProvider";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import type { CmsProvider } from "@/lib/cms/types";
-import { markGettingStartedStep } from "@/lib/getting-started";
 
 type QueuePublication = {
   provider: CmsProvider;
@@ -235,7 +234,6 @@ export function ArticleQueuePanel({
             : data.title ?? slug,
         },
       );
-      markGettingStartedStep("publishedCms");
       notifyChecklistUpdate();
       trackEvent("cms_published", { provider, slug });
       await load();

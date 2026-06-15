@@ -7,7 +7,9 @@ import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
+import { DashboardWorkspaceEmpty } from "@/components/dashboard/overview/DashboardWorkspaceEmpty";
 import { DashboardOverviewLead } from "@/components/dashboard/overview/DashboardOverviewLead";
+import { PromptSparkline } from "@/components/dashboard/PromptSparkline";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { PLATFORMS } from "@/lib/dashboard";
@@ -32,6 +34,11 @@ import {
   auditStatus,
   citationTrendStatus,
 } from "@/lib/dashboard-data-status";
+import type { PromptRow } from "@/lib/features";
+import {
+  competitorForPrompt,
+  promptCitationTrend,
+} from "@/lib/dashboard-prompt-trends";
 
 function formatCompact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -274,23 +281,14 @@ function MyDashboardOverviewContent({
     <div className="space-y-5 pb-8">
       <DashboardOverviewLead workspace={workspace} />
 
-      {/* First-run CTA — shown prominently before any data cards */}
-      {!workspace.hasRealAudit && (
-        <div className="rounded-2xl border border-dashed border-accent/40 bg-accent/5 p-6 text-center">
-          <p className="font-display text-lg font-bold text-ink">Run your first audit for live data</p>
-          <p className="mt-2 text-sm text-muted">
-            Charts below use workspace estimates until a GEO audit completes.
-          </p>
-          <Link
-            href="/audit"
-            className="mt-4 inline-flex rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep"
-          >
-            Run citation audit →
-          </Link>
-        </div>
-      )}
-
-      <GettingStartedChecklist workspace={workspace} welcome={false} />
+      {!workspace.hasRealAudit ? (
+        <>
+          <DashboardWorkspaceEmpty workspace={workspace} />
+          <GettingStartedChecklist workspace={workspace} />
+        </>
+      ) : (
+        <>
+      <GettingStartedChecklist workspace={workspace} />
 
       <CopilotDashboardPrompt />
       <DashboardWidgetGrid workspace={workspace} />
@@ -440,7 +438,9 @@ function MyDashboardOverviewContent({
             <thead>
               <tr className="border-b border-[#eef2f6] bg-[#f8fafc]">
                 <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Money prompt</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">4-wk trend</th>
                 <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Status</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">vs Competitor</th>
                 <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Leader</th>
               </tr>
             </thead>
@@ -448,10 +448,17 @@ function MyDashboardOverviewContent({
               {(topPrompts.length
                 ? topPrompts
                 : [{ prompt: workspace.buyerQuestion, cited: false, leader: "—" }]
-              ).map((row) => (
+              ).map((row) => {
+                const promptRow = row as PromptRow;
+                const vs = competitorForPrompt(workspace, promptRow);
+                const trend = promptCitationTrend(workspace, promptRow);
+                return (
                 <tr key={row.prompt} className="bg-white transition-colors duration-100 hover:bg-[#fafbfd]">
                   <td className="px-4 py-3 pr-2 font-medium text-[#0f172a]">
                     {row.prompt.length > 52 ? `${row.prompt.slice(0, 52)}…` : row.prompt}
+                  </td>
+                  <td className="px-4 py-3">
+                    <PromptSparkline values={trend} positive={Boolean(row.cited)} />
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -470,11 +477,21 @@ function MyDashboardOverviewContent({
                       {row.cited ? "Cited" : "Gap"}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`text-[11px] font-semibold ${
+                        vs.clientAhead ? "text-emerald-600" : "text-red-600"
+                      }`}
+                    >
+                      {vs.clientAhead ? "You" : vs.name}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-[#64748b]">
                     <span className="max-w-[180px] truncate block">{row.leader ?? "—"}</span>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>
@@ -823,6 +840,9 @@ function MyDashboardOverviewContent({
           </DashboardCard>
         </div>
       </div>
+
+        </>
+      )}
 
       <QuickFixModal
         isOpen={isFixOpen}

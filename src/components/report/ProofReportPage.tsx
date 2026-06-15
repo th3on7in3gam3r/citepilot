@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { WorkspaceProvider, useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { PLATFORMS } from "@/lib/dashboard";
 import {
@@ -14,6 +13,7 @@ import {
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
 import { defaultWorkspacePreferences } from "@/lib/settings";
+import { site } from "@/lib/site";
 
 export function ProofReportPage() {
   return (
@@ -25,6 +25,7 @@ export function ProofReportPage() {
 
 function ProofReportInner() {
   const { workspace, ready } = useWorkspaceContext();
+  const [copied, setCopied] = useState(false);
   const pdfTitle = workspace
     ? `${workspace.domain} — citation proof report`
     : "Citation proof report";
@@ -37,6 +38,16 @@ function ProofReportInner() {
       document.title = previous;
     };
   }, [pdfTitle, workspace]);
+
+  useEffect(() => {
+    if (!workspace) return;
+    void fetch("/api/onboarding/checklist", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "shared_proof" }),
+    }).catch(() => undefined);
+  }, [workspace]);
 
   if (!ready || !workspace) {
     return (
@@ -67,8 +78,19 @@ function ProofReportInner() {
     window.print();
   }
 
+  async function copyLink() {
+    const url = `${window.location.origin}/report/proof`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  }
+
   return (
-    <div className="min-h-[100dvh] bg-cream print:bg-white citepilot-print-report">
+    <div className="relative min-h-[100dvh] bg-cream print:bg-white citepilot-print-report">
       <header className="border-b border-border bg-white px-6 py-6 print:border-0">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -79,22 +101,23 @@ function ProofReportInner() {
             />
             <p className="mt-3 max-w-2xl text-sm text-muted">
               Share current AI visibility, benchmark position, and next actions with
-              clients or internal teams. Use Save as PDF for a print-ready export.
+              clients or internal teams.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 print:hidden">
-            <Link
-              href="/dashboard/analytics"
+          <div className="flex flex-wrap gap-2 citepilot-no-print">
+            <button
+              type="button"
+              onClick={() => void copyLink()}
               className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface"
             >
-              Back to Analytics
-            </Link>
+              {copied ? "Copied!" : "Copy link"}
+            </button>
             <button
               type="button"
               onClick={exportPdf}
               className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white"
             >
-              Export PDF
+              Export as PDF
             </button>
           </div>
         </div>
@@ -313,6 +336,15 @@ function ProofReportInner() {
       <div className="mx-auto max-w-5xl px-6 pb-10">
         <ReportPoweredByFooter hidePoweredBy={whiteLabel.hidePoweredBy} />
       </div>
+
+      {!whiteLabel.hidePoweredBy && (
+        <div
+          className="pointer-events-none fixed bottom-4 right-4 z-10 rounded-lg border border-border/60 bg-white/90 px-3 py-2 text-[10px] font-semibold text-muted shadow-sm backdrop-blur print:fixed print:bottom-6 print:right-6"
+          aria-hidden
+        >
+          {site.name}
+        </div>
+      )}
     </div>
   );
 }

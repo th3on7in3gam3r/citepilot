@@ -6,6 +6,7 @@ import { CopilotPanel } from "@/components/dashboard/copilot/CopilotPanel";
 import { CopilotProvider, useCopilot } from "@/components/dashboard/copilot/CopilotProvider";
 import { GridFilterProvider } from "@/components/dashboard/copilot/GridFilterProvider";
 import { GlobalFilterModal } from "@/components/dashboard/filters/GlobalFilterModal";
+import { DashboardCommandPalette } from "@/components/dashboard/DashboardCommandPalette";
 import { DashboardRail } from "@/components/dashboard/layout/DashboardRail";
 import { DashboardTopBar } from "@/components/dashboard/layout/DashboardTopBar";
 import { WorkspaceProvider, useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -84,6 +85,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <DashboardShellInner>{children}</DashboardShellInner>
           <CopilotPanel />
           <GlobalFilterModal />
+          <DashboardCommandPalette />
         </CopilotProvider>
       </GridFilterProvider>
     </WorkspaceProvider>

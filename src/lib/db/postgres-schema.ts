@@ -240,4 +240,11 @@ CREATE INDEX IF NOT EXISTS idx_cron_dispatch_job_period ON cron_dispatch_log(job
 CREATE INDEX IF NOT EXISTS idx_cron_dispatch_workspace ON cron_dispatch_log(workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_cms_publications_slug ON cms_publications(post_slug);
+
+CREATE TABLE IF NOT EXISTS user_onboarding (
+  user_id TEXT PRIMARY KEY,
+  dismissed_at TEXT,
+  shared_proof INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
 `;
