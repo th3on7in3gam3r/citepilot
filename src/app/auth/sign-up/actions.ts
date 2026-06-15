@@ -1,7 +1,11 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth/server";
 import { passwordMeetsRequirements } from "@/lib/auth/password-requirements";
+import { claimReferralForUser } from "@/lib/referrals/process";
+import { REFERRAL_COOKIE } from "@/lib/referrals/constants";
+import { ensureUserReferral } from "@/lib/referrals/store";
 import { redirect } from "next/navigation";
 
 function cleanDomain(raw: string): string {
@@ -36,7 +40,7 @@ export async function signUpWithEmail(
     };
   }
 
-  const { error } = await auth.signUp.email({
+  const { data, error } = await auth.signUp.email({
     email,
     name: (formData.get("name") as string) || email.split("@")[0] || "User",
     password,
@@ -44,6 +48,16 @@ export async function signUpWithEmail(
 
   if (error) {
     return { error: error.message ?? "Could not create account" };
+  }
+
+  const userId = data?.user?.id;
+  if (userId) {
+    await ensureUserReferral(userId, email);
+    const cookieStore = await cookies();
+    const refCode = cookieStore.get(REFERRAL_COOKIE)?.value;
+    if (refCode) {
+      await claimReferralForUser(userId, refCode);
+    }
   }
 
   redirect(`/start?domain=${encodeURIComponent(domain)}`);

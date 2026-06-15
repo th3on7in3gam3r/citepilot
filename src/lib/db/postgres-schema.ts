@@ -249,4 +249,29 @@ CREATE TABLE IF NOT EXISTS user_onboarding (
   shared_proof INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS user_referrals (
+  user_id TEXT PRIMARY KEY,
+  referral_code TEXT NOT NULL UNIQUE,
+  referred_by TEXT,
+  referral_count INTEGER NOT NULL DEFAULT 0,
+  credits_earned INTEGER NOT NULL DEFAULT 0,
+  credits_applied INTEGER NOT NULL DEFAULT 0,
+  link_clicks INTEGER NOT NULL DEFAULT 0,
+  email TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_referrals_code ON user_referrals(referral_code);
+CREATE INDEX IF NOT EXISTS idx_user_referrals_referred_by ON user_referrals(referred_by);
+
+CREATE TABLE IF NOT EXISTS referral_attributions (
+  referred_user_id TEXT PRIMARY KEY,
+  referrer_user_id TEXT NOT NULL,
+  signed_up_at TEXT NOT NULL,
+  converted_at TEXT,
+  credit_applied_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_referral_attributions_referrer ON referral_attributions(referrer_user_id);
 `;

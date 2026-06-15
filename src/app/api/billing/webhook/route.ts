@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { upsertBillingAccount } from "@/lib/billing/store";
+import { getBillingByUserId, upsertBillingAccount } from "@/lib/billing/store";
+import { isPaidPlan } from "@/lib/billing/types";
+import { processReferralConversion } from "@/lib/referrals/process";
 import { stripeWebhookSecret } from "@/lib/stripe/config";
 import { captureServerException } from "@/lib/observability/sentry";
 import { getStripe, mapSubscriptionToBilling } from "@/lib/stripe/server";
@@ -13,6 +15,9 @@ async function syncSubscription(
   userId: string,
 ): Promise<void> {
   const mapped = mapSubscriptionToBilling(subscription);
+  const previous = await getBillingByUserId(userId);
+  const wasPaid = isPaidPlan(previous);
+
   await upsertBillingAccount({
     userId,
     stripeCustomerId:
@@ -24,6 +29,11 @@ async function syncSubscription(
     status: mapped.status,
     currentPeriodEnd: mapped.currentPeriodEnd,
   });
+
+  const updated = await getBillingByUserId(userId);
+  if (!wasPaid && isPaidPlan(updated)) {
+    await processReferralConversion(userId);
+  }
 }
 
 export const POST = withApiLogging(async function POST(request: Request) {

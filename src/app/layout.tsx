@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
+import { ReferralRefCapture } from "@/components/referrals/ReferralRefCapture";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
@@ -95,6 +96,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col bg-white text-ink">
         <AnalyticsScripts />
+        <ReferralRefCapture />
         <AppProviders>{children}</AppProviders>
         <CookieConsentBanner />
       </body>

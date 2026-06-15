@@ -73,6 +73,17 @@ export function OnboardingFlow({
   }, []);
 
   useEffect(() => {
+    void fetch("/api/referrals/claim", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    }).catch(() => {
+      /* OAuth signup — claim referral from cookie if present */
+    });
+  }, []);
+
+  useEffect(() => {
     if (!initialDomain) return;
     const clean = initialDomain
       .replace(/^https?:\/\//, "")

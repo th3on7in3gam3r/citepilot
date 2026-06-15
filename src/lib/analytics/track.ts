@@ -13,7 +13,12 @@ export type AnalyticsEvent =
   | "insights_completed"
   | "autopilot_run"
   | "citation_checker_started"
-  | "citation_checker_completed";
+  | "citation_checker_completed"
+  | "referral_link_clicked"
+  | "referral_signup_completed"
+  | "referral_converted_to_paid"
+  | "referral_credit_applied"
+  | "referral_share_clicked";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

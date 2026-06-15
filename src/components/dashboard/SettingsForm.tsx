@@ -9,6 +9,7 @@ import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettings
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
+import { ReferralPanel } from "@/components/dashboard/ReferralPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
   deleteWorkspace,
@@ -801,6 +802,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             <SignOutButton className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-60" />
           </div>
         </Panel>
+
+        {isPilot && <ReferralPanel />}
 
         <BillingPlanPanel />
         <Panel title="Danger zone" className="border-l-4 border-l-red-500">

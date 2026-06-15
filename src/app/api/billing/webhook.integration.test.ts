@@ -2,11 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type Stripe from "stripe";
 
 const upsertBillingAccount = vi.fn().mockResolvedValue(undefined);
+const getBillingByUserId = vi.fn().mockResolvedValue(null);
 const constructEvent = vi.fn();
 const retrieve = vi.fn();
 
 vi.mock("@/lib/billing/store", () => ({
   upsertBillingAccount,
+  getBillingByUserId,
+}));
+
+vi.mock("@/lib/referrals/process", () => ({
+  processReferralConversion: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/stripe/config", async (importOriginal) => {
@@ -31,6 +37,8 @@ vi.mock("@/lib/stripe/server", async (importOriginal) => {
 describe("POST /api/billing/webhook", () => {
   beforeEach(() => {
     upsertBillingAccount.mockClear();
+    getBillingByUserId.mockReset();
+    getBillingByUserId.mockResolvedValue(null);
     constructEvent.mockReset();
     retrieve.mockReset();
   });
@@ -60,6 +68,18 @@ describe("POST /api/billing/webhook", () => {
       },
     });
     retrieve.mockResolvedValue(subscription);
+
+    getBillingByUserId
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        userId: "user-42",
+        stripeCustomerId: "cus_1",
+        stripeSubscriptionId: "sub_1",
+        plan: "pilot",
+        status: "active",
+        currentPeriodEnd: null,
+        updatedAt: new Date().toISOString(),
+      });
 
     const { POST } = await import("@/app/api/billing/webhook/route");
     const res = await POST(
