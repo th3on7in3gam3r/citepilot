@@ -489,6 +489,39 @@ function migrateSchema(db: Database.Database): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_referral_attributions_referrer ON referral_attributions(referrer_user_id);
+
+    CREATE TABLE IF NOT EXISTS email_unsubscribes (
+      user_id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      unsubscribed_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS email_sent (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      sequence_name TEXT NOT NULL,
+      email_number INTEGER NOT NULL,
+      resend_id TEXT,
+      sent_at TEXT NOT NULL,
+      opened_at TEXT,
+      clicked_at TEXT
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_email_sent_dedup ON email_sent(user_id, sequence_name, email_number);
+    CREATE INDEX IF NOT EXISTS idx_email_sent_resend ON email_sent(resend_id);
+
+    CREATE TABLE IF NOT EXISTS email_sequence_queue (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      sequence_name TEXT NOT NULL,
+      email_number INTEGER NOT NULL,
+      scheduled_at TEXT NOT NULL,
+      payload TEXT NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_email_queue_due ON email_sequence_queue(status, scheduled_at);
   `);
 
   const auditCols = db

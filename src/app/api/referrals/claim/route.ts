@@ -6,6 +6,7 @@ import { claimReferralForUser } from "@/lib/referrals/process";
 import { REFERRAL_COOKIE } from "@/lib/referrals/constants";
 import { normalizeReferralCode } from "@/lib/referrals/code";
 import { ensureUserReferral } from "@/lib/referrals/store";
+import { triggerFreeOnboarding } from "@/lib/email/sequences/engine";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 /** Link signed-in user to referrer from cookie or body code (OAuth signup). */
@@ -28,5 +29,6 @@ export const POST = withApiLogging(async function POST(request: Request) {
   }
 
   const result = await claimReferralForUser(userId, code);
+  await triggerFreeOnboarding(userId, sessionUser?.email);
   return NextResponse.json(result);
 });

@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/weekly-ops-report",
       "schedule": "0 15 * * 1"
+    },
+    {
+      "path": "/api/cron/email-sequences",
+      "schedule": "0 10 * * *"
     }
   ]
 }

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getBillingByUserId, upsertBillingAccount } from "@/lib/billing/store";
-import { isPaidPlan } from "@/lib/billing/types";
+import { isPaidPlan, isActiveBillingStatus } from "@/lib/billing/types";
 import { processReferralConversion } from "@/lib/referrals/process";
+import {
+  triggerChurnPrevention,
+  triggerPilotRetention,
+} from "@/lib/email/sequences/engine";
 import { stripeWebhookSecret } from "@/lib/stripe/config";
 import { captureServerException } from "@/lib/observability/sentry";
 import { getStripe, mapSubscriptionToBilling } from "@/lib/stripe/server";
@@ -33,6 +37,17 @@ async function syncSubscription(
   const updated = await getBillingByUserId(userId);
   if (!wasPaid && isPaidPlan(updated)) {
     await processReferralConversion(userId);
+    void triggerPilotRetention(userId).catch((err) =>
+      console.error("Pilot retention sequence failed", err),
+    );
+  }
+
+  const wasActive = previous && isActiveBillingStatus(previous.status);
+  const isPastDue = updated?.status === "past_due";
+  if (wasActive && isPastDue) {
+    void triggerChurnPrevention(userId).catch((err) =>
+      console.error("Churn sequence failed", err),
+    );
   }
 }
 
@@ -80,6 +95,26 @@ export const POST = withApiLogging(async function POST(request: Request) {
         const userId = subscription.metadata?.userId;
         if (!userId) break;
         await syncSubscription(subscription, userId);
+        break;
+      }
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId =
+          typeof invoice.customer === "string"
+            ? invoice.customer
+            : invoice.customer?.id;
+        if (!customerId) break;
+        const row = await import("@/lib/db").then((m) =>
+          m.dbGet<{ user_id: string }>(
+            `SELECT user_id FROM billing_accounts WHERE stripe_customer_id = ?`,
+            [customerId],
+          ),
+        );
+        if (row?.user_id) {
+          void triggerChurnPrevention(row.user_id).catch((err) =>
+            console.error("Churn sequence failed", err),
+          );
+        }
         break;
       }
       default:

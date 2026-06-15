@@ -12,7 +12,9 @@ import {
 } from "@/lib/billing/limits-server";
 import { getBillingByUserId } from "@/lib/billing/store";
 import { getRecentAuditsForWorkspace, runCitationAudit } from "@/lib/audit/run-audit";
+import { createAuditShare } from "@/lib/audit/share";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
+import { triggerPostAuditSequence } from "@/lib/email/sequences/engine";
 import { trackServerEvent } from "@/lib/analytics/track-server";
 import { captureServerException } from "@/lib/observability/sentry";
 import {
@@ -114,6 +116,28 @@ export const POST = withApiLogging(async function POST(request: Request) {
         audit,
         userEmail: sessionUser?.email,
       }).catch((err) => console.error("Audit email failed", err));
+
+      if (userId) {
+        void (async () => {
+          const share = await createAuditShare({
+            auditId: audit.id,
+            workspaceId: body.workspaceId!,
+            userId,
+          });
+          await triggerPostAuditSequence({
+            userId,
+            email: sessionUser?.email,
+            domain: audit.domain,
+            workspaceId: body.workspaceId!,
+            auditId: audit.id,
+            score: audit.score,
+            cited: audit.cited,
+            total: audit.total,
+            gaps: audit.gaps,
+            shareUrl: "url" in share ? share.url : undefined,
+          });
+        })().catch((err) => console.error("Post-audit sequence failed", err));
+      }
 
       const recent = await getRecentAuditsForWorkspace(body.workspaceId, 2);
       const isSecond =

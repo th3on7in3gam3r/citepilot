@@ -15,6 +15,11 @@ vi.mock("@/lib/referrals/process", () => ({
   processReferralConversion: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/lib/email/sequences/engine", () => ({
+  triggerPilotRetention: vi.fn().mockResolvedValue(undefined),
+  triggerChurnPrevention: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/stripe/config", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/stripe/config")>();
   return {

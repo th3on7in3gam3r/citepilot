@@ -6,6 +6,7 @@ import { passwordMeetsRequirements } from "@/lib/auth/password-requirements";
 import { claimReferralForUser } from "@/lib/referrals/process";
 import { REFERRAL_COOKIE } from "@/lib/referrals/constants";
 import { ensureUserReferral } from "@/lib/referrals/store";
+import { triggerFreeOnboarding } from "@/lib/email/sequences/engine";
 import { redirect } from "next/navigation";
 
 function cleanDomain(raw: string): string {
@@ -58,6 +59,7 @@ export async function signUpWithEmail(
     if (refCode) {
       await claimReferralForUser(userId, refCode);
     }
+    await triggerFreeOnboarding(userId, email);
   }
 
   redirect(`/start?domain=${encodeURIComponent(domain)}`);
