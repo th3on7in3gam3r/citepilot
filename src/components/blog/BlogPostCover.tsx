@@ -5,17 +5,27 @@ import { PILLAR_GRADIENTS } from "@/lib/blog/covers";
 
 export function BlogPostCover({
   pillarId,
+  variant = "card",
   className = "",
 }: {
   pillarId: EditorialPillarId;
+  /** card = listing grid; featured = side panel in hero card; thumb = minimal strip */
+  variant?: "card" | "featured" | "thumb";
   className?: string;
 }) {
   const colors = PILLAR_GRADIENTS[pillarId];
   const pillar = EDITORIAL_PILLARS.find((p) => p.id === pillarId);
 
+  const sizeClass =
+    variant === "featured"
+      ? "h-full min-h-[12rem] w-full md:min-h-0"
+      : variant === "thumb"
+        ? "h-28 w-full"
+        : "h-40 w-full sm:h-44";
+
   return (
     <div
-      className={`relative aspect-[16/9] w-full overflow-hidden ${className}`}
+      className={`relative overflow-hidden ${sizeClass} ${className}`}
       style={{
         background: `linear-gradient(135deg, ${colors.from} 0%, ${colors.via} 45%, ${colors.to} 100%)`,
       }}
@@ -28,7 +38,7 @@ export function BlogPostCover({
             "radial-gradient(circle at 20% 80%, rgba(255,255,255,0.25) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 40%)",
         }}
       />
-      {pillar && (
+      {pillar && variant !== "featured" && (
         <span
           className={`absolute bottom-4 left-4 inline-flex rounded-full border border-white/25 bg-black/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${colors.accent} backdrop-blur-sm`}
         >

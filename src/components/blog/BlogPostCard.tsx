@@ -80,18 +80,23 @@ export function BlogPostCard({
   post: BlogPost;
   featured?: boolean;
 }) {
+  if (featured) {
+    return (
+      <article className="overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/10 to-white/[0.04] backdrop-blur-sm transition hover:border-accent/40 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <Link href={`/blog/${post.slug}`} className="block md:min-h-[16rem]">
+          <BlogPostCover pillarId={post.pillar} variant="featured" />
+        </Link>
+        <CardBody post={post} featured />
+      </article>
+    );
+  }
+
   return (
-    <article
-      className={`overflow-hidden rounded-2xl border backdrop-blur-sm transition hover:border-accent/30 ${
-        featured
-          ? "border-accent/30 bg-gradient-to-br from-accent/10 to-white/[0.04]"
-          : "border-white/10 bg-white/[0.04]"
-      }`}
-    >
+    <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm transition hover:border-accent/30">
       <Link href={`/blog/${post.slug}`} className="block">
-        <BlogPostCover pillarId={post.pillar} />
+        <BlogPostCover pillarId={post.pillar} variant="card" />
       </Link>
-      <CardBody post={post} featured={featured} />
+      <CardBody post={post} />
     </article>
   );
 }
