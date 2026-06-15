@@ -11,8 +11,10 @@ import {
   ReportBrandingHeader,
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
+import { ReportThemeStyles } from "@/components/report/ReportThemeStyles";
 import { ProofReportGetOwnCta } from "@/components/report/ProofReportGetOwnCta";
 import { trackEvent } from "@/lib/analytics/track";
+import { reportDocumentTitle } from "@/lib/white-label/theme";
 import { site } from "@/lib/site";
 
 function unlockKey(token: string) {
@@ -143,7 +145,7 @@ export function PublicProofReportPage({ token }: { token: string }) {
 
   const audit = data.audit;
   const generatedAt = new Date(data.createdAt).toLocaleString();
-  const pdfTitle = `${audit.domain} — citation proof report`;
+  const pdfTitle = reportDocumentTitle(audit.domain, data.branding.agencyName);
   const reportUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/report/proof/${token}`
@@ -159,16 +161,15 @@ export function PublicProofReportPage({ token }: { token: string }) {
 
   return (
     <div className="relative min-h-[100dvh] bg-cream print:bg-white citepilot-print-report">
+      <ReportThemeStyles primaryColor={data.branding.primaryColor} />
       <header className="border-b border-border bg-white px-6 py-6 print:border-0">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <ReportBrandingHeader
-              whiteLabel={{
-                agencyName: data.branding.agencyName,
-                logoUrl: data.branding.logoUrl,
-                hidePoweredBy: data.branding.hidePoweredBy,
-              }}
+              branding={data.branding}
+              workspaceId={data.branding.workspaceId}
               domain={audit.domain}
+              title={pdfTitle}
               subtitle={`Proof report · ${audit.domain} · ${generatedAt}`}
             />
           </div>
@@ -279,17 +280,8 @@ export function PublicProofReportPage({ token }: { token: string }) {
       </main>
 
       <div className="mx-auto max-w-5xl px-6 pb-10 citepilot-print-only-watermark">
-        <ReportPoweredByFooter hidePoweredBy={data.branding.hidePoweredBy} />
+        <ReportPoweredByFooter branding={data.branding} />
       </div>
-
-      {!data.branding.hidePoweredBy && (
-        <div
-          className="pointer-events-none fixed bottom-4 right-4 z-10 rounded-lg border border-border/60 bg-white/90 px-3 py-2 text-[10px] font-semibold text-muted shadow-sm backdrop-blur print:fixed print:bottom-6 print:right-6 citepilot-print-watermark"
-          aria-hidden
-        >
-          {site.name} · getcitepilot.com
-        </div>
-      )}
     </div>
   );
 }

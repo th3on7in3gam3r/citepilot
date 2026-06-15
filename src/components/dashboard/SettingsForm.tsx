@@ -12,6 +12,7 @@ import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
 import { ReferralPanel } from "@/components/dashboard/ReferralPanel";
+import { WhiteLabelSettingsPanel } from "@/components/dashboard/WhiteLabelSettingsPanel";
 import { ThemeSettingsPanel } from "@/components/theme/ThemeSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
@@ -158,25 +159,39 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   }
 
   async function sendTestDigest() {
-    if (!workspaceId) return;
+    if (!workspaceId) {
+      toast.error("No workspace selected. Refresh the page and try again.");
+      return;
+    }
     const email = preferences.monitoringEmail.trim();
     if (!email) {
       toast.error("Add a monitoring email first, then save settings.");
       return;
     }
+    if (!isValidMonitoringEmail(email)) {
+      toast.error("Enter a valid monitoring email address.");
+      return;
+    }
+
+    const payload = { workspaceId, email };
+    if (process.env.NODE_ENV === "development") {
+      console.log("test-digest payload:", JSON.stringify(payload));
+    }
+
     setTestDigestState("sending");
     try {
       const res = await fetch("/api/notifications/test-digest", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, email }),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json()) as {
         ok?: boolean;
         error?: string;
         hint?: string;
         sentTo?: string;
+        details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
       };
       if (res.ok && data.ok) {
         setTestDigestState("sent");
@@ -184,9 +199,15 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         setTimeout(() => setTestDigestState("idle"), 4000);
       } else {
         setTestDigestState("error");
-        toast.error(data.error ?? `Failed to send test email (${res.status}).`, {
-          description: data.hint,
-        });
+        const fieldMsg = data.details?.fieldErrors
+          ? Object.entries(data.details.fieldErrors)
+              .flatMap(([field, msgs]) => msgs.map((m) => `${field}: ${m}`))
+              .join(" ")
+          : null;
+        toast.error(
+          fieldMsg ?? data.error ?? `Failed to send test email (${res.status}).`,
+          { description: data.hint },
+        );
         setTimeout(() => setTestDigestState("idle"), 6000);
       }
     } catch {
@@ -194,6 +215,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       toast.error("Network error — could not send test email.");
       setTimeout(() => setTestDigestState("idle"), 4000);
     }
+  }
+
+  function isValidMonitoringEmail(value: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
   }
 
   async function savePreferences(
@@ -543,7 +568,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                 <p className="font-semibold text-ink">Client-ready weekly reports</p>
                 <p className="mt-1 text-muted">
                   Add a <strong>monitoring email</strong> and{" "}
-                  <strong>agency name</strong> (Client reporting below) so Monday
+                  <strong>agency name</strong> (White Label below) so Monday
                   proof report emails include your branding and a share link for
                   stakeholders.
                 </p>
@@ -627,72 +652,25 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           />
         )}
 
-        {(isPilot || isFleet) && (
-          <Panel title="Client reporting">
+        {(isPilot || isFleet) && workspaceId && (
+          <Panel title="White Label">
             <p className="mb-4 text-sm text-muted">
-              Shown on the stakeholder proof report and in weekly proof report
-              emails after Monday re-scans. Fleet can also hide CitePilot branding
-              on share links.
+              Brand proof reports, share links, and weekly digest emails with your agency
+              identity. Fleet unlocks logo upload, colors, custom report domains, and email
+              branding.
             </p>
-            <label className="block text-sm font-semibold text-ink">
-              Agency / client-facing name
-              <input
-                type="text"
-                value={preferences.whiteLabel.agencyName}
-                onChange={(e) =>
-                  setPreferences((p) => ({
-                    ...p,
-                    whiteLabel: { ...p.whiteLabel, agencyName: e.target.value },
-                  }))
-                }
-                placeholder="Your agency or client brand"
-                className={inputClass}
-              />
-            </label>
-            {isFleet && (
-              <>
-                <label className="mt-5 block text-sm font-semibold text-ink">
-                  Logo URL
-                  <input
-                    type="url"
-                    value={preferences.whiteLabel.logoUrl}
-                    onChange={(e) =>
-                      setPreferences((p) => ({
-                        ...p,
-                        whiteLabel: { ...p.whiteLabel, logoUrl: e.target.value },
-                      }))
-                    }
-                    placeholder="https://…/logo.png"
-                    className={inputClass}
-                  />
-                </label>
-                <ul className="mt-5">
-                  <SettingsToggleRow
-                    id="settings-hide-powered-by"
-                    label='Hide “Powered by CitePilot”'
-                    hint="On audit share links and proof report PDF export"
-                    checked={preferences.whiteLabel.hidePoweredBy}
-                    disabled={togglesBusy}
-                    onCheckedChange={(hidePoweredBy) => {
-                      const next = {
-                        ...preferences,
-                        whiteLabel: {
-                          ...preferences.whiteLabel,
-                          hidePoweredBy,
-                        },
-                      };
-                      setPreferences(next);
-                      void savePreferences(
-                        next,
-                        hidePoweredBy
-                          ? "White-label saved — share links will hide CitePilot branding."
-                          : "White-label saved — CitePilot credit will show on share links.",
-                      );
-                    }}
-                  />
-                </ul>
-              </>
-            )}
+            <WhiteLabelSettingsPanel
+              workspaceId={workspaceId}
+              preferences={preferences}
+              isFleet={isFleet}
+              isPilot={isPilot}
+              togglesBusy={savingPrefs}
+              onPreferencesChange={(next, toast) => {
+                setPreferences(next);
+                void savePreferences(next, toast);
+              }}
+              onPreferencesDraft={setPreferences}
+            />
           </Panel>
         )}
 

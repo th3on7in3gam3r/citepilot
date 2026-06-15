@@ -12,8 +12,10 @@ import {
   ReportBrandingHeader,
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
+import { ReportThemeStyles } from "@/components/report/ReportThemeStyles";
 import { ProofReportGetOwnCta } from "@/components/report/ProofReportGetOwnCta";
 import { defaultWorkspacePreferences } from "@/lib/settings";
+import { brandingFromPreferences, reportDocumentTitle } from "@/lib/white-label/theme";
 import { site } from "@/lib/site";
 import { trackEvent } from "@/lib/analytics/track";
 
@@ -28,8 +30,12 @@ export function ProofReportPage() {
 function ProofReportInner() {
   const { workspace, ready } = useWorkspaceContext();
   const [copied, setCopied] = useState(false);
+
+  const whiteLabel =
+    workspace?.preferences?.whiteLabel ?? defaultWorkspacePreferences.whiteLabel;
+  const branding = brandingFromPreferences(whiteLabel);
   const pdfTitle = workspace
-    ? `${workspace.domain} — citation proof report`
+    ? reportDocumentTitle(workspace.domain, branding.agencyName)
     : "Citation proof report";
 
   useEffect(() => {
@@ -76,8 +82,6 @@ function ProofReportInner() {
           "Turn buyer discussion insights into citation-ready content",
         ];
   const generatedAt = new Date().toLocaleString();
-  const whiteLabel =
-    workspace.preferences?.whiteLabel ?? defaultWorkspacePreferences.whiteLabel;
 
   function exportPdf() {
     document.title = pdfTitle;
@@ -97,12 +101,15 @@ function ProofReportInner() {
 
   return (
     <div className="relative min-h-[100dvh] bg-cream print:bg-white citepilot-print-report">
+      <ReportThemeStyles primaryColor={branding.primaryColor} />
       <header className="border-b border-border bg-white px-6 py-6 print:border-0">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <ReportBrandingHeader
-              whiteLabel={whiteLabel}
+              branding={branding}
+              workspaceId={workspace.workspaceId ?? workspace.id}
               domain={workspace.domain}
+              title={pdfTitle}
               subtitle={`Proof report · ${workspace.domain} · generated ${generatedAt}`}
             />
             <p className="mt-3 max-w-2xl text-sm text-muted">
@@ -341,17 +348,8 @@ function ProofReportInner() {
         <ProofReportGetOwnCta domainHint={workspace.domain} />
       </main>
       <div className="mx-auto max-w-5xl px-6 pb-10">
-        <ReportPoweredByFooter hidePoweredBy={whiteLabel.hidePoweredBy} />
+        <ReportPoweredByFooter branding={branding} />
       </div>
-
-      {!whiteLabel.hidePoweredBy && (
-        <div
-          className="pointer-events-none fixed bottom-4 right-4 z-10 rounded-lg border border-border/60 bg-white/90 px-3 py-2 text-[10px] font-semibold text-muted shadow-sm backdrop-blur print:fixed print:bottom-6 print:right-6"
-          aria-hidden
-        >
-          {site.name}
-        </div>
-      )}
     </div>
   );
 }

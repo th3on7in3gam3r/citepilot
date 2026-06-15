@@ -12,6 +12,8 @@ export type SendEmailInput = {
   subject: string;
   html: string;
   text?: string;
+  fromName?: string;
+  replyTo?: string;
 };
 
 const DOMAIN_VERIFY_PATTERNS = [
@@ -38,18 +40,31 @@ export function formatResendError(message: string): string {
   return message;
 }
 
+function applyFromName(baseFrom: string, fromName?: string): string {
+  if (!fromName?.trim()) return baseFrom;
+  const match = baseFrom.match(/<([^>]+)>/);
+  const email = match?.[1]?.trim() ?? baseFrom.trim();
+  return `${fromName.trim()} <${email}>`;
+}
+
 async function sendViaResend(
   input: SendEmailInput,
   from: string,
 ): Promise<{ ok: boolean; error?: string; rawError?: string; id?: string }> {
   const resend = new Resend(resendApiKey()!);
+  const fromHeader = applyFromName(from, input.fromName);
+  const replyTo =
+    input.replyTo?.trim() && isValidRecipientEmail(input.replyTo)
+      ? input.replyTo.trim()
+      : undefined;
   try {
     const { data, error } = await resend.emails.send({
-      from,
+      from: fromHeader,
       to: input.to,
       subject: input.subject,
       html: input.html,
       text: input.text,
+      replyTo,
     });
 
     if (error) {

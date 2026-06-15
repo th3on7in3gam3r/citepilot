@@ -6,7 +6,15 @@ import { dbGet, dbRun } from "@/lib/db";
 import { parsePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
+import type { WhiteLabelBranding } from "@/lib/white-label/types";
+import { buildProofShareUrl } from "@/lib/white-label/domains";
+import { brandingFromPreferences } from "@/lib/white-label/theme";
+
 import type { ShareExpiry } from "@/lib/audit/share-social";
+
+export type ShareBranding = WhiteLabelBranding & {
+  workspaceId?: string;
+};
 
 type ShareRow = {
   token: string;
@@ -21,11 +29,7 @@ export type SharedAuditView = {
   token: string;
   audit: AuditPayload;
   domain: string;
-  branding: {
-    agencyName: string;
-    logoUrl: string;
-    hidePoweredBy: boolean;
-  };
+  branding: ShareBranding;
   createdAt: string;
   expiresAt: string | null;
   requiresPassword: boolean;
@@ -87,10 +91,10 @@ export async function createAuditShare(input: {
     [token, input.auditId, input.workspaceId, now, expiresAt, passwordHash],
   );
 
-  const { appBaseUrl } = await import("@/lib/stripe/config");
+  const prefs = ws.preferences ?? parsePreferences("{}");
   return {
     token,
-    url: `${appBaseUrl()}/report/proof/${token}`,
+    url: buildProofShareUrl(token, prefs),
   };
 }
 
@@ -123,6 +127,19 @@ export async function getAuditOgData(token: string): Promise<AuditOgData | null>
   };
 }
 
+function shareBrandingFromPrefs(
+  prefs: ReturnType<typeof parsePreferences>,
+  workspaceId: string,
+  ws: Awaited<ReturnType<typeof getWorkspaceById>>,
+): ShareBranding {
+  const base = brandingFromPreferences(prefs.whiteLabel);
+  return {
+    ...base,
+    agencyName: base.agencyName || ws?.businessType || "GEO Audit",
+    workspaceId,
+  };
+}
+
 export async function getSharedAudit(
   token: string,
   options?: { skipPasswordGate?: boolean },
@@ -137,7 +154,13 @@ export async function getSharedAudit(
       token: row.token,
       audit: {} as AuditPayload,
       domain: auditForDomain?.domain ?? "",
-      branding: { agencyName: "", logoUrl: "", hidePoweredBy: false },
+      branding: {
+        agencyName: "",
+        logoUrl: "",
+        hidePoweredBy: false,
+        poweredByMode: "agency_via_citepilot",
+        primaryColor: "#0ea5e9",
+      },
       createdAt: row.created_at,
       expiresAt: row.expires_at,
       requiresPassword: false,
@@ -158,11 +181,7 @@ export async function getSharedAudit(
       token: row.token,
       audit: {} as AuditPayload,
       domain: audit.domain,
-      branding: {
-        agencyName: prefs.whiteLabel.agencyName || ws?.businessType || "GEO Audit",
-        logoUrl: prefs.whiteLabel.logoUrl,
-        hidePoweredBy: prefs.whiteLabel.hidePoweredBy,
-      },
+      branding: shareBrandingFromPrefs(prefs, row.workspace_id, ws),
       createdAt: row.created_at,
       expiresAt: row.expires_at,
       requiresPassword: true,
@@ -174,11 +193,7 @@ export async function getSharedAudit(
     token: row.token,
     audit,
     domain: audit.domain,
-    branding: {
-      agencyName: prefs.whiteLabel.agencyName || ws?.businessType || "GEO Audit",
-      logoUrl: prefs.whiteLabel.logoUrl,
-      hidePoweredBy: prefs.whiteLabel.hidePoweredBy,
-    },
+    branding: shareBrandingFromPrefs(prefs, row.workspace_id, ws),
     createdAt: row.created_at,
     expiresAt: row.expires_at,
     requiresPassword: false,

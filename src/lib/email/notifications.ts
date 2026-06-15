@@ -27,10 +27,15 @@ import {
 } from "@/lib/cron/dispatch-log";
 import { appBaseUrl } from "@/lib/stripe/config";
 import { dashboardUrl } from "@/lib/email/config";
-import { sendEmail } from "@/lib/email/send";
+import { sendEmail, isValidRecipientEmail } from "@/lib/email/send";
 import { dbAll, dbGet } from "@/lib/db";
 import { parsePreferences, type WorkspacePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import {
+  buildWhiteLabelEmailHtml,
+  whiteLabelFromName,
+} from "@/lib/white-label/email-layout";
+import { userHasFleetAccess } from "@/lib/billing/access";
 
 const DIGEST_JOB = "weekly-digest";
 
@@ -367,31 +372,50 @@ export async function sendWeeklyDigestEmail(input: {
   previousScore: number | null;
   gaps: string[];
   to: string;
+  whiteLabel?: WorkspacePreferences["whiteLabel"];
+  workspaceId?: string;
+  fleetBranding?: boolean;
 }): Promise<{ ok: boolean; error?: string }> {
   const delta =
     input.previousScore != null
       ? input.score - input.previousScore
       : null;
 
-  return sendEmail({
-    to: input.to,
-    subject: `Weekly citation digest — ${input.domain}`,
-    html: layout(
-      `Weekly digest — ${input.domain}`,
-      `<p>Citation score: <strong>${input.score}/100</strong>${
-        delta != null
-          ? ` (${delta >= 0 ? "+" : ""}${delta} vs last week)`
-          : ""
-      }</p>
+  const bodyHtml = `<p>Citation score: <strong>${input.score}/100</strong>${
+    delta != null
+      ? ` (${delta >= 0 ? "+" : ""}${delta} vs last week)`
+      : ""
+  }</p>
 <p>Money prompt: <em>${input.buyerQuestion || "—"}</em></p>
 <p>Priority gaps:</p><ul>${input.gaps.slice(0, 5).map((g) => `<li>${g}</li>`).join("")}</ul>
 ${
   input.competitors.length
     ? `<p>Competitors on your radar: ${input.competitors.slice(0, 5).join(", ")}</p>`
     : ""
-}`,
-    ),
+}`;
+
+  const wl = input.whiteLabel;
+  const useFleetLayout = input.fleetBranding && wl;
+
+  return sendEmail({
+    to: input.to,
+    subject: `Weekly citation digest — ${input.domain}`,
+    html: useFleetLayout
+      ? buildWhiteLabelEmailHtml({
+          whiteLabel: wl,
+          workspaceId: input.workspaceId,
+          title: `Weekly digest — ${input.domain}`,
+          bodyHtml,
+        })
+      : layout(`Weekly digest — ${input.domain}`, bodyHtml),
     text: `Weekly digest for ${input.domain}: score ${input.score}/100`,
+    fromName: useFleetLayout ? whiteLabelFromName(wl) : undefined,
+    replyTo:
+      useFleetLayout &&
+      wl?.replyToEmail &&
+      isValidRecipientEmail(wl.replyToEmail)
+        ? wl.replyToEmail.trim()
+        : undefined,
   });
 }
 
@@ -468,6 +492,9 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
     try {
       let emailSent = false;
       if (to) {
+        const fleetBranding = row.user_id
+          ? await userHasFleetAccess(row.user_id)
+          : false;
         const sendResult = await sendWeeklyDigestEmail({
           domain: row.domain,
           buyerQuestion: row.buyer_question ?? "",
@@ -476,6 +503,9 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
           previousScore: audits[1]?.score ?? null,
           gaps,
           to,
+          whiteLabel: prefs.whiteLabel,
+          workspaceId: row.id,
+          fleetBranding,
         });
 
         if (sendResult.ok) {

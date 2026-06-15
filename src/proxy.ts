@@ -43,7 +43,58 @@ function withApiCorsHeaders(
   return response;
 }
 
+const PRIMARY_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "getcitepilot.com",
+  "www.getcitepilot.com",
+]);
+
+function hostFromRequest(request: NextRequest): string {
+  return request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? "";
+}
+
+function isPrimaryHost(host: string): boolean {
+  if (!host) return true;
+  if (PRIMARY_HOSTS.has(host)) return true;
+  if (host.endsWith(".vercel.app")) return true;
+  return false;
+}
+
+async function handleShortReportPath(request: NextRequest): Promise<NextResponse | null> {
+  const shortMatch = request.nextUrl.pathname.match(/^\/r\/([^/]+)/);
+  if (!shortMatch) return null;
+
+  const token = shortMatch[1];
+  const host = hostFromRequest(request);
+
+  if (!isPrimaryHost(host)) {
+    try {
+      const verifyUrl = new URL("/api/white-label/resolve-host", request.url);
+      verifyUrl.searchParams.set("host", host);
+      const res = await fetch(verifyUrl.toString(), { cache: "no-store" });
+      if (!res.ok) return NextResponse.next();
+      const json = (await res.json()) as { verified?: boolean };
+      if (!json.verified) {
+        return NextResponse.json(
+          { error: "Custom report domain is not verified for this host." },
+          { status: 404 },
+        );
+      }
+    } catch {
+      return NextResponse.next();
+    }
+  }
+
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = `/report/proof/${token}`;
+  return NextResponse.rewrite(rewriteUrl);
+}
+
 async function handleProxy(request: NextRequest): Promise<NextResponse> {
+  const shortReport = await handleShortReportPath(request);
+  if (shortReport) return shortReport;
+
   const { pathname } = request.nextUrl;
   const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
 
@@ -105,5 +156,6 @@ export const config = {
     "/dashboard/:path*",
     "/auth/sign-in",
     "/auth/sign-up",
+    "/r/:path*",
   ],
 };

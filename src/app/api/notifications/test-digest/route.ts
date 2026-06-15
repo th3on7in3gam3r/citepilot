@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { userHasFleetAccess } from "@/lib/billing/access";
 import { isEmailConfigured } from "@/lib/email/config";
 import { sendWeeklyDigestEmail } from "@/lib/email/notifications";
 import { isValidRecipientEmail } from "@/lib/email/send";
+import { parseTestDigestRequest } from "@/lib/notifications/test-digest-schema";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
 import { dbAll } from "@/lib/db";
@@ -32,35 +34,42 @@ export const POST = withApiLogging(async function POST(request: Request) {
     );
   }
 
-  let body: { workspaceId?: string; email?: string };
+  let body: unknown;
   try {
-    body = (await request.json()) as { workspaceId?: string; email?: string };
+    body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const workspaceId = body.workspaceId?.trim();
-  if (!workspaceId) {
+  const parsed = parseTestDigestRequest(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "workspaceId is required" },
-      { status: 400 },
+      { error: "Validation failed", details: parsed.error.flatten() },
+      { status: 422 },
     );
   }
+
+  const { workspaceId, email: bodyEmail } = parsed.data;
 
   const ws = await getWorkspaceById(workspaceId, userId);
   if (!ws) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const to =
-    body.email?.trim() || ws.preferences.monitoringEmail?.trim() || "";
+  const to = bodyEmail || ws.preferences.monitoringEmail?.trim() || "";
 
   if (!to) {
     return NextResponse.json(
       {
-        ok: false,
-        error:
-          "No monitoring email configured. Add one in Settings → Alerts and save, or enter an address first.",
+        error: "Validation failed",
+        details: {
+          fieldErrors: {
+            email: [
+              "No monitoring email configured. Add one in Settings → Alerts and save, or enter an address first.",
+            ],
+          },
+          formErrors: [],
+        },
       },
       { status: 422 },
     );
@@ -68,7 +77,13 @@ export const POST = withApiLogging(async function POST(request: Request) {
 
   if (!isValidRecipientEmail(to)) {
     return NextResponse.json(
-      { ok: false, error: `Invalid email address: ${to}` },
+      {
+        error: "Validation failed",
+        details: {
+          fieldErrors: { email: [`Invalid email address: ${to}`] },
+          formErrors: [],
+        },
+      },
       { status: 422 },
     );
   }
@@ -86,14 +101,18 @@ export const POST = withApiLogging(async function POST(request: Request) {
     : ["Run a GEO audit to populate real gap data in digests."];
 
   try {
+    const fleetBranding = userId ? await userHasFleetAccess(userId) : false;
     const result = await sendWeeklyDigestEmail({
       domain: ws.domain,
       buyerQuestion: ws.buyerQuestion ?? "",
-      competitors: ws.competitors,
+      competitors: ws.competitors ?? [],
       score,
       previousScore,
       gaps,
       to,
+      whiteLabel: ws.preferences.whiteLabel,
+      workspaceId,
+      fleetBranding,
     });
 
     if (!result.ok) {

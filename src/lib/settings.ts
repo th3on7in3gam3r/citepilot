@@ -1,3 +1,21 @@
+import {
+  DEFAULT_PRIMARY_COLOR,
+  type WhiteLabelPoweredByMode,
+} from "@/lib/white-label/types";
+
+export type WhiteLabelPreferences = {
+  agencyName: string;
+  logoUrl: string;
+  /** @deprecated use poweredByMode */
+  hidePoweredBy: boolean;
+  poweredByMode: WhiteLabelPoweredByMode;
+  primaryColor: string;
+  customReportDomain: string;
+  customDomainVerified: boolean;
+  emailFromName: string;
+  replyToEmail: string;
+};
+
 export type AutopilotPreferences = {
   /** Master switch — weekly rescan + optional Autopilot email (Pilot+) */
   enabled: boolean;
@@ -33,11 +51,7 @@ export type WorkspacePreferences = {
   autopilot: AutopilotPreferences;
   /** Paid monitoring — one prompt per line; falls back to buyer question when empty */
   monitoredPrompts: string[];
-  whiteLabel: {
-    agencyName: string;
-    logoUrl: string;
-    hidePoweredBy: boolean;
-  };
+  whiteLabel: WhiteLabelPreferences;
   /** @deprecated Use geoSnippetFixes — kept for migration only */
   appliedFixes: string[];
   /** JSON-LD blocks included in the hosted GEO snippet script */
@@ -61,6 +75,12 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
     agencyName: "",
     logoUrl: "",
     hidePoweredBy: false,
+    poweredByMode: "agency_via_citepilot",
+    primaryColor: DEFAULT_PRIMARY_COLOR,
+    customReportDomain: "",
+    customDomainVerified: false,
+    emailFromName: "",
+    replyToEmail: "",
   },
   appliedFixes: [],
   geoSnippetFixes: [],
@@ -107,10 +127,9 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
       monitoredPrompts: Array.isArray(parsed.monitoredPrompts)
         ? parsed.monitoredPrompts.filter((p): p is string => typeof p === "string")
         : defaultWorkspacePreferences.monitoredPrompts,
-      whiteLabel: {
-        ...defaultWorkspacePreferences.whiteLabel,
-        ...(parsed.whiteLabel ?? {}),
-      },
+      whiteLabel: normalizeWhiteLabelPreferences(
+        parsed.whiteLabel as Partial<WhiteLabelPreferences> | undefined,
+      ),
       appliedFixes: Array.isArray(parsed.appliedFixes)
         ? parsed.appliedFixes.filter((f): f is string => typeof f === "string")
         : defaultWorkspacePreferences.appliedFixes,
@@ -125,9 +144,44 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
   }
 }
 
+function normalizeWhiteLabelPreferences(
+  raw: Partial<WhiteLabelPreferences> | undefined,
+): WhiteLabelPreferences {
+  const merged = {
+    ...defaultWorkspacePreferences.whiteLabel,
+    ...(raw ?? {}),
+  };
+
+  const poweredByMode: WhiteLabelPoweredByMode =
+    merged.poweredByMode === "agency_primary" ||
+    merged.poweredByMode === "agency_via_citepilot"
+      ? merged.poweredByMode
+      : merged.hidePoweredBy
+        ? "agency_primary"
+        : "agency_via_citepilot";
+
+  const primaryColor =
+    typeof merged.primaryColor === "string" && merged.primaryColor.trim()
+      ? merged.primaryColor.trim()
+      : DEFAULT_PRIMARY_COLOR;
+
+  return {
+    ...merged,
+    poweredByMode,
+    primaryColor,
+    customReportDomain: merged.customReportDomain?.trim() ?? "",
+    customDomainVerified: Boolean(merged.customDomainVerified),
+    emailFromName: merged.emailFromName?.trim() ?? "",
+    replyToEmail: merged.replyToEmail?.trim() ?? "",
+    hidePoweredBy: poweredByMode === "agency_primary",
+  };
+}
+
 export function mergePreferences(
   current: WorkspacePreferences,
-  patch: Partial<WorkspacePreferences>,
+  patch: Partial<Omit<WorkspacePreferences, "whiteLabel">> & {
+    whiteLabel?: Partial<WhiteLabelPreferences>;
+  },
 ): WorkspacePreferences {
   return {
     ...current,

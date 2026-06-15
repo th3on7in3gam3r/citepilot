@@ -578,6 +578,25 @@ function migrateSchema(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_alert_events_workspace ON alert_events(workspace_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_alert_events_user ON alert_events(user_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS white_label_logos (
+      workspace_id TEXT PRIMARY KEY,
+      mime_type TEXT NOT NULL,
+      data_base64 TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS white_label_domains (
+      domain TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      verified_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_white_label_domains_workspace ON white_label_domains(workspace_id);
   `);
 
   const auditCols = db
