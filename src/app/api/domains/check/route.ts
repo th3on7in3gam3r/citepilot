@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
 import { domainFormatStatus } from "@/lib/onboarding/domain-validation";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,7 @@ async function probe(url: string): Promise<boolean> {
   }
 }
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const raw = new URL(request.url).searchParams.get("domain")?.trim();
   if (!raw) {
     return NextResponse.json({ error: "domain required" }, { status: 400 });
@@ -44,4 +45,4 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ reachable, domain });
-}
+});

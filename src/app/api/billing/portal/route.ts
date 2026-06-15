@@ -3,10 +3,11 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { getBillingByUserId } from "@/lib/billing/store";
 import { appBaseUrl, isStripeConfigured } from "@/lib/stripe/config";
 import { getStripe } from "@/lib/stripe/server";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
   }
@@ -38,4 +39,4 @@ export async function POST(request: Request) {
     console.error("POST /api/billing/portal", error);
     return NextResponse.json({ error: "Billing portal failed" }, { status: 500 });
   }
-}
+});

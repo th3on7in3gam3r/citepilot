@@ -6,6 +6,7 @@ import {
   updateBlogPost,
 } from "@/lib/blog/store";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -38,7 +39,7 @@ async function resolvePost(request: Request, slug: string) {
 }
 
 /** PATCH /api/blog/posts/[slug] — edit title, description, seoTitle, markdown */
-export async function PATCH(request: Request, { params }: Context) {
+export const PATCH = withApiLogging(async function PATCH(request: Request, { params }: Context) {
   const { slug } = await params;
   const resolved = await resolvePost(request, slug);
   if (resolved.error) return resolved.error;
@@ -76,14 +77,14 @@ export async function PATCH(request: Request, { params }: Context) {
   });
 
   return NextResponse.json({ ok: true, slug });
-}
+});
 
 /** DELETE /api/blog/posts/[slug] — permanently remove a post */
-export async function DELETE(request: Request, { params }: Context) {
+export const DELETE = withApiLogging(async function DELETE(request: Request, { params }: Context) {
   const { slug } = await params;
   const resolved = await resolvePost(request, slug);
   if (resolved.error) return resolved.error;
 
   await deleteBlogPost(slug);
   return NextResponse.json({ ok: true, slug });
-}
+});

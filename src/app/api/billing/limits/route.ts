@@ -6,10 +6,11 @@ import {
   getPromptLimitsForUser,
   getWorkspaceLimitsForUser,
 } from "@/lib/billing/limits-server";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   try {
     const { userId } = await optionalApiUser(request);
 
@@ -30,4 +31,4 @@ export async function GET(request: Request) {
     console.error("GET /api/billing/limits", error);
     return NextResponse.json({ error: "Could not load limits" }, { status: 500 });
   }
-}
+});

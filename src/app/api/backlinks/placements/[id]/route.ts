@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { updatePlacementStatus } from "@/lib/backlinks/store";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
 type PlacementAction = "accept" | "decline" | "mark_live" | "cancel";
 
-export async function PATCH(
+export const PATCH = withApiLogging(async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -47,4 +48,4 @@ export async function PATCH(
   }
 
   return NextResponse.json({ placement: result.placement });
-}
+});

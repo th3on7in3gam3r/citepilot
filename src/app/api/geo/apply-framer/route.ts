@@ -5,11 +5,12 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import type { FramerCredentials } from "@/lib/cms/types";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -56,4 +57,4 @@ export async function POST(request: Request) {
       error instanceof Error ? error.message : "Could not apply GEO snippet to Framer";
     return NextResponse.json({ error: message }, { status: 400 });
   }
-}
+});

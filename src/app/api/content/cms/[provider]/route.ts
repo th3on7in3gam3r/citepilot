@@ -8,6 +8,7 @@ import { testShopifyConnection } from "@/lib/cms/shopify";
 import { CMS_PROVIDERS, type CmsConnectionSummary, type CmsProvider } from "@/lib/cms/types";
 import { testWordPressConnection } from "@/lib/cms/wordpress";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -64,7 +65,7 @@ async function requireOwnedWorkspace(request: Request, workspaceId: string) {
   return { userId, workspace };
 }
 
-export async function GET(request: Request, { params }: Params) {
+export const GET = withApiLogging(async function GET(request: Request, { params }: Params) {
   const { provider: rawProvider } = await params;
   const provider = parseProvider(rawProvider);
   if (!provider) {
@@ -96,9 +97,9 @@ export async function GET(request: Request, { params }: Params) {
     displayName: connection.displayName,
     siteUrl: connection.siteUrl,
   } satisfies CmsConnectionSummary);
-}
+});
 
-export async function POST(request: Request, { params }: Params) {
+export const POST = withApiLogging(async function POST(request: Request, { params }: Params) {
   try {
     const { provider: rawProvider } = await params;
     const provider = parseProvider(rawProvider);
@@ -187,9 +188,9 @@ export async function POST(request: Request, { params }: Params) {
     const message = error instanceof Error ? error.message : "Could not save connection";
     return NextResponse.json({ error: message }, { status: 400 });
   }
-}
+});
 
-export async function DELETE(request: Request, { params }: Params) {
+export const DELETE = withApiLogging(async function DELETE(request: Request, { params }: Params) {
   const { provider: rawProvider } = await params;
   const provider = parseProvider(rawProvider);
   if (!provider) {
@@ -207,4 +208,4 @@ export async function DELETE(request: Request, { params }: Params) {
 
   await deleteCmsConnection(workspaceId, provider);
   return NextResponse.json({ ok: true });
-}
+});

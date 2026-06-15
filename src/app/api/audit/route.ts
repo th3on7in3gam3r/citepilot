@@ -25,11 +25,12 @@ import {
 } from "@/lib/rate-limit/request";
 import { rateLimitHeaders } from "@/lib/rate-limit/hourly";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const sessionUserId = await getSessionUserId();
     const auditRate = await enforceHourlyRateLimit(
@@ -150,4 +151,4 @@ export async function POST(request: Request) {
     console.error("POST /api/audit", error);
     return NextResponse.json({ error: "Audit failed" }, { status: 500 });
   }
-}
+});

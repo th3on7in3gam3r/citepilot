@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { DiscussionThread } from "@/lib/api-types";
 import { fetchDiscussions } from "@/lib/discussions/fetch-discussions";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
   if (!q) {
@@ -18,4 +19,4 @@ export async function GET(request: Request) {
     console.error("GET /api/discussions", error);
     return NextResponse.json({ threads: [] satisfies DiscussionThread[] });
   }
-}
+});

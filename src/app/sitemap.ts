@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/agency",
     "/docs/api",
     "/changelog",
+    "/status",
     "/terms",
     "/privacy",
     ...vsCompetitors.map((c) => `/vs/${c.slug}`),

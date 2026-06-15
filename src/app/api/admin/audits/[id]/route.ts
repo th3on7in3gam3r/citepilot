@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { deleteAuditRun } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function DELETE(_request: Request, { params }: Params) {
+export const DELETE = withApiLogging(async function DELETE(_request: Request, { params }: Params) {
   try {
     const { id } = await params;
     const ok = await deleteAuditRun(id);
@@ -17,4 +18,4 @@ export async function DELETE(_request: Request, { params }: Params) {
     console.error("DELETE /api/admin/audits/[id]", error);
     return NextResponse.json({ error: "Failed to delete audit" }, { status: 500 });
   }
-}
+});

@@ -75,6 +75,7 @@ export const nav = {
       { label: "vs Moz", href: "/vs/moz" },
     ],
     company: [
+      { label: "System Status", href: "/status" },
       { label: "Changelog", href: "/changelog" },
       { label: "API docs", href: "/docs/api" },
       { label: "Agencies", href: "/agency" },

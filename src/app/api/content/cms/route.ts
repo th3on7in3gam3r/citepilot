@@ -3,6 +3,7 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { listCmsConnections } from "@/lib/cms/store";
 import { CMS_PROVIDERS, type CmsConnectionSummary, type CmsProvider } from "@/lib/cms/types";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,7 @@ function summaryDetail(provider: CmsProvider, defaults: unknown): string | undef
   return undefined;
 }
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId")?.trim();
   if (!workspaceId) {
@@ -61,4 +62,4 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({ providers });
-}
+});

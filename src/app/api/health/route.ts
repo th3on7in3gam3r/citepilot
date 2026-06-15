@@ -4,6 +4,7 @@ import { webflowEnvStatus } from "@/lib/webflow/config";
 import { stripeEnvStatus } from "@/lib/stripe/config";
 import { isEmailConfigured } from "@/lib/email/config";
 import { isGscConfigured } from "@/lib/gsc/config";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -109,7 +110,7 @@ function buildDetailedChecks(): Record<string, Check> {
   return checks;
 }
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   if (!isAuthorizedHealthRequest(request)) {
     return NextResponse.json({ ok: true });
   }
@@ -140,4 +141,4 @@ export async function GET(request: Request) {
     },
     { status: ok ? 200 : 503 },
   );
-}
+});

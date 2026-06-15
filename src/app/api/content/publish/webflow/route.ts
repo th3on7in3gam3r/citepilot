@@ -6,11 +6,12 @@ import { WebflowApiError, publishPostToWebflow } from "@/lib/webflow/client";
 import { formatWebflowError } from "@/lib/webflow/errors";
 import { isWebflowConfigured } from "@/lib/webflow/config";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   if (!isWebflowConfigured()) {
     return NextResponse.json(
       {
@@ -84,4 +85,4 @@ export async function POST(request: Request) {
     console.error("POST /api/content/publish/webflow", error);
     return NextResponse.json({ error: "Webflow publish failed" }, { status: 500 });
   }
-}
+});

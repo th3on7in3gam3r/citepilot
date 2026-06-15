@@ -6,10 +6,11 @@ import {
   enforceHourlyRateLimit,
 } from "@/lib/rate-limit/request";
 import { addWaitlistEmail } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const rate = await enforceHourlyRateLimit(
       `waitlist:ip:${clientIpFromRequest(request)}`,
@@ -34,4 +35,4 @@ export async function POST(request: Request) {
     console.error("POST /api/waitlist", error);
     return NextResponse.json({ error: "Failed to join waitlist" }, { status: 500 });
   }
-}
+});

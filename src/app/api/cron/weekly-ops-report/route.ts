@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { requireCronAuth } from "@/lib/cron/auth";
 import { cronPeriodKey, recordCronDispatch } from "@/lib/cron/dispatch-log";
 import { OPS_REPORT_JOB, sendWeeklyOpsReport } from "@/lib/email/ops-report";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const authError = requireCronAuth(request);
   if (authError) return authError;
 
@@ -29,4 +30,4 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ ok: true, stats: result.stats });
-}
+});

@@ -12,10 +12,11 @@ import {
   stripePilotPriceId,
 } from "@/lib/stripe/config";
 import { getStripe } from "@/lib/stripe/server";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json(
       { error: "Stripe not configured — set STRIPE_SECRET_KEY and STRIPE_PILOT_PRICE_ID" },
@@ -95,4 +96,4 @@ export async function POST(request: Request) {
     console.error("POST /api/billing/checkout", error);
     return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
   }
-}
+});

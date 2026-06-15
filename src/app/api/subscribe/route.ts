@@ -6,10 +6,11 @@ import {
   clientIpFromRequest,
   enforceHourlyRateLimit,
 } from "@/lib/rate-limit/request";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const rate = await enforceHourlyRateLimit(
       `subscribe:ip:${clientIpFromRequest(request)}`,
@@ -40,4 +41,4 @@ export async function POST(request: Request) {
     console.error("POST /api/subscribe", error);
     return NextResponse.json({ error: "Subscribe failed" }, { status: 500 });
   }
-}
+});

@@ -7,12 +7,13 @@ import {
   getWorkspaceById,
   toSnapshot,
 } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(request: Request, { params }: Params) {
+export const GET = withApiLogging(async function GET(request: Request, { params }: Params) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -40,9 +41,9 @@ export async function GET(request: Request, { params }: Params) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function PATCH(request: Request, { params }: Params) {
+export const PATCH = withApiLogging(async function PATCH(request: Request, { params }: Params) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -70,9 +71,9 @@ export async function PATCH(request: Request, { params }: Params) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE(request: Request, { params }: Params) {
+export const DELETE = withApiLogging(async function DELETE(request: Request, { params }: Params) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -93,4 +94,4 @@ export async function DELETE(request: Request, { params }: Params) {
       { status: 500 },
     );
   }
-}
+});

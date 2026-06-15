@@ -5,10 +5,11 @@ import {
   createFleetApiKey,
   listFleetApiKeys,
 } from "@/lib/fleet/api-keys";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const user = await requireApiUser(request);
   if (user instanceof NextResponse) return user;
   const userId = apiUserId(user);
@@ -24,9 +25,9 @@ export async function GET(request: Request) {
 
   const keys = await listFleetApiKeys(userId);
   return NextResponse.json({ keys });
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   const user = await requireApiUser(request);
   if (user instanceof NextResponse) return user;
   const userId = apiUserId(user);
@@ -53,4 +54,4 @@ export async function POST(request: Request) {
     key: created,
     message: "Copy this key now — it will not be shown again.",
   });
-}
+});

@@ -21,6 +21,7 @@ import {
 } from "@/lib/cms/types";
 import { publishPostToWordPress } from "@/lib/cms/wordpress";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -31,7 +32,7 @@ function parseProvider(value: string): CmsProvider | null {
   return CMS_PROVIDERS.includes(value as CmsProvider) ? (value as CmsProvider) : null;
 }
 
-export async function POST(request: Request, { params }: Params) {
+export const POST = withApiLogging(async function POST(request: Request, { params }: Params) {
   try {
     const { provider: rawProvider } = await params;
     const provider = parseProvider(rawProvider);
@@ -145,4 +146,4 @@ export async function POST(request: Request, { params }: Params) {
     console.error("POST /api/content/publish/[provider]", error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { setNetworkOptIn } from "@/lib/backlinks/store";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   const user = await requireApiUser(request);
   if (user instanceof NextResponse) return user;
   const userId = apiUserId(user);
@@ -33,4 +34,4 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ network });
-}
+});

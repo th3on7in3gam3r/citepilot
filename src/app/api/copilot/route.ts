@@ -21,13 +21,14 @@ import {
   toSnapshot,
   updateWorkspace,
 } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 type CopilotKind = "prioritize" | "explain-gap";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -171,4 +172,4 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
+});

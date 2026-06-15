@@ -3,10 +3,11 @@ import { optionalApiUser } from "@/lib/auth/api";
 import { getBillingByUserId } from "@/lib/billing/store";
 import { isFleetPlan, isPaidPlan, isPilotPlan, planDisplayName } from "@/lib/billing/types";
 import { isStripeConfigured } from "@/lib/stripe/config";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   try {
     const { userId, signedIn } = await optionalApiUser(request);
 
@@ -42,4 +43,4 @@ export async function GET(request: Request) {
     console.error("GET /api/billing/status", error);
     return NextResponse.json({ error: "Could not load billing status" }, { status: 500 });
   }
-}
+});

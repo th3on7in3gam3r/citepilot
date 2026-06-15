@@ -3,10 +3,11 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { buildGscAuthUrl } from "@/lib/gsc/client";
 import { isGscConfigured } from "@/lib/gsc/config";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   if (!isGscConfigured()) {
     return NextResponse.json(
       { error: "Google Search Console not configured on server" },
@@ -37,4 +38,4 @@ export async function GET(request: Request) {
   ).toString("base64url");
 
   return NextResponse.json({ url: buildGscAuthUrl(state) });
-}
+});

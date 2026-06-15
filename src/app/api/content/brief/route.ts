@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { buildArticleBrief } from "@/lib/content-strategy";
 import type { ArticleBriefInput } from "@/lib/content-strategy";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const body = (await request.json()) as Partial<ArticleBriefInput>;
     if (!body.topic?.trim()) {
@@ -29,4 +30,4 @@ export async function POST(request: Request) {
     console.error("POST /api/content/brief", error);
     return NextResponse.json({ error: "Failed to build brief" }, { status: 500 });
   }
-}
+});

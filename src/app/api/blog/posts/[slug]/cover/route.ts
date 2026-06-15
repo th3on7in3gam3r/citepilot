@@ -3,6 +3,7 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { generateBlogCoverDataUrl } from "@/lib/blog/generate-cover";
 import { getGeneratedPostBySlug, updateBlogPost } from "@/lib/blog/store";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -10,7 +11,7 @@ export const maxDuration = 60;
 type Context = { params: Promise<{ slug: string }> };
 
 /** POST /api/blog/posts/[slug]/cover — AI-generate a cover image (DALL·E 3) */
-export async function POST(request: Request, { params }: Context) {
+export const POST = withApiLogging(async function POST(request: Request, { params }: Context) {
   const { slug } = await params;
   const user = await requireApiUser(request);
   if (user instanceof NextResponse) return user;
@@ -54,4 +55,4 @@ export async function POST(request: Request, { params }: Context) {
     coverImageUrl: result.coverImageUrl,
     coverImageAlt: result.coverImageAlt,
   });
-}
+});

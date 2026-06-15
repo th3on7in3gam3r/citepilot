@@ -17,13 +17,14 @@ import {
 } from "@/lib/rate-limit/hourly";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function POST(request: Request, { params }: Params) {
+export const POST = withApiLogging(async function POST(request: Request, { params }: Params) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -154,4 +155,4 @@ export async function POST(request: Request, { params }: Params) {
       { status: 500 },
     );
   }
-}
+});

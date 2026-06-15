@@ -8,10 +8,11 @@ import {
 } from "@/lib/blog/store";
 import { listCmsPublicationsForPosts } from "@/lib/cms/store";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId")?.trim();
   const scope = searchParams.get("scope")?.trim();
@@ -82,4 +83,4 @@ export async function GET(request: Request) {
       })),
     })),
   });
-}
+});

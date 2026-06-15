@@ -5,10 +5,11 @@ import {
   listRecentWorkspaces,
   listWaitlist,
 } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export const GET = withApiLogging(async function GET() {
   try {
     const stats = await getAdminStats();
     const workspaces = await listRecentWorkspaces(10);
@@ -32,4 +33,4 @@ export async function GET() {
     console.error("GET /api/admin/stats", error);
     return NextResponse.json({ error: "Failed to load admin stats" }, { status: 500 });
   }
-}
+});

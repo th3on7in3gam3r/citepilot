@@ -18,10 +18,11 @@ import {
   listWorkspacesForUser,
   toSnapshot,
 } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -73,9 +74,9 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -135,4 +136,4 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
+});

@@ -4,6 +4,7 @@ import { upsertBillingAccount } from "@/lib/billing/store";
 import { stripeWebhookSecret } from "@/lib/stripe/config";
 import { captureServerException } from "@/lib/observability/sentry";
 import { getStripe, mapSubscriptionToBilling } from "@/lib/stripe/server";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,7 @@ async function syncSubscription(
   });
 }
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   // Intentionally not app-rate-limited: Stripe signs payloads and retries on failure.
   const secret = stripeWebhookSecret();
   if (!secret) {
@@ -84,4 +85,4 @@ export async function POST(request: Request) {
     console.error("Stripe webhook handler", event.type, error);
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
-}
+});

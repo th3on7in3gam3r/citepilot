@@ -10,10 +10,11 @@ import {
   gettingStartedCompletion,
   shouldShowChecklist,
 } from "@/lib/getting-started";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,9 +40,9 @@ export async function GET(request: Request) {
       allDone,
     }),
   });
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withApiLogging(async function PATCH(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -58,4 +59,4 @@ export async function PATCH(request: Request) {
   }
 
   return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-}
+});

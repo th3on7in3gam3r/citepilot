@@ -4,6 +4,7 @@ import { getWorkspaceById } from "@/lib/server/workspace";
 import { sendWeeklyDigestEmail } from "@/lib/email/notifications";
 import { parsePreferences } from "@/lib/settings";
 import { dbAll, dbGet } from "@/lib/db";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -23,7 +24,7 @@ type WorkspaceRow = {
  * Sends a one-off weekly digest email to the monitoring email configured for
  * the given workspace. Requires authentication.
  */
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (auth instanceof NextResponse) return auth;
 
@@ -99,4 +100,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true, sentTo: to });
-}
+});

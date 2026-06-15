@@ -13,11 +13,12 @@ import type {
   GeneratedArticleRequest,
 } from "@/lib/content-strategy";
 import { captureServerException } from "@/lib/observability/sentry";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) {
     return NextResponse.json(
@@ -143,4 +144,4 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
     console.error("POST /api/content/generate", error);
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });
   }
-}
+});

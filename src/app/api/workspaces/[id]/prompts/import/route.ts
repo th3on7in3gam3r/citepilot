@@ -6,12 +6,13 @@ import { planForUser } from "@/lib/billing/limits-server";
 import { requireFleetAccess } from "@/lib/fleet/request-auth";
 import { mergePreferences } from "@/lib/settings";
 import { getWorkspaceById, updateWorkspace } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function POST(request: Request, { params }: Params) {
+export const POST = withApiLogging(async function POST(request: Request, { params }: Params) {
   try {
     const auth = await requireFleetAccess(request);
     if (auth instanceof NextResponse) return auth;
@@ -73,4 +74,4 @@ export async function POST(request: Request, { params }: Params) {
     console.error("POST /api/workspaces/[id]/prompts/import", error);
     return NextResponse.json({ error: "Failed to import prompts" }, { status: 500 });
   }
-}
+});
