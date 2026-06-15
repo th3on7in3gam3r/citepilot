@@ -26,7 +26,7 @@ export function FeatureSuite() {
   }, []);
 
   return (
-    <Section id="features" className="bg-cream dark:bg-background">
+    <Section id="features" className="bg-background">
       <SectionHeading
         eyebrow="Product"
         title="A powerful suite of features — all in one place."

@@ -26,7 +26,7 @@ const icons: Record<string, ReactNode> = {
 
 export function Pillars() {
   return (
-    <Section id="pillars" className="bg-white dark:bg-background">
+    <Section id="pillars" className="bg-background">
       <SectionHeading
         eyebrow="Product"
         title="Three pillars. One outcome: more citations."

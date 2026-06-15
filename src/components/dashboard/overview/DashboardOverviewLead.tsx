@@ -11,7 +11,7 @@ export function DashboardOverviewLead({ workspace }: { workspace: WorkspaceSnaps
     : null;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <p className="text-sm text-muted">
           Tracking{" "}

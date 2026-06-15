@@ -4,7 +4,7 @@ import { faq } from "@/lib/content";
 
 export function FAQ() {
   return (
-    <Section id="faq" className="bg-white dark:bg-background">
+    <Section id="faq" className="bg-background">
       <SectionHeading
         eyebrow="FAQ"
         title="Questions teams ask before switching"

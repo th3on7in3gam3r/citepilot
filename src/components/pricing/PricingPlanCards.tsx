@@ -72,7 +72,7 @@ export function PricingPlanCards() {
             onClick={() => setInterval("monthly")}
             className={`rounded-full px-5 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
               interval === "monthly"
-                ? "bg-foreground text-background dark:bg-white dark:text-ink"
+                ? "bg-foreground text-background preserve-light-surface dark:bg-white dark:text-on-light"
                 : "text-muted hover:text-foreground dark:text-white/65 dark:hover:text-white"
             }`}
           >
@@ -83,7 +83,7 @@ export function PricingPlanCards() {
             onClick={() => setInterval("annual")}
             className={`rounded-full px-5 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
               interval === "annual"
-                ? "bg-foreground text-background dark:bg-white dark:text-ink"
+                ? "bg-foreground text-background preserve-light-surface dark:bg-white dark:text-on-light"
                 : "text-muted hover:text-foreground dark:text-white/65 dark:hover:text-white"
             }`}
           >

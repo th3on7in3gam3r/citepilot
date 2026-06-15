@@ -18,7 +18,7 @@ export function SectionHeading({
   const alignClass = align === "center" ? "mx-auto text-center" : "text-left";
   const Heading = headingLevel;
   const headingClass = `font-display mt-3 text-3xl font-bold tracking-tight md:mt-4 md:text-4xl lg:text-[2.75rem] ${
-    light ? "text-white" : "text-ink"
+    light ? "text-white" : "text-foreground"
   }`;
 
   return (

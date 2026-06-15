@@ -36,7 +36,7 @@ function TestimonialCard({
 
 export function Testimonials() {
   return (
-    <Section className="bg-cream dark:bg-background">
+    <Section className="bg-background">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-4xl lg:text-[2.75rem]">
           From CitePilot customers

@@ -36,7 +36,7 @@ export function CustomerLogosBar() {
 
   return (
     <section
-      className="border-b border-border bg-cream py-8 dark:bg-background md:py-10"
+      className="border-b border-border bg-background py-8 md:py-10"
       aria-label="Trusted by teams using CitePilot"
     >
       <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted">

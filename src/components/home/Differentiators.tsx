@@ -4,7 +4,7 @@ import { differentiators } from "@/lib/content";
 
 export function Differentiators() {
   return (
-    <Section className="bg-cream dark:bg-background">
+    <Section className="bg-background">
       <SectionHeading
         eyebrow="Why CitePilot"
         title="Monitor. Fix. Prove. — not monitor-only."

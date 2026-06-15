@@ -7,7 +7,7 @@ export function HomeActionBar() {
   return (
     <section
       id="get-started"
-      className="relative z-10 border-t border-border/80 bg-cream pb-14 pt-10 dark:bg-background md:pb-16 md:pt-12"
+      className="relative z-10 border-t border-border/80 bg-background pb-14 pt-10 md:pb-16 md:pt-12"
       aria-label="Get started"
     >
       <Container>
