@@ -81,6 +81,14 @@ export function OnboardingFlow({
     }).catch(() => {
       /* OAuth signup — claim referral from cookie if present */
     });
+    void fetch("/api/widget/badge-referral", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    }).catch(() => {
+      /* OAuth signup — badge referral from cookie if present */
+    });
   }, []);
 
   useEffect(() => {

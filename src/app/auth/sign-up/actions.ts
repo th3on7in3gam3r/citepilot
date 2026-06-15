@@ -7,6 +7,7 @@ import { claimReferralForUser } from "@/lib/referrals/process";
 import { REFERRAL_COOKIE } from "@/lib/referrals/constants";
 import { ensureUserReferral } from "@/lib/referrals/store";
 import { triggerFreeOnboarding } from "@/lib/email/sequences/engine";
+import { trackBadgeReferralSignup } from "@/lib/widget/track-referral";
 import { redirect } from "next/navigation";
 
 function cleanDomain(raw: string): string {
@@ -59,6 +60,7 @@ export async function signUpWithEmail(
     if (refCode) {
       await claimReferralForUser(userId, refCode);
     }
+    await trackBadgeReferralSignup(userId);
     await triggerFreeOnboarding(userId, email);
   }
 

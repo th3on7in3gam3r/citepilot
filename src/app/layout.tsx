@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
 import { ReferralRefCapture } from "@/components/referrals/ReferralRefCapture";
+import { BadgeRefCapture } from "@/components/widget/BadgeRefCapture";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
@@ -99,6 +100,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <AnalyticsScripts />
         <ReferralRefCapture />
+        <BadgeRefCapture />
         <AppProviders>{children}</AppProviders>
         <CookieConsentBanner />
       </body>

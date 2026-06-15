@@ -28,7 +28,10 @@ export type AnalyticsEvent =
   | "checkout_completed"
   | "upgrade_modal_shown"
   | "upgrade_modal_clicked"
-  | "upgrade_modal_dismissed";
+  | "upgrade_modal_dismissed"
+  | "badge_impression"
+  | "badge_click"
+  | "badge_referral_signup";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 
