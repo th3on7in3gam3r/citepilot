@@ -43,7 +43,20 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    const previewCsp = securityHeaders.map((header) =>
+      header.key === "Content-Security-Policy"
+        ? {
+            ...header,
+            value: header.value.replace("frame-ancestors 'none'", "frame-ancestors 'self'"),
+          }
+        : header,
+    );
+
     return [
+      {
+        source: "/report/proof/preview",
+        headers: previewCsp,
+      },
       {
         source: "/(.*)",
         headers: securityHeaders,

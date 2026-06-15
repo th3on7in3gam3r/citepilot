@@ -7,7 +7,8 @@ function isBenignExtensionMessage(args: unknown[]): boolean {
   return (
     text.includes("Could not establish connection") ||
     text.includes("Receiving end does not exist") ||
-    text.includes("runtime.lastError")
+    text.includes("runtime.lastError") ||
+    text.includes("Unchecked runtime.lastError")
   );
 }
 
@@ -27,9 +28,19 @@ export function SuppressExtensionConsoleNoise() {
       originalWarn(...args);
     };
 
+    const onWindowError = (event: ErrorEvent) => {
+      const message = event.message ?? "";
+      if (isBenignExtensionMessage([message])) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener("error", onWindowError);
+
     return () => {
       console.error = originalError;
       console.warn = originalWarn;
+      window.removeEventListener("error", onWindowError);
     };
   }, []);
 

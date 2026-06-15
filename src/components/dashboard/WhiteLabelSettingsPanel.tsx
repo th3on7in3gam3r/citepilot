@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
+import { WhiteLabelProofPreview } from "@/components/report/WhiteLabelProofPreview";
 import type { WorkspacePreferences } from "@/lib/settings";
 import {
   DEFAULT_PRIMARY_COLOR,
@@ -398,11 +399,9 @@ export function WhiteLabelSettingsPanel({
           Preview uses your unsaved settings from this browser (not saved to the database until you
           blur a field or toggle).
         </p>
-        <iframe
-          title="White-label report preview"
-          src="/report/proof/preview?embed=1"
-          className="mt-3 h-[520px] w-full rounded-xl border border-border bg-white"
-        />
+        <div className="mt-3 max-h-[520px] overflow-y-auto">
+          <WhiteLabelProofPreview branding={previewState} embed />
+        </div>
       </div>
     </div>
   );
