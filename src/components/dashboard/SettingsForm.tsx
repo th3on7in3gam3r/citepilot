@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
-import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
+import { EmailAlertsSettingsPanel } from "@/components/dashboard/EmailAlertsSettingsPanel";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
@@ -559,111 +559,36 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               className={inputClass}
             />
           </label>
-          {preferences.monitoringEmail.trim() && (
-            <div className="mt-3 flex items-center gap-3">
-              <button
-                type="button"
-                disabled={testDigestState === "sending"}
-                onClick={() => void sendTestDigest()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-ink transition hover:bg-slate-100 disabled:opacity-50"
-              >
-                {testDigestState === "sending" ? (
-                  <>
-                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    Sending…
-                  </>
-                ) : testDigestState === "sent" ? (
-                  <>
-                    <svg className="h-3.5 w-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Sent!
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    Send test digest
-                  </>
-                )}
-              </button>
-              <span className="text-xs text-muted">Sends a real email now to verify your address</span>
-            </div>
-          )}
-          <ul className="mt-4 space-y-3">
-            {(
-              [
-                {
-                  key: "weeklyDigest" as const,
-                  label: "Weekly citation digest",
-                  hint: "Summary of score changes and top gaps",
-                },
-                {
-                  key: "auditCompleteEmail" as const,
-                  label: "Audit complete alerts",
-                  hint: "Notify when a re-scan finishes",
-                },
-                {
-                  key: "scoreDropAlerts" as const,
-                  label: "Citation score drop alerts",
-                  hint: "Email when score falls 5+ points after a re-scan",
-                },
-                {
-                  key: "competitorMoveAlerts" as const,
-                  label: "Competitor move alerts",
-                  hint: "Email when prompts are lost, platforms slip, or competitor gaps appear (Pilot+)",
-                },
-                {
-                  key: "proofReportEmail" as const,
-                  label: "Weekly proof report email",
-                  hint: "After Monday re-scan: score delta, proof report link, and client share URL (Pilot+)",
-                },
-                {
-                  key: "discussionAlerts" as const,
-                  label: "Discussion opportunity alerts",
-                  hint: "HN & Stack Overflow threads in your niche",
-                },
-              ] as const
-            ).map((item) => {
-              const needsPilot =
-                (item.key === "competitorMoveAlerts" ||
-                  item.key === "proofReportEmail") &&
-                !isPilot &&
-                !isFleet;
-              return (
-                <SettingsToggleRow
-                  key={item.key}
-                  id={`settings-${item.key}`}
-                  label={item.label}
-                  hint={item.hint}
-                  checked={preferences[item.key]}
-                  disabled={togglesBusy || needsPilot}
-                  onCheckedChange={(enabled) => {
-                    if (needsPilot) return;
-                    const next = {
-                      ...preferences,
-                      [item.key]: enabled,
-                    };
-                    setPreferences(next);
-                    void savePreferences(next);
-                  }}
-                />
-              );
-            })}
-          </ul>
-          {!isPilot && !isFleet && (
-            <div className="mt-4">
-              <UpgradePrompt
-                compact
-                title="Competitor move alerts (Pilot+)"
-                description="Get email when you lose prompts, platforms slip, or new competitor gaps appear."
-              />
-            </div>
-          )}
+          <EmailAlertsSettingsPanel
+            embedded
+            preferences={preferences}
+            togglesBusy={togglesBusy}
+            onPreferenceChange={(next) => {
+              setPreferences(next);
+              void savePreferences(next);
+            }}
+            testDigestButton={
+              preferences.monitoringEmail.trim() ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={testDigestState === "sending"}
+                    onClick={() => void sendTestDigest()}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-ink transition hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    {testDigestState === "sending"
+                      ? "Sending…"
+                      : testDigestState === "sent"
+                        ? "Sent!"
+                        : "Send test digest"}
+                  </button>
+                  <span className="text-xs text-muted">
+                    Sends a real email now to verify your address
+                  </span>
+                </div>
+              ) : undefined
+            }
+          />
         </Panel>
 
         {workspaceId && (

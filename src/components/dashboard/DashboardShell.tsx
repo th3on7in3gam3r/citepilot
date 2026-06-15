@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { DashboardMobileNav } from "@/components/dashboard/DashboardMobileNav";
 import { CopilotPanel } from "@/components/dashboard/copilot/CopilotPanel";
@@ -12,6 +13,9 @@ import { DashboardTopBar } from "@/components/dashboard/layout/DashboardTopBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { WorkspaceProvider, useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { BillingProvider } from "@/contexts/BillingContext";
+import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
+import { DashboardUsageLimitBanner } from "@/components/dashboard/DashboardUsageLimitBanner";
+import { DashboardUpgradeCelebration } from "@/components/dashboard/DashboardUpgradeCelebration";
 import { dashboardNav } from "@/lib/dashboard";
 
 function pageHeader(pathname: string): {
@@ -73,6 +77,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           <DashboardTopBar title={title} backHref={backHref} backLabel={backLabel} />
         </div>
         <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8">
+          <DashboardUsageLimitBanner />
           {children}
         </main>
       </div>
@@ -83,16 +88,21 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <BillingProvider>
-      <WorkspaceProvider>
-        <GridFilterProvider>
-          <CopilotProvider>
-            <DashboardShellInner>{children}</DashboardShellInner>
-            <CopilotPanel />
-            <GlobalFilterModal />
-            <DashboardCommandPalette />
-          </CopilotProvider>
-        </GridFilterProvider>
-      </WorkspaceProvider>
+      <UpgradeModalProvider>
+        <WorkspaceProvider>
+          <GridFilterProvider>
+            <CopilotProvider>
+              <DashboardShellInner>{children}</DashboardShellInner>
+              <Suspense fallback={null}>
+                <DashboardUpgradeCelebration />
+              </Suspense>
+              <CopilotPanel />
+              <GlobalFilterModal />
+              <DashboardCommandPalette />
+            </CopilotProvider>
+          </GridFilterProvider>
+        </WorkspaceProvider>
+      </UpgradeModalProvider>
     </BillingProvider>
   );
 }

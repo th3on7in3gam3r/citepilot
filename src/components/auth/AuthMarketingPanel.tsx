@@ -14,7 +14,7 @@ export function AuthMarketingPanel() {
   const isSignUp = pathname?.includes("/sign-up");
 
   return (
-    <div className="hidden lg:flex flex-col justify-between p-12 bg-cream min-h-[100dvh]">
+    <div className="hidden min-h-[100dvh] flex-col justify-between bg-cream p-12 lg:flex dark:border-r dark:border-[#222]">
       <Logo />
 
       {isSignUp ? (
@@ -22,15 +22,15 @@ export function AuthMarketingPanel() {
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
             Join CitePilot
           </p>
-          <h2 className="font-display mt-3 text-4xl font-bold text-ink leading-tight">
+          <h2 className="font-display mt-3 text-4xl font-bold leading-tight text-ink">
             Start tracking your AI citation share
           </h2>
           <p className="mt-4 text-base text-muted">
             Teams use CitePilot to monitor money prompts across ChatGPT,
             Perplexity, and Google AI — then prove when citations move.
           </p>
-          <figure className="mt-8 rounded-2xl border border-border bg-white p-6 shadow-sm">
-            <blockquote className="text-sm leading-relaxed text-ink/85">
+          <figure className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm dark:border-[#222] dark:bg-[#111]">
+            <blockquote className="text-sm leading-relaxed text-foreground/85">
               &ldquo;{signUpQuote.text}&rdquo;
             </blockquote>
             <figcaption className="mt-4 text-xs text-muted">
@@ -48,14 +48,14 @@ export function AuthMarketingPanel() {
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
             Welcome back
           </p>
-          <h2 className="font-display mt-3 text-4xl font-bold text-ink leading-tight">
+          <h2 className="font-display mt-3 text-4xl font-bold leading-tight text-ink">
             Pick up where your citations left off
           </h2>
           <p className="mt-4 text-base text-muted">
             Your last scan may have surfaced new competitor moves — sign in to
             see weekly deltas and prioritized fixes.
           </p>
-          <div className="mt-6 rounded-2xl border border-border bg-white p-3 shadow-sm">
+          <div className="mt-6 rounded-2xl border border-border bg-card p-3 shadow-sm dark:border-[#222] dark:bg-[#111]">
             <CitationDashboardMock embedded compact />
           </div>
           <p className="mt-4 text-sm font-medium text-ink">
@@ -69,7 +69,7 @@ export function AuthMarketingPanel() {
 
       <Link
         href="/"
-        className="text-sm font-medium text-muted hover:text-ink transition-colors"
+        className="text-sm font-medium text-muted transition-colors hover:text-ink"
       >
         ← Back to CitePilot
       </Link>

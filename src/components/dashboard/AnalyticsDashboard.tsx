@@ -123,7 +123,7 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
   return (
     <>
       <GooeyFilter />
-      <div className="overflow-hidden rounded-2xl border border-border bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.06))] p-4 shadow-sm">
+      <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-border p-4 shadow-sm dark:border-accent/15">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -142,7 +142,7 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
               onChange={setTab}
               gscConnected={gscConnected}
             />
-            <select className="rounded-full border border-border bg-white px-4 py-2 text-sm text-muted shadow-sm">
+            <select className="rounded-full border border-border bg-card px-4 py-2 text-sm text-muted shadow-sm dark:border-[#333]">
               <option>Last 30 days</option>
               <option>Last 90 days</option>
             </select>
@@ -187,7 +187,7 @@ function AnalyticsSourceToggle({
 
   return (
     <div
-      className="flex min-w-[11rem] flex-col items-stretch gap-2.5 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm"
+      className="flex min-w-[11rem] flex-col items-stretch gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm dark:border-[#333] dark:bg-[#111]"
       role="group"
       aria-label="Analytics data source"
     >
@@ -241,7 +241,7 @@ function LLMPanel({
   return (
     <>
       <Panel title="Brand presence" className="mt-6" id="money-prompts">
-        <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.1),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
+        <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -253,13 +253,13 @@ function LLMPanel({
                 which buyer questions still need a stronger answer footprint.
               </p>
             </div>
-            <div className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+            <div className="rounded-full border border-white/80 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
               Buyer question: {workspace.buyerQuestion}
             </div>
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm">
+            <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted">
                 Visibility score
               </p>
@@ -302,7 +302,7 @@ function CorrelationInsightsPanel({
 }) {
   return (
     <Panel title="Correlation insights" className="mt-6">
-      <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
+      <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
           Directional analysis
         </p>
@@ -339,7 +339,7 @@ function CorrelationInsightsPanel({
                   {insight.confidence} confidence
                 </span>
                 {insight.estimatedLift && (
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink">
+                  <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-ink">
                     Est. lift {insight.estimatedLift}
                   </span>
                 )}
@@ -352,7 +352,7 @@ function CorrelationInsightsPanel({
                 {insight.platforms.map((platform) => (
                   <span
                     key={platform}
-                    className="rounded-full border border-border bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted"
+                    className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted"
                   >
                     {platform}
                   </span>
@@ -395,7 +395,7 @@ function CompetitorBenchmarkPanel({
           {!workspace.hasRealAudit && (
             <Link
               href="/audit"
-              className="mt-4 inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink"
+              className="mt-4 inline-flex rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-ink"
             >
               Run citation audit
             </Link>
@@ -424,15 +424,15 @@ function CompetitorBenchmarkPanel({
               </p>
             </div>
             <div className="grid gap-2 text-xs text-muted sm:grid-cols-3">
-              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="font-semibold text-ink">Prompt leaders</p>
                 <p className="mt-1">See who wins each tracked buyer question.</p>
               </div>
-              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="font-semibold text-ink">Gap sizing</p>
                 <p className="mt-1">Spot where a few points could flip the outcome.</p>
               </div>
-              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="font-semibold text-ink">Executive-ready</p>
                 <p className="mt-1">A cleaner competitive view for clients and teams.</p>
               </div>
@@ -440,7 +440,7 @@ function CompetitorBenchmarkPanel({
           </div>
           <Link
             href="/dashboard/settings"
-            className="mt-5 inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
+            className="mt-5 inline-flex rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
           >
             Add competitors in Settings
           </Link>
@@ -500,10 +500,10 @@ function CompetitorBenchmarkPanel({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+            <span className="rounded-full border border-white/80 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
               {prompts.length} tracked prompt{prompts.length === 1 ? "" : "s"}
             </span>
-            <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+            <span className="rounded-full border border-white/80 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
               {brands.length} brands compared
             </span>
             {uncitedBehind > 0 && (
@@ -515,7 +515,7 @@ function CompetitorBenchmarkPanel({
         </div>
 
         <div className="mt-5 grid gap-3 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+          <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Your standing
             </p>
@@ -534,7 +534,7 @@ function CompetitorBenchmarkPanel({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+          <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Prompt split
             </p>
@@ -551,7 +551,7 @@ function CompetitorBenchmarkPanel({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+          <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Priority opportunity
             </p>
@@ -616,7 +616,7 @@ function CompetitorBenchmarkPanel({
                         You
                       </span>
                     )}
-                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {benchmarkRankLabel(rank)}
                     </span>
                   </div>
@@ -626,7 +626,7 @@ function CompetitorBenchmarkPanel({
                         <span>Visibility strength</span>
                         <span>{formatScore(brand.avgVisibility)}/100</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white">
+                      <div className="h-2 overflow-hidden rounded-full bg-card">
                         <div
                           className={`h-full rounded-full ${
                             isYou ? "bg-gradient-to-r from-[#7b93f0] to-accent" : "bg-ink/75"
@@ -641,7 +641,7 @@ function CompetitorBenchmarkPanel({
                         <span>Prompt share</span>
                         <span>{promptShare}%</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white">
+                      <div className="h-2 overflow-hidden rounded-full bg-card">
                         <div
                           className={`h-full rounded-full ${
                             isYou ? "bg-gradient-to-r from-mint to-glow" : "bg-ink/50"
@@ -653,7 +653,7 @@ function CompetitorBenchmarkPanel({
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border/80 bg-white/80 px-4 py-3">
+                <div className="rounded-xl border border-border/80 bg-card/80 px-4 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                     Avg visibility
                   </p>
@@ -662,7 +662,7 @@ function CompetitorBenchmarkPanel({
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-border/80 bg-white/80 px-4 py-3">
+                <div className="rounded-xl border border-border/80 bg-card/80 px-4 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                     Prompts led
                   </p>
@@ -693,7 +693,7 @@ function CompetitorBenchmarkPanel({
                 </div>
 
                 <div className="text-left lg:text-right">
-                  <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                  <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                     {promptShare}% prompt share
                   </span>
                 </div>
@@ -737,16 +737,16 @@ function CompetitorBenchmarkPanel({
                       : `Not cited on this prompt — ${prompt.leader} is the inferred leader from audit settings.`}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {prompt.leader}
                     </span>
-                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {prompt.youCited ? "Cited" : "Not cited"}
                     </span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink">
+                  <span className="rounded-full bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink">
                     Your rank #{yourPromptRank}
                   </span>
                   <span
@@ -773,10 +773,10 @@ function CompetitorBenchmarkPanel({
                       key={score.brand}
                       className={`rounded-xl border px-4 py-3 transition ${
                         isLeader
-                          ? "border-[#cbd6ff] bg-white shadow-sm"
+                          ? "border-[#cbd6ff] bg-card shadow-sm"
                           : isYou
-                            ? "border-mint/25 bg-white/85"
-                            : "border-border/80 bg-white/75"
+                            ? "border-mint/25 bg-card/85"
+                            : "border-border/80 bg-card/75"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -836,7 +836,7 @@ function CompetitorBenchmarkPanel({
 
 function PromptsCard({ workspace }: { workspace: WorkspaceSnapshot }) {
   return (
-    <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm">
+    <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted">
         Prompts tracked
       </p>
@@ -895,7 +895,7 @@ function PromptTable({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+              <span className="rounded-full bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
                 {row.visibility === null
                   ? "—"
                   : row.fromAudit
@@ -921,7 +921,7 @@ function PromptTable({
                 {row.models.map((m) => (
                   <span
                     key={m}
-                    className="rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-muted"
+                    className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-muted"
                   >
                     {m}
                   </span>
@@ -940,7 +940,7 @@ function PromptTable({
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
                 Strength
               </p>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-card">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-[#7b93f0] via-accent to-glow"
                   style={{

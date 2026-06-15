@@ -18,9 +18,9 @@ import {
 import { SiteDetailsFooter } from "@/components/dashboard/site-details/SiteDetailsShared";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { effectInit } from "@/lib/react/effect-init";
+import { siteDetailsInputClass } from "@/lib/dashboard/surface-classes";
 
-const inputClass =
-  "mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9]/20";
+const inputClass = siteDetailsInputClass;
 
 type DomainInfoSectionProps = {
   workspace: WorkspaceSnapshot;
@@ -162,7 +162,7 @@ export function DomainInfoSection({
     >
       {showFull && (
         <>
-          <label className="block text-sm font-semibold text-[#0f172a]">
+          <label className="block text-sm font-semibold text-ink">
             Select Domain
             <div className="relative mt-2">
               <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[#0ea5e9]">
@@ -181,22 +181,22 @@ export function DomainInfoSection({
           {showCompetitors && (
             <div>
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#0f172a]">Backlinks</label>
-                <span className="text-xs text-[#64748b]">
+                <label className="text-sm font-semibold text-ink">Backlinks</label>
+                <span className="text-xs text-muted">
                   {competitors.length} / 5
                 </span>
               </div>
-              <div className="mt-2 flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-[#e2e8f0] bg-white px-3 py-2">
+              <div className="mt-2 flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-border bg-card px-3 py-2">
                 {competitors.map((c, i) => (
                   <span
                     key={c}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#f1f5f9] px-3 py-1.5 text-sm text-[#0f172a]"
+                    className="inline-flex items-center gap-2 rounded-lg bg-surface px-3 py-1.5 text-sm text-ink"
                   >
                     {c}
                     <button
                       type="button"
                       onClick={() => removeTag(competitors, setCompetitors, i)}
-                      className="text-[#94a3b8] hover:text-[#0f172a]"
+                      className="text-[#94a3b8] hover:text-ink"
                       aria-label={`Remove ${c}`}
                     >
                       ×
@@ -220,14 +220,14 @@ export function DomainInfoSection({
                   />
                 )}
               </div>
-              <p className="mt-1.5 text-xs text-[#64748b]">
+              <p className="mt-1.5 text-xs text-muted">
                 Maximum 5 competitor domains with your current plan.
               </p>
             </div>
           )}
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <label className="block text-sm font-semibold text-[#0f172a]">
+            <label className="block text-sm font-semibold text-ink">
               Client
               <input
                 type="text"
@@ -237,7 +237,7 @@ export function DomainInfoSection({
                 className={inputClass}
               />
             </label>
-            <label className="block text-sm font-semibold text-[#0f172a]">
+            <label className="block text-sm font-semibold text-ink">
               <span className="flex items-center gap-1">
                 Industry
                 <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#e2e8f0] text-[10px] font-normal text-[#94a3b8]">
@@ -260,8 +260,8 @@ export function DomainInfoSection({
 
           {showTargeting && (
             <div>
-              <label className="text-sm font-semibold text-[#0f172a]">Anchors</label>
-              <div className="mt-2 flex min-h-[52px] flex-wrap items-center gap-2 rounded-xl border border-[#e2e8f0] bg-white px-3 py-2">
+              <label className="text-sm font-semibold text-ink">Anchors</label>
+              <div className="mt-2 flex min-h-[52px] flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
                 {audiences.slice(0, 1).map((a, i) => (
                   <span
                     key={a}
@@ -271,14 +271,14 @@ export function DomainInfoSection({
                     <button
                       type="button"
                       onClick={() => removeTag(audiences, setAudiences, i)}
-                      className="text-[#64748b] hover:text-[#0f172a]"
+                      className="text-muted hover:text-ink"
                     >
                       ×
                     </button>
                   </span>
                 ))}
                 {audiences.length > 1 && (
-                  <span className="rounded-lg bg-[#f1f5f9] px-3 py-1.5 text-sm text-[#64748b]">
+                  <span className="rounded-lg bg-surface px-3 py-1.5 text-sm text-muted">
                     +{audiences.length - 1} more
                   </span>
                 )}
@@ -303,7 +303,7 @@ export function DomainInfoSection({
           )}
 
           <fieldset>
-            <legend className="text-sm font-semibold text-[#0f172a]">Business Type</legend>
+            <legend className="text-sm font-semibold text-ink">Business Type</legend>
             <div className="mt-3 divide-y divide-[#eef2f6] rounded-xl border border-[#e2e8f0]">
               {SITE_MODEL_OPTIONS.map((opt) => (
                 <label
@@ -318,14 +318,14 @@ export function DomainInfoSection({
                     onChange={() => setSiteModel(opt.id)}
                     className="h-4 w-4 border-[#cbd5e1] text-[#0ea5e9] focus:ring-[#0ea5e9]"
                   />
-                  <span className="text-sm text-[#334155]">{opt.label}</span>
+                  <span className="text-sm text-foreground/80">{opt.label}</span>
                 </label>
               ))}
             </div>
           </fieldset>
 
           <div className="rounded-xl border border-[#fce7f3] bg-[#fff1f2]/40 px-4 py-4">
-            <p className="text-sm font-semibold text-[#0f172a]">
+            <p className="text-sm font-semibold text-ink">
               Privacy Settings{" "}
               <Link
                 href="/pricing"
@@ -334,7 +334,7 @@ export function DomainInfoSection({
                 ⚡ Upgrade plan
               </Link>
             </p>
-            <p className="mt-1 text-sm text-[#64748b]">
+            <p className="mt-1 text-sm text-muted">
               Configure white-label share links and proof report privacy on Fleet.{" "}
               <Link href="/dashboard/settings" className="font-medium text-[#0ea5e9]">
                 Learn more
@@ -346,7 +346,7 @@ export function DomainInfoSection({
 
       {mode === "targeting" && !showFull && (
         <>
-          <label className="block text-sm font-semibold text-[#0f172a]">
+          <label className="block text-sm font-semibold text-ink">
             Primary buyer question
             <textarea
               rows={3}
@@ -356,7 +356,7 @@ export function DomainInfoSection({
             />
           </label>
           <div>
-            <label className="text-sm font-semibold text-[#0f172a]">Target audiences</label>
+            <label className="text-sm font-semibold text-ink">Target audiences</label>
             <div className="mt-2 flex flex-wrap gap-2">
               {audiences.map((a, i) => (
                 <span
@@ -392,12 +392,12 @@ export function DomainInfoSection({
 
       {mode === "competitors" && !showFull && (
         <div>
-          <label className="text-sm font-semibold text-[#0f172a]">Competitor domains</label>
+          <label className="text-sm font-semibold text-ink">Competitor domains</label>
           <div className="mt-2 flex flex-wrap gap-2">
             {competitors.map((c, i) => (
               <span
                 key={c}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#f1f5f9] px-3 py-1.5 text-sm"
+                className="inline-flex items-center gap-2 rounded-lg bg-surface px-3 py-1.5 text-sm"
               >
                 {c}
                 <button type="button" onClick={() => removeTag(competitors, setCompetitors, i)}>
@@ -426,9 +426,9 @@ export function DomainInfoSection({
       )}
 
       {showKeywords && mode !== "full" && (
-        <label className="block text-sm font-semibold text-[#0f172a]">
+        <label className="block text-sm font-semibold text-ink">
           Monitored money prompts
-          <span className="mt-1 block text-xs font-normal text-[#64748b]">
+          <span className="mt-1 block text-xs font-normal text-muted">
             One per line ·{" "}
             {promptLimitMax === null
               ? "Fleet: unlimited"

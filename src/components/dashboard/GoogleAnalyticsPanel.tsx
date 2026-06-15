@@ -182,7 +182,7 @@ export function GoogleAnalyticsPanel({
         title={preferOrganicLead ? "Organic performance (Search Console)" : "Organic performance"}
         className="mt-6"
       >
-        <div className="mb-6 overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
+        <div className="mb-6 dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -194,7 +194,7 @@ export function GoogleAnalyticsPanel({
                   : "Connect Search Console to lead this tab with measured organic demand instead of unavailable metrics."}
               </p>
             </div>
-            <div className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+            <div className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm dark:border-[#333] dark:bg-[#161616]">
               {connected ? "Live Google data" : "Not connected"}
             </div>
           </div>
@@ -284,7 +284,7 @@ function MetricCard({
   unavailable?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.96))] px-4 py-4 shadow-sm">
+    <div className="dash-metric-card rounded-2xl border border-border px-4 py-4 shadow-sm dark:border-[#222]">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
       <p className="font-display mt-2 text-3xl font-bold text-ink">{value}</p>
       {unavailable ? (

@@ -14,6 +14,8 @@ type Props = {
   billingInterval?: BillingInterval;
   /** PostHog feature gate id when checkout started from an upgrade prompt */
   feature?: string;
+  /** Analytics source: gate, banner, modal, pricing_page, etc. */
+  source?: string;
 };
 
 export function PilotCheckoutButton({
@@ -24,6 +26,7 @@ export function PilotCheckoutButton({
   signedIn = false,
   billingInterval = "monthly",
   feature,
+  source,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +39,20 @@ export function PilotCheckoutButton({
 
     setLoading(true);
     setError(null);
+    trackEvent("checkout_started", { plan, feature, source });
     trackEvent(plan === "fleet" ? "fleet_checkout_started" : "pilot_checkout_started", {
       feature,
+      source,
     });
+    if (source) {
+      trackEvent("upgrade_cta_clicked", {
+        source,
+        feature_name: feature,
+        plan,
+      });
+    }
     try {
-      const res = await fetch("/api/billing/checkout", {
+      const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

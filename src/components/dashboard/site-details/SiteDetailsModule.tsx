@@ -135,10 +135,10 @@ export function SiteDetailsModule() {
   if (!ready) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-12 rounded-2xl bg-white" />
+        <div className="h-12 rounded-2xl bg-card" />
         <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
-          <div className="h-96 rounded-2xl bg-white" />
-          <div className="h-96 rounded-2xl bg-white" />
+          <div className="h-96 rounded-2xl bg-card" />
+          <div className="h-96 rounded-2xl bg-card" />
         </div>
       </div>
     );
@@ -146,9 +146,9 @@ export function SiteDetailsModule() {
 
   if (!workspaceId) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#e2e8f0] bg-white p-12 text-center">
-        <p className="font-display text-xl font-bold text-[#0f172a]">No site yet</p>
-        <p className="mt-2 text-sm text-[#64748b]">
+      <div className="rounded-2xl border border-dashed border-[#e2e8f0] bg-card p-12 text-center">
+        <p className="font-display text-xl font-bold text-ink">No site yet</p>
+        <p className="mt-2 text-sm text-muted">
           Complete onboarding to configure your site details and content workspace.
         </p>
         <Link
@@ -178,12 +178,12 @@ export function SiteDetailsModule() {
         />
 
         <div className="min-w-0 flex-1">
-          <div className="rounded-2xl border border-[#e8edf3] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
-            <header className="border-b border-[#eef2f6] px-6 py-5">
-              <h2 className="font-display text-xl font-bold text-[#0f172a]">
+          <div className="rounded-2xl border border-border bg-card shadow-sm dark:border-[#222] dark:bg-[#111]">
+            <header className="border-b border-border px-6 py-5 dark:border-[#222]">
+              <h2 className="font-display text-xl font-bold text-ink">
                 {section.label}
               </h2>
-              <p className="mt-1 text-sm text-[#64748b]">{section.description}</p>
+              <p className="mt-1 text-sm text-muted">{section.description}</p>
             </header>
 
             <div className="px-6 py-6">
@@ -273,7 +273,7 @@ function SectionBody({
         <div className="space-y-8">
           <CompetitorAnalysisGrid workspace={workspace} />
           <div className="border-t border-[#eef2f6] pt-8">
-            <p className="mb-4 text-sm font-semibold text-[#0f172a]">Tracked competitors</p>
+            <p className="mb-4 text-sm font-semibold text-ink">Tracked competitors</p>
             <DomainInfoSection
               workspace={workspace}
               workspaceId={workspaceId}
@@ -357,16 +357,16 @@ function PagesSection({
   return (
     <div className="space-y-8">
       <section>
-        <h3 className="text-sm font-semibold text-[#0f172a]">CitePilot editorial mix</h3>
-        <p className="mt-1 text-sm text-[#64748b]">
+        <h3 className="text-sm font-semibold text-ink">CitePilot editorial mix</h3>
+        <p className="mt-1 text-sm text-muted">
           Template cadence for your site blog — 3–5 posts/week across GEO pillars.
         </p>
         <ul className="mt-4 divide-y divide-[#eef2f6] text-sm">
           {editorialWeek.map((slot) => (
             <li key={slot.day} className="flex flex-col gap-1 py-3 sm:flex-row sm:justify-between sm:items-center">
               <div>
-                <span className="font-semibold text-[#0f172a]">{slot.day}</span>
-                <span className="text-[#64748b]"> · {slot.pillarTitle}</span>
+                <span className="font-semibold text-ink">{slot.day}</span>
+                <span className="text-muted"> · {slot.pillarTitle}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-medium text-[#0ea5e9] bg-[#0ea5e9]/5 border border-[#0ea5e9]/10 px-2 py-0.5 rounded-md">
@@ -391,14 +391,14 @@ function PagesSection({
         </ul>
       </section>
       <section>
-        <h3 className="text-sm font-semibold text-[#0f172a]">30-day content calendar</h3>
+        <h3 className="text-sm font-semibold text-ink">30-day content calendar</h3>
         <ul className="mt-4 divide-y divide-[#eef2f6]">
           {calendar.map((c) => (
             <li key={c.week} className="py-4 first:pt-0 flex flex-col justify-between sm:flex-row sm:items-center gap-3">
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-[#64748b]">{c.week}</p>
-                <p className="font-medium text-[#0f172a]">{c.topic}</p>
-                <p className="mt-1 text-xs text-[#64748b]">{c.rationale}</p>
+                <p className="text-xs font-semibold text-muted">{c.week}</p>
+                <p className="font-medium text-ink">{c.topic}</p>
+                <p className="mt-1 text-xs text-muted">{c.rationale}</p>
               </div>
               <button
                 type="button"

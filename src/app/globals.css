@@ -306,6 +306,13 @@ html:not(.dark) .hero-premium-orb {
   backdrop-filter: blur(16px);
 }
 
+html:not(.dark) .glass {
+  background: var(--card);
+  border: 1px solid var(--color-border);
+  backdrop-filter: none;
+  box-shadow: 0 24px 80px -20px rgba(7, 11, 20, 0.12);
+}
+
 .glass-light {
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--color-border);
@@ -394,6 +401,60 @@ html.dark .bg-white {
   background-color: var(--card);
 }
 
+html.dark .bg-white\/90,
+html.dark .bg-white\/80,
+html.dark .bg-white\/70,
+html.dark .bg-white\/60 {
+  background-color: color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+html.dark .bg-\[\#f8fafc\],
+html.dark .bg-\[\#f8fafb\],
+html.dark .bg-\[\#fafbfd\] {
+  background-color: var(--color-surface);
+}
+
+html.dark .hover\:bg-\[\#fafbfd\]:hover,
+html.dark .hover\:bg-\[\#f8fafb\]:hover {
+  background-color: var(--color-surface);
+}
+
+html.dark .border-\[\#eef2f6\],
+html.dark .border-\[\#e8edf3\],
+html.dark .border-\[\#e2e8f0\] {
+  border-color: var(--color-border);
+}
+
+html.dark .divide-\[\#f1f5f9\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--color-border);
+}
+
+.dash-gradient-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(123, 147, 240, 0.1),
+    rgba(255, 255, 255, 0.98) 45%,
+    rgba(34, 211, 238, 0.08)
+  );
+}
+
+html.dark .dash-gradient-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.14),
+    var(--card) 48%,
+    rgba(34, 211, 238, 0.1)
+  );
+}
+
+.dash-metric-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+}
+
+html.dark .dash-metric-card {
+  background: var(--card);
+}
+
 /* Intentional light surfaces in dark UI (e.g. pricing toggle pill) */
 html.dark .preserve-light-surface.bg-white,
 html.dark .preserve-light-surface.dark\:bg-white {
@@ -402,6 +463,20 @@ html.dark .preserve-light-surface.dark\:bg-white {
 
 html.dark .text-on-light {
   color: #1a1a1a;
+}
+
+/* Remaining hardcoded slate text in dashboard (site details, legacy cards) */
+html.dark .text-\[\#0f172a\] {
+  color: var(--foreground);
+}
+
+html.dark .text-\[\#334155\] {
+  color: color-mix(in srgb, var(--foreground) 85%, transparent);
+}
+
+html.dark .text-\[\#64748b\],
+html.dark .text-\[\#94a3b8\] {
+  color: var(--color-muted);
 }
 
 @media print {
@@ -431,5 +506,16 @@ html.dark .text-on-light {
 
   header.citepilot-no-print {
     display: none !important;
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
   }
 }

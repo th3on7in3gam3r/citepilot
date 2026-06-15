@@ -82,7 +82,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
         metadata: { userId, plan },
       },
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${base}/dashboard/settings?billing=success`,
+      success_url: `${base}/dashboard?upgraded=true&plan=${plan}`,
       cancel_url: `${base}/pricing?billing=canceled`,
       allow_promotion_codes: true,
     });

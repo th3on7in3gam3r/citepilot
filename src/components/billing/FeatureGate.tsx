@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { PilotCheckoutButton } from "@/components/billing/PilotCheckoutButton";
+import { useBilling } from "@/contexts/BillingContext";
+import {
+  useUpgradeModalOptional,
+  userTierForAnalytics,
+} from "@/contexts/UpgradeModalContext";
 import { trackEvent } from "@/lib/analytics/track";
+import type { BillingPlan } from "@/lib/billing/types";
 
 export type FeatureGateProps = {
   /** PostHog / analytics identifier, e.g. `weekly_monitoring` */
@@ -15,26 +21,64 @@ export type FeatureGateProps = {
   highlights?: readonly string[];
   compact?: boolean;
   className?: string;
+  plan?: Extract<BillingPlan, "pilot" | "fleet">;
+  /** When set, primary text button navigates instead of checkout-only */
+  onClick?: () => void;
 };
 
 export function FeatureGate({
   feature,
   title,
   description,
-  cta = "Upgrade to Pilot →",
+  cta,
   highlights = [],
   compact = false,
   className = "",
+  plan = "pilot",
+  onClick,
 }: FeatureGateProps) {
   const router = useRouter();
+  const { isPaid, isFleet, ready } = useBilling();
+  const upgradeModal = useUpgradeModalOptional();
+
+  const ctaLabel =
+    cta ?? (plan === "fleet" ? "Upgrade to Fleet →" : "Upgrade to Pilot →");
+  const tier = ready ? userTierForAnalytics(isPaid, isFleet) : "free";
 
   useEffect(() => {
+    trackEvent("feature_gate_viewed", { feature_name: feature, user_tier: tier });
     trackEvent("upgrade_prompt_viewed", { feature });
-  }, [feature]);
+  }, [feature, tier]);
+
+  function openModal() {
+    if (plan === "pilot" && isPaid) return;
+    upgradeModal?.openUpgradeModal({
+      feature,
+      title,
+      description,
+      plan,
+      unlocks: highlights,
+    });
+  }
 
   function goToPricing() {
+    trackEvent("upgrade_cta_clicked", {
+      source: "gate",
+      feature_name: feature,
+      plan,
+      destination: "pricing",
+    });
     trackEvent("upgrade_prompt_clicked", { feature, destination: "pricing" });
-    router.push("/pricing");
+    if (onClick) {
+      onClick();
+    } else {
+      router.push("/pricing");
+    }
+  }
+
+  function handleGateClick() {
+    openModal();
+    if (onClick) onClick();
   }
 
   return (
@@ -50,7 +94,11 @@ export function FeatureGate({
       />
 
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={handleGateClick}
+          className="min-w-0 flex-1 cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-lg"
+        >
           <div className="flex items-center gap-2">
             <span
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-accent/30 bg-accent/10 text-sm"
@@ -77,17 +125,18 @@ export function FeatureGate({
               ))}
             </ul>
           )}
-        </div>
+        </button>
 
         <div className="flex shrink-0 flex-col gap-2 sm:items-end">
           <PilotCheckoutButton
-            plan="pilot"
+            plan={plan}
             signedIn
             variant="accent"
             className="w-full sm:w-auto"
             feature={feature}
+            source="gate"
           >
-            <span className="px-1">{cta}</span>
+            <span className="px-1">{ctaLabel}</span>
           </PilotCheckoutButton>
           <button
             type="button"

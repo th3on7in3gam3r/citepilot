@@ -30,9 +30,8 @@ export function DashboardCard({
 
   return (
     <section
-      className={`group relative overflow-hidden rounded-2xl border border-[#e8edf3] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05),0_0_0_1px_rgba(15,23,42,0.02)] transition-shadow duration-200 hover:shadow-[0_4px_20px_rgba(15,23,42,0.09),0_0_0_1px_rgba(15,23,42,0.03)] ${className}`}
+      className={`group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-[#222] dark:bg-[#111] dark:shadow-black/20 dark:hover:shadow-black/30 ${className}`}
     >
-      {/* Top accent gradient bar */}
       {accent !== "none" && (
         <div
           className={`absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${accentColors[accent]}`}
@@ -41,10 +40,10 @@ export function DashboardCard({
       )}
 
       {(title || action || dataStatus) && (
-        <header className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-5 py-[14px]">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-[14px] dark:border-[#222]">
           <div className="flex min-w-0 items-center gap-2">
             {title ? (
-              <h2 className="truncate text-sm font-semibold text-[#0f172a]">{title}</h2>
+              <h2 className="truncate text-sm font-semibold text-ink">{title}</h2>
             ) : (
               <span />
             )}
@@ -53,12 +52,12 @@ export function DashboardCard({
           {action && actionHref ? (
             <Link
               href={actionHref}
-              className="text-xs font-medium text-[#94a3b8] transition-colors hover:text-[#0ea5e9]"
+              className="text-xs font-medium text-muted transition-colors hover:text-accent"
             >
               {action} →
             </Link>
           ) : action ? (
-            <span className="text-xs font-medium text-[#94a3b8]">{action}</span>
+            <span className="text-xs font-medium text-muted">{action}</span>
           ) : null}
         </header>
       )}

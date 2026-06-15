@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type { WorkspaceListItem, WorkspaceLimitsInfo } from "@/hooks/useWorkspace";
-import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
-import { workspaceLimitMessage } from "@/lib/billing/limits";
+import { FeatureGate } from "@/components/billing/FeatureGate";
 import { useToast } from "@/components/notifications/ToastProvider";
 
 function planBadge(plan: WorkspaceLimitsInfo["plan"]) {
@@ -110,11 +109,10 @@ export function WorkspaceSwitcher({
     );
   }
 
-  const limitHint = limits ? workspaceLimitMessage(limits) : null;
   const isBar = variant === "bar";
   const shellClass = isBar
-    ? "border-[#e2e8f0] bg-white hover:border-[#0ea5e9]/40"
-    : "border-border bg-surface hover:border-accent/40 hover:bg-white";
+    ? "border-border bg-card hover:border-accent/40 dark:border-[#333] dark:bg-[#111]"
+    : "border-border bg-surface hover:border-accent/40 hover:bg-card dark:hover:bg-[#161616]";
 
   return (
     <div
@@ -132,7 +130,7 @@ export function WorkspaceSwitcher({
         aria-label={`Active site: ${workspace?.domain ?? "none selected"}`}
       >
         {isBar && (
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#e0f2fe] text-[#0284c7]">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
             </svg>
@@ -140,7 +138,7 @@ export function WorkspaceSwitcher({
         )}
         <div className="min-w-0 flex-1">
           <p
-            className={`truncate font-semibold ${isBar ? "text-sm text-[#0f172a]" : "text-sm text-ink"}`}
+            className={`truncate font-semibold ${isBar ? "text-sm text-ink" : "text-sm text-ink"}`}
           >
             {workspace?.domain ?? "Select workspace"}
           </p>
@@ -153,18 +151,18 @@ export function WorkspaceSwitcher({
           )}
         </div>
         {isBar && limits && (
-          <span className="hidden shrink-0 rounded-md bg-[#f1f5f9] px-1.5 py-0.5 text-[10px] font-semibold text-[#64748b] lg:inline">
+          <span className="hidden shrink-0 rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted lg:inline">
             {planBadge(limits.plan)}
           </span>
         )}
-        <span className={`shrink-0 text-xs ${isBar ? "text-[#94a3b8]" : "text-muted"}`} aria-hidden>
+        <span className={`shrink-0 text-xs ${isBar ? "text-muted" : "text-muted"}`} aria-hidden>
           {open ? "▴" : "▾"}
         </span>
       </button>
 
       {open && (
         <div
-          className={`absolute z-50 mt-2 overflow-hidden rounded-xl border border-border bg-white shadow-lg ${
+          className={`absolute z-50 mt-2 overflow-hidden rounded-xl border border-border bg-card shadow-lg dark:border-[#333] dark:bg-[#111] ${
             compact ? "right-0 w-72" : "left-0 right-0 w-full min-w-[16rem]"
           }`}
           role="listbox"
@@ -207,16 +205,29 @@ export function WorkspaceSwitcher({
                 >
                   + Add another site
                 </button>
-              ) : (
-                <div onClick={() => setOpen(false)} role="presentation">
-                  <UpgradePrompt
-                    compact
-                    title="Workspace limit reached"
-                    description={limitHint ?? "Upgrade to add more client workspaces."}
-                    plan={limits?.plan === "fleet" ? "fleet" : "pilot"}
-                  />
-                </div>
-              )
+              ) : limits ? (
+                <FeatureGate
+                  compact
+                  feature="multi_workspace"
+                  plan={limits.plan === "pilot" ? "fleet" : "pilot"}
+                  title={
+                    limits.plan === "pilot"
+                      ? "More client workspaces (Fleet)"
+                      : "Add another workspace"
+                  }
+                  description={
+                    limits.plan === "pilot"
+                      ? "Pilot includes up to 3 workspaces. Upgrade to Fleet for unlimited client sites and white-label reporting."
+                      : "Free tier includes one workspace. Upgrade to Pilot for up to 3 client sites with weekly monitoring."
+                  }
+                  cta={limits.plan === "pilot" ? "Upgrade to Fleet →" : "Upgrade to Pilot →"}
+                  highlights={
+                    limits.plan === "pilot"
+                      ? ["Unlimited workspaces", "White-label share links", "Bulk prompt import"]
+                      : ["Up to 3 workspaces", "Weekly re-scans", "Email alerts & CMS publish"]
+                  }
+                />
+              ) : null
             ) : (
               <form onSubmit={handleCreate} className="space-y-2 p-1">
                 <p className="text-xs font-semibold text-ink">Add a new site</p>

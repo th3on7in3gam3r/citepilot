@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { authInputClass } from "@/components/auth/auth-styles";
+import { authInputClass, authLabelClass } from "@/components/auth/auth-styles";
 
 export function PasswordField({
   name = "password",
@@ -24,7 +24,7 @@ export function PasswordField({
   const fieldId = id ?? name;
 
   return (
-    <label htmlFor={fieldId} className="block text-sm font-semibold text-white/70">
+    <label htmlFor={fieldId} className={authLabelClass}>
       {label}
       <div className="relative mt-2">
         <input
@@ -41,7 +41,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-white/45 transition hover:text-white/80"
+          className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-muted transition hover:text-foreground"
           aria-label={visible ? "Hide password" : "Show password"}
         >
           {visible ? (

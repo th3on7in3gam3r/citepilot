@@ -20,7 +20,15 @@ export type AnalyticsEvent =
   | "referral_credit_applied"
   | "referral_share_clicked"
   | "upgrade_prompt_viewed"
-  | "upgrade_prompt_clicked";
+  | "upgrade_prompt_clicked"
+  | "feature_gate_viewed"
+  | "usage_limit_warning_shown"
+  | "upgrade_cta_clicked"
+  | "checkout_started"
+  | "checkout_completed"
+  | "upgrade_modal_shown"
+  | "upgrade_modal_clicked"
+  | "upgrade_modal_dismissed";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

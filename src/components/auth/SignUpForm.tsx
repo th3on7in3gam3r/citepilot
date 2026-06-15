@@ -6,7 +6,7 @@ import { useActionState } from "react";
 import { signUpWithEmail } from "@/app/auth/sign-up/actions";
 import { AuthDivider } from "@/components/auth/AuthDivider";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
-import { authInputClass } from "@/components/auth/auth-styles";
+import { authFormCardClass, authInputClass, authLabelClass } from "@/components/auth/auth-styles";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
@@ -24,14 +24,14 @@ export function SignUpForm() {
   const passwordOk = passwordMeetsRequirements(password);
 
   return (
-    <div className="glass rounded-2xl p-8">
+    <div className={authFormCardClass}>
       <p className="text-xs font-semibold uppercase tracking-wider text-accent">
         CitePilot account
       </p>
-      <h1 className="font-display mt-2 text-2xl font-bold text-white">
+      <h1 className="font-display mt-2 text-2xl font-bold text-ink">
         Create account
       </h1>
-      <p className="mt-2 mb-6 text-sm text-white/60">
+      <p className="mt-2 mb-6 text-sm text-muted">
         Add your domain now — we&apos;ll take you straight to your first citation
         audit.
       </p>
@@ -40,7 +40,7 @@ export function SignUpForm() {
         label="Sign up with Google"
         callbackPath="/start"
         signupIntent
-        variant="dark"
+        variant="light"
       />
 
       <AuthDivider />
@@ -50,7 +50,7 @@ export function SignUpForm() {
         className="space-y-4"
         onSubmit={handleEmailSubmit}
       >
-        <label className="block text-sm font-semibold text-white/70">
+        <label className={authLabelClass}>
           Name
           <input
             name="name"
@@ -61,7 +61,7 @@ export function SignUpForm() {
             className={authInputClass}
           />
         </label>
-        <label className="block text-sm font-semibold text-white/70">
+        <label className={authLabelClass}>
           Work email
           <input
             name="email"
@@ -72,9 +72,9 @@ export function SignUpForm() {
             className={authInputClass}
           />
         </label>
-        <label className="block text-sm font-semibold text-white/70">
+        <label className={authLabelClass}>
           Website domain
-          <span className="mt-1 block text-xs font-normal text-white/45">
+          <span className="mt-1 block text-xs font-normal text-muted">
             We&apos;ll pre-fill onboarding — e.g. yourcompany.com
           </span>
           <input
@@ -107,7 +107,7 @@ export function SignUpForm() {
         />
       </form>
 
-      <p className="mt-6 text-center text-sm text-white/60">
+      <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}
         <Link href="/auth/sign-in" className="font-semibold text-accent">
           Sign in

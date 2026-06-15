@@ -243,7 +243,7 @@ export function CitationVolumeChart({
                   {PLATFORM_REACH.map((p) => (
                     <li
                       key={p.id}
-                      className="rounded-xl border border-white/80 bg-white/90 px-3 py-2 text-[11px] shadow-sm"
+                      className="rounded-xl border border-border bg-card px-3 py-2 text-[11px] shadow-sm dark:border-[#333]"
                     >
                       <div className="flex items-center gap-1.5">
                         <span aria-hidden>{p.flag}</span>

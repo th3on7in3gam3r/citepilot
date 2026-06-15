@@ -28,6 +28,7 @@ import { RosenLineChart } from "@/components/charts/RosenLineChart";
 import { RosenHorizontalBarChart } from "@/components/charts/RosenBarChart";
 import { GscConnectCard } from "@/components/dashboard/GscConnectCard";
 import { WeeklyMonitoringPanel } from "@/components/dashboard/WeeklyMonitoringPanel";
+import { CitationTrendPanel } from "@/components/dashboard/CitationTrendPanel";
 import { CHART_COLORS } from "@/lib/charts/theme";
 import { useGscMetrics } from "@/hooks/useGscMetrics";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
@@ -331,22 +332,22 @@ function MyDashboardOverviewContent({
               const isEmerald = b.theme === "emerald";
               
               const borderClass = isSky 
-                ? "border-sky-100 hover:border-sky-200" 
+                ? "border-sky-100 hover:border-sky-200 dark:border-sky-900/50 dark:hover:border-sky-800/60" 
                 : isViolet 
-                ? "border-violet-100 hover:border-violet-200" 
+                ? "border-violet-100 hover:border-violet-200 dark:border-violet-900/50 dark:hover:border-violet-800/60" 
                 : isEmerald 
-                ? "border-emerald-100 hover:border-emerald-200" 
-                : "border-rose-100 hover:border-rose-200";
+                ? "border-emerald-100 hover:border-emerald-200 dark:border-emerald-900/50 dark:hover:border-emerald-800/60" 
+                : "border-rose-100 hover:border-rose-200 dark:border-rose-900/50 dark:hover:border-rose-800/60";
 
               const bgClass = isSky 
-                ? "bg-gradient-to-br from-sky-50/40 via-white to-white" 
+                ? "bg-gradient-to-br from-sky-50/40 via-card to-card dark:from-sky-950/30 dark:via-[#111] dark:to-[#111]" 
                 : isViolet 
-                ? "bg-gradient-to-br from-violet-50/40 via-white to-white" 
+                ? "bg-gradient-to-br from-violet-50/40 via-card to-card dark:from-violet-950/30 dark:via-[#111] dark:to-[#111]" 
                 : isEmerald 
-                ? "bg-gradient-to-br from-emerald-50/40 via-white to-white" 
-                : "bg-gradient-to-br from-rose-50/40 via-white to-white";
+                ? "bg-gradient-to-br from-emerald-50/40 via-card to-card dark:from-emerald-950/30 dark:via-[#111] dark:to-[#111]" 
+                : "bg-gradient-to-br from-rose-50/40 via-card to-card dark:from-rose-950/30 dark:via-[#111] dark:to-[#111]";
 
-              const textClass = isRose ? "text-rose-700" : "text-slate-900";
+              const textClass = isRose ? "text-rose-700 dark:text-rose-300" : "text-foreground";
               const accentBar = isSky 
                 ? "bg-gradient-to-r from-sky-400 to-blue-500" 
                 : isViolet 
@@ -356,12 +357,12 @@ function MyDashboardOverviewContent({
                 : "bg-gradient-to-r from-rose-400 to-pink-500";
 
               const badgeBg = isSky 
-                ? "bg-sky-50 border-sky-100 text-sky-700" 
+                ? "bg-sky-50 border-sky-100 text-sky-700 dark:bg-sky-950/40 dark:border-sky-900/50 dark:text-sky-300" 
                 : isViolet 
-                ? "bg-violet-50 border-violet-100 text-violet-700" 
+                ? "bg-violet-50 border-violet-100 text-violet-700 dark:bg-violet-950/40 dark:border-violet-900/50 dark:text-violet-300" 
                 : isEmerald 
-                ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
-                : "bg-rose-50 border-rose-100 text-rose-700";
+                ? "bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300" 
+                : "bg-rose-50 border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300";
 
               return (
                 <Link
@@ -436,18 +437,18 @@ function MyDashboardOverviewContent({
         </div>
 
         {/* Bottom row: prompt table */}
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-[#eef2f6] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-border shadow-sm dark:border-[#222]">
           <table className="w-full min-w-[420px] text-left text-xs">
             <thead>
-              <tr className="border-b border-[#eef2f6] bg-[#f8fafc]">
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Money prompt</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">4-wk trend</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Status</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">vs Competitor</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Leader</th>
+              <tr className="border-b border-border bg-surface">
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Money prompt</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">4-wk trend</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Status</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">vs Competitor</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Leader</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#f1f5f9]">
+            <tbody className="divide-y divide-border">
               {(topPrompts.length
                 ? topPrompts
                 : [{ prompt: workspace.buyerQuestion, cited: false, leader: "—" }]
@@ -456,8 +457,8 @@ function MyDashboardOverviewContent({
                 const vs = competitorForPrompt(workspace, promptRow);
                 const trend = promptCitationTrend(workspace, promptRow);
                 return (
-                <tr key={row.prompt} className="bg-white transition-colors duration-100 hover:bg-[#fafbfd]">
-                  <td className="px-4 py-3 pr-2 font-medium text-[#0f172a]">
+                <tr key={row.prompt} className="bg-card transition-colors duration-100 hover:bg-surface dark:bg-[#111] dark:hover:bg-[#161616]">
+                  <td className="px-4 py-3 pr-2 font-medium text-ink">
                     {row.prompt.length > 52 ? `${row.prompt.slice(0, 52)}…` : row.prompt}
                   </td>
                   <td className="px-4 py-3">
@@ -489,7 +490,7 @@ function MyDashboardOverviewContent({
                       {vs.clientAhead ? "You" : vs.name}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#64748b]">
+                  <td className="px-4 py-3 text-muted">
                     <span className="max-w-[180px] truncate block">{row.leader ?? "—"}</span>
                   </td>
                 </tr>
@@ -720,53 +721,13 @@ function MyDashboardOverviewContent({
 
       {/* Row 6 */}
       <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
-        <DashboardCard title="Citation trend" action="Last 30 days" dataStatus={trendDataStatus}>
-          <div className="space-y-6">
-            {/* Rosen-style gradient line chart — Citation Score */}
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Citation Score</p>
-                <span className="text-xs font-bold text-indigo-600">
-                  {historyValues.length > 0 ? historyValues[historyValues.length - 1] : 0}
-                </span>
-              </div>
-              <RosenLineChart
-                labels={historyLabels}
-                series={[
-                  {
-                    label: "Score",
-                    values: historyValues,
-                    gradientFrom: "#6366f1",
-                    gradientTo: "#a78bfa",
-                  },
-                ]}
-                height={108}
-              />
-            </div>
-
-            {/* Rosen-style gradient line chart — Platforms Cited */}
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Platforms Cited</p>
-                <span className="text-xs font-bold text-sky-600">
-                  {citedCount}/{PLATFORMS.length}
-                </span>
-              </div>
-              <RosenLineChart
-                labels={historyLabels}
-                series={[
-                  {
-                    label: "Platforms",
-                    values: historyValues.map((v) => Math.round(v / 15)),
-                    gradientFrom: "#0ea5e9",
-                    gradientTo: "#38bdf8",
-                  },
-                ]}
-                height={108}
-              />
-            </div>
-          </div>
-        </DashboardCard>
+        <CitationTrendPanel
+          historyLabels={historyLabels}
+          historyValues={historyValues}
+          citedCount={citedCount}
+          platformCount={PLATFORMS.length}
+          trendDataStatus={trendDataStatus}
+        />
 
         <div className={`grid gap-5 ${gscConnected ? "sm:grid-cols-2 xl:grid-cols-1" : ""}`}>
           {gscConnected && gsc && (
@@ -796,7 +757,7 @@ function MyDashboardOverviewContent({
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Score</p>
                   <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{workspace.citationScore}%</span>
+                    <span className="text-3xl font-extrabold tracking-tight text-ink">{workspace.citationScore}%</span>
                     {workspace.weeklyLiftAvailable && (
                       <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
                         {workspace.weeklyLift}
@@ -824,8 +785,8 @@ function MyDashboardOverviewContent({
                       key={p.name} 
                       className={`flex items-center justify-between rounded-xl border p-2.5 text-xs transition-all duration-150 ${
                         p.cited 
-                          ? "border-emerald-100 bg-gradient-to-r from-emerald-50/50 to-white text-slate-900 shadow-[0_1px_2px_rgba(16,185,129,0.02)]" 
-                          : "border-slate-100 bg-gradient-to-r from-slate-50/50 to-white text-slate-400"
+                          ? "border-emerald-100 bg-gradient-to-r from-emerald-50/50 to-card text-ink shadow-[0_1px_2px_rgba(16,185,129,0.02)] dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-[#111]"
+                          : "border-border bg-gradient-to-r from-surface/50 to-card text-muted dark:from-[#161616] dark:to-[#111]"
                       }`}
                     >
                       <span className="font-semibold truncate max-w-[100px]">{p.name}</span>

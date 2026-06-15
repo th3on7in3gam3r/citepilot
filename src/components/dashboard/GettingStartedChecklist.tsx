@@ -69,7 +69,7 @@ export function GettingStartedChecklist({
   }
 
   return (
-    <section className="mb-8 overflow-hidden rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/5 via-white to-white shadow-sm">
+    <section className="mb-8 overflow-hidden rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/5 via-card to-card shadow-sm dark:from-accent/10 dark:via-[#111] dark:to-[#111] dark:border-accent/20">
       <header className="flex items-start justify-between gap-4 border-b border-accent/10 px-6 py-5">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
