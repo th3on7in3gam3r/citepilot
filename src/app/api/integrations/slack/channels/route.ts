@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { isSlackConfigured } from "@/lib/alerts/slack-config";
 import { listSlackChannels } from "@/lib/alerts/slack-client";
 import { getSlackConnection } from "@/lib/alerts/store";
 import { userHasPilotAccess } from "@/lib/billing/access";
@@ -31,15 +32,17 @@ export const GET = withApiLogging(async function GET(request: Request) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
+  const configured = isSlackConfigured();
   const connection = await getSlackConnection(workspaceId, userId);
   if (!connection) {
-    return NextResponse.json({ connected: false, channels: [] });
+    return NextResponse.json({ connected: false, configured, channels: [] });
   }
 
   try {
     const channels = await listSlackChannels(connection);
     return NextResponse.json({
       connected: true,
+      configured: true,
       teamName: connection.slack_team_name,
       channelId: connection.slack_channel_id,
       channelName: connection.slack_channel_name,

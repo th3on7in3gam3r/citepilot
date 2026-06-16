@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
+import { SlackAlertsPanel } from "@/components/dashboard/SlackAlertsPanel";
 import { effectInit } from "@/lib/react/effect-init";
 import { useBilling } from "@/contexts/BillingContext";
 import { useToast } from "@/components/notifications/ToastProvider";
@@ -229,96 +229,111 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
     return <div className="h-48 animate-pulse rounded-2xl bg-surface" />;
   }
 
-  if (!isPaid) {
-    return (
-      <FeatureGate
-        feature="cms_publish"
-        title="CMS integrations"
-        description="Connect Webflow, WordPress, Ghost, Shopify, or Framer and publish generated articles in one click."
-        highlights={[
-          "Workspace-level credentials",
-          "Test connections before publishing",
-          "Publish from the article queue",
-        ]}
-      />
-    );
-  }
-
   const framerScript = framerWidgetScriptTag(workspaceId, site.url);
   const ordered = providerOrder
     .map((id) => integrations.find((item) => item.id === id))
     .filter(Boolean) as IntegrationStatus[];
+
+  const cmsSection = !isPaid ? (
+    <FeatureGate
+      feature="cms_publish"
+      title="CMS integrations"
+      description="Connect Webflow, WordPress, Ghost, Shopify, or Framer and publish generated articles in one click."
+      highlights={[
+        "Workspace-level credentials",
+        "Test connections before publishing",
+        "Publish from the article queue",
+      ]}
+    />
+  ) : loading ? (
+    <p className="text-sm text-muted">Loading integrations…</p>
+  ) : (
+    <div className="grid gap-4 md:grid-cols-2">
+      {ordered.map((item) => {
+        const badge = statusBadge(item.status, item.connected);
+        return (
+          <article
+            key={item.id}
+            className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className="flex h-11 w-11 items-center justify-center rounded-xl text-sm font-bold text-white"
+                  style={{ background: logoColors[item.id] }}
+                >
+                  {item.name.charAt(0)}
+                </span>
+                <div>
+                  <h3 className="font-display font-bold text-ink">{item.name}</h3>
+                  <span
+                    className={`mt-1 inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badge.className}`}
+                  >
+                    {badge.label}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="mt-3 flex-1 text-sm text-muted">{item.description}</p>
+            {item.connected && item.displayName && (
+              <p className="mt-2 text-xs text-muted">
+                {item.displayName}
+                {item.siteUrl ? ` · ${item.siteUrl}` : ""}
+              </p>
+            )}
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (item.connected) setManageId(item.id);
+                  else setActiveId(item.id);
+                }}
+                className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white hover:bg-ink/90"
+              >
+                {item.connected ? "Manage" : "Connect"}
+              </button>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
 
   return (
     <>
       <DashboardPageHeader
         headingLevel="h2"
         title="Integrations"
-        description="Connect, test, and manage publishing to Webflow, WordPress, Ghost, Shopify, and Framer."
+        description="Connect CMS platforms to publish articles, and Slack for citation digests and alerts."
       />
 
-      <div className="mb-4">
-        <Link
-          href="/dashboard/settings"
-          className="text-sm font-semibold text-accent hover:underline"
-        >
-          ← Back to Settings
-        </Link>
-      </div>
+      <section className="mb-10">
+        <h3 className="font-display text-base font-bold text-ink">Publishing (CMS)</h3>
+        <p className="mt-1 text-sm text-muted">
+          Webflow, WordPress, Ghost, Shopify, and Framer — publish from your article queue.
+        </p>
+        <div className="mt-4">{cmsSection}</div>
+      </section>
 
-      {loading ? (
-        <p className="text-sm text-muted">Loading integrations…</p>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {ordered.map((item) => {
-            const badge = statusBadge(item.status, item.connected);
-            return (
-              <article
-                key={item.id}
-                className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="flex h-11 w-11 items-center justify-center rounded-xl text-sm font-bold text-white"
-                      style={{ background: logoColors[item.id] }}
-                    >
-                      {item.name.charAt(0)}
-                    </span>
-                    <div>
-                      <h3 className="font-display font-bold text-ink">{item.name}</h3>
-                      <span
-                        className={`mt-1 inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badge.className}`}
-                      >
-                        {badge.label}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-3 flex-1 text-sm text-muted">{item.description}</p>
-                {item.connected && item.displayName && (
-                  <p className="mt-2 text-xs text-muted">
-                    {item.displayName}
-                    {item.siteUrl ? ` · ${item.siteUrl}` : ""}
-                  </p>
-                )}
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (item.connected) setManageId(item.id);
-                      else setActiveId(item.id);
-                    }}
-                    className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white hover:bg-ink/90"
-                  >
-                    {item.connected ? "Manage" : "Connect"}
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+      <section>
+        <h3 className="font-display text-base font-bold text-ink">Slack alerts</h3>
+        <p className="mt-1 text-sm text-muted">
+          Authorize with Slack OAuth — no email field. After connecting, choose a channel for
+          digests and citation change alerts.
+        </p>
+        <article className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#4A154B] text-sm font-bold text-white">
+              S
+            </span>
+            <div>
+              <h3 className="font-display font-bold text-ink">Slack</h3>
+              <p className="text-xs text-muted">Weekly digests & citation alerts</p>
+            </div>
+          </div>
+          <SlackAlertsPanel workspaceId={workspaceId} embedded />
+        </article>
+      </section>
 
       {activeId === "webflow" && (
         <ConnectModal title="Connect Webflow" onClose={() => setActiveId(null)}>

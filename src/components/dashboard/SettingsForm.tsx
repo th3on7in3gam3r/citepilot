@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
@@ -52,6 +53,7 @@ type SettingsFormProps = {
 
 export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProps) {
   const toast = useToast();
+  const searchParams = useSearchParams();
   const workspaceId = workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId();
 
   const [domain, setDomain] = useState(workspace.domain);
@@ -104,6 +106,17 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         setIsPilot(false);
       });
   }, []);
+
+  useEffect(() => {
+    const slackStatus = searchParams.get("slack");
+    const alerts = searchParams.get("alerts");
+    if (slackStatus === "connected") {
+      toast.success("Slack connected — pick a channel below.");
+    }
+    if (alerts === "slack" || slackStatus === "connected") {
+      document.getElementById("notifications")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [searchParams, toast]);
 
   useEffect(() => {
     effectInit(() => {
@@ -289,13 +302,34 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       <DashboardPageHeader
         headingLevel="h2"
         title="Edit workspace settings"
-        description="Update your domain, money prompts, monitoring email, notifications, Autopilot, and white-label options."
+        description="Update your domain, money prompts, CMS integrations, monitoring email, Slack alerts, Autopilot, and white-label options."
         action={
           lastUpdated ? (
             <p className="text-xs text-muted">Last updated {lastUpdated}</p>
           ) : undefined
         }
       />
+
+      <Panel title="Integrations" className="border-l-4 border-l-sky-400">
+        <p className="text-sm text-muted">
+          Connect Webflow, WordPress, Ghost, Shopify, or Framer to publish from
+          your content queue. Connect Slack for citation digests and alerts.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/dashboard/settings/integrations"
+            className="inline-flex rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white"
+          >
+            Manage integrations →
+          </Link>
+          <Link
+            href="/dashboard/settings#notifications"
+            className="inline-flex rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface"
+          >
+            Slack & email alerts →
+          </Link>
+        </div>
+      </Panel>
 
       <ThemeSettingsPanel />
 
@@ -480,19 +514,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               </button>
             </div>
           </div>
-        </Panel>
-
-        <Panel title="Integrations" className="border-l-4 border-l-sky-400">
-          <p className="text-sm text-muted">
-            Connect Webflow, WordPress, Ghost, Shopify, and Framer to publish articles
-            from your content queue.
-          </p>
-          <Link
-            href="/dashboard/settings/integrations"
-            className="mt-4 inline-flex rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white"
-          >
-            Manage integrations →
-          </Link>
         </Panel>
 
         <Panel title="Notifications" className="border-l-4 border-l-mint" id="notifications">
