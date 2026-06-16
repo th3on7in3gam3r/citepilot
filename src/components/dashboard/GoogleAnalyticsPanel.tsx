@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import type { GscMetrics } from "@/lib/gsc/client";
 import { Panel } from "@/components/dashboard/DashboardUI";
-import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
+import { GoogleAnalyticsChartsGrid } from "@/components/dashboard/analytics/GoogleAnalyticsChartsGrid";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { buildOrganicCitationBridge } from "@/lib/analytics/organic-citation-bridge";
 
@@ -110,6 +110,13 @@ export function GoogleAnalyticsPanel({
 
   return (
     <>
+      <GoogleAnalyticsChartsGrid
+        workspace={workspace}
+        metrics={metrics}
+        connected={connected}
+        loading={loading}
+      />
+
       {loadError && (
         <div
           className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-4"
@@ -179,7 +186,7 @@ export function GoogleAnalyticsPanel({
       )}
 
       <Panel
-        title={preferOrganicLead ? "Organic performance (Search Console)" : "Organic performance"}
+        title={preferOrganicLead ? "Organic insights" : "Organic performance"}
         className="mt-6"
       >
         <div className="mb-6 dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
@@ -202,27 +209,13 @@ export function GoogleAnalyticsPanel({
 
         {loading ? (
           <p className="text-sm text-muted">Loading Search Console data…</p>
-        ) : (
+        ) : !connected ? (
           <div className="grid gap-4 sm:grid-cols-3">
-            <MetricCard
-              label="Organic clicks (28d)"
-              value={connected ? String(metrics!.clicks) : "—"}
-              delta={metrics?.clicksDelta ?? undefined}
-              unavailable={!connected}
-            />
-            <MetricCard
-              label="Impressions"
-              value={connected ? metrics!.impressions.toLocaleString() : "—"}
-              delta={metrics?.impressionsDelta ?? undefined}
-              unavailable={!connected}
-            />
-            <MetricCard
-              label="Avg. position"
-              value={connected ? metrics!.position.toFixed(1) : "—"}
-              unavailable={!connected}
-            />
+            <MetricCard label="Organic clicks (28d)" value="—" unavailable />
+            <MetricCard label="Impressions" value="—" unavailable />
+            <MetricCard label="Avg. position" value="—" unavailable />
           </div>
-        )}
+        ) : null}
 
         <div className="mt-6 rounded-2xl border border-border bg-surface/50 px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -241,18 +234,6 @@ export function GoogleAnalyticsPanel({
             </ul>
           )}
         </div>
-
-        {connected && (
-          <div className="mt-6">
-            <CitationVolumeChart
-              seed={0}
-              compact
-              citationScore={workspace.citationScore}
-              hasRealAudit={workspace.hasRealAudit}
-              citationHistory={workspace.citationHistory}
-            />
-          </div>
-        )}
       </Panel>
 
       {connected && (
