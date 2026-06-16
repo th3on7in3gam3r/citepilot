@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
+import { CitationVisualizations } from "@/components/dashboard/visualizations/CitationVisualizations";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { GooeyFilter, LiquidToggle } from "@/components/ui/liquid-toggle";
@@ -240,6 +241,7 @@ function LLMPanel({
 }) {
   return (
     <>
+      <CitationVisualizations workspace={workspace} />
       <Panel title="Brand presence" className="mt-6" id="money-prompts">
         <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
