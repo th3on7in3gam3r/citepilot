@@ -61,6 +61,9 @@ export type WorkspacePayload = OnboardingAnswers & {
 
 export type WorkspaceUpdateInput = Partial<OnboardingAnswers> & {
   preferences?: Partial<WorkspacePreferences>;
+  displayName?: string;
+  status?: "active" | "paused";
+  archived?: boolean;
 };
 
 export type WorkspaceSnapshotResponse = {

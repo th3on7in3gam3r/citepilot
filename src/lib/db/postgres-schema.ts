@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS workspaces (
   referral TEXT,
   preferences TEXT NOT NULL DEFAULT '{}',
   user_id TEXT,
+  display_name TEXT,
+  status TEXT NOT NULL DEFAULT 'active',
+  archived_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -448,4 +451,19 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
 );
 
 CREATE INDEX IF NOT EXISTS idx_notification_preferences_workspace ON notification_preferences(workspace_id);
+
+CREATE TABLE IF NOT EXISTS workspace_members (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  email TEXT NOT NULL,
+  user_id TEXT,
+  role TEXT NOT NULL DEFAULT 'viewer',
+  invited_by TEXT NOT NULL,
+  invited_at TEXT NOT NULL,
+  accepted_at TEXT,
+  UNIQUE(workspace_id, email)
+);
+
+CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
 `;

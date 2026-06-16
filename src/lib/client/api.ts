@@ -60,11 +60,17 @@ export type WorkspaceListResponse = {
   workspaces: {
     id: string;
     domain: string;
+    displayName?: string | null;
     businessType: string;
     buyerQuestion: string;
     updatedAt: string;
     citationScore: number;
     hasRealAudit: boolean;
+    promptCount?: number;
+    lastScanAt?: string | null;
+    status?: "active" | "paused";
+    archivedAt?: string | null;
+    scoreDeltaWeek?: number | null;
     workspace: WorkspaceSnapshotResponse;
   }[];
   limits: WorkspaceLimits;

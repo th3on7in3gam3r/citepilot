@@ -22,6 +22,7 @@ export type DashboardNavItem = {
   description: string;
   icon:
     | "overview"
+    | "workspaces"
     | "analytics"
     | "content"
     | "backlinks"
@@ -41,6 +42,14 @@ export const dashboardNav: DashboardNavItem[] = [
     href: "/dashboard",
     description: "Citation score, trends, and weekly priorities",
     icon: "overview",
+    section: "main",
+  },
+  {
+    id: "workspaces",
+    label: "Workspaces",
+    href: "/dashboard/workspaces",
+    description: "Manage all client workspaces, bulk scans, and exports",
+    icon: "workspaces",
     section: "main",
   },
   {

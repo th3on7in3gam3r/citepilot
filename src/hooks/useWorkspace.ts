@@ -19,6 +19,7 @@ import {
   storeWorkspaceId,
 } from "@/lib/client/api";
 import { effectInit } from "@/lib/react/effect-init";
+import { recordRecentWorkspace } from "@/lib/workspace/recent";
 import type { WorkspaceLimits } from "@/lib/billing/limits";
 import {
   ONBOARDING_STORAGE_KEY,
@@ -28,11 +29,17 @@ import {
 export type WorkspaceListItem = {
   id: string;
   domain: string;
+  displayName?: string | null;
   buyerQuestion: string;
   businessType: string;
   updatedAt: string;
   citationScore: number;
   hasRealAudit: boolean;
+  promptCount?: number;
+  lastScanAt?: string | null;
+  status?: "active" | "paused";
+  archivedAt?: string | null;
+  scoreDeltaWeek?: number | null;
 };
 
 export type WorkspaceLimitsInfo = WorkspaceLimits;
@@ -127,6 +134,7 @@ export function useWorkspace() {
   const switchWorkspace = useCallback(
     async (id: string) => {
       storeWorkspaceId(id);
+      recordRecentWorkspace(id);
       const fromApi = await fetchWorkspace(id);
       if (fromApi) {
         setWorkspace(normalizeSnapshot(fromApi, id));
@@ -152,7 +160,7 @@ export function useWorkspace() {
         if (result.limits) setLimits(result.limits);
       }
       await loadList();
-      return {};
+      return { id: result.id };
     },
     [loadList],
   );

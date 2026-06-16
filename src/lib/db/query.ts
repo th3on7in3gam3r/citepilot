@@ -74,6 +74,34 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `ALTER TABLE audit_shares ADD COLUMN IF NOT EXISTS password_hash TEXT`,
       );
+      await pool.query(
+        `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS display_name TEXT`,
+      );
+      await pool.query(
+        `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`,
+      );
+      await pool.query(
+        `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS archived_at TEXT`,
+      );
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS workspace_members (
+          id TEXT PRIMARY KEY,
+          workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+          email TEXT NOT NULL,
+          user_id TEXT,
+          role TEXT NOT NULL DEFAULT 'viewer',
+          invited_by TEXT NOT NULL,
+          invited_at TEXT NOT NULL,
+          accepted_at TEXT,
+          UNIQUE(workspace_id, email)
+        )
+      `);
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id)`,
+      );
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id)`,
+      );
     })();
   }
   await globalForPg.citepilotPgReady;

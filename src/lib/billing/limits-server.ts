@@ -13,7 +13,7 @@ import {
   buildPromptLimits,
   type PromptLimits,
 } from "@/lib/billing/prompt-limits";
-import { countWorkspacesForUser } from "@/lib/server/workspace";
+import { countActiveWorkspacesForUser } from "@/lib/server/workspace-management";
 
 export type { WorkspaceLimits, PromptLimits };
 
@@ -49,7 +49,7 @@ export async function getWorkspaceLimitsForUser(
   }
 
   const [count, billing] = await Promise.all([
-    countWorkspacesForUser(userId),
+    countActiveWorkspacesForUser(userId),
     getBillingByUserId(userId),
   ]);
 

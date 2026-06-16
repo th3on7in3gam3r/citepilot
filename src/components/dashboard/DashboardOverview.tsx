@@ -4,11 +4,15 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { MyDashboardOverview } from "@/components/dashboard/overview/MyDashboardOverview";
+import { FleetAgencyOverview } from "@/components/dashboard/workspaces/FleetAgencyOverview";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useBilling } from "@/contexts/BillingContext";
 import { ONBOARDING_WELCOME_TOAST_KEY } from "@/lib/onboarding";
+import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 
 export function DashboardOverview() {
   const { refresh } = useWorkspaceContext();
+  const { isFleet, ready: billingReady } = useBilling();
   const searchParams = useSearchParams();
   const toast = useToast();
 
@@ -27,6 +31,10 @@ export function DashboardOverview() {
       clearTimeout(second);
     };
   }, [searchParams, refresh, toast]);
+
+  if (!billingReady) return <DashboardPageSkeleton />;
+
+  if (isFleet) return <FleetAgencyOverview />;
 
   return <MyDashboardOverview />;
 }

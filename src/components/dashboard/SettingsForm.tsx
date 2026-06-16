@@ -6,6 +6,7 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
 import { NotificationPreferencesPanel } from "@/components/dashboard/NotificationPreferencesPanel";
+import { WorkspaceManagementPanel } from "@/components/dashboard/workspaces/WorkspaceManagementPanel";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
@@ -14,12 +15,10 @@ import { WhiteLabelSettingsPanel } from "@/components/dashboard/WhiteLabelSettin
 import { ThemeSettingsPanel } from "@/components/theme/ThemeSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import {
-  deleteWorkspace,
   getStoredWorkspaceId,
   runAudit,
   updateWorkspace,
 } from "@/lib/client/api";
-import { useRouter } from "next/navigation";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import {
@@ -47,7 +46,6 @@ type SettingsFormProps = {
 };
 
 export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProps) {
-  const router = useRouter();
   const toast = useToast();
   const workspaceId = workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId();
 
@@ -66,7 +64,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   const [saving, setSaving] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [auditing, setAuditing] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [isFleet, setIsFleet] = useState(false);
   const [isPilot, setIsPilot] = useState(false);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(
@@ -269,28 +266,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     }
   }
 
-  async function handleDelete() {
-    if (!workspaceId) return;
-    if (
-      !window.confirm(
-        "Delete this workspace and all audits? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
-    setDeleting(true);
-    const ok = await deleteWorkspace(workspaceId);
-    setDeleting(false);
-    if (!ok) {
-      toast.error("Failed to delete workspace.");
-      return;
-    }
-    await onDeleted?.();
-    router.push("/dashboard");
-  }
-
-  const busy = saving || auditing || deleting;
-  const togglesBusy = saving || savingPrefs || auditing || deleting;
+  const busy = saving || auditing;
+  const togglesBusy = saving || savingPrefs || auditing;
   const lastUpdated = workspace.updatedAt
     ? new Date(workspace.updatedAt).toLocaleString()
     : null;
@@ -618,20 +595,15 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         {isPilot && <ReferralPanel />}
 
         <BillingPlanPanel />
-        <Panel title="Danger zone" className="border-l-4 border-l-red-500">
-          <p className="text-sm text-muted">
-            Permanently remove this workspace, audits, and snapshots from your local
-            database.
-          </p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleDelete}
-            className="mt-4 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
-          >
-            {deleting ? "Deleting…" : "Delete workspace"}
-          </button>
-        </Panel>
+
+        {workspaceId && (
+          <WorkspaceManagementPanel
+            workspaceId={workspaceId}
+            domain={domain}
+            onChanged={() => void onSaved()}
+            onDeleted={() => void onDeleted?.()}
+          />
+        )}
       </form>
     </>
   );

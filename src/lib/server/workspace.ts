@@ -399,7 +399,7 @@ export async function listWorkspacesForUser(
 ): Promise<WorkspacePayload[]> {
   const rows = await dbAll<WorkspaceRow>(
     `SELECT * FROM workspaces
-     WHERE user_id = ?
+     WHERE user_id = ? AND archived_at IS NULL
      ORDER BY updated_at DESC
      LIMIT ?`,
     [userId, limit],
@@ -487,6 +487,8 @@ export async function getCitationSnapshots(
 
 /** Delete all rows that reference a workspace, in FK-safe order. */
 export async function deleteWorkspaceDependents(id: string): Promise<void> {
+  await dbRun(`DELETE FROM notification_preferences WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM workspace_members WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM cron_dispatch_log WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM cms_publications WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM cms_connections WHERE workspace_id = ?`, [id]);

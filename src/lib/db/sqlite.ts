@@ -28,6 +28,9 @@ function initSchema(db: Database.Database): void {
       referral TEXT,
       preferences TEXT NOT NULL DEFAULT '{}',
       user_id TEXT,
+      display_name TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      archived_at TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -267,6 +270,34 @@ function migrateSchema(db: Database.Database): void {
   if (!columns.some((c) => c.name === "user_id")) {
     db.exec(`ALTER TABLE workspaces ADD COLUMN user_id TEXT`);
   }
+  if (!columns.some((c) => c.name === "display_name")) {
+    db.exec(`ALTER TABLE workspaces ADD COLUMN display_name TEXT`);
+  }
+  if (!columns.some((c) => c.name === "status")) {
+    db.exec(
+      `ALTER TABLE workspaces ADD COLUMN status TEXT NOT NULL DEFAULT 'active'`,
+    );
+  }
+  if (!columns.some((c) => c.name === "archived_at")) {
+    db.exec(`ALTER TABLE workspaces ADD COLUMN archived_at TEXT`);
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS workspace_members (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      user_id TEXT,
+      role TEXT NOT NULL DEFAULT 'viewer',
+      invited_by TEXT NOT NULL,
+      invited_at TEXT NOT NULL,
+      accepted_at TEXT,
+      UNIQUE(workspace_id, email),
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id);
+    CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
+  `);
 
   const blogCols = db
     .prepare(`PRAGMA table_info(blog_posts)`)
@@ -691,6 +722,22 @@ function migrateSchema(db: Database.Database): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_notification_preferences_workspace ON notification_preferences(workspace_id);
+
+    CREATE TABLE IF NOT EXISTS workspace_members (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      user_id TEXT,
+      role TEXT NOT NULL DEFAULT 'viewer',
+      invited_by TEXT NOT NULL,
+      invited_at TEXT NOT NULL,
+      accepted_at TEXT,
+      UNIQUE(workspace_id, email),
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id);
+    CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
   `);
 }
 

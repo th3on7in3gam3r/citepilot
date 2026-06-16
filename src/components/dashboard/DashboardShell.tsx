@@ -13,6 +13,9 @@ import { DashboardRail } from "@/components/dashboard/layout/DashboardRail";
 import { DashboardTopBar } from "@/components/dashboard/layout/DashboardTopBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { WorkspaceProvider, useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { WorkspaceSwitcherProvider, useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
+import { WorkspaceSwitcherModal } from "@/components/dashboard/workspaces/WorkspaceSwitcherModal";
+import { WorkspaceCreationWizard } from "@/components/dashboard/workspaces/WorkspaceCreationWizard";
 import { BillingProvider } from "@/contexts/BillingContext";
 import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 import { DashboardUsageLimitBanner } from "@/components/dashboard/DashboardUsageLimitBanner";
@@ -31,6 +34,13 @@ function pageHeader(pathname: string): {
       title: "Overview",
       backHref: null,
       backLabel: null,
+    };
+  }
+  if (pathname.startsWith("/dashboard/workspaces")) {
+    return {
+      title: "Workspaces",
+      backHref: "/dashboard",
+      backLabel: "Overview",
     };
   }
   if (pathname.startsWith("/dashboard/content")) {
@@ -116,23 +126,36 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   );
 }
 
+function WorkspaceModals() {
+  const { switcherOpen, setSwitcherOpen } = useWorkspaceSwitcher();
+  return (
+    <>
+      <WorkspaceSwitcherModal open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
+      <WorkspaceCreationWizard />
+    </>
+  );
+}
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <BillingProvider>
       <UpgradeModalProvider>
         <WorkspaceProvider>
-          <GridFilterProvider>
-            <CopilotProvider>
-              <PostHogIdentify />
-              <DashboardShellInner>{children}</DashboardShellInner>
-              <Suspense fallback={null}>
-                <DashboardUpgradeCelebration />
-              </Suspense>
-              <CopilotPanel />
-              <GlobalFilterModal />
-              <DashboardCommandPalette />
-            </CopilotProvider>
-          </GridFilterProvider>
+          <WorkspaceSwitcherProvider>
+            <GridFilterProvider>
+              <CopilotProvider>
+                <PostHogIdentify />
+                <DashboardShellInner>{children}</DashboardShellInner>
+                <Suspense fallback={null}>
+                  <DashboardUpgradeCelebration />
+                </Suspense>
+                <CopilotPanel />
+                <GlobalFilterModal />
+                <DashboardCommandPalette />
+                <WorkspaceModals />
+              </CopilotProvider>
+            </GridFilterProvider>
+          </WorkspaceSwitcherProvider>
         </WorkspaceProvider>
       </UpgradeModalProvider>
     </BillingProvider>
