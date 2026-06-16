@@ -1,8 +1,10 @@
+import "server-only";
 import { resolveTxt } from "dns/promises";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
-
-export const VERIFICATION_META_NAME = "citepilot-site-verification";
-export const VERIFICATION_DNS_PREFIX = "citepilot-site-verification=";
+import {
+  VERIFICATION_DNS_PREFIX,
+  VERIFICATION_META_NAME,
+} from "@/lib/score/verification-constants";
 
 export async function verifyDnsTxtRecord(
   domain: string,

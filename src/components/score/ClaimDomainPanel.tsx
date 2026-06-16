@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   VERIFICATION_DNS_PREFIX,
   VERIFICATION_META_NAME,
-} from "@/lib/score/verification";
+} from "@/lib/score/verification-constants";
 
 type ClaimState = {
   token: string | null;
