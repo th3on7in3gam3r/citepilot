@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
-import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
+import { AnalyticsChartsGrid } from "@/components/dashboard/analytics/AnalyticsChartsGrid";
 import { CitationVisualizations } from "@/components/dashboard/visualizations/CitationVisualizations";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
@@ -239,8 +239,39 @@ function LLMPanel({
   benchmark: CompetitorBenchmarkResult;
   correlations: CorrelationInsight[];
 }) {
+  const workspaceId = workspace.workspaceId ?? workspace.id;
+  const [platformRates, setPlatformRates] = useState<
+    import("@/lib/citations/viz-data").PlatformCitationRate[] | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    let cancelled = false;
+    fetch(`/api/workspaces/${encodeURIComponent(workspaceId)}/citations/visualization`, {
+      credentials: "include",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { heatmap?: { platformRates: import("@/lib/citations/viz-data").PlatformCitationRate[] } } | null) => {
+        if (!cancelled && data?.heatmap?.platformRates) {
+          setPlatformRates(data.heatmap.platformRates);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceId]);
+
   return (
     <>
+      <div className="mt-6">
+        <AnalyticsChartsGrid
+          workspace={workspace}
+          rows={rows}
+          platformRates={platformRates}
+        />
+      </div>
+
       <CitationVisualizations workspace={workspace} />
       <Panel title="Brand presence" className="mt-6" id="money-prompts">
         <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
@@ -284,14 +315,6 @@ function LLMPanel({
         <PromptTable rows={rows} hasRealAudit={workspace.hasRealAudit} />
       </Panel>
       <CompetitorBenchmarkPanel workspace={workspace} benchmark={benchmark} />
-      <div className="mt-6">
-        <CitationVolumeChart
-          seed={0}
-          citationScore={workspace.citationScore}
-          hasRealAudit={workspace.hasRealAudit}
-          citationHistory={workspace.citationHistory}
-        />
-      </div>
       <CorrelationInsightsPanel insights={correlations} />
     </>
   );

@@ -1,6 +1,7 @@
 import {
   ArcElement,
   BarElement,
+  BubbleController,
   CategoryScale,
   Chart as ChartJS,
   Filler,
@@ -8,6 +9,9 @@ import {
   LinearScale,
   LineElement,
   PointElement,
+  PolarAreaController,
+  RadarController,
+  RadialLinearScale,
   Tooltip,
 } from "chart.js";
 import { CHART_COLORS, chartFontFamily } from "./theme";
@@ -20,10 +24,14 @@ export function registerCharts(): void {
   ChartJS.register(
     CategoryScale,
     LinearScale,
+    RadialLinearScale,
     PointElement,
     LineElement,
     BarElement,
     ArcElement,
+    RadarController,
+    PolarAreaController,
+    BubbleController,
     Filler,
     Legend,
     Tooltip,

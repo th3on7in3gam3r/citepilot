@@ -2,8 +2,11 @@
 
 import {
   Bar,
+  Bubble,
   Doughnut,
   Line,
+  PolarArea,
+  Radar,
 } from "react-chartjs-2";
 import type { ChartOptions } from "chart.js";
 import { registerCharts } from "@/lib/charts/register";
@@ -390,6 +393,201 @@ export function DashboardSparkline({
           scales: {
             x: { display: false },
             y: { display: false },
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+export function DashboardRadarChart({
+  labels,
+  values,
+  height = 260,
+  color = CHART_COLORS.primary,
+}: {
+  labels: readonly string[];
+  values: number[];
+  height?: number;
+  color?: string;
+}) {
+  return (
+    <div style={{ height }} className="w-full">
+      <Radar
+        data={{
+          labels: [...labels],
+          datasets: [
+            {
+              label: "Coverage",
+              data: values,
+              borderColor: color,
+              backgroundColor: chartFill(color, 0.28),
+              borderWidth: 2,
+              pointBackgroundColor: color,
+              pointBorderColor: "#fff",
+              pointBorderWidth: 2,
+              pointRadius: 3,
+            },
+          ],
+        }}
+        options={{
+          ...baseOptions,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: CHART_COLORS.ink,
+              cornerRadius: 8,
+            },
+          },
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: {
+                stepSize: 25,
+                color: CHART_COLORS.muted,
+                font: { size: 9 },
+                backdropColor: "transparent",
+              },
+              grid: { color: CHART_COLORS.grid },
+              angleLines: { color: CHART_COLORS.grid },
+              pointLabels: {
+                color: CHART_COLORS.label,
+                font: { size: 10, weight: 600 },
+              },
+            },
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+export function DashboardPolarAreaChart({
+  segments,
+  height = 260,
+}: {
+  segments: { label: string; value: number; color?: string }[];
+  height?: number;
+}) {
+  return (
+    <div style={{ height }} className="w-full">
+      <PolarArea
+        data={{
+          labels: segments.map((s) => s.label),
+          datasets: [
+            {
+              data: segments.map((s) => s.value),
+              backgroundColor: segments.map(
+                (s, i) => chartFill(s.color ?? CHART_PALETTE[i % CHART_PALETTE.length], 0.55),
+              ),
+              borderColor: segments.map(
+                (s, i) => s.color ?? CHART_PALETTE[i % CHART_PALETTE.length],
+              ),
+              borderWidth: 1,
+            },
+          ],
+        }}
+        options={{
+          ...baseOptions,
+          plugins: {
+            legend: {
+              display: true,
+              position: "bottom",
+              labels: {
+                boxWidth: 8,
+                color: CHART_COLORS.label,
+                font: { size: 10 },
+              },
+            },
+            tooltip: {
+              backgroundColor: CHART_COLORS.ink,
+              cornerRadius: 8,
+            },
+          },
+          scales: {
+            r: {
+              grid: { color: CHART_COLORS.grid },
+              ticks: { display: false },
+            },
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+export type BubblePoint = {
+  x: number;
+  y: number;
+  r: number;
+  label?: string;
+};
+
+export function DashboardBubbleChart({
+  points,
+  height = 260,
+  color = CHART_COLORS.violet,
+}: {
+  points: BubblePoint[];
+  height?: number;
+  color?: string;
+}) {
+  return (
+    <div style={{ height }} className="w-full">
+      <Bubble
+        data={{
+          datasets: [
+            {
+              label: "Prompts",
+              data: points,
+              backgroundColor: chartFill(color, 0.45),
+              borderColor: color,
+              borderWidth: 1.5,
+            },
+          ],
+        }}
+        options={{
+          ...baseOptions,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: CHART_COLORS.ink,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => {
+                  const raw = ctx.raw as BubblePoint & { label?: string };
+                  const name = raw.label ?? `Prompt ${ctx.dataIndex + 1}`;
+                  return ` ${name}: ${raw.y}% visibility`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Prompt index",
+                color: CHART_COLORS.muted,
+                font: { size: 10 },
+              },
+              grid: { color: CHART_COLORS.grid },
+              border: { display: false },
+              ticks: { color: CHART_COLORS.muted, font: { size: 10 } },
+            },
+            y: {
+              min: 0,
+              max: 100,
+              title: {
+                display: true,
+                text: "Visibility %",
+                color: CHART_COLORS.muted,
+                font: { size: 10 },
+              },
+              grid: { color: CHART_COLORS.grid },
+              border: { display: false },
+              ticks: { color: CHART_COLORS.muted, font: { size: 10 } },
+            },
           },
         }}
       />
