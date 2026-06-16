@@ -19,21 +19,31 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
-/** Stripe API 2025+ stores billing period on items, not the subscription root. */
+/** Stripe API 2025+ stores billing period on items; older SDKs use the subscription root. */
+type SubscriptionWithLegacyPeriod = Stripe.Subscription & {
+  current_period_end?: number;
+};
+
+type SubscriptionItemWithPeriod = {
+  current_period_end?: number;
+};
+
 export function subscriptionCurrentPeriodEnd(
   subscription: Stripe.Subscription,
 ): number | null {
   const fromItems = subscription.items.data
-    .map((item) => item.current_period_end)
+    .map(
+      (item) =>
+        (item as Stripe.SubscriptionItem & SubscriptionItemWithPeriod)
+          .current_period_end,
+    )
     .filter((value): value is number => typeof value === "number" && value > 0);
 
   if (fromItems.length > 0) {
     return Math.min(...fromItems);
   }
 
-  const legacy = (
-    subscription as Stripe.Subscription & { current_period_end?: number }
-  ).current_period_end;
+  const legacy = (subscription as SubscriptionWithLegacyPeriod).current_period_end;
 
   return typeof legacy === "number" && legacy > 0 ? legacy : null;
 }

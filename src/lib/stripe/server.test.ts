@@ -47,10 +47,21 @@ describe("mapSubscriptionToBilling", () => {
   it("reads current period end from subscription items (Stripe v22+)", () => {
     const end = Math.floor(Date.now() / 1000) + 7200;
     const sub = subscription({ status: "active" });
-    sub.items.data[0]!.current_period_end = end;
+    (sub.items.data[0] as Stripe.SubscriptionItem & { current_period_end?: number })
+      .current_period_end = end;
     expect(subscriptionCurrentPeriodEnd(sub)).toBe(end);
     expect(mapSubscriptionToBilling(sub).currentPeriodEnd).toBe(
       new Date(end * 1000).toISOString(),
     );
+  });
+
+  it("reads current period end from subscription root (Stripe v17)", () => {
+    const end = Math.floor(Date.now() / 1000) + 3600;
+    const sub = subscription({ status: "active" }) as Stripe.Subscription & {
+      current_period_end?: number;
+    };
+    sub.items.data = [{ price: { id: "price_pilot" } } as Stripe.SubscriptionItem];
+    sub.current_period_end = end;
+    expect(subscriptionCurrentPeriodEnd(sub)).toBe(end);
   });
 });
