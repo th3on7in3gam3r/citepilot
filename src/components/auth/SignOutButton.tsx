@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import posthog from "posthog-js";
 
 export function SignOutButton({ className }: { className?: string }) {
   const router = useRouter();
@@ -16,6 +17,11 @@ export function SignOutButton({ className }: { className?: string }) {
       });
     } catch (error) {
       console.error("Sign out failed", error);
+    }
+    try {
+      if (posthog.__loaded) posthog.reset();
+    } catch {
+      /* ignore */
     }
     router.push("/");
     router.refresh();

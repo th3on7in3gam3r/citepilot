@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { AuditFeedbackSurvey } from "@/components/feedback/AuditFeedbackSurvey";
 import { ProductCTAButton } from "@/components/ui/ProductCTA";
 import type { AuditPayload } from "@/lib/api-types";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
@@ -349,6 +350,14 @@ export function AuditForm() {
                 ))}
               </ul>
             </div>
+
+            <AuditFeedbackSurvey
+              auditId={result.id}
+              workspaceId={result.workspaceId}
+              domain={result.domain}
+              score={result.score}
+              source="public"
+            />
 
             {/* Waitlist / upgrade */}
             {!waitlistSent ? (

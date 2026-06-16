@@ -31,7 +31,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
     const stripe = getStripe();
     const portal = await stripe.billingPortal.sessions.create({
       customer: billing.stripeCustomerId,
-      return_url: `${appBaseUrl()}/dashboard/settings`,
+      return_url: `${appBaseUrl()}/cancel-survey`,
     });
 
     return NextResponse.json({ url: portal.url });

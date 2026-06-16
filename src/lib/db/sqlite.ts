@@ -614,6 +614,63 @@ function migrateSchema(db: Database.Database): void {
   if (shareCols.length > 0 && !shareCols.some((c) => c.name === "password_hash")) {
     db.exec(`ALTER TABLE audit_shares ADD COLUMN password_hash TEXT`);
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS feature_requests (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      submitted_by TEXT,
+      submitter_email TEXT,
+      vote_count INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'under_review',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_feature_requests_status ON feature_requests(status);
+    CREATE INDEX IF NOT EXISTS idx_feature_requests_votes ON feature_requests(vote_count DESC);
+
+    CREATE TABLE IF NOT EXISTS feature_request_votes (
+      id TEXT PRIMARY KEY,
+      request_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE(request_id, user_id),
+      FOREIGN KEY (request_id) REFERENCES feature_requests(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_feature_votes_user ON feature_request_votes(user_id);
+
+    CREATE TABLE IF NOT EXISTS audit_feedback (
+      id TEXT PRIMARY KEY,
+      audit_id TEXT,
+      workspace_id TEXT,
+      user_id TEXT,
+      domain TEXT NOT NULL,
+      score INTEGER,
+      useful INTEGER NOT NULL,
+      comment TEXT,
+      source TEXT NOT NULL DEFAULT 'dashboard',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_feedback_audit ON audit_feedback(audit_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_feedback_domain ON audit_feedback(domain);
+
+    CREATE TABLE IF NOT EXISTS cancel_survey_responses (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      competitor TEXT,
+      missing_feature TEXT,
+      details TEXT,
+      plan TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_cancel_survey_user ON cancel_survey_responses(user_id);
+  `);
 }
 
 export function getDb(): Database.Database {

@@ -38,7 +38,10 @@ export type AnalyticsEvent =
   | "proof_report_viewed"
   | "proof_report_cta_clicked"
   | "proof_report_share_clicked"
-  | "audit_share_created";
+  | "audit_share_created"
+  | "audit_feedback_submitted"
+  | "cancel_survey_submitted"
+  | "feature_request_submitted";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

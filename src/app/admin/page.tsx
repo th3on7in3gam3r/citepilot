@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { AdminDedupeButton } from "@/components/admin/AdminDedupeButton";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
+import { AdminFeatureRequestsPanel } from "@/components/admin/AdminFeatureRequestsPanel";
 import {
   getAdminStats,
   listRecentAudits,
@@ -180,6 +181,16 @@ export default async function AdminPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <h2 className="font-display text-lg font-bold text-ink">Feature requests</h2>
+          <p className="mt-2 text-sm text-muted">
+            Community roadmap — update status to notify submitters by email.
+          </p>
+          <div className="mt-4">
+            <AdminFeatureRequestsPanel />
           </div>
         </section>
 

@@ -18,6 +18,7 @@ import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 import { DashboardUsageLimitBanner } from "@/components/dashboard/DashboardUsageLimitBanner";
 import { GeoScoreBadgePrompt } from "@/components/dashboard/GeoScoreBadgePrompt";
 import { DashboardUpgradeCelebration } from "@/components/dashboard/DashboardUpgradeCelebration";
+import { PostHogIdentify } from "@/components/analytics/PostHogIdentify";
 import { dashboardNav } from "@/lib/dashboard";
 
 function pageHeader(pathname: string): {
@@ -122,6 +123,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <WorkspaceProvider>
           <GridFilterProvider>
             <CopilotProvider>
+              <PostHogIdentify />
               <DashboardShellInner>{children}</DashboardShellInner>
               <Suspense fallback={null}>
                 <DashboardUpgradeCelebration />

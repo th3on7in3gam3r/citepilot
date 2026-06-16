@@ -6,6 +6,7 @@ import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/Das
 import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
 import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
 import { ShareAuditResultsCard } from "@/components/dashboard/ShareAuditResultsCard";
+import { AuditFeedbackSurvey } from "@/components/feedback/AuditFeedbackSurvey";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { getStoredWorkspaceId, runAudit } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -29,6 +30,8 @@ export function GeoAuditPageClient() {
   const toast = useToast();
   const [auditing, setAuditing] = useState(false);
   const [showShareBanner, setShowShareBanner] = useState(false);
+  const [lastAuditId, setLastAuditId] = useState<string | null>(null);
+  const [lastAuditScore, setLastAuditScore] = useState<number | null>(null);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(PROMPT_LIMIT_FREE);
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
@@ -89,8 +92,10 @@ export function GeoAuditPageClient() {
     trackEvent("audit_started", { workspaceId, domain: ws.domain, source: "geo-audit" });
 
     try {
-      await runAudit({ domain: ws.domain, prompts, workspaceId });
+      const audit = await runAudit({ domain: ws.domain, prompts, workspaceId });
       trackAuditCompleted(workspaceId, { isSecond: ws.hasRealAudit, source: "geo-audit" });
+      setLastAuditId(audit.id);
+      setLastAuditScore(audit.score);
       await refresh();
       setShowShareBanner(true);
       toast.success("Audit complete — results updated.");
@@ -161,6 +166,18 @@ export function GeoAuditPageClient() {
         visible={showShareBanner}
         onDismiss={() => setShowShareBanner(false)}
       />
+
+      {showShareBanner && (
+        <div className="mb-6">
+          <AuditFeedbackSurvey
+            auditId={lastAuditId}
+            workspaceId={workspaceId}
+            domain={workspace.domain}
+            score={lastAuditScore}
+            source="dashboard"
+          />
+        </div>
+      )}
 
       <div id="platform-coverage" className="scroll-mt-24 grid gap-4 sm:grid-cols-3">
         <StatCard label="GEO score" value={String(geoScore)} sub="/100" />

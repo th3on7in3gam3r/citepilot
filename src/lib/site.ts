@@ -59,6 +59,7 @@ export const nav = {
   ],
   secondary: [
     { label: "Blog", href: "/blog" },
+    { label: "Suggest a feature", href: "/feedback" },
     { label: "GEO Playbook", href: "/tools/geo-playbook" },
   ],
   footer: {

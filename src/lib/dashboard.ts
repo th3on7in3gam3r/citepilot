@@ -29,7 +29,8 @@ export type DashboardNavItem = {
     | "discussions"
     | "alerts"
     | "settings"
-    | "help";
+    | "help"
+    | "feedback";
   section?: "main" | "footer";
 };
 
@@ -89,6 +90,14 @@ export const dashboardNav: DashboardNavItem[] = [
     description: "Slack, webhook, and email alert history",
     icon: "alerts",
     section: "main",
+  },
+  {
+    id: "feedback",
+    label: "Suggest a feature",
+    href: "/feedback",
+    description: "Upvote ideas and share what to build next",
+    icon: "feedback",
+    section: "footer",
   },
   {
     id: "settings",
