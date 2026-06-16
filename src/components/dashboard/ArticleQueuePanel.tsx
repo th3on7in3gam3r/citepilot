@@ -50,11 +50,20 @@ type CmsProviderStatus = {
 type QueueFilter = "all" | "draft" | "webflow" | CmsProvider;
 
 const providerLabels: Record<CmsProvider, string> = {
+  webflow: "Webflow",
   wordpress: "WordPress",
   ghost: "Ghost",
   shopify: "Shopify",
   framer: "Framer",
 };
+
+const publishTargets: CmsProvider[] = [
+  "webflow",
+  "wordpress",
+  "ghost",
+  "shopify",
+  "framer",
+];
 
 function StatusBadge({
   children,
@@ -99,7 +108,10 @@ export function ArticleQueuePanel({
           credentials: "include",
         },
       ),
-      fetch("/api/content/webflow/status"),
+      fetch(
+        `/api/content/webflow/status?workspaceId=${encodeURIComponent(workspaceId)}`,
+        { credentials: "include" },
+      ),
       fetch(`/api/content/cms?workspaceId=${encodeURIComponent(workspaceId)}`, {
         credentials: "include",
       }),
@@ -198,11 +210,11 @@ export function ArticleQueuePanel({
   }, [posts, filter]);
 
   async function publishToProvider(
-    provider: CmsProvider | "webflow",
+    provider: CmsProvider,
     slug: string,
     isUpdate: boolean,
   ) {
-    const label = provider === "webflow" ? "Webflow" : providerLabels[provider];
+    const label = providerLabels[provider];
     setPublishingKey(`${provider}:${slug}`);
 
     try {
@@ -214,7 +226,7 @@ export function ArticleQueuePanel({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ slug }),
+        body: JSON.stringify({ slug, workspaceId }),
       },
       );
       const data = (await res.json()) as {
@@ -265,8 +277,14 @@ export function ArticleQueuePanel({
     }
   }
 
-  function publicationFor(post: QueuePost, provider: CmsProvider) {
-    return post.publications.find((item) => item.provider === provider) ?? null;
+  function providerConnected(provider: CmsProvider): boolean {
+    if (provider === "webflow") return webflowConnected;
+    return providers.some((p) => p.provider === provider && p.connected);
+  }
+
+  function postPublishedTo(post: QueuePost, provider: CmsProvider): boolean {
+    if (provider === "webflow") return Boolean(post.webflow);
+    return post.publications.some((p) => p.provider === provider);
   }
 
   function publicationDate(post: QueuePost): string {
@@ -294,10 +312,11 @@ export function ArticleQueuePanel({
 
       {webflow && !webflowConfigured && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          <p className="font-semibold">Webflow not configured</p>
+          <p className="font-semibold">Webflow not connected</p>
           <p className="mt-1 text-amber-900">
-            Set <code className="text-xs">WEBFLOW_*</code> in Vercel env vars
-            (or <code className="text-xs">.env.local</code> locally), then redeploy.
+            <Link href="/dashboard/settings/integrations" className="font-semibold text-accent hover:underline">
+              Connect Webflow in Settings → Integrations
+            </Link>
           </p>
         </div>
       )}
@@ -435,61 +454,21 @@ export function ArticleQueuePanel({
                         </a>
                       ),
                   )}
-                  {webflowConfigured && (
-                    <button
-                      type="button"
-                      disabled={publishingKey === `webflow:${post.slug}`}
-                      onClick={() => void publishToProvider("webflow", post.slug, onWebflow)}
-                      className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-50"
-                      title={
-                        onWebflow
-                          ? "Update existing Webflow CMS item"
-                          : "Publish to Webflow CMS"
-                      }
-                    >
-                      {publishingKey === `webflow:${post.slug}`
-                        ? onWebflow
-                          ? "Updating…"
-                          : "Publishing…"
-                        : onWebflow
-                          ? "Sync to Webflow"
-                          : "Publish to Webflow"}
-                    </button>
-                  )}
-                  {providers
-                    .filter((provider) => provider.connected)
-                    .map((provider) => {
-                      const publication = publicationFor(post, provider.provider);
-                      const busy = publishingKey === `${provider.provider}:${post.slug}`;
-                      return (
-                        <button
-                          key={provider.provider}
-                          type="button"
-                          disabled={busy}
-                          onClick={() =>
-                            void publishToProvider(
-                              provider.provider,
-                              post.slug,
-                              Boolean(publication),
-                            )
-                          }
-                          className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
-                          title={
-                            publication
-                              ? `Update existing ${providerLabels[provider.provider]} item`
-                              : `Publish to ${providerLabels[provider.provider]}`
-                          }
-                        >
-                          {busy
-                            ? publication
-                              ? "Updating…"
-                              : "Publishing…"
-                            : publication
-                              ? `Sync to ${providerLabels[provider.provider]}`
-                              : `Publish to ${providerLabels[provider.provider]}`}
-                        </button>
-                      );
-                    })}
+                  <PublishToControl
+                    targets={publishTargets}
+                    isConnected={providerConnected}
+                    getLabel={(p) => providerLabels[p]}
+                    busy={Boolean(
+                      publishingKey && publishingKey.endsWith(`:${post.slug}`),
+                    )}
+                    onPublish={(provider) =>
+                      void publishToProvider(
+                        provider,
+                        post.slug,
+                        postPublishedTo(post, provider),
+                      )
+                    }
+                  />
                   <button
                     type="button"
                     disabled={!!publishingKey}
@@ -507,5 +486,67 @@ export function ArticleQueuePanel({
         </ul>
       )}
     </Panel>
+  );
+}
+
+function PublishToControl({
+  targets,
+  isConnected,
+  getLabel,
+  onPublish,
+  busy,
+}: {
+  targets: CmsProvider[];
+  isConnected: (provider: CmsProvider) => boolean;
+  getLabel: (provider: CmsProvider) => string;
+  onPublish: (provider: CmsProvider) => void;
+  busy: boolean;
+}) {
+  const [selected, setSelected] = useState<CmsProvider>(
+    targets.find(isConnected) ?? targets[0]!,
+  );
+
+  return (
+    <div className="flex items-center gap-2">
+      <label className="sr-only" htmlFor="publish-target">
+        Publish to
+      </label>
+      <span className="text-xs text-muted">Publish to:</span>
+      <select
+        id="publish-target"
+        value={selected}
+        onChange={(e) => setSelected(e.target.value as CmsProvider)}
+        className="max-w-[180px] rounded-full border border-border bg-white px-3 py-2 text-xs font-semibold text-ink"
+      >
+        {targets.map((provider) => {
+          const connected = isConnected(provider);
+          return (
+            <option
+              key={provider}
+              value={provider}
+              disabled={!connected}
+              title={
+                connected ? undefined : "Connect in Settings → Integrations"
+              }
+            >
+              {getLabel(provider)} {connected ? "✓" : "✗ Not connected"}
+            </option>
+          );
+        })}
+      </select>
+      <button
+        type="button"
+        disabled={busy || !isConnected(selected)}
+        onClick={() => onPublish(selected)}
+        title={
+          !isConnected(selected)
+            ? "Connect in Settings → Integrations"
+            : undefined
+        }
+        className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {busy ? "Publishing…" : "Publish"}
+      </button>
+    </div>
   );
 }

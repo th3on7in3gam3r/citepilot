@@ -482,6 +482,19 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </div>
         </Panel>
 
+        <Panel title="Integrations" className="border-l-4 border-l-sky-400">
+          <p className="text-sm text-muted">
+            Connect Webflow, WordPress, Ghost, Shopify, and Framer to publish articles
+            from your content queue.
+          </p>
+          <Link
+            href="/dashboard/settings/integrations"
+            className="mt-4 inline-flex rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white"
+          >
+            Manage integrations →
+          </Link>
+        </Panel>
+
         <Panel title="Notifications" className="border-l-4 border-l-mint" id="notifications">
           {(isPilot || isFleet) &&
             (!preferences.monitoringEmail.trim() ||

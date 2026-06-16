@@ -19,6 +19,7 @@ import { WorkspaceCreationWizard } from "@/components/dashboard/workspaces/Works
 import { BillingProvider } from "@/contexts/BillingContext";
 import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 import { DashboardUsageLimitBanner } from "@/components/dashboard/DashboardUsageLimitBanner";
+import { IntegrationHealthBanner } from "@/components/dashboard/integrations/IntegrationHealthBanner";
 import { GeoScoreBadgePrompt } from "@/components/dashboard/GeoScoreBadgePrompt";
 import { DashboardUpgradeCelebration } from "@/components/dashboard/DashboardUpgradeCelebration";
 import { PostHogIdentify } from "@/components/analytics/PostHogIdentify";
@@ -118,6 +119,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         </div>
         <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8">
           <DashboardUsageLimitBanner />
+          <IntegrationHealthBanner />
           <GeoScoreBadgePrompt />
           {children}
         </main>

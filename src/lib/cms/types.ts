@@ -1,4 +1,5 @@
 export const CMS_PROVIDERS = [
+  "webflow",
   "wordpress",
   "ghost",
   "shopify",
@@ -6,6 +7,12 @@ export const CMS_PROVIDERS = [
 ] as const;
 
 export type CmsProvider = (typeof CMS_PROVIDERS)[number];
+
+export type WebflowCredentials = {
+  apiKey: string;
+  siteId: string;
+  collectionId: string;
+};
 
 export type WordPressCredentials = {
   siteUrl: string;
@@ -33,6 +40,7 @@ export type FramerCredentials = {
 };
 
 export type CmsCredentialsByProvider = {
+  webflow: WebflowCredentials;
   wordpress: WordPressCredentials;
   ghost: GhostCredentials;
   shopify: ShopifyCredentials;
@@ -40,15 +48,27 @@ export type CmsCredentialsByProvider = {
 };
 
 export type CmsRemoteDefaultsByProvider = {
-  wordpress: Record<string, never>;
-  ghost: Record<string, never>;
+  webflow: {
+    siteName: string;
+    collectionName: string;
+    sitePreviewUrl?: string;
+    fieldName?: string;
+    fieldSlug?: string;
+    fieldBody?: string;
+    maskedApiKey?: string;
+  };
+  wordpress: { maskedAppPassword?: string };
+  ghost: { maskedAdminApiKey?: string };
   shopify: {
     blogId: string;
     blogTitle: string;
     blogHandle: string;
+    maskedAccessToken?: string;
   };
   framer: {
     collectionName: string;
+    snippetInstalled?: boolean;
+    maskedApiKey?: string;
   };
 };
 
@@ -107,4 +127,8 @@ export type CmsConnectionSummary = {
   displayName?: string;
   siteUrl?: string;
   detail?: string;
+  status?: "connected" | "error" | "disconnected";
+  maskedSecret?: string;
+  lastPublishTitle?: string;
+  lastPublishAt?: string;
 };

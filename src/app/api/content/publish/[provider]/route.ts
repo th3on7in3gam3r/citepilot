@@ -39,6 +39,12 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     if (!provider) {
       return NextResponse.json({ error: "Unsupported provider" }, { status: 404 });
     }
+    if (provider === "webflow") {
+      return NextResponse.json(
+        { error: "Use /api/content/publish/webflow for Webflow publishing" },
+        { status: 400 },
+      );
+    }
 
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;

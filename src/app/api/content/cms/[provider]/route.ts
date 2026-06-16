@@ -6,6 +6,8 @@ import { testGhostConnection } from "@/lib/cms/ghost";
 import { deleteCmsConnection, getCmsConnection, upsertCmsConnection } from "@/lib/cms/store";
 import { testShopifyConnection } from "@/lib/cms/shopify";
 import { CMS_PROVIDERS, type CmsConnectionSummary, type CmsProvider } from "@/lib/cms/types";
+import { testWebflowConnection } from "@/lib/cms/webflow";
+import { maskSecret } from "@/lib/integrations/helpers";
 import { testWordPressConnection } from "@/lib/cms/wordpress";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
@@ -116,6 +118,27 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     const auth = await requireOwnedWorkspace(request, workspaceId);
     if (auth instanceof NextResponse) return auth;
 
+    if (provider === "webflow") {
+      const credentials = {
+        apiKey: getString(body, "apiKey")!,
+        siteId: getString(body, "siteId")!,
+        collectionId: getString(body, "collectionId")!,
+      };
+      const checked = await testWebflowConnection(credentials);
+      await upsertCmsConnection({
+        workspaceId,
+        provider,
+        displayName: checked.displayName,
+        siteUrl: checked.siteUrl,
+        credentials,
+        remoteDefaults: {
+          ...checked.remoteDefaults,
+          maskedApiKey: maskSecret(credentials.apiKey),
+        },
+      });
+      return NextResponse.json(toSummary(provider, checked));
+    }
+
     if (provider === "wordpress") {
       const credentials = {
         siteUrl: getString(body, "siteUrl")!,
@@ -129,6 +152,9 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         displayName: checked.displayName,
         siteUrl: checked.siteUrl,
         credentials,
+        remoteDefaults: {
+          maskedAppPassword: maskSecret(credentials.appPassword),
+        },
       });
       return NextResponse.json(toSummary(provider, checked));
     }
@@ -145,6 +171,9 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         displayName: checked.displayName,
         siteUrl: checked.siteUrl,
         credentials,
+        remoteDefaults: {
+          maskedAdminApiKey: maskSecret(credentials.adminApiKey),
+        },
       });
       return NextResponse.json(toSummary(provider, checked));
     }
@@ -161,7 +190,10 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         displayName: checked.displayName,
         siteUrl: checked.siteUrl,
         credentials,
-        remoteDefaults: checked.remoteDefaults,
+        remoteDefaults: {
+          ...checked.remoteDefaults,
+          maskedAccessToken: maskSecret(credentials.accessToken),
+        },
       });
       return NextResponse.json(toSummary(provider, checked));
     }
@@ -181,7 +213,10 @@ export const POST = withApiLogging(async function POST(request: Request, { param
       displayName: checked.displayName,
       siteUrl: checked.siteUrl,
       credentials,
-      remoteDefaults: checked.remoteDefaults,
+      remoteDefaults: {
+        ...checked.remoteDefaults,
+        maskedApiKey: maskSecret(credentials.apiKey),
+      },
     });
     return NextResponse.json(toSummary(provider, checked));
   } catch (error) {

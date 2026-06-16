@@ -27,6 +27,8 @@ type CmsProviderStatus = {
   detail?: string;
 };
 
+type CmsFormProvider = Exclude<CmsProvider, "webflow">;
+
 type ProviderForms = {
   wordpress: {
     siteUrl: string;
@@ -52,6 +54,7 @@ type ProviderForms = {
 };
 
 const providerLabels: Record<CmsProvider, string> = {
+  webflow: "Webflow",
   wordpress: "WordPress",
   ghost: "Ghost",
   shopify: "Shopify",
@@ -148,11 +151,14 @@ export function CmsConnectionsPanel({
   const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
   const [providers, setProviders] = useState<CmsProviderStatus[]>([]);
   const [forms, setForms] = useState<ProviderForms>(emptyForms);
-  const [saving, setSaving] = useState<CmsProvider | null>(null);
-  const [removing, setRemoving] = useState<CmsProvider | null>(null);
+  const [saving, setSaving] = useState<CmsFormProvider | null>(null);
+  const [removing, setRemoving] = useState<CmsFormProvider | null>(null);
   const load = useCallback(async () => {
     const [webflowRes, cmsRes] = await Promise.all([
-      fetch("/api/content/webflow/status", { credentials: "include" }),
+      fetch(
+        `/api/content/webflow/status?workspaceId=${encodeURIComponent(workspaceId)}`,
+        { credentials: "include" },
+      ),
       fetch(`/api/content/cms?workspaceId=${encodeURIComponent(workspaceId)}`, {
         credentials: "include",
       }),
@@ -186,7 +192,7 @@ export function CmsConnectionsPanel({
     (webflow?.configured && webflow.connected) || providers.some((provider) => provider.connected),
   );
 
-  function updateForm<P extends CmsProvider>(
+  function updateForm<P extends CmsFormProvider>(
     provider: P,
     key: keyof ProviderForms[P],
     value: string,
@@ -200,7 +206,7 @@ export function CmsConnectionsPanel({
     }));
   }
 
-  async function saveProvider(provider: CmsProvider) {
+  async function saveProvider(provider: CmsFormProvider) {
     setSaving(provider);
 
     try {
@@ -229,7 +235,7 @@ export function CmsConnectionsPanel({
     }
   }
 
-  async function disconnectProvider(provider: CmsProvider) {
+  async function disconnectProvider(provider: CmsFormProvider) {
     setRemoving(provider);
 
     try {
@@ -387,7 +393,7 @@ export function CmsConnectionsPanel({
             <div>
               <h3 className="font-display font-bold text-ink">Webflow</h3>
               <p className="mt-1 text-sm text-muted">
-                Existing env-based publishing for the site-wide blog collection.
+                Connect per workspace with API key, site, and collection.
               </p>
             </div>
             <span
@@ -397,9 +403,15 @@ export function CmsConnectionsPanel({
                   : "bg-surface text-muted"
               }`}
             >
-              {webflow?.configured && webflow.connected ? "Connected" : "Env setup"}
+              {webflow?.configured && webflow.connected ? "Connected" : "Not connected"}
             </span>
           </div>
+          <Link
+            href="/dashboard/settings/integrations"
+            className="mt-4 inline-flex rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface"
+          >
+            Manage in Integrations →
+          </Link>
           {webflow?.detail && (
             <p className="mt-3 text-sm text-muted">
               {webflow.siteName ? `${webflow.siteName} · ` : ""}

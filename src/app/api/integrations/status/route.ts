@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { buildIntegrationStatuses } from "@/lib/integrations/status";
 import { getWorkspaceById } from "@/lib/server/workspace";
-import { buildIntegrationStatuses, integrationSummariesFromStatuses } from "@/lib/integrations/status";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export const GET = withApiLogging(async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId")?.trim();
+  const verify = searchParams.get("verify") === "1";
+
   if (!workspaceId) {
     return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
   }
@@ -23,8 +26,14 @@ export const GET = withApiLogging(async function GET(request: Request) {
 
   const integrations = await buildIntegrationStatuses({
     workspaceId,
+    verify,
   });
-  const providers = integrationSummariesFromStatuses(integrations);
 
-  return NextResponse.json({ providers, integrations });
+  const errors = integrations.filter((item) => item.status === "error");
+
+  return NextResponse.json({
+    integrations,
+    hasErrors: errors.length > 0,
+    errorProviders: errors.map((item) => item.id),
+  });
 });
