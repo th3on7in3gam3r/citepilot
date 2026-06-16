@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { DashboardNavLink } from "@/components/dashboard/DashboardNavLink";
 import { WorkspaceSwitcher } from "@/components/dashboard/WorkspaceSwitcher";
 import { Logo } from "@/components/ui/Logo";
@@ -15,7 +16,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
   const [open, setOpen] = useState(false);
 
   const main = dashboardNav.filter((item) => item.section !== "footer");
-  const footer = dashboardNav.filter((item) => item.section === "footer" && item.id !== "settings");
+  const footer = dashboardNav.filter((item) => item.section === "footer");
 
   useEffect(() => {
     effectInit(() => setOpen(false));
@@ -118,10 +119,11 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
-                className="mt-2 block rounded-xl px-3 py-2.5 text-sm font-medium text-muted hover:bg-surface hover:text-ink"
+                className="mt-2 flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted hover:bg-surface hover:text-ink"
               >
                 ← Marketing site
               </Link>
+              <SignOutButton className="mt-2 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-border px-3 py-2.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-60" />
             </div>
           </aside>
         </div>

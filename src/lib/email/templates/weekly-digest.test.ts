@@ -80,4 +80,21 @@ describe("buildWeeklyDigestEmail", () => {
     expect(html).not.toContain("/api/white-label/logo");
     expect(html).toContain("Powered by Biblefunlandstudios via CitePilot");
   });
+
+  it("includes unsubscribe link when provided", () => {
+    const url = "https://getcitepilot.com/api/email/unsubscribe-digest?ws=ws_1&token=abc";
+    const { html, text } = buildWeeklyDigestEmail({
+      domain: "client.com",
+      buyerQuestion: "test",
+      competitors: [],
+      score: 60,
+      previousScore: null,
+      gaps: [],
+      unsubscribeUrl: url,
+    });
+
+    expect(html).toContain("Unsubscribe");
+    expect(html).toContain("ws=ws_1");
+    expect(text).toContain(url);
+  });
 });

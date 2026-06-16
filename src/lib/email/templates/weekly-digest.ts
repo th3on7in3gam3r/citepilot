@@ -29,6 +29,7 @@ export type WeeklyDigestEmailInput = {
   fleetBranding?: boolean;
   /** Pre-resolved logo for email `<img>` — omit API routes that may 404. */
   headerLogoSrc?: string;
+  unsubscribeUrl?: string;
 };
 
 function scoreDeltaHint(score: number, previousScore: number | null): {
@@ -126,6 +127,11 @@ function buildDigestPlainText(input: WeeklyDigestEmailInput): string {
   }
 
   lines.push("", `Dashboard: ${dashboardUrl("/dashboard/analytics")}`);
+
+  if (input.unsubscribeUrl) {
+    lines.push("", `Unsubscribe from weekly digests: ${input.unsubscribeUrl}`);
+  }
+
   return lines.join("\n");
 }
 
@@ -176,6 +182,7 @@ export function buildWeeklyDigestEmail(input: WeeklyDigestEmailInput): {
           href: dashboardUrl("/report/proof"),
           label: "View proof report",
         },
+        unsubscribeUrl: input.unsubscribeUrl,
       }),
     };
   }
@@ -199,6 +206,7 @@ export function buildWeeklyDigestEmail(input: WeeklyDigestEmailInput): {
         href: dashboardUrl("/report/proof"),
         label: "View proof report",
       },
+      unsubscribeUrl: input.unsubscribeUrl,
     }),
   };
 }

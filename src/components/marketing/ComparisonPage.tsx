@@ -13,10 +13,48 @@ import {
   type Competitor,
 } from "@/lib/data/competitors";
 
+function ComparisonTableMobile({ competitor }: { competitor: Competitor }) {
+  return (
+    <div className="space-y-3 md:hidden">
+      {COMPARISON_ROW_ORDER.map((key) => {
+        const row = competitor.comparisonRows[key];
+        return (
+          <article
+            key={key}
+            className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+          >
+            <p className="font-semibold text-white/85">{COMPARISON_ROW_LABELS[key]}</p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
+                  CitePilot
+                </p>
+                <p className={`mt-1 text-sm ${comparisonCellClass(row.citepilot)}`}>
+                  {formatComparisonCell(row.citepilot)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
+                  {competitor.name}
+                </p>
+                <p className={`mt-1 text-sm ${comparisonCellClass(row.competitor)}`}>
+                  {formatComparisonCell(row.competitor)}
+                </p>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 function ComparisonTable({ competitor }: { competitor: Competitor }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/10">
-      <table className="w-full min-w-[640px] text-left text-sm">
+    <>
+      <ComparisonTableMobile competitor={competitor} />
+      <div className="hidden overflow-x-auto rounded-2xl border border-white/10 md:block">
+        <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.04]">
             <th className="px-4 py-3.5 font-semibold text-white/50">Feature</th>
@@ -49,7 +87,8 @@ function ComparisonTable({ competitor }: { competitor: Competitor }) {
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
 

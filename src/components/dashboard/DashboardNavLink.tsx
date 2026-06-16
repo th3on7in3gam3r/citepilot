@@ -17,7 +17,7 @@ export function DashboardNavLink({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+      className={`flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
         active
           ? "bg-accent/10 text-accent"
           : "text-muted hover:bg-surface hover:text-ink"

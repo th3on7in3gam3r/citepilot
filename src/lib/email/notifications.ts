@@ -28,6 +28,7 @@ import {
 import { appBaseUrl } from "@/lib/stripe/config";
 import { dashboardUrl } from "@/lib/email/config";
 import { sendEmail, type SendEmailResult, isValidRecipientEmail } from "@/lib/email/send";
+import { digestUnsubscribeUrl } from "@/lib/email/unsubscribe";
 import { dbAll, dbGet } from "@/lib/db";
 import { parsePreferences, type WorkspacePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
@@ -395,6 +396,9 @@ export async function sendWeeklyDigestEmail(input: {
     workspaceId: input.workspaceId,
     fleetBranding: input.fleetBranding,
     headerLogoSrc,
+    unsubscribeUrl: input.workspaceId
+      ? digestUnsubscribeUrl(input.workspaceId)
+      : undefined,
   });
 
   const wl = input.whiteLabel;

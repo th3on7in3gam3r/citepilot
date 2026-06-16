@@ -41,7 +41,7 @@ export function Hero() {
           </div>
         </header>
 
-        <div className="hero-rise hero-rise-delay-2 mt-10 sm:mt-12 md:mt-14">
+        <div className="hero-rise hero-rise-delay-2 mt-10 hidden sm:mt-12 sm:block md:mt-14">
           <HeroProductBanner />
         </div>
       </Container>
