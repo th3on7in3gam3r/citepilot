@@ -20,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
       // Default rule — all crawlers allowed except private paths
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/score/"],
         disallow: disallowList,
       },
       // --- AI crawlers explicitly welcomed ---

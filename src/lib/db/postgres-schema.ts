@@ -479,4 +479,17 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS domain_score_profiles (
+  domain TEXT PRIMARY KEY,
+  is_public INTEGER NOT NULL DEFAULT 1,
+  claimed_by_user_id TEXT,
+  claimed_at TEXT,
+  verified_at TEXT,
+  verification_token TEXT,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_domain_score_profiles_public ON domain_score_profiles(is_public);
+CREATE INDEX IF NOT EXISTS idx_audit_domain ON audit_runs(domain);
 `;

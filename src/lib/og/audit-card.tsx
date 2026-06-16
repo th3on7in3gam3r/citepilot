@@ -115,7 +115,7 @@ export async function renderAuditOgImage(data: AuditOgData) {
             {data.citedPrompts}/{data.totalPrompts} prompts cited
           </span>
           <span style={{ fontWeight: 600, color: "#94a3b8" }}>
-            Tracked by CitePilot — getcitepilot.com
+            Powered by CitePilot
           </span>
         </div>
       </div>

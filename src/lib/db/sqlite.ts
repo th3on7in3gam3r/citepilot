@@ -671,6 +671,20 @@ function migrateSchema(db: Database.Database): void {
   `);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS domain_score_profiles (
+      domain TEXT PRIMARY KEY,
+      is_public INTEGER NOT NULL DEFAULT 1,
+      claimed_by_user_id TEXT,
+      claimed_at TEXT,
+      verified_at TEXT,
+      verification_token TEXT,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_domain_score_profiles_public ON domain_score_profiles(is_public);
+    CREATE INDEX IF NOT EXISTS idx_audit_domain ON audit_runs(domain);
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS feature_requests (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,

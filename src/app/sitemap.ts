@@ -3,6 +3,7 @@ import { countPostsByPillar, getAllPosts } from "@/lib/blog";
 import { EDITORIAL_PILLARS } from "@/lib/content-strategy";
 import { DASHBOARD_SEO_HUB_PATHS } from "@/lib/dashboard-seo-hubs";
 import { competitors } from "@/lib/data/competitors";
+import { listPublicScoreDomains } from "@/lib/score/domain-profiles";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -68,5 +69,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.55,
   }));
 
-  return [...staticEntries, ...postEntries, ...categoryEntries];
+  let scoreEntries: MetadataRoute.Sitemap = [];
+  try {
+    const scoreDomains = await listPublicScoreDomains();
+    scoreEntries = scoreDomains.map(({ domain, lastModified }) => ({
+      url: `${base}/score/${encodeURIComponent(domain)}`,
+      lastModified: new Date(lastModified),
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // DB unavailable — skip dynamic score pages
+  }
+
+  return [...staticEntries, ...postEntries, ...categoryEntries, ...scoreEntries];
 }

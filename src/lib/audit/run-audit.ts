@@ -13,6 +13,7 @@ import {
   runLivePlatformProbes,
 } from "@/lib/audit/platform-probes";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
+import { ensureDomainScoreProfile } from "@/lib/score/domain-profiles";
 import {
   analyzeSite,
   brandFromDomain,
@@ -180,6 +181,8 @@ async function persistAudit(
     platformChecks,
     audit.createdAt,
   );
+
+  await ensureDomainScoreProfile(audit.domain);
 
   if (audit.workspaceId) {
     await dbRun(

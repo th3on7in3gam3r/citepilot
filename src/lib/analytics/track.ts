@@ -37,6 +37,7 @@ export type AnalyticsEvent =
   | "tool_upgrade_cta_clicked"
   | "proof_report_viewed"
   | "proof_report_cta_clicked"
+  | "score_page_cta_clicked"
   | "proof_report_share_clicked"
   | "audit_share_created"
   | "audit_feedback_submitted"
