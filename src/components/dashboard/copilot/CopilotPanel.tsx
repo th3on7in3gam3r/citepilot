@@ -234,7 +234,7 @@ export function CopilotPanel() {
           {(activeFilterCount > 0 || tableLabel) && (
             <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-[#e2e8f0] bg-white px-3 py-2">
               <Link
-                href="/dashboard/content?section=competitors"
+                href="/dashboard/competitors"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#f1f5f9] px-2.5 py-1 text-xs font-semibold text-[#334155] transition hover:bg-[#e2e8f0]"
               >
                 <svg className="h-3.5 w-3.5 text-[#64748b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>

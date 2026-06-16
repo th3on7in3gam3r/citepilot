@@ -1,4 +1,5 @@
 import type { AuditPayload, PromptResult } from "@/lib/api-types";
+import { discoverCompetitorCandidates } from "@/lib/competitors/intelligence";
 
 export type CompetitorMoveDelta = {
   hasChanges: boolean;
@@ -7,6 +8,13 @@ export type CompetitorMoveDelta = {
   promptsWon: PromptResult[];
   newCompetitorGaps: string[];
   platformLosses: { platform: string; previousShare: number; currentShare: number }[];
+  competitorRateSurges: {
+    competitor: string;
+    previousRate: number;
+    currentRate: number;
+    delta: number;
+  }[];
+  newEntrantDomains: string[];
 };
 
 function normalizeCompetitorKey(value: string): string {
@@ -47,6 +55,58 @@ function promptMap(results: PromptResult[]): Map<string, PromptResult> {
   return map;
 }
 
+function competitorCitationRate(
+  results: PromptResult[],
+  competitor: string,
+  trackedCompetitors: string[],
+): number {
+  const total = results.length;
+  if (total === 0) return 0;
+  const normalized = normalizeCompetitorKey(competitor);
+  const primary = normalizeCompetitorKey(trackedCompetitors[0] ?? competitor);
+  if (normalized !== primary) return 0;
+  const led = results.filter((pr) => !pr.cited).length;
+  return Math.round((led / total) * 100);
+}
+
+function discoverEntrants(
+  current: AuditPayload,
+  previous: AuditPayload | null,
+  trackedCompetitors: string[],
+): string[] {
+  const workspaceLike = {
+    domain: current.domain,
+    competitors: trackedCompetitors,
+    promptResults: current.promptResults,
+    gaps: current.gaps,
+    hasRealAudit: true,
+  } as Parameters<typeof discoverCompetitorCandidates>[0]["workspace"];
+
+  const currentCandidates = discoverCompetitorCandidates({ workspace: workspaceLike })
+    .map((c) => normalizeCompetitorKey(c.domain))
+    .filter(Boolean);
+
+  if (!previous) {
+    return currentCandidates.slice(0, 3);
+  }
+
+  const prevWorkspaceLike = {
+    domain: previous.domain,
+    competitors: trackedCompetitors,
+    promptResults: previous.promptResults,
+    gaps: previous.gaps,
+    hasRealAudit: true,
+  } as Parameters<typeof discoverCompetitorCandidates>[0]["workspace"];
+
+  const previousSet = new Set(
+    discoverCompetitorCandidates({ workspace: prevWorkspaceLike }).map((c) =>
+      normalizeCompetitorKey(c.domain),
+    ),
+  );
+
+  return currentCandidates.filter((d) => !previousSet.has(d)).slice(0, 3);
+}
+
 export function buildCompetitorMoveDelta(input: {
   current: AuditPayload;
   previous: AuditPayload | null;
@@ -64,6 +124,12 @@ export function buildCompetitorMoveDelta(input: {
       promptsWon: [],
       newCompetitorGaps: competitorGaps,
       platformLosses: [],
+      competitorRateSurges: [],
+      newEntrantDomains: discoverEntrants(
+        input.current,
+        null,
+        input.trackedCompetitors,
+      ),
     };
   }
 
@@ -112,10 +178,41 @@ export function buildCompetitorMoveDelta(input: {
 
   const scoreDelta = input.current.score - previous.score;
 
+  const competitorRateSurges: CompetitorMoveDelta["competitorRateSurges"] = [];
+  for (const competitor of input.trackedCompetitors) {
+    const prevRate = competitorCitationRate(
+      previous.promptResults,
+      competitor,
+      input.trackedCompetitors,
+    );
+    const currRate = competitorCitationRate(
+      input.current.promptResults,
+      competitor,
+      input.trackedCompetitors,
+    );
+    const delta = currRate - prevRate;
+    if (delta > 10) {
+      competitorRateSurges.push({
+        competitor,
+        previousRate: prevRate,
+        currentRate: currRate,
+        delta,
+      });
+    }
+  }
+
+  const newEntrantDomains = discoverEntrants(
+    input.current,
+    previous,
+    input.trackedCompetitors,
+  );
+
   const hasChanges =
     promptsLost.length > 0 ||
     newCompetitorGaps.length > 0 ||
-    platformLosses.length > 0;
+    platformLosses.length > 0 ||
+    competitorRateSurges.length > 0 ||
+    newEntrantDomains.length > 0;
 
   return {
     hasChanges,
@@ -124,6 +221,8 @@ export function buildCompetitorMoveDelta(input: {
     promptsWon,
     newCompetitorGaps,
     platformLosses,
+    competitorRateSurges,
+    newEntrantDomains,
   };
 }
 

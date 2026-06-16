@@ -13,9 +13,13 @@ import {
   buildPromptLimits,
   type PromptLimits,
 } from "@/lib/billing/prompt-limits";
+import {
+  buildCompetitorLimits,
+  type CompetitorLimits,
+} from "@/lib/competitors/limits";
 import { countActiveWorkspacesForUser } from "@/lib/server/workspace-management";
 
-export type { WorkspaceLimits, PromptLimits };
+export type { WorkspaceLimits, PromptLimits, CompetitorLimits };
 
 export function planForUser(
   billing: Awaited<ReturnType<typeof getBillingByUserId>>,
@@ -34,6 +38,17 @@ export async function getPromptLimitsForUser(
   }
   const billing = await getBillingByUserId(userId);
   return buildPromptLimits(planForUser(billing), promptCount);
+}
+
+export async function getCompetitorLimitsForUser(
+  userId: string | null,
+  competitorCount = 0,
+): Promise<CompetitorLimits> {
+  if (!userId) {
+    return buildCompetitorLimits("free", competitorCount);
+  }
+  const billing = await getBillingByUserId(userId);
+  return buildCompetitorLimits(planForUser(billing), competitorCount);
 }
 
 export async function getWorkspaceLimitsForUser(

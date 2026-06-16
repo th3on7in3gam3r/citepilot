@@ -51,11 +51,11 @@ function recipientEmail(
   return fallbackEmail?.trim() || null;
 }
 
-function layout(title: string, body: string): string {
+function layout(title: string, body: string, footerHref = "/dashboard"): string {
   return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;max-width:560px;margin:0 auto;padding:24px">
 <h1 style="font-size:20px;margin:0 0 16px">${title}</h1>
 ${body}
-<p style="margin-top:32px;font-size:12px;color:#666"><a href="${dashboardUrl("/dashboard/analytics")}">Open CitePilot analytics</a></p>
+<p style="margin-top:32px;font-size:12px;color:#666"><a href="${dashboardUrl(footerHref)}">Open CitePilot dashboard</a></p>
 </body></html>`;
 }
 
@@ -108,6 +108,25 @@ function competitorMoveHtml(
       `<p><strong>New competitor-related gaps</strong>:</p><ul>${delta.newCompetitorGaps
         .slice(0, 5)
         .map((g) => `<li>${g}</li>`)
+        .join("")}</ul>`,
+    );
+  }
+
+  if (delta.competitorRateSurges.length > 0) {
+    parts.push(
+      `<p><strong>Competitor citation rate surges</strong> (&gt;10% week-over-week):</p><ul>${delta.competitorRateSurges
+        .map(
+          (s) =>
+            `<li>${s.competitor}: ${s.previousRate}% → ${s.currentRate}% (+${s.delta}%)</li>`,
+        )
+        .join("")}</ul>`,
+    );
+  }
+
+  if (delta.newEntrantDomains.length > 0) {
+    parts.push(
+      `<p><strong>New competitors on your money prompts</strong>:</p><ul>${delta.newEntrantDomains
+        .map((d) => `<li>${d}</li>`)
         .join("")}</ul>`,
     );
   }
@@ -184,11 +203,11 @@ export async function sendCompetitorMoveEmail(input: {
   return sendEmail({
     to: input.to,
     subject,
-    html: layout(`Competitor alert — ${input.domain}`, competitorMoveHtml(
-      input.domain,
-      input.delta,
-      input.competitors,
-    )),
+    html: layout(
+      `Competitor alert — ${input.domain}`,
+      competitorMoveHtml(input.domain, input.delta, input.competitors),
+      "/dashboard/competitors",
+    ),
     text: `Competitor movement on ${input.domain}`,
   });
 }

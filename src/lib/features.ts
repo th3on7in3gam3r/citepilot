@@ -56,6 +56,13 @@ export const productFeatures: ProductFeature[] = [
       "Tracks brand mentions across ChatGPT, Perplexity, Grok, DeepSeek, and other AI answer surfaces. Measures citation growth and visibility trends over time.",
     dashboardHref: "/dashboard/analytics",
   },
+  {
+    id: "competitors",
+    title: "Competitor Intelligence",
+    description:
+      "Track rival domains, compare citation rates prompt-by-prompt, discover new competitors on money prompts, and get GEO actions to close gaps.",
+    dashboardHref: "/dashboard/competitors",
+  },
 ];
 
 export type CmsPlatform = {

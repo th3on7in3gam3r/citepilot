@@ -25,6 +25,7 @@ export type DashboardNavItem = {
     | "workspaces"
     | "analytics"
     | "content"
+    | "competitors"
     | "backlinks"
     | "audit"
     | "discussions"
@@ -66,6 +67,14 @@ export const dashboardNav: DashboardNavItem[] = [
     href: "/dashboard/analytics",
     description: "LLM visibility tracking and organic performance",
     icon: "analytics",
+    section: "main",
+  },
+  {
+    id: "competitors",
+    label: "Competitors",
+    href: "/dashboard/competitors",
+    description: "Track rivals, prompt gaps, and steal-their-citations actions",
+    icon: "competitors",
     section: "main",
   },
   {

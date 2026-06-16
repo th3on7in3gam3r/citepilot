@@ -35,11 +35,11 @@ export function GlobalFilterModal() {
         ? undefined
         : {
             label: "View table",
-            onClick: () => router.push("/dashboard/content?section=competitors"),
+            onClick: () => router.push("/dashboard/competitors"),
           },
     });
     if (!pathname.startsWith("/dashboard/content")) {
-      router.push("/dashboard/content?section=competitors");
+      router.push("/dashboard/competitors");
     }
   }
 

@@ -29,6 +29,11 @@ import {
 import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 import {
+  COMPETITOR_LIMIT_FLEET,
+  COMPETITOR_LIMIT_FREE,
+  COMPETITOR_LIMIT_PILOT,
+} from "@/lib/competitors/limits";
+import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
 } from "@/lib/settings";
@@ -70,6 +75,12 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     PROMPT_LIMIT_FREE,
   );
   const [monitoredPromptsText, setMonitoredPromptsText] = useState("");
+
+  const competitorMax = isFleet
+    ? COMPETITOR_LIMIT_FLEET
+    : isPilot
+      ? COMPETITOR_LIMIT_PILOT
+      : COMPETITOR_LIMIT_FREE;
 
   useEffect(() => {
     void fetch("/api/billing/limits", { credentials: "include" })
@@ -421,6 +432,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
           <div className="mt-5">
             <p className="text-sm font-semibold text-ink">Competitors</p>
+            <p className="mt-1 text-xs text-muted">
+              Up to {competitorMax} tracked per workspace on your plan.
+            </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {competitors.map((c, i) => (
                 <span
@@ -447,7 +461,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    addTag(competitorInput, competitors, setCompetitors, 8);
+                    addTag(competitorInput, competitors, setCompetitors, competitorMax);
                     setCompetitorInput("");
                   }
                 }}
@@ -457,7 +471,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               <button
                 type="button"
                 onClick={() => {
-                  addTag(competitorInput, competitors, setCompetitors, 8);
+                  addTag(competitorInput, competitors, setCompetitors, competitorMax);
                   setCompetitorInput("");
                 }}
                 className="shrink-0 rounded-xl border border-border px-4 py-3 text-sm font-semibold text-ink hover:bg-surface"
