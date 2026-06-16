@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth, isNeonAuthEnabled } from "@/lib/auth/server";
-import { ADMIN_COOKIE, checkAdminAccess } from "@/lib/admin-auth";
+import { auth, getRealSessionUser, isNeonAuthEnabled } from "@/lib/auth/server";
+import { checkAdminEmailAccess } from "@/lib/admin-auth";
 import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
 
@@ -98,17 +98,13 @@ async function handleProxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
   const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
 
-  const admin = checkAdminAccess(
-    pathname,
-    request.cookies.get(ADMIN_COOKIE)?.value,
-  );
+  const sessionUser = await getRealSessionUser(request);
+  const admin = await checkAdminEmailAccess(pathname, sessionUser?.email);
   if (admin.protected && !admin.allowed) {
     if (pathname.startsWith("/api/admin")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Not Found" }, { status: 404 });
     }
-    const login = new URL("/admin/login", request.url);
-    login.searchParams.set("from", pathname);
-    return NextResponse.redirect(login);
+    return new NextResponse("Not Found", { status: 404 });
   }
 
   if (

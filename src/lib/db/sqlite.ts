@@ -658,6 +658,19 @@ function migrateSchema(db: Database.Database): void {
   }
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_audit_log (
+      id TEXT PRIMARY KEY,
+      admin_id TEXT NOT NULL,
+      admin_email TEXT NOT NULL,
+      action TEXT NOT NULL,
+      target_user_id TEXT,
+      metadata TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log(created_at DESC);
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS feature_requests (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,

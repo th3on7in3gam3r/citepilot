@@ -1,46 +1,59 @@
-import { ADMIN_COOKIE } from "@/lib/constants";
+import {
+  adminEmailsFromEnv,
+  isAdminEmail,
+  isAdminProtectedPath,
+} from "@/lib/admin/emails";
 
-export { ADMIN_COOKIE };
+export { ADMIN_COOKIE } from "@/lib/constants";
 
+/** @deprecated Use ADMIN_EMAILS + Neon session instead. Kept for legacy cookie logout. */
 export function adminSecretFromEnv(): string | undefined {
   const value = process.env.ADMIN_SECRET?.trim();
   return value || undefined;
 }
 
 export function isAdminApiPublic(pathname: string): boolean {
-  return pathname === "/api/admin/login" || pathname === "/api/admin/logout";
+  return pathname === "/api/admin/logout";
 }
 
-export function isAdminLoginPage(pathname: string): boolean {
-  return pathname === "/admin/login";
+export function isAdminLoginPage(_pathname: string): boolean {
+  return false;
 }
 
-/** Routes that require a valid admin cookie when ADMIN_SECRET is set. */
-export function isAdminProtectedPath(pathname: string): boolean {
-  if (isAdminLoginPage(pathname) || isAdminApiPublic(pathname)) return false;
-  return pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
-}
+export { isAdminProtectedPath, isAdminEmail, adminEmailsFromEnv };
 
 export type AdminAccessResult = {
-  /** False when ADMIN_SECRET is set and the cookie does not match. */
   allowed: boolean;
-  /** True when ADMIN_SECRET is set and this path is admin-protected. */
   protected: boolean;
 };
 
+/** Sync helper retained for tests — use checkAdminEmailAccess in proxy. */
 export function checkAdminAccess(
   pathname: string,
-  adminCookie: string | undefined,
-  adminSecret = adminSecretFromEnv(),
+  _adminCookie: string | undefined,
+  _adminSecret = adminSecretFromEnv(),
 ): AdminAccessResult {
-  if (!adminSecret) {
-    return { allowed: true, protected: false };
-  }
   if (!isAdminProtectedPath(pathname)) {
     return { allowed: true, protected: false };
   }
+  if (adminEmailsFromEnv().length === 0) {
+    return { allowed: false, protected: true };
+  }
+  return { allowed: false, protected: true };
+}
+
+export async function checkAdminEmailAccess(
+  pathname: string,
+  email: string | null | undefined,
+): Promise<AdminAccessResult> {
+  if (!isAdminProtectedPath(pathname)) {
+    return { allowed: true, protected: false };
+  }
+  if (adminEmailsFromEnv().length === 0) {
+    return { allowed: false, protected: true };
+  }
   return {
-    allowed: adminCookie === adminSecret,
+    allowed: isAdminEmail(email),
     protected: true,
   };
 }

@@ -105,6 +105,20 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS onboarding_completed_at TEXT`,
       );
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS admin_audit_log (
+          id TEXT PRIMARY KEY,
+          admin_id TEXT NOT NULL,
+          admin_email TEXT NOT NULL,
+          action TEXT NOT NULL,
+          target_user_id TEXT,
+          metadata TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL
+        )
+      `);
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log(created_at DESC)`,
+      );
     })();
   }
   await globalForPg.citepilotPgReady;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { DashboardMobileNav } from "@/components/dashboard/DashboardMobileNav";
-import { ProductTour } from "@/components/dashboard/onboarding/ProductTour";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { CopilotPanel } from "@/components/dashboard/copilot/CopilotPanel";
 import { CopilotProvider, useCopilot } from "@/components/dashboard/copilot/CopilotProvider";
 import { GridFilterProvider } from "@/components/dashboard/copilot/GridFilterProvider";
@@ -22,6 +22,7 @@ import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 import { DashboardUsageLimitBanner } from "@/components/dashboard/DashboardUsageLimitBanner";
 import { IntegrationHealthBanner } from "@/components/dashboard/integrations/IntegrationHealthBanner";
 import { GeoScoreBadgePrompt } from "@/components/dashboard/GeoScoreBadgePrompt";
+import { ProductTour } from "@/components/dashboard/onboarding/ProductTour";
 import { DashboardUpgradeCelebration } from "@/components/dashboard/DashboardUpgradeCelebration";
 import { PostHogIdentify } from "@/components/analytics/PostHogIdentify";
 import { dashboardNav } from "@/lib/dashboard";
@@ -118,6 +119,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         <div className="hidden lg:block">
           <DashboardTopBar title={title} backHref={backHref} backLabel={backLabel} />
         </div>
+        <ImpersonationBanner />
         <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8">
           <DashboardUsageLimitBanner />
           <IntegrationHealthBanner />

@@ -39,10 +39,10 @@ function buildDetailedChecks(): Record<string, Check> {
     tavily: { ok: hasKey("TAVILY_API_KEY") },
     openPageRank: { ok: hasKey("OPEN_PAGERANK_API_KEY") },
     admin: {
-      ok: hasKey("ADMIN_SECRET"),
-      detail: hasKey("ADMIN_SECRET")
-        ? "Admin routes require sign-in"
-        : "Dev mode — set ADMIN_SECRET for production",
+      ok: Boolean(process.env.ADMIN_EMAILS?.trim()),
+      detail: process.env.ADMIN_EMAILS?.trim()
+        ? "Admin routes require ADMIN_EMAILS session"
+        : "Set ADMIN_EMAILS (comma-separated admin emails)",
     },
     neonAuth: (() => {
       const baseUrl = process.env.NEON_AUTH_BASE_URL?.trim();
