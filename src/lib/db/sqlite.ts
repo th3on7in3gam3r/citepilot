@@ -670,6 +670,27 @@ function migrateSchema(db: Database.Database): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_cancel_survey_user ON cancel_survey_responses(user_id);
+
+    CREATE TABLE IF NOT EXISTS notification_preferences (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      workspace_id TEXT NOT NULL UNIQUE,
+      email_weekly_digest INTEGER NOT NULL DEFAULT 1,
+      digest_day INTEGER NOT NULL DEFAULT 1,
+      digest_hour INTEGER NOT NULL DEFAULT 9,
+      digest_timezone TEXT NOT NULL DEFAULT 'UTC',
+      email_drop_alerts INTEGER NOT NULL DEFAULT 1,
+      drop_threshold INTEGER NOT NULL DEFAULT 10,
+      email_competitor_alerts INTEGER NOT NULL DEFAULT 1,
+      slack_weekly INTEGER NOT NULL DEFAULT 1,
+      slack_drop_alerts INTEGER NOT NULL DEFAULT 1,
+      webhook_events TEXT NOT NULL DEFAULT '["audit.completed","citation.change_detected"]',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_notification_preferences_workspace ON notification_preferences(workspace_id);
   `);
 }
 

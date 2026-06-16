@@ -27,6 +27,7 @@ import {
   mergePreferences,
   parsePreferences,
 } from "@/lib/settings";
+import { createDefaultNotificationPreferences } from "@/lib/notifications/preferences-store";
 
 type WorkspaceRow = {
   id: string;
@@ -297,6 +298,10 @@ export async function createWorkspace(
       now,
     ],
   );
+
+  if (userId) {
+    await createDefaultNotificationPreferences({ workspaceId: id, userId });
+  }
 
   const row = await dbGet<WorkspaceRow>(
     `SELECT * FROM workspaces WHERE id = ?`,

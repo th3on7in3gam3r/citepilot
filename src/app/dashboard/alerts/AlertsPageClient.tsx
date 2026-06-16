@@ -166,7 +166,7 @@ export function AlertsPageClient() {
             <p className="font-semibold text-ink">No alerts yet</p>
             <p className="mt-2 text-sm text-muted">
               Add more prompts to start monitoring, then connect Slack or webhooks in{" "}
-              <Link href="/dashboard/settings#alerts" className="font-semibold text-accent hover:underline">
+              <Link href="/dashboard/settings#notifications" className="font-semibold text-accent hover:underline">
                 Settings → Alerts
               </Link>
               .

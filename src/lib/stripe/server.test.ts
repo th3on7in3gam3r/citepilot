@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type Stripe from "stripe";
-import { mapSubscriptionToBilling } from "@/lib/stripe/server";
+import { mapSubscriptionToBilling, subscriptionCurrentPeriodEnd } from "@/lib/stripe/server";
 
 function subscription(
   overrides: Partial<Stripe.Subscription> & {
@@ -17,11 +17,11 @@ function subscription(
       data: [
         {
           price: { id: overrides.priceId ?? "price_pilot" },
+          current_period_end: Math.floor(Date.now() / 1000) + 3600,
         } as Stripe.SubscriptionItem,
       ],
     },
-    current_period_end: Math.floor(Date.now() / 1000) + 3600,
-  } as Stripe.Subscription;
+  } as unknown as Stripe.Subscription;
 }
 
 describe("mapSubscriptionToBilling", () => {
@@ -42,5 +42,15 @@ describe("mapSubscriptionToBilling", () => {
       subscription({ status: "active", priceId: "price_fleet" }),
     );
     expect(mapped.plan).toBe("fleet");
+  });
+
+  it("reads current period end from subscription items (Stripe v22+)", () => {
+    const end = Math.floor(Date.now() / 1000) + 7200;
+    const sub = subscription({ status: "active" });
+    sub.items.data[0]!.current_period_end = end;
+    expect(subscriptionCurrentPeriodEnd(sub)).toBe(end);
+    expect(mapSubscriptionToBilling(sub).currentPeriodEnd).toBe(
+      new Date(end * 1000).toISOString(),
+    );
   });
 });

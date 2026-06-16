@@ -5,9 +5,7 @@ import Link from "next/link";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
-import { EmailAlertsSettingsPanel } from "@/components/dashboard/EmailAlertsSettingsPanel";
-import { SlackAlertsPanel } from "@/components/dashboard/SlackAlertsPanel";
-import { WebhookAlertsPanel } from "@/components/dashboard/WebhookAlertsPanel";
+import { NotificationPreferencesPanel } from "@/components/dashboard/NotificationPreferencesPanel";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
@@ -69,7 +67,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [auditing, setAuditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [testDigestState, setTestDigestState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [isFleet, setIsFleet] = useState(false);
   const [isPilot, setIsPilot] = useState(false);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(
@@ -156,78 +153,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       buyerQuestion,
       referral: "",
     };
-  }
-
-  async function sendTestDigest() {
-    if (!workspaceId) {
-      toast.error("No workspace selected. Refresh the page and try again.");
-      return;
-    }
-    const email = preferences.monitoringEmail.trim();
-    if (!email) {
-      toast.error("Add a monitoring email first, then save settings.");
-      return;
-    }
-    if (!isValidMonitoringEmail(email)) {
-      toast.error("Enter a valid monitoring email address.");
-      return;
-    }
-
-    const payload = { workspaceId, email };
-    if (process.env.NODE_ENV === "development") {
-      console.log("test-digest payload:", JSON.stringify(payload));
-    }
-
-    setTestDigestState("sending");
-    try {
-      const res = await fetch("/api/notifications/test-digest", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-        hint?: string;
-        warning?: string;
-        sentTo?: string;
-        usedTestFrom?: boolean;
-        correctedFrom?: boolean;
-        details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
-      };
-      const delivered = res.ok && data.ok !== false && Boolean(data.sentTo);
-      if (delivered) {
-        setTestDigestState("sent");
-        const note = data.warning ?? (data.usedTestFrom
-          ? "Sent via Resend test sender — update EMAIL_FROM in Vercel when ready."
-          : undefined);
-        toast.success(`Test digest sent to ${data.sentTo ?? email}`, {
-          description: note,
-        });
-        setTimeout(() => setTestDigestState("idle"), 4000);
-      } else {
-        setTestDigestState("error");
-        const fieldMsg = data.details?.fieldErrors
-          ? Object.entries(data.details.fieldErrors)
-              .flatMap(([field, msgs]) => msgs.map((m) => `${field}: ${m}`))
-              .join(" ")
-          : null;
-        toast.error(
-          fieldMsg ?? data.error ?? `Failed to send test email (${res.status}).`,
-          { description: data.hint },
-        );
-        setTimeout(() => setTestDigestState("idle"), 6000);
-      }
-    } catch {
-      setTestDigestState("error");
-      toast.error("Network error — could not send test email.");
-      setTimeout(() => setTestDigestState("idle"), 4000);
-    }
-  }
-
-  function isValidMonitoringEmail(value: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
   }
 
   async function savePreferences(
@@ -566,7 +491,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </div>
         </Panel>
 
-        <Panel title="Alerts" className="border-l-4 border-l-mint" id="alerts">
+        <Panel title="Notifications" className="border-l-4 border-l-mint" id="notifications">
           {(isPilot || isFleet) &&
             (!preferences.monitoringEmail.trim() ||
               !preferences.whiteLabel.agencyName.trim()) && (
@@ -584,59 +509,16 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               </div>
             )}
           <p className="mb-4 text-sm text-muted">
-            Pilot and Fleet workspaces re-scan monitored prompts weekly (Mondays)
-            and can email digests or score-drop alerts when an address is set.
+            Control when and how CitePilot sends citation alerts — email, Slack,
+            and webhooks (Fleet).
           </p>
-          <label className="block text-sm font-semibold text-ink">
-            Monitoring email
-            <input
-              type="email"
-              value={preferences.monitoringEmail}
-              onChange={(e) =>
-                setPreferences((p) => ({
-                  ...p,
-                  monitoringEmail: e.target.value,
-                }))
-              }
-              placeholder="you@company.com"
-              className={inputClass}
-            />
-          </label>
-          <EmailAlertsSettingsPanel
-            embedded
-            preferences={preferences}
-            togglesBusy={togglesBusy}
-            onPreferenceChange={(next) => {
-              setPreferences(next);
-              void savePreferences(next);
-            }}
-            testDigestButton={
-              preferences.monitoringEmail.trim() ? (
-                <div className="mt-3 flex items-center gap-3">
-                  <button
-                    type="button"
-                    disabled={testDigestState === "sending"}
-                    onClick={() => void sendTestDigest()}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-ink transition hover:bg-slate-100 disabled:opacity-50"
-                  >
-                    {testDigestState === "sending"
-                      ? "Sending…"
-                      : testDigestState === "sent"
-                        ? "Sent!"
-                        : "Send test digest"}
-                  </button>
-                  <span className="text-xs text-muted">
-                    Sends a real email now to verify your address
-                  </span>
-                </div>
-              ) : undefined
-            }
-          />
           {workspaceId && (
-            <>
-              <SlackAlertsPanel workspaceId={workspaceId} />
-              <WebhookAlertsPanel workspaceId={workspaceId} />
-            </>
+            <NotificationPreferencesPanel
+              workspaceId={workspaceId}
+              onMonitoringEmailSaved={(email) =>
+                setPreferences((p) => ({ ...p, monitoringEmail: email }))
+              }
+            />
           )}
         </Panel>
 

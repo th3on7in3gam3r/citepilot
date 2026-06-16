@@ -427,4 +427,25 @@ CREATE TABLE IF NOT EXISTS cancel_survey_responses (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cancel_survey_user ON cancel_survey_responses(user_id);
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  workspace_id TEXT NOT NULL UNIQUE,
+  email_weekly_digest BOOLEAN NOT NULL DEFAULT TRUE,
+  digest_day INTEGER NOT NULL DEFAULT 1,
+  digest_hour INTEGER NOT NULL DEFAULT 9,
+  digest_timezone TEXT NOT NULL DEFAULT 'UTC',
+  email_drop_alerts BOOLEAN NOT NULL DEFAULT TRUE,
+  drop_threshold INTEGER NOT NULL DEFAULT 10,
+  email_competitor_alerts BOOLEAN NOT NULL DEFAULT TRUE,
+  slack_weekly BOOLEAN NOT NULL DEFAULT TRUE,
+  slack_drop_alerts BOOLEAN NOT NULL DEFAULT TRUE,
+  webhook_events TEXT NOT NULL DEFAULT '["audit.completed","citation.change_detected"]',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_preferences_workspace ON notification_preferences(workspace_id);
 `;

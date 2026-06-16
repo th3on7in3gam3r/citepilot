@@ -19,6 +19,25 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
+/** Stripe API 2025+ stores billing period on items, not the subscription root. */
+export function subscriptionCurrentPeriodEnd(
+  subscription: Stripe.Subscription,
+): number | null {
+  const fromItems = subscription.items.data
+    .map((item) => item.current_period_end)
+    .filter((value): value is number => typeof value === "number" && value > 0);
+
+  if (fromItems.length > 0) {
+    return Math.min(...fromItems);
+  }
+
+  const legacy = (
+    subscription as Stripe.Subscription & { current_period_end?: number }
+  ).current_period_end;
+
+  return typeof legacy === "number" && legacy > 0 ? legacy : null;
+}
+
 export function mapSubscriptionToBilling(subscription: Stripe.Subscription): {
   plan: BillingPlan;
   status: "inactive" | "active" | "trialing" | "past_due" | "canceled";
@@ -51,8 +70,9 @@ export function mapSubscriptionToBilling(subscription: Stripe.Subscription): {
   return {
     plan,
     status: billingStatus,
-    currentPeriodEnd: subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000).toISOString()
-      : null,
+    currentPeriodEnd: (() => {
+      const periodEnd = subscriptionCurrentPeriodEnd(subscription);
+      return periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
+    })(),
   };
 }

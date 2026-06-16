@@ -15,7 +15,6 @@ import {
 import {
   dispatchCitationChangeAlerts,
   dispatchWeeklySlackDigest,
-  isWeeklyDigestDay,
   recordEmailAlertEvent,
   scoreDropExceeded,
 } from "@/lib/alerts/dispatch";
@@ -33,6 +32,10 @@ import { dbAll, dbGet } from "@/lib/db";
 import { parsePreferences, type WorkspacePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { userHasFleetAccess } from "@/lib/billing/access";
+import {
+  getNotificationPreferences,
+  isDigestDayDue,
+} from "@/lib/notifications/preferences-store";
 import { buildWeeklyDigestEmail } from "@/lib/email/templates/weekly-digest";
 import { resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
 import { whiteLabelFromName } from "@/lib/white-label/email-layout";
@@ -364,6 +367,35 @@ export async function sendScheduledProofReportEmail(input: {
   }
 }
 
+export async function sendScoreDropTestEmail(input: {
+  domain: string;
+  to: string;
+  currentScore: number;
+  previousScore: number;
+  gaps: string[];
+  whiteLabel?: WorkspacePreferences["whiteLabel"];
+  fleetBranding?: boolean;
+}): Promise<SendEmailResult> {
+  const delta = input.currentScore - input.previousScore;
+  const wl = input.whiteLabel;
+  const fromName =
+    input.fleetBranding && wl?.agencyName?.trim()
+      ? wl.agencyName.trim()
+      : "CitePilot";
+
+  return sendEmail({
+    to: input.to,
+    subject: `[Test] Citation score dropped for ${input.domain} (${input.currentScore}/100)`,
+    html: layout(
+      `Score drop alert — ${input.domain}`,
+      `<p>This is a <strong>test alert</strong> from ${fromName}.</p>
+<p>Your citation score changed from <strong>${input.previousScore}</strong> to <strong>${input.currentScore}</strong> (${delta} points).</p>
+<ul>${input.gaps.slice(0, 4).map((g) => `<li>${g}</li>`).join("")}</ul>`,
+    ),
+    text: `[Test] Score dropped to ${input.currentScore} for ${input.domain}`,
+  });
+}
+
 export async function sendWeeklyDigestEmail(input: {
   domain: string;
   buyerQuestion: string;
@@ -451,16 +483,23 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
   console.info(`[cron] ${DIGEST_JOB} started period=${periodKey} workspaces=${rows.length}`);
 
   for (const row of rows) {
-    const prefs = parsePreferences(row.preferences);
-    if (!prefs.weeklyDigest) {
+    if (!row.user_id) {
       result.skipped++;
       continue;
     }
 
-    if (!isWeeklyDigestDay(prefs.weeklyDigestDay)) {
+    const notifPrefs = await getNotificationPreferences(row.id, row.user_id);
+    if (!notifPrefs.emailWeeklyDigest) {
       result.skipped++;
       continue;
     }
+
+    if (!isDigestDayDue(notifPrefs)) {
+      result.skipped++;
+      continue;
+    }
+
+    const prefs = parsePreferences(row.preferences);
 
     const to = prefs.monitoringEmail?.trim();
 

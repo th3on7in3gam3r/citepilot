@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { getSessionUser } from "@/lib/auth/server";
 import { userHasFleetAccess } from "@/lib/billing/access";
 import { emailFromMisconfigurationWarning, isEmailConfigured } from "@/lib/email/config";
-import { sendWeeklyDigestEmail } from "@/lib/email/notifications";
+import {
+  sendScoreDropTestEmail,
+  sendWeeklyDigestEmail,
+} from "@/lib/email/notifications";
 import { isValidRecipientEmail } from "@/lib/email/send";
-import { parseTestDigestRequest } from "@/lib/notifications/test-digest-schema";
+import {
+  formatValidationErrorMessage,
+  parseTestDigestRequest,
+} from "@/lib/notifications/test-digest-schema";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
 import { dbAll } from "@/lib/db";
@@ -13,10 +20,7 @@ export const runtime = "nodejs";
 
 /**
  * POST /api/notifications/test-digest
- * Body: { workspaceId: string; email?: string }
- *
- * Sends a one-off weekly digest email. Uses `email` from the body when
- * provided (e.g. unsaved Settings form value), otherwise the saved monitoring email.
+ * Body: { type: "weekly_digest" | "drop_alert", workspaceId: string }
  */
 export const POST = withApiLogging(async function POST(request: Request) {
   const auth = await requireApiUser(request);
@@ -43,29 +47,36 @@ export const POST = withApiLogging(async function POST(request: Request) {
 
   const parsed = parseTestDigestRequest(body);
   if (!parsed.success) {
+    const details = parsed.error.flatten();
     return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.flatten() },
+      {
+        error: formatValidationErrorMessage(details),
+        details,
+      },
       { status: 422 },
     );
   }
 
-  const { workspaceId, email: bodyEmail } = parsed.data;
+  const { workspaceId, type } = parsed.data;
 
   const ws = await getWorkspaceById(workspaceId, userId);
   if (!ws) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const to = bodyEmail || ws.preferences.monitoringEmail?.trim() || "";
+  const sessionUser = await getSessionUser(request);
+  const to =
+    ws.preferences.monitoringEmail?.trim() || sessionUser?.email?.trim() || "";
 
   if (!to) {
     return NextResponse.json(
       {
-        error: "Validation failed",
+        error:
+          "No monitoring email configured. Add one in Settings → Notifications and save.",
         details: {
           fieldErrors: {
             email: [
-              "No monitoring email configured. Add one in Settings → Alerts and save, or enter an address first.",
+              "No monitoring email configured. Add one in Settings → Notifications and save.",
             ],
           },
           formErrors: [],
@@ -78,7 +89,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
   if (!isValidRecipientEmail(to)) {
     return NextResponse.json(
       {
-        error: "Validation failed",
+        error: `Invalid email address: ${to}`,
         details: {
           fieldErrors: { email: [`Invalid email address: ${to}`] },
           formErrors: [],
@@ -94,27 +105,39 @@ export const POST = withApiLogging(async function POST(request: Request) {
   );
 
   const latest = ws.latestAudit;
-  const score = audits[0]?.score ?? latest?.score ?? 0;
-  const previousScore = audits[1]?.score ?? null;
+  const score = audits[0]?.score ?? latest?.score ?? 72;
+  const previousScore = audits[1]?.score ?? score + 8;
   const gaps = latest?.gaps?.length
     ? latest.gaps
     : ["Run a GEO audit to populate real gap data in digests."];
 
   try {
     const fleetBranding = userId ? await userHasFleetAccess(userId) : false;
-    const result = await sendWeeklyDigestEmail({
-      domain: ws.domain,
-      buyerQuestion: ws.buyerQuestion ?? "",
-      competitors: ws.competitors ?? [],
-      score,
-      previousScore,
-      gaps,
-      to,
-      whiteLabel: ws.preferences.whiteLabel,
-      workspaceId,
-      fleetBranding,
-      allowTestFromFallback: true,
-    });
+
+    const result =
+      type === "drop_alert"
+        ? await sendScoreDropTestEmail({
+            domain: ws.domain,
+            to,
+            currentScore: score,
+            previousScore,
+            gaps,
+            whiteLabel: ws.preferences.whiteLabel,
+            fleetBranding,
+          })
+        : await sendWeeklyDigestEmail({
+            domain: ws.domain,
+            buyerQuestion: ws.buyerQuestion ?? "",
+            competitors: ws.competitors ?? [],
+            score,
+            previousScore,
+            gaps,
+            to,
+            whiteLabel: ws.preferences.whiteLabel,
+            workspaceId,
+            fleetBranding,
+            allowTestFromFallback: true,
+          });
 
     if (!result.ok) {
       const hint =
@@ -139,6 +162,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       sentTo: to,
+      type,
       usedTestFrom: result.usedTestFrom ?? false,
       correctedFrom: result.correctedFrom ?? false,
       ...(warning ? { warning } : {}),
