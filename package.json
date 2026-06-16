@@ -20,6 +20,7 @@
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "driver.js": "^1.4.0",
     "framer-api": "^0.1.10",
     "html-to-image": "^1.11.13",
     "next": "16.2.6",

@@ -286,6 +286,18 @@ function MyDashboardOverviewContent({
       {!workspace.hasRealAudit ? (
         <>
           <DashboardWorkspaceEmpty workspace={workspace} />
+          <div
+            data-tour="results"
+            className="rounded-2xl border border-dashed border-border bg-surface/80 px-6 py-8 text-center"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Citation results
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Your citation score, platform heatmap, and weekly action plan will
+              appear here after your first scan.
+            </p>
+          </div>
           <GettingStartedChecklist workspace={workspace} />
         </>
       ) : (

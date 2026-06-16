@@ -35,6 +35,7 @@ export function DashboardWorkspaceEmpty({
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Link
           href="/dashboard/content?section=keywords"
+          data-tour="prompts"
           className="inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep"
         >
           Add your first prompt →

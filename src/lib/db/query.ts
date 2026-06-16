@@ -102,6 +102,9 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id)`,
       );
+      await pool.query(
+        `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS onboarding_completed_at TEXT`,
+      );
     })();
   }
   await globalForPg.citepilotPgReady;

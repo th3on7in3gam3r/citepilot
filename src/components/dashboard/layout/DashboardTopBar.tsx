@@ -52,6 +52,7 @@ export function DashboardTopBar({
           <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-border bg-surface p-1 dark:border-[#222] dark:bg-[#141414]">
             <Link
               href="/dashboard/geo-audit"
+              data-tour="run-scan"
               className="rounded-lg px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-card hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:hover:bg-[#111]"
             >
               Run audit

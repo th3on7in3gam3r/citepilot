@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   PrivacySettingsBlock,
   SiteDetailsFooter,
@@ -37,6 +38,18 @@ export function KeywordsSection({
   const [newKeyword, setNewKeyword] = useState("");
   const [adding, setAdding] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const promptInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("tour") !== "focus-prompt") return;
+    setShowAddForm(true);
+    const timer = window.setTimeout(() => {
+      promptInputRef.current?.focus();
+      promptInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchParams]);
 
   const allRows = useMemo(() => buildKeywordRows(workspace), [workspace]);
   const activeRows = allRows.filter((r) => r.active);
@@ -139,6 +152,7 @@ export function KeywordsSection({
           </button>
           <button
             type="button"
+            data-tour="prompt-input"
             onClick={() => setShowAddForm((v) => !v)}
             className="rounded-xl border border-accent/40 bg-accent/5 px-4 py-2.5 text-sm font-semibold text-accent transition hover:bg-accent/10"
           >
@@ -154,6 +168,7 @@ export function KeywordsSection({
           className="flex gap-3 rounded-2xl border border-accent/30 bg-accent/5 p-4"
         >
           <input
+            ref={promptInputRef}
             type="text"
             value={newKeyword}
             onChange={(e) => setNewKeyword(e.target.value)}

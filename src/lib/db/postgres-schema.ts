@@ -252,7 +252,8 @@ CREATE TABLE IF NOT EXISTS user_onboarding (
   user_id TEXT PRIMARY KEY,
   dismissed_at TEXT,
   shared_proof INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  onboarding_completed_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS user_referrals (

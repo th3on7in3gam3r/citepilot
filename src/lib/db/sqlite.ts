@@ -503,7 +503,8 @@ function migrateSchema(db: Database.Database): void {
       user_id TEXT PRIMARY KEY,
       dismissed_at TEXT,
       shared_proof INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      onboarding_completed_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS user_referrals (
@@ -644,6 +645,16 @@ function migrateSchema(db: Database.Database): void {
     .all() as { name: string }[];
   if (shareCols.length > 0 && !shareCols.some((c) => c.name === "password_hash")) {
     db.exec(`ALTER TABLE audit_shares ADD COLUMN password_hash TEXT`);
+  }
+
+  const onboardingCols = db
+    .prepare(`PRAGMA table_info(user_onboarding)`)
+    .all() as { name: string }[];
+  if (
+    onboardingCols.length > 0 &&
+    !onboardingCols.some((c) => c.name === "onboarding_completed_at")
+  ) {
+    db.exec(`ALTER TABLE user_onboarding ADD COLUMN onboarding_completed_at TEXT`);
   }
 
   db.exec(`

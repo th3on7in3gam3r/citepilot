@@ -545,3 +545,67 @@ html.dark .text-\[\#94a3b8\] {
     font-size: 16px;
   }
 }
+
+/* Driver.js product tour — CitePilot theme */
+.driver-popover.citepilot-tour-popover {
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+  max-width: min(360px, calc(100vw - 32px));
+}
+
+.driver-popover.citepilot-tour-popover .driver-popover-title {
+  font-family: var(--font-display, inherit);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.driver-popover.citepilot-tour-popover .driver-popover-description {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.driver-popover.citepilot-tour-popover .driver-popover-progress-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.driver-popover.citepilot-tour-popover .driver-popover-navigation-btns {
+  gap: 0.5rem;
+}
+
+.driver-popover.citepilot-tour-popover button {
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-shadow: none;
+}
+
+.driver-popover.citepilot-tour-popover .driver-popover-next-btn,
+.driver-popover.citepilot-tour-popover .driver-popover-done-btn {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+}
+
+.driver-popover.citepilot-tour-popover .driver-popover-next-btn:hover,
+.driver-popover.citepilot-tour-popover .driver-popover-done-btn:hover {
+  background: var(--color-accent-deep);
+}
+
+.driver-popover.citepilot-tour-popover .driver-popover-prev-btn,
+.driver-popover.citepilot-tour-popover .driver-popover-close-btn {
+  background: transparent;
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+
+.driver-active-element,
+.driver-active-element * {
+  outline-color: var(--color-accent) !important;
+}

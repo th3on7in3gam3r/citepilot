@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { DashboardMobileNav } from "@/components/dashboard/DashboardMobileNav";
+import { ProductTour } from "@/components/dashboard/onboarding/ProductTour";
 import { CopilotPanel } from "@/components/dashboard/copilot/CopilotPanel";
 import { CopilotProvider, useCopilot } from "@/components/dashboard/copilot/CopilotProvider";
 import { GridFilterProvider } from "@/components/dashboard/copilot/GridFilterProvider";
@@ -121,6 +122,9 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           <DashboardUsageLimitBanner />
           <IntegrationHealthBanner />
           <GeoScoreBadgePrompt />
+          <Suspense fallback={null}>
+            <ProductTour />
+          </Suspense>
           {children}
         </main>
       </div>

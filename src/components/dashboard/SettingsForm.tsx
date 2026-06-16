@@ -11,6 +11,7 @@ import { WorkspaceManagementPanel } from "@/components/dashboard/workspaces/Work
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
+import { RestartProductTourLink } from "@/components/dashboard/onboarding/RestartProductTourLink";
 import { ReferralPanel } from "@/components/dashboard/ReferralPanel";
 import { WhiteLabelSettingsPanel } from "@/components/dashboard/WhiteLabelSettingsPanel";
 import { ThemeSettingsPanel } from "@/components/theme/ThemeSettingsPanel";
@@ -637,6 +638,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           <p className="text-sm text-muted">
             Signed in with Neon Auth. Sign out to switch accounts or use a shared computer.
           </p>
+          <RestartProductTourLink />
           <div className="mt-4">
             <SignOutButton className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-60" />
           </div>
