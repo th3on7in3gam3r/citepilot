@@ -92,9 +92,9 @@ export async function buildIntegrationStatuses(input: {
 }): Promise<IntegrationStatus[]> {
   const connections = await listCmsConnections(input.workspaceId);
   const byProvider = new Map(connections.map((item) => [item.provider, item]));
+  const framerConnection = byProvider.get("framer");
   const framerSnippetInstalled = Boolean(
-    framerConnection?.provider === "framer" &&
-      framerConnection.remoteDefaults &&
+    framerConnection?.remoteDefaults &&
       "snippetInstalled" in framerConnection.remoteDefaults &&
       framerConnection.remoteDefaults.snippetInstalled,
   );
