@@ -41,7 +41,7 @@ function sampleAudit(domain: string): AuditPayload {
       geoScore: 0,
     },
     mode: "technical",
-    trigger: "manual",
+    workspaceId: "test",
     createdAt: new Date().toISOString(),
   };
 }

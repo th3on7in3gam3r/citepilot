@@ -9,8 +9,8 @@ import { useToast } from "@/components/notifications/ToastProvider";
 import type {
   NotificationPreferences,
   WebhookEventType,
-} from "@/lib/notifications/preferences-store";
-import { WEBHOOK_EVENT_OPTIONS } from "@/lib/notifications/preferences-store";
+} from "@/lib/notifications/preferences-types";
+import { WEBHOOK_EVENT_OPTIONS } from "@/lib/notifications/preferences-types";
 import type { ScoreDropThresholdPercent } from "@/lib/settings";
 
 const DIGEST_DAYS = [
