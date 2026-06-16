@@ -105,8 +105,14 @@ export function renderGeoBadgeSvg(
 
 export function widgetPlatformSummary(
   platforms: Pick<PlatformPresence, "name" | "present">[],
+  limit = 2,
 ): { name: string; cited: boolean }[] {
-  const wanted = ["ChatGPT", "Perplexity"];
+  const wanted = [
+    "ChatGPT",
+    "Perplexity",
+    "Google AI Overviews",
+    "Gemini",
+  ].slice(0, Math.max(1, limit));
   return wanted.map((name) => {
     const row = platforms.find((p) => p.name === name);
     return { name, cited: row?.present ?? false };

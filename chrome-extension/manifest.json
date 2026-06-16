@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "CitePilot — GEO Citation Checker",
+  "version": "1.0.0",
+  "description": "See if any website is cited on ChatGPT and Perplexity",
+  "permissions": ["activeTab", "storage", "cookies", "tabs"],
+  "host_permissions": [
+    "https://getcitepilot.com/*",
+    "https://www.getcitepilot.com/*",
+    "http://localhost:3000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CitePilot citation check",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

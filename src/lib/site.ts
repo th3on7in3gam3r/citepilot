@@ -52,6 +52,11 @@ export const nav = {
           href: "/tools/geo-playbook",
           description: "42-item interactive checklist + PDF guide",
         },
+        {
+          label: "Chrome extension",
+          href: "/chrome-extension",
+          description: "Citation checker badge on any site you browse",
+        },
       ],
     },
     { label: "Agencies", href: "/agency" },
@@ -74,6 +79,7 @@ export const nav = {
       { label: "Citation audit", href: "/audit" },
       { label: "Citation gap calculator", href: "/tools/citation-gap-calculator" },
       { label: "GEO Playbook", href: "/tools/geo-playbook" },
+      { label: "Chrome extension", href: "/chrome-extension" },
       { label: "Start analysis", href: "/start" },
     ],
     compare: [

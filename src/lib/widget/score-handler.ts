@@ -79,12 +79,16 @@ export async function handleWidgetScoreRequest(
   };
 
   if (format === "json") {
+    const platformLimit = Math.min(
+      8,
+      Math.max(1, Number.parseInt(url.searchParams.get("platforms") ?? "2", 10) || 2),
+    );
     return Response.json(
       {
         domain: data.domain,
         score: data.score,
         hasAudit: data.hasAudit,
-        platforms: widgetPlatformSummary(data.platforms),
+        platforms: widgetPlatformSummary(data.platforms, platformLimit),
       },
       { headers: { ...cacheHeaders, ...CORS_HEADERS } },
     );
