@@ -514,9 +514,11 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         {isFleet && workspaceId && (
           <FleetSettingsPanel
             workspaceId={workspaceId}
-            onPromptsImported={(prompts) =>
-              setMonitoredPromptsText(prompts.join("\n"))
-            }
+            domain={domain}
+            existingPrompts={promptsFromPreferences(preferences, buyerQuestion)}
+            onPromptsImported={() => {
+              void onSaved();
+            }}
           />
         )}
 

@@ -9,6 +9,12 @@ import {
   promptRowsForWorkspace,
 } from "@/lib/dashboard-data";
 import {
+  buildProofReportRawRows,
+  proofReportRawToCsv,
+} from "@/lib/prompts/export-data";
+import { downloadTextFile } from "@/lib/prompts/download";
+import type { HeatmapRow } from "@/lib/citations/viz-data";
+import {
   ReportBrandingHeader,
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
@@ -30,6 +36,7 @@ export function ProofReportPage() {
 function ProofReportInner() {
   const { workspace, ready } = useWorkspaceContext();
   const [copied, setCopied] = useState(false);
+  const [exportingRaw, setExportingRaw] = useState(false);
 
   const whiteLabel =
     workspace?.preferences?.whiteLabel ?? defaultWorkspacePreferences.whiteLabel;
@@ -88,6 +95,27 @@ function ProofReportInner() {
     window.print();
   }
 
+  async function exportRawData() {
+    const workspaceId = workspace?.workspaceId ?? workspace?.id;
+    if (!workspace || !workspaceId) return;
+    setExportingRaw(true);
+    try {
+      const res = await fetch(`/api/workspaces/${workspaceId}/citations/visualization`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        return;
+      }
+      const data = (await res.json()) as { heatmap?: { rows: HeatmapRow[] } };
+      const rows = buildProofReportRawRows(workspace, data.heatmap?.rows ?? []);
+      const csv = proofReportRawToCsv(rows);
+      const domain = workspace.domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      downloadTextFile(csv, `${domain}-proof-report-raw.csv`, "text/csv");
+    } finally {
+      setExportingRaw(false);
+    }
+  }
+
   async function copyLink() {
     const url = `${window.location.origin}/report/proof`;
     try {
@@ -124,6 +152,14 @@ function ProofReportInner() {
               className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface"
             >
               {copied ? "Copied!" : "Copy link"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void exportRawData()}
+              disabled={exportingRaw}
+              className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-50"
+            >
+              {exportingRaw ? "Exporting…" : "Export raw data"}
             </button>
             <button
               type="button"

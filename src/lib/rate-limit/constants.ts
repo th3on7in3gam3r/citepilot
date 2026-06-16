@@ -18,3 +18,9 @@ export const WAITLIST_RATE_LIMIT_PER_HOUR = 10;
 
 /** Blog newsletter signups per IP per hour. */
 export const SUBSCRIBE_RATE_LIMIT_PER_HOUR = 1;
+
+/** Prompt CSV imports per user per hour. */
+export const PROMPT_IMPORT_RATE_LIMIT_PER_HOUR = 3;
+
+/** Max prompts per import batch. */
+export const PROMPT_IMPORT_MAX_PER_BATCH = 200;

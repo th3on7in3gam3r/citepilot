@@ -30,6 +30,11 @@ export type WorkspaceListMeta = {
 export type AgencyOverview = {
   workspaceCount: number;
   weightedCitationScore: number;
+  totalPrompts: number;
+  activeCount: number;
+  pausedCount: number;
+  auditedCount: number;
+  workspaces: WorkspaceListMeta[];
   needsAttention: {
     id: string;
     domain: string;
@@ -370,6 +375,11 @@ export async function getAgencyOverview(userId: string): Promise<AgencyOverview>
   return {
     workspaceCount: items.length,
     weightedCitationScore,
+    totalPrompts: items.reduce((sum, w) => sum + w.promptCount, 0),
+    activeCount: items.filter((w) => w.status === "active").length,
+    pausedCount: items.filter((w) => w.status === "paused").length,
+    auditedCount: scored.length,
+    workspaces: items,
     needsAttention,
     recentActivity: recentActivity.map((r) => ({
       id: r.id,

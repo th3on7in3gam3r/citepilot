@@ -6,6 +6,8 @@ import {
   PrivacySettingsBlock,
   SiteDetailsFooter,
 } from "@/components/dashboard/site-details/SiteDetailsShared";
+import { PromptExportMenu } from "@/components/dashboard/prompts/PromptExportMenu";
+import { PromptImportModal } from "@/components/dashboard/prompts/PromptImportModal";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { updateWorkspace } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -27,13 +29,14 @@ export function KeywordsSection({
   onContinue: () => void;
 }) {
   const toast = useToast();
-  const { applyWorkspace } = useWorkspaceContext();
+  const { applyWorkspace, refresh } = useWorkspaceContext();
   const [tab, setTab] = useState<Tab>("active");
   const [range, setRange] = useState<Range>("7d");
   const [saving, setSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [adding, setAdding] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const allRows = useMemo(() => buildKeywordRows(workspace), [workspace]);
   const activeRows = allRows.filter((r) => r.active);
@@ -126,6 +129,14 @@ export function KeywordsSection({
           >
             View Keyword Rankings
           </Link>
+          <PromptExportMenu workspace={workspace} />
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#0f172a] transition hover:bg-[#f8fafb]"
+          >
+            Import prompts
+          </button>
           <button
             type="button"
             onClick={() => setShowAddForm((v) => !v)}
@@ -263,6 +274,17 @@ export function KeywordsSection({
         saving={saving}
         onSave={() => handleSave(false)}
         onSaveContinue={() => handleSave(true)}
+      />
+
+      <PromptImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        workspaceId={workspaceId}
+        domain={displayDomain}
+        existingPrompts={workspace.preferences?.monitoredPrompts ?? []}
+        onImported={() => {
+          void refresh();
+        }}
       />
     </div>
   );
