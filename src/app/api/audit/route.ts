@@ -15,6 +15,7 @@ import { getRecentAuditsForWorkspace, runCitationAudit } from "@/lib/audit/run-a
 import { createAuditShare } from "@/lib/audit/share";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
 import { triggerPostAuditSequence } from "@/lib/email/sequences/engine";
+import { publicScorePageUrl } from "@/lib/score/public-score-url";
 import { trackServerEvent } from "@/lib/analytics/track-server";
 import { captureServerException } from "@/lib/observability/sentry";
 import {
@@ -135,6 +136,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
             total: audit.total,
             gaps: audit.gaps,
             shareUrl: "url" in share ? share.url : undefined,
+            scorePageUrl: publicScorePageUrl(audit.domain),
           });
         })().catch((err) => console.error("Post-audit sequence failed", err));
       }

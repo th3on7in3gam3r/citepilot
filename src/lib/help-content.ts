@@ -27,6 +27,13 @@ export type HelpWorkflowStep = {
 
 export const helpGuides: HelpGuide[] = [
   {
+    title: "Public GEO score pages",
+    description:
+      "Find your /score/yourdomain.com page, share it, and verify ownership with DNS TXT or a meta tag.",
+    href: "/help/public-score-pages",
+    cta: "Open guide",
+  },
+  {
     title: "White-label report domain (CNAME)",
     description:
       "Point reports.youragency.com to CitePilot — step-by-step for Settings vs your DNS provider, with common mistakes.",
@@ -96,6 +103,14 @@ export const helpWorkflow: HelpWorkflowStep[] = [
 ];
 
 export const helpQuickAnswers: HelpQuickAnswer[] = [
+  {
+    q: "What is the public score page vs the proof report?",
+    a: "After an audit, CitePilot publishes a free SEO page at /score/yourdomain.com with your headline GEO score. Your proof report link (from email or Share) is the detailed private report — optional password. Both are linked from GEO Audit and post-audit emails. See /help/public-score-pages.",
+  },
+  {
+    q: "DNS claim says TXT but also @ — which do I use?",
+    a: "Both are different fields. Type = TXT (the record kind). Host/Name = either @ (or blank) for your root domain, OR _citepilot-verify if your DNS panel does not allow @. Pick one host, paste the full Value from the claim panel, save, wait a few minutes, then Verify. Full walkthrough: /help/public-score-pages.",
+  },
   {
     q: "Where do I add the CNAME for white-label report links?",
     a: "In your own domain's DNS — not getcitepilot.com. If your agency site is youragency.com, open DNS for that domain (Cloudflare, Vercel, GoDaddy, etc.) and add: Name = reports, Type = CNAME, Value = reports.getcitepilot.com. In CitePilot Settings → White Label, enter reports.youragency.com. See /help/white-label-reports for the full walkthrough.",

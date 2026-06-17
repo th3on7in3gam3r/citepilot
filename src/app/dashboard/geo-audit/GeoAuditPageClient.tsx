@@ -15,6 +15,7 @@ import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { publicScorePageUrl } from "@/lib/score/public-score-url";
 
 const feature = productFeatures.find((f) => f.id === "geo-audit")!;
 
@@ -161,6 +162,28 @@ export function GeoAuditPageClient() {
           </div>
         )}
       </Panel>
+
+      {workspace.hasRealAudit && (
+        <Panel className="mb-6 border border-border bg-surface/50">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-ink">Public score page</p>
+              <p className="mt-1 text-sm text-muted">
+                Shareable SEO landing page for {workspace.domain}. Claim it to control
+                visibility in search.
+              </p>
+            </div>
+            <Link
+              href={publicScorePageUrl(workspace.domain)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-full border border-accent/30 bg-white px-5 py-2.5 text-sm font-semibold text-accent transition hover:bg-accent/5"
+            >
+              View public score page →
+            </Link>
+          </div>
+        </Panel>
+      )}
 
       <ShareAuditResultsCard
         visible={showShareBanner}

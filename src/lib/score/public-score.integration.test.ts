@@ -21,4 +21,21 @@ describe("score page data integration", () => {
       expect.any(Array),
     );
   }, 30_000);
+
+  it("loads full public score page data for biblefunlandstudios.com", async () => {
+    if (!process.env.DATABASE_URL?.trim() && !process.env.NEON_URL?.trim()) {
+      return;
+    }
+
+    const { getPublicScorePageData } = await import("@/lib/score/public-score");
+    const data = await getPublicScorePageData("biblefunlandstudios.com");
+    if (!data) {
+      // Domain may not be audited in this environment.
+      return;
+    }
+
+    expect(data.domain).toBe("biblefunlandstudios.com");
+    expect(data.audit.score).toEqual(expect.any(Number));
+    expect(data.platforms.length).toBeGreaterThan(0);
+  }, 30_000);
 });

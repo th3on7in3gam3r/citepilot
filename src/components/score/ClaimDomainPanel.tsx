@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   VERIFICATION_DNS_PREFIX,
@@ -187,14 +188,44 @@ export function ClaimDomainPanel({
             <div className="mt-4 space-y-3">
               {method === "dns" ? (
                 <div className="rounded-xl bg-cream p-4 text-sm">
-                  <p className="font-semibold text-ink">Add a TXT record</p>
-                  <p className="mt-1 text-muted">
-                    Host: <code className="text-ink">@</code> or{" "}
-                    <code className="text-ink">_citepilot-verify</code>
+                  <p className="font-semibold text-ink">Add one TXT record in your domain&apos;s DNS</p>
+                  <p className="mt-2 text-muted">
+                    Log in where you manage DNS for <strong>{domain}</strong> (Cloudflare,
+                    Vercel, GoDaddy, etc.) — not getcitepilot.com.
                   </p>
-                  <p className="mt-2 break-all font-mono text-xs text-ink">
-                    {VERIFICATION_DNS_PREFIX}
-                    {token}
+                  <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-[5.5rem_1fr]">
+                    <dt className="font-semibold text-ink">Type</dt>
+                    <dd className="text-muted">TXT</dd>
+                    <dt className="font-semibold text-ink">Host</dt>
+                    <dd className="text-muted">
+                      Pick <strong>one</strong> (not both):
+                      <ul className="mt-1.5 list-disc space-y-1 pl-4">
+                        <li>
+                          <code className="text-ink">@</code> or leave blank — most providers
+                          (verifies the root domain)
+                        </li>
+                        <li>
+                          <code className="text-ink">_citepilot-verify</code> — if your panel
+                          does not allow <code className="text-ink">@</code>
+                        </li>
+                      </ul>
+                    </dd>
+                    <dt className="font-semibold text-ink">Value</dt>
+                    <dd className="break-all font-mono text-xs text-ink">
+                      {VERIFICATION_DNS_PREFIX}
+                      {token}
+                    </dd>
+                  </dl>
+                  <p className="mt-3 text-xs text-muted">
+                    TXT is the record <em>type</em>; @ or _citepilot-verify is the{" "}
+                    <em>host</em> field. After saving, wait a few minutes, then click Verify
+                    below.{" "}
+                    <Link
+                      href="/help/public-score-pages"
+                      className="font-semibold text-accent hover:text-accent-deep"
+                    >
+                      Full DNS guide →
+                    </Link>
                   </p>
                 </div>
               ) : (

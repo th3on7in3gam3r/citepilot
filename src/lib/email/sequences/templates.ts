@@ -117,7 +117,13 @@ ${cta(pricingUrl, `Start Pilot — ${PILOT_PRICE_LABEL}`)}`,
     const score = data.score ?? 0;
     const topGap = data.topGap ?? "Improve structured data and answer capsules on key pages";
     const shareUrl = data.shareUrl ?? auditUrl;
+    const scorePageUrl = data.scorePageUrl;
     if (emailNumber === 1) {
+      const scorePageBlock =
+        scorePageUrl != null
+          ? `<p>Your public GEO score page (shareable &amp; indexed):</p>
+${cta(scorePageUrl, "View public score page →")}`
+          : "";
       return {
         subject: `Your CitePilot audit results for ${domain}`,
         html: layout(
@@ -127,9 +133,12 @@ ${cta(pricingUrl, `Start Pilot — ${PILOT_PRICE_LABEL}`)}`,
 <p><strong>Citation score: ${score}/100</strong> · ${data.cited ?? 0}/${data.total ?? 0} prompts cited</p>
 <p><strong>Top gap:</strong> ${topGap}</p>
 <p><strong>Recommended first fix:</strong> Address your highest-impact gap this week — small technical and content fixes often move the needle fastest.</p>
-${cta(shareUrl, "See full report →")}`,
+${cta(shareUrl, "See full proof report →")}
+${scorePageBlock}`,
         ),
-        text: `Audit for ${domain}: ${score}/100. Top gap: ${topGap}. Full report: ${shareUrl}`,
+        text: `Audit for ${domain}: ${score}/100. Top gap: ${topGap}. Proof report: ${shareUrl}${
+          scorePageUrl != null ? ` Public score page: ${scorePageUrl}` : ""
+        }`,
       };
     }
     if (emailNumber === 2) {

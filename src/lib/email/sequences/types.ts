@@ -16,6 +16,7 @@ export type SequenceEmailPayload = {
   topGap?: string;
   gapFixType?: GapFixType;
   shareUrl?: string;
+  scorePageUrl?: string;
   userName?: string;
 };
 

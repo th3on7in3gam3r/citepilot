@@ -232,6 +232,7 @@ export async function triggerPostAuditSequence(input: {
   total: number;
   gaps: string[];
   shareUrl?: string;
+  scorePageUrl?: string;
 }): Promise<void> {
   if (input.email) {
     const { cacheUserEmail } = await import("@/lib/email/recipient");
@@ -252,6 +253,7 @@ export async function triggerPostAuditSequence(input: {
       topGap,
       gapFixType: classifyGapFixType(topGap),
       shareUrl: input.shareUrl,
+      scorePageUrl: input.scorePageUrl,
     },
   });
 }
