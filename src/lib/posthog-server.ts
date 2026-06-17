@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import PostHog from "posthog-node";
+import { PostHog } from "posthog-node";
 import { normalizeFlagVariant } from "@/lib/analytics/feature-flags";
 
 function posthogHost(): string {
