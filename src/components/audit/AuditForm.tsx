@@ -8,6 +8,7 @@ import { ProductCTAButton } from "@/components/ui/ProductCTA";
 import type { AuditPayload } from "@/lib/api-types";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { HERO_CTA_VARIANT_STORAGE_KEY } from "@/lib/analytics/feature-flags";
 import { getStoredWorkspaceId, joinWaitlist, runAudit } from "@/lib/client/api";
 import { ONBOARDING_STORAGE_KEY, type OnboardingAnswers } from "@/lib/onboarding";
 import { auditDiagnosticPhases } from "@/lib/marketing/audit-landing";
@@ -88,7 +89,18 @@ export function AuditForm() {
     }
 
     const workspaceId = getStoredWorkspaceId() ?? undefined;
-    trackEvent("audit_started", { domain: cleanDomain, workspaceId, source: "public_audit" });
+    let heroCtaVariant: string | undefined;
+    try {
+      heroCtaVariant = sessionStorage.getItem(HERO_CTA_VARIANT_STORAGE_KEY) ?? undefined;
+    } catch {
+      /* ignore */
+    }
+    trackEvent("audit_started", {
+      domain: cleanDomain,
+      workspaceId,
+      source: "public_audit",
+      ...(heroCtaVariant ? { variant: heroCtaVariant, from: "hero" } : {}),
+    });
 
     try {
       const audit = await runAudit({ domain: cleanDomain, prompts: promptList, workspaceId });

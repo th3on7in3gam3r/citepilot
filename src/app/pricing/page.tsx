@@ -7,8 +7,10 @@ import { Header } from "@/components/layout/Header";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
+import { FEATURE_FLAGS } from "@/lib/analytics/feature-flags";
 import { pricingLanding } from "@/lib/marketing/pricing-landing";
 import { pricingPageFaqItems } from "@/lib/marketing/site-faq";
+import { getServerSideFlagVariant } from "@/lib/posthog-server";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
@@ -29,7 +31,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const pricingLayoutVariant = await getServerSideFlagVariant(
+    FEATURE_FLAGS.PRICING_PAGE_LAYOUT,
+  );
+
   return (
     <>
       <Header light overlay />
@@ -122,7 +128,7 @@ export default function PricingPage() {
             >
               Choose your plan
             </h2>
-            <PricingPlanCards />
+            <PricingPlanCards initialLayoutVariant={pricingLayoutVariant} />
           </section>
 
           <ProductTransparencySection variant="dark" />

@@ -16,6 +16,8 @@ type Props = {
   feature?: string;
   /** Analytics source: gate, banner, modal, pricing_page, etc. */
   source?: string;
+  /** A/B variant for experiment attribution (e.g. pricing-page-layout). */
+  abVariant?: string;
 };
 
 export function PilotCheckoutButton({
@@ -27,6 +29,7 @@ export function PilotCheckoutButton({
   billingInterval = "monthly",
   feature,
   source,
+  abVariant,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +42,11 @@ export function PilotCheckoutButton({
 
     setLoading(true);
     setError(null);
-    trackEvent("checkout_started", { plan, feature, source });
+    trackEvent("checkout_started", { plan, feature, source, variant: abVariant });
     trackEvent(plan === "fleet" ? "fleet_checkout_started" : "pilot_checkout_started", {
       feature,
       source,
+      variant: abVariant,
     });
     if (source) {
       trackEvent("upgrade_cta_clicked", {

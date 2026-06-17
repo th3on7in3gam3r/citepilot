@@ -42,7 +42,9 @@ export type AnalyticsEvent =
   | "audit_share_created"
   | "audit_feedback_submitted"
   | "cancel_survey_submitted"
-  | "feature_request_submitted";
+  | "feature_request_submitted"
+  | "hero_cta_clicked"
+  | "first_scan_completed";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

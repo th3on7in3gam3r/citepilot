@@ -45,10 +45,10 @@ const StickyProductShowcase = dynamic(
 );
 
 /** Home sections — hero + features eager; heavy below-fold sections lazy-loaded. */
-export function HomePage() {
+export function HomePage({ heroCtaVariant }: { heroCtaVariant?: string }) {
   return (
     <>
-      <Hero />
+      <Hero heroCtaVariant={heroCtaVariant} />
       <CustomerLogosBar />
       <SocialProofStats />
       <HomeActionBar />

@@ -21,6 +21,11 @@ import {
   TOTAL_STEPS,
   type OnboardingAnswers,
 } from "@/lib/onboarding";
+import {
+  FEATURE_FLAGS,
+  ONBOARDING_PROMPT_EXAMPLES,
+} from "@/lib/analytics/feature-flags";
+import { useFeatureFlagVariant } from "@/hooks/useFeatureFlagVariant";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { effectInit } from "@/lib/react/effect-init";
 import { runAudit } from "@/lib/client/api";
@@ -49,10 +54,17 @@ function syncStepUrl(stepIndex: number, mode: "push" | "replace") {
 
 export function OnboardingFlow({
   initialDomain,
+  initialPromptVariant,
 }: {
   initialDomain?: string;
+  initialPromptVariant?: string;
 }) {
   const router = useRouter();
+  const promptSuggestionsVariant = useFeatureFlagVariant(
+    FEATURE_FLAGS.ONBOARDING_PROMPT_SUGGESTIONS,
+    { initialVariant: initialPromptVariant, fallback: "control" },
+  );
+  const showPromptSuggestions = promptSuggestionsVariant === "variant_a";
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<OnboardingAnswers>(initial);
   const [audienceInput, setAudienceInput] = useState("");
@@ -168,13 +180,23 @@ export function OnboardingFlow({
 
         const prompts = [answers.buyerQuestion].filter(Boolean);
         if (prompts.length > 0) {
-          trackEvent("audit_started", { workspaceId: data.id });
+          trackEvent("audit_started", {
+            workspaceId: data.id,
+            source: "onboarding",
+            variant: promptSuggestionsVariant,
+          });
           void runAudit({
             domain: answers.domain,
             prompts,
             workspaceId: data.id,
           })
-            .then(() => trackAuditCompleted(data.id))
+            .then(() => {
+              trackAuditCompleted(data.id);
+              trackEvent("first_scan_completed", {
+                workspaceId: data.id,
+                variant: promptSuggestionsVariant,
+              });
+            })
             .catch(() => undefined);
         }
       }
@@ -466,6 +488,32 @@ export function OnboardingFlow({
                     className="mt-2 w-full rounded-full border border-border bg-white px-6 py-4 text-lg outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
                     onKeyDown={(e) => e.key === "Enter" && canContinue() && next()}
                   />
+                  {showPromptSuggestions && (
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        Example prompts — tap to use
+                      </p>
+                      <ul className="mt-2 flex flex-col gap-2">
+                        {ONBOARDING_PROMPT_EXAMPLES.map((example) => (
+                          <li key={example}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setAnswers((a) => ({ ...a, buyerQuestion: example }))
+                              }
+                              className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+                                answers.buyerQuestion === example
+                                  ? "border-accent bg-accent/5 font-semibold text-ink ring-1 ring-accent/25"
+                                  : "border-border bg-surface text-muted hover:border-accent/40 hover:text-ink"
+                              }`}
+                            >
+                              {example}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <p className="mt-3 text-sm text-muted">
                     Tip: use a question your customers actually ask AI before they
                     buy.

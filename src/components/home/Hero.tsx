@@ -1,8 +1,9 @@
 import { Container } from "@/components/ui/Container";
 import { HeroProductBanner } from "@/components/home/HeroProductBanner";
+import { HeroCta } from "@/components/home/HeroCta";
 import Link from "next/link";
 
-export function Hero() {
+export function Hero({ heroCtaVariant }: { heroCtaVariant?: string }) {
   return (
     <section className="hero-premium relative overflow-hidden">
       <div className="hero-premium-grid" aria-hidden />
@@ -23,12 +24,7 @@ export function Hero() {
           </p>
 
           <div className="mt-7 flex flex-col items-center sm:mt-8">
-            <Link
-              href="/audit"
-              className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-8 py-3.5 text-base font-bold text-white shadow-[0_4px_20px_rgba(14,165,233,0.3)] transition hover:scale-[1.02] hover:shadow-[0_6px_24px_rgba(14,165,233,0.35)] dark:shadow-[0_4px_24px_rgba(14,165,233,0.25)] dark:hover:shadow-[0_6px_28px_rgba(14,165,233,0.3)] sm:w-auto sm:min-w-[15rem]"
-            >
-              Start free audit
-            </Link>
+            <HeroCta initialVariant={heroCtaVariant} />
             <p className="mt-3 text-xs text-muted dark:text-white/40">
               No credit card ·{" "}
               <Link

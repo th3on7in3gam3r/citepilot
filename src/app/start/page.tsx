@@ -1,5 +1,7 @@
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { getSessionUserId } from "@/lib/auth/server";
+import { FEATURE_FLAGS } from "@/lib/analytics/feature-flags";
+import { getServerSideFlagVariant } from "@/lib/posthog-server";
 import { countWorkspacesForUser } from "@/lib/server/workspace";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -20,6 +22,9 @@ export default async function StartPage({
 }) {
   const params = await searchParams;
   const userId = await getSessionUserId();
+  const promptVariant = userId
+    ? await getServerSideFlagVariant(FEATURE_FLAGS.ONBOARDING_PROMPT_SUGGESTIONS, userId)
+    : await getServerSideFlagVariant(FEATURE_FLAGS.ONBOARDING_PROMPT_SUGGESTIONS);
 
   if (userId && params.full !== "1") {
     const count = await countWorkspacesForUser(userId);
@@ -28,5 +33,10 @@ export default async function StartPage({
     }
   }
 
-  return <OnboardingFlow initialDomain={params.domain} />;
+  return (
+    <OnboardingFlow
+      initialDomain={params.domain}
+      initialPromptVariant={promptVariant}
+    />
+  );
 }
