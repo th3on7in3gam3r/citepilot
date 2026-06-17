@@ -1,5 +1,5 @@
-import { randomUUID } from "crypto";
 import { userHasFleetAccess } from "@/lib/billing/access";
+import { requireWorkspaceAccess } from "@/lib/auth/workspace-access";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { parsePreferences } from "@/lib/settings";
@@ -8,6 +8,7 @@ import {
   getWorkspaceById,
   toSnapshot,
 } from "@/lib/server/workspace";
+import { listWorkspaceIdsForMember } from "@/lib/server/workspace-members";
 
 export type WorkspaceStatus = "active" | "paused";
 
@@ -144,17 +145,40 @@ export async function listWorkspaceMetaForUser(
   userId: string,
   options: { includeArchived?: boolean } = {},
 ): Promise<WorkspaceListMeta[]> {
-  const clause = options.includeArchived
-    ? "WHERE user_id = ?"
-    : "WHERE user_id = ? AND archived_at IS NULL";
-  const rows = await dbAll<WorkspaceRow>(
+  const memberIds = await listWorkspaceIdsForMember(userId);
+  const archivedClause = options.includeArchived
+    ? ""
+    : "AND archived_at IS NULL";
+
+  const ownedRows = await dbAll<WorkspaceRow>(
     `SELECT id, domain, business_type, buyer_question, preferences, user_id,
             display_name, status, archived_at, updated_at
-     FROM workspaces ${clause}
+     FROM workspaces WHERE user_id = ? ${archivedClause}
      ORDER BY updated_at DESC
      LIMIT 200`,
     [userId],
   );
+
+  let memberRows: WorkspaceRow[] = [];
+  if (memberIds.length > 0) {
+    const placeholders = memberIds.map(() => "?").join(", ");
+    memberRows = await dbAll<WorkspaceRow>(
+      `SELECT id, domain, business_type, buyer_question, preferences, user_id,
+              display_name, status, archived_at, updated_at
+       FROM workspaces WHERE id IN (${placeholders}) ${archivedClause}
+       ORDER BY updated_at DESC`,
+      memberIds,
+    );
+  }
+
+  const seen = new Set<string>();
+  const rows: WorkspaceRow[] = [];
+  for (const row of [...ownedRows, ...memberRows]) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    rows.push(row);
+  }
+
   return Promise.all(rows.map((row) => buildWorkspaceListMeta(row)));
 }
 
@@ -191,6 +215,9 @@ export async function updateWorkspaceManagement(
     restore?: boolean;
   },
 ): Promise<boolean> {
+  const access = await requireWorkspaceAccess(userId, id, "owner");
+  if (!access) return false;
+
   const row = await dbGet<WorkspaceRow>(
     `SELECT id FROM workspaces WHERE id = ? AND user_id = ?`,
     [id, userId],
@@ -230,58 +257,6 @@ export async function updateWorkspaceManagement(
   return (result.changes ?? 0) > 0;
 }
 
-export async function inviteWorkspaceMember(input: {
-  workspaceId: string;
-  ownerUserId: string;
-  email: string;
-}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
-  const email = input.email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { ok: false, error: "Invalid email address" };
-  }
-
-  const ws = await dbGet<{ id: string }>(
-    `SELECT id FROM workspaces WHERE id = ? AND user_id = ? AND archived_at IS NULL`,
-    [input.workspaceId, input.ownerUserId],
-  );
-  if (!ws) return { ok: false, error: "Workspace not found" };
-
-  const existing = await dbGet<{ id: string }>(
-    `SELECT id FROM workspace_members WHERE workspace_id = ? AND email = ?`,
-    [input.workspaceId, email],
-  );
-  if (existing) return { ok: false, error: "Invite already sent for this email" };
-
-  const id = randomUUID();
-  const now = new Date().toISOString();
-  await dbRun(
-    `INSERT INTO workspace_members
-     (id, workspace_id, email, user_id, role, invited_by, invited_at, accepted_at)
-     VALUES (?, ?, ?, NULL, 'viewer', ?, ?, NULL)`,
-    [id, input.workspaceId, email, input.ownerUserId, now],
-  );
-  return { ok: true, id };
-}
-
-export async function listWorkspaceMembers(workspaceId: string, ownerUserId: string) {
-  const ws = await dbGet<{ id: string }>(
-    `SELECT id FROM workspaces WHERE id = ? AND user_id = ?`,
-    [workspaceId, ownerUserId],
-  );
-  if (!ws) return [];
-
-  return dbAll<{
-    id: string;
-    email: string;
-    role: string;
-    invited_at: string;
-    accepted_at: string | null;
-  }>(
-    `SELECT id, email, role, invited_at, accepted_at
-     FROM workspace_members WHERE workspace_id = ? ORDER BY invited_at DESC`,
-    [workspaceId],
-  );
-}
 
 export async function transferWorkspace(
   workspaceId: string,
@@ -300,7 +275,7 @@ export async function transferWorkspace(
   );
   const memberUser = await dbGet<{ user_id: string }>(
     `SELECT user_id FROM workspace_members
-     WHERE LOWER(email) = ? AND user_id IS NOT NULL
+     WHERE LOWER(email) = ? AND user_id IS NOT NULL AND status = 'accepted'
      LIMIT 1`,
     [email],
   );

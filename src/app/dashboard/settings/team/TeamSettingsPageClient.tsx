@@ -1,0 +1,36 @@
+"use client";
+
+import { WorkspaceTeamPanel } from "@/components/dashboard/workspaces/WorkspaceTeamPanel";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { authClient } from "@/lib/auth/client";
+import { getStoredWorkspaceId } from "@/lib/client/api";
+import { useEffect, useState } from "react";
+
+export function TeamSettingsPageClient() {
+  const { workspace, workspaces } = useWorkspaceContext();
+  const workspaceId = workspace?.workspaceId ?? workspace?.id ?? getStoredWorkspaceId();
+  const active = workspaces.find((w) => w.id === workspaceId);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    void authClient.getSession().then(({ data }) => {
+      setOwnerEmail(data?.user?.email ?? null);
+    });
+  }, []);
+
+  if (!workspaceId || !active) {
+    return (
+      <p className="text-sm text-muted">
+        Select a workspace from the switcher to manage its team.
+      </p>
+    );
+  }
+
+  return (
+    <WorkspaceTeamPanel
+      workspaceId={workspaceId}
+      domain={active.domain}
+      ownerEmail={ownerEmail}
+    />
+  );
+}

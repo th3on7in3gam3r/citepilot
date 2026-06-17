@@ -6,6 +6,11 @@ import { usePathname } from "next/navigation";
 const tabs = [
   { href: "/dashboard/settings", label: "General", match: (path: string) => path === "/dashboard/settings" },
   {
+    href: "/dashboard/settings/team",
+    label: "Team",
+    match: (path: string) => path.startsWith("/dashboard/settings/team"),
+  },
+  {
     href: "/dashboard/settings/integrations",
     label: "Integrations",
     match: (path: string) => path.startsWith("/dashboard/settings/integrations"),

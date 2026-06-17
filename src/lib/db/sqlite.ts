@@ -289,15 +289,36 @@ function migrateSchema(db: Database.Database): void {
       email TEXT NOT NULL,
       user_id TEXT,
       role TEXT NOT NULL DEFAULT 'viewer',
+      status TEXT NOT NULL DEFAULT 'pending',
       invited_by TEXT NOT NULL,
       invited_at TEXT NOT NULL,
       accepted_at TEXT,
+      token TEXT,
       UNIQUE(workspace_id, email),
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     );
     CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id);
     CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL;
   `);
+
+  const memberCols = db
+    .prepare(`PRAGMA table_info(workspace_members)`)
+    .all() as { name: string }[];
+  if (!memberCols.some((c) => c.name === "token")) {
+    db.exec(`ALTER TABLE workspace_members ADD COLUMN token TEXT`);
+    db.exec(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL`,
+    );
+  }
+  if (!memberCols.some((c) => c.name === "status")) {
+    db.exec(
+      `ALTER TABLE workspace_members ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'`,
+    );
+    db.exec(
+      `UPDATE workspace_members SET status = 'accepted' WHERE accepted_at IS NOT NULL`,
+    );
+  }
 
   const blogCols = db
     .prepare(`PRAGMA table_info(blog_posts)`)
@@ -767,15 +788,18 @@ function migrateSchema(db: Database.Database): void {
       email TEXT NOT NULL,
       user_id TEXT,
       role TEXT NOT NULL DEFAULT 'viewer',
+      status TEXT NOT NULL DEFAULT 'pending',
       invited_by TEXT NOT NULL,
       invited_at TEXT NOT NULL,
       accepted_at TEXT,
+      token TEXT,
       UNIQUE(workspace_id, email),
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     );
 
     CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id);
     CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL;
   `);
 }
 

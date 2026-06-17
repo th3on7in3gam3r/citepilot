@@ -103,6 +103,18 @@ async function ensurePostgres(): Promise<void> {
         `CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id)`,
       );
       await pool.query(
+        `ALTER TABLE workspace_members ADD COLUMN IF NOT EXISTS token TEXT`,
+      );
+      await pool.query(
+        `ALTER TABLE workspace_members ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`,
+      );
+      await pool.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL`,
+      );
+      await pool.query(
+        `UPDATE workspace_members SET status = 'accepted' WHERE accepted_at IS NOT NULL AND status = 'pending'`,
+      );
+      await pool.query(
         `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS onboarding_completed_at TEXT`,
       );
       await pool.query(`

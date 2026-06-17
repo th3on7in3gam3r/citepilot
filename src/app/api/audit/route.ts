@@ -28,6 +28,7 @@ import {
 } from "@/lib/rate-limit/request";
 import { rateLimitHeaders } from "@/lib/rate-limit/hourly";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { requireWorkspaceAccess } from "@/lib/auth/workspace-access";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
@@ -77,6 +78,10 @@ export const POST = withApiLogging(async function POST(request: Request) {
       const uid = requireApiUserId(user);
       if (uid instanceof NextResponse) return uid;
       userId = uid;
+      const access = await requireWorkspaceAccess(userId, body.workspaceId, "editor");
+      if (!access) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       const ws = await getWorkspaceById(body.workspaceId, userId);
       if (!ws) {
         return NextResponse.json({ error: "Workspace not found" }, { status: 404 });

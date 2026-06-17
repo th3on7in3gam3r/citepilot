@@ -1,47 +1,12 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { getSessionUser } from "@/lib/auth/server";
-import {
-  getMemberLimitsForOwner,
-  inviteWorkspaceMember,
-  listWorkspaceMembersForOwner,
-} from "@/lib/server/workspace-members";
+import { inviteWorkspaceMember } from "@/lib/server/workspace-members";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
 type Params = { params: Promise<{ id: string }> };
-
-export const GET = withApiLogging(async function GET(request: Request, { params }: Params) {
-  const auth = await requireApiUser(request);
-  if (auth instanceof NextResponse) return auth;
-  const userId = apiUserId(auth);
-  if (!userId) {
-    return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-  }
-
-  const { id } = await params;
-  const [members, limits] = await Promise.all([
-    listWorkspaceMembersForOwner(id, userId),
-    getMemberLimitsForOwner(id, userId),
-  ]);
-
-  if (!limits) {
-    return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
-  }
-
-  return NextResponse.json({
-    data: {
-      members,
-      limits,
-      owner: {
-        email: null,
-        role: "owner" as const,
-        status: "accepted" as const,
-      },
-    },
-  });
-});
 
 export const POST = withApiLogging(async function POST(request: Request, { params }: Params) {
   const auth = await requireApiUser(request);

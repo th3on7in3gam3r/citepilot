@@ -10,14 +10,6 @@ import { useBilling } from "@/contexts/BillingContext";
 const inputClass =
   "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-[#333] dark:bg-[#141414]";
 
-type Member = {
-  id: string;
-  email: string;
-  role: string;
-  invitedAt: string;
-  acceptedAt: string | null;
-};
-
 type WorkspaceManagementPanelProps = {
   workspaceId: string;
   domain: string;
@@ -36,12 +28,9 @@ export function WorkspaceManagementPanel({
   const { workspaces } = useWorkspaceContext();
 
   const [displayName, setDisplayName] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
   const [transferEmail, setTransferEmail] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState("");
-  const [members, setMembers] = useState<Member[]>([]);
   const [savingName, setSavingName] = useState(false);
-  const [inviting, setInviting] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [transferring, setTransferring] = useState(false);
@@ -51,13 +40,6 @@ export function WorkspaceManagementPanel({
     const item = workspaces.find((w) => w.id === workspaceId);
     if (item?.displayName) setDisplayName(item.displayName);
   }, [workspaces, workspaceId]);
-
-  useEffect(() => {
-    void fetch(`/api/workspaces/${workspaceId}/members`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { members?: Member[] } | null) => setMembers(d?.members ?? []))
-      .catch(() => setMembers([]));
-  }, [workspaceId]);
 
   async function saveDisplayName() {
     setSavingName(true);
@@ -76,36 +58,6 @@ export function WorkspaceManagementPanel({
       onChanged();
     } finally {
       setSavingName(false);
-    }
-  }
-
-  async function inviteMember(e: React.FormEvent) {
-    e.preventDefault();
-    if (!inviteEmail.trim()) return;
-    setInviting(true);
-    try {
-      const res = await fetch(`/api/workspaces/${workspaceId}/members`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail.trim() }),
-      });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        toast.error(data.error ?? "Failed to send invite");
-        return;
-      }
-      toast.success("Collaborator invited");
-      setInviteEmail("");
-      const list = await fetch(`/api/workspaces/${workspaceId}/members`, {
-        credentials: "include",
-      });
-      if (list.ok) {
-        const d = (await list.json()) as { members: Member[] };
-        setMembers(d.members);
-      }
-    } finally {
-      setInviting(false);
     }
   }
 
@@ -207,34 +159,14 @@ export function WorkspaceManagementPanel({
         <div>
           <h3 className="text-sm font-semibold text-ink">Team access</h3>
           <p className="mt-1 text-xs text-muted">
-            Invite a collaborator to view this workspace (read-only).
+            Invite collaborators to view or edit this workspace.
           </p>
-          <form onSubmit={inviteMember} className="mt-3 flex flex-wrap gap-2">
-            <input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="collaborator@agency.com"
-              className={`${inputClass} mt-0 min-w-[200px] flex-1`}
-            />
-            <button
-              type="submit"
-              disabled={inviting}
-              className="self-end rounded-xl border border-border px-4 py-3 text-sm font-semibold disabled:opacity-50"
-            >
-              {inviting ? "Sending…" : "Invite"}
-            </button>
-          </form>
-          {members.length > 0 && (
-            <ul className="mt-3 space-y-1 text-xs text-muted">
-              {members.map((m) => (
-                <li key={m.id}>
-                  {m.email}
-                  {m.acceptedAt ? " · accepted" : " · pending"}
-                </li>
-              ))}
-            </ul>
-          )}
+          <a
+            href="/dashboard/settings/team"
+            className="mt-3 inline-block rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-surface"
+          >
+            Manage team →
+          </a>
         </div>
 
         {isFleet && (
