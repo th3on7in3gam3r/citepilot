@@ -36,7 +36,6 @@ export async function getRelatedScoreDomains(
        WHERE w.business_type = ?
          AND ar.domain != ?
          AND COALESCE(p.is_public, 1) = 1
-       GROUP BY ar.domain, ar.score
        ORDER BY ar.created_at DESC
        LIMIT ?`,
       [category, normalized, limit],

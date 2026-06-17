@@ -36,7 +36,7 @@ export async function getPublicScorePageData(
     present: audit.platforms.find((p) => p.name === name)?.present ?? false,
   }));
 
-  const relatedDomains = await getRelatedScoreDomains(domain);
+  const relatedDomains = await getRelatedScoreDomains(domain).catch(() => []);
 
   return { domain, audit, profile, platforms, relatedDomains };
 }
