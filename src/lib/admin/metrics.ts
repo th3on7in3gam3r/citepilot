@@ -46,15 +46,16 @@ export async function gatherAdminOverview(): Promise<AdminOverviewStats> {
   const monthStartIso = monthStart();
 
   const planRows = await dbAll<{ plan: string; count: number }>(
-    `SELECT
-       CASE
-         WHEN plan = 'fleet' AND status IN ('active', 'trialing', 'past_due') THEN 'fleet'
-         WHEN plan = 'pilot' AND status IN ('active', 'trialing', 'past_due') THEN 'pilot'
-         ELSE 'free'
-       END AS plan,
-       COUNT(*) AS count
-     FROM billing_accounts
-     GROUP BY plan`,
+    `SELECT tier AS plan, COUNT(*) AS count FROM (
+       SELECT
+         CASE
+           WHEN plan = 'fleet' AND status IN ('active', 'trialing', 'past_due') THEN 'fleet'
+           WHEN plan = 'pilot' AND status IN ('active', 'trialing', 'past_due') THEN 'pilot'
+           ELSE 'free'
+         END AS tier
+       FROM billing_accounts
+     ) AS grouped
+     GROUP BY tier`,
   );
 
   const plans = { free: 0, pilot: 0, fleet: 0, total: 0 };

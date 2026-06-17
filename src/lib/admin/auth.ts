@@ -1,4 +1,4 @@
-import { getSessionUser } from "@/lib/auth/server";
+import { getRealSessionUser } from "@/lib/auth/server";
 import { isAdminEmail } from "@/lib/admin/emails";
 
 export { adminEmailsFromEnv, isAdminEmail, isAdminProtectedPath } from "@/lib/admin/emails";
@@ -8,7 +8,7 @@ export async function getAdminSession(request?: Request): Promise<{
   email: string;
   name: string;
 } | null> {
-  const user = await getSessionUser(request);
+  const user = await getRealSessionUser(request);
   if (!user?.email || !isAdminEmail(user.email)) return null;
   return user;
 }
