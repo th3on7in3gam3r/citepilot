@@ -16,6 +16,11 @@ import { useToast } from "@/components/notifications/ToastProvider";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 import { publicScorePageUrl } from "@/lib/score/public-score-url";
+import { GeoAuditFixGuide } from "@/components/dashboard/geo-audit/GeoAuditFixGuide";
+import { GeoAuditScanDelta } from "@/components/dashboard/geo-audit/GeoAuditScanDelta";
+import { GeoAuditScoreBreakdown } from "@/components/dashboard/geo-audit/GeoAuditScoreBreakdown";
+import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
+import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
 
 const feature = productFeatures.find((f) => f.id === "geo-audit")!;
 
@@ -46,7 +51,13 @@ export function GeoAuditPageClient() {
   if (!ready || !workspace) return null;
 
   const gaps = workspace.gaps.length > 0 ? workspace.gaps : fallbackGaps;
-  const geoScore = workspace.siteSignals?.geoScore ?? workspace.citationScore;
+  const scanDelta = workspace.scanDelta ?? emptyScanDeltaSummary;
+  const promptsCited =
+    workspace.promptResults?.filter((p) => p.cited).length ?? 0;
+  const promptTotal = Math.max(
+    workspace.promptResults?.length ?? workspace.promptsTracked,
+    1,
+  );
   const workspaceId =
     workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId() ?? undefined;
 
@@ -203,41 +214,32 @@ export function GeoAuditPageClient() {
       )}
 
       <div id="platform-coverage" className="scroll-mt-24 grid gap-4 sm:grid-cols-3">
-        <StatCard label="GEO score" value={String(geoScore)} sub="/100" />
+        <StatCard label="Citation score" value={String(workspace.citationScore)} sub="/100" />
         <StatCard
-          label="Platforms"
-          value={`${workspace.citedPlatforms}/${workspace.totalPlatforms}`}
+          label="Prompts cited"
+          value={`${promptsCited}/${promptTotal}`}
+          sub="AI mentions"
         />
-        <StatCard label="Gaps found" value={String(gaps.length)} />
+        <StatCard label="Gaps open" value={String(gaps.length)} />
       </div>
-      {workspace.siteSignals && (
-        <Panel title="Site signals" className="mt-6">
-          <ul className="grid gap-2 text-sm sm:grid-cols-2">
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Title: {workspace.siteSignals.title ?? "Missing"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Meta description: {workspace.siteSignals.metaDescription ? "Present" : "Missing"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              JSON-LD: {workspace.siteSignals.hasJsonLd ? "Yes" : "No"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              FAQ schema: {workspace.siteSignals.hasFaqSchema ? "Yes" : "No"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Sitemap: {workspace.siteSignals.sitemapFound ? "Found" : "Not found"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Word count: {workspace.siteSignals.wordCount}
-            </li>
-          </ul>
-        </Panel>
+
+      {workspace.hasRealAudit && (
+        <>
+          <GeoAuditScoreBreakdown workspace={workspace} />
+          <GeoAuditFixGuide workspace={workspace} />
+          <GeoAuditScanDelta domain={workspace.domain} scanDelta={scanDelta} />
+        </>
       )}
+
+      {workspace.siteSignals && <GeoAuditSiteSignals signals={workspace.siteSignals} />}
       <Panel title="Priority fixes" className="mt-6" id="priority-fixes">
         <p className="mb-4 text-sm text-muted">
-          From your latest audit. Use CitePilot Insights for a plain-language
-          explanation of any gap (Pilot+, or one free preview on Free) or click Quick Fix to copy pre-generated code snippets.
+          From your latest live crawl. Use Quick Fix to copy code or enable the GEO Snippet —
+          then publish on {workspace.domain} and re-run. Check{" "}
+          <a href="#scan-delta" className="font-semibold text-accent hover:underline">
+            Since your last scan
+          </a>{" "}
+          to confirm gaps cleared.
         </p>
         <ul className="space-y-3 text-sm text-muted">
           {gaps.map((g) => (

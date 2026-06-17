@@ -102,5 +102,21 @@ describe("buildScanDeltaSummary", () => {
     expect(summary.newGaps).toBe(1);
     expect(summary.chips).toContain("−1 prompt cited");
     expect(summary.chips).toContain("+1 gap");
+    expect(summary.detail?.newGapLabels).toEqual(["new gap"]);
+    expect(summary.detail?.fullyUnchanged).toBe(false);
+  });
+
+  it("marks fully unchanged scans in detail", () => {
+    const previous = audit({ id: "prev", score: 45, cited: 2, gaps: ["gap a"] });
+    const current = audit({
+      id: "curr",
+      score: 45,
+      cited: 2,
+      gaps: ["gap a"],
+    });
+
+    const summary = buildScanDeltaSummary({ current, previous });
+    expect(summary.detail?.fullyUnchanged).toBe(true);
+    expect(summary.chips).toEqual([]);
   });
 });

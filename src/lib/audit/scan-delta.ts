@@ -1,6 +1,25 @@
 import type { AuditPayload } from "@/lib/api-types";
 import { buildDeltaFromAudits } from "@/lib/audit/competitor-delta";
 
+export type ScanDeltaDetail = {
+  previousScore: number;
+  currentScore: number;
+  previousGeoScore: number;
+  currentGeoScore: number;
+  geoScoreDelta: number;
+  previousCited: number;
+  currentCited: number;
+  citedDelta: number;
+  promptTotal: number;
+  resolvedGapLabels: string[];
+  newGapLabels: string[];
+  unchangedGapLabels: string[];
+  promptsGained: string[];
+  promptsLostLabels: string[];
+  /** True when every compared field is identical */
+  fullyUnchanged: boolean;
+};
+
 export type ScanDeltaSummary = {
   available: boolean;
   previousScanAt: string | null;
@@ -12,6 +31,8 @@ export type ScanDeltaSummary = {
   resolvedGaps: number;
   /** Short lines for UI chips, e.g. "−2 prompts cited", "+1 gap" */
   chips: string[];
+  /** Line-item diff for dashboard detail panels */
+  detail: ScanDeltaDetail | null;
 };
 
 export const emptyScanDeltaSummary: ScanDeltaSummary = {
@@ -24,6 +45,7 @@ export const emptyScanDeltaSummary: ScanDeltaSummary = {
   newGaps: 0,
   resolvedGaps: 0,
   chips: [],
+  detail: null,
 };
 
 function plural(n: number, singular: string, pluralForm?: string): string {
@@ -85,6 +107,7 @@ export function buildScanDeltaSummary(input: {
     newGaps: 0,
     resolvedGaps: 0,
     chips: [],
+    detail: null,
   };
 
   if (!input.previous) return empty;
@@ -114,11 +137,21 @@ export function buildScanDeltaSummary(input: {
 
   const previousGapSet = new Set(previousGaps);
   const currentGapSet = new Set(currentGaps);
-  const newGaps = currentGaps.filter((g) => !previousGapSet.has(g)).length;
-  const resolvedGaps = previousGaps.filter((g) => !currentGapSet.has(g)).length;
+  const resolvedGapLabels = previousGaps.filter((g) => !currentGapSet.has(g));
+  const newGapLabels = currentGaps.filter((g) => !previousGapSet.has(g));
+  const unchangedGapLabels = currentGaps.filter((g) => previousGapSet.has(g));
+  const newGaps = newGapLabels.length;
+  const resolvedGaps = resolvedGapLabels.length;
 
   const promptsCitedNet = move.promptsWon.length - move.promptsLost.length;
   const scoreDelta = move.scoreDelta;
+  const promptsGained = move.promptsWon.map((p) => p.prompt);
+  const promptsLostLabels = move.promptsLost.map((p) => p.prompt);
+
+  const previousGeoScore = input.previous.siteSignals?.geoScore ?? 0;
+  const currentGeoScore = input.current.siteSignals?.geoScore ?? 0;
+  const geoScoreDelta = currentGeoScore - previousGeoScore;
+  const citedDelta = input.current.cited - input.previous.cited;
 
   const chips = formatScanDeltaChips({
     scoreDelta,
@@ -128,13 +161,17 @@ export function buildScanDeltaSummary(input: {
     platformSlips: move.platformLosses.length,
   });
 
-  const hasMovement =
-    chips.length > 0 ||
-    move.promptsWon.length > 0 ||
-    move.promptsLost.length > 0;
+  const fullyUnchanged =
+    scoreDelta === 0 &&
+    geoScoreDelta === 0 &&
+    citedDelta === 0 &&
+    newGapLabels.length === 0 &&
+    resolvedGapLabels.length === 0 &&
+    promptsGained.length === 0 &&
+    promptsLostLabels.length === 0;
 
   return {
-    available: hasMovement || scoreDelta != null,
+    available: true,
     previousScanAt: input.previous.createdAt,
     scoreDelta,
     promptsCitedNet,
@@ -143,5 +180,22 @@ export function buildScanDeltaSummary(input: {
     newGaps,
     resolvedGaps,
     chips,
+    detail: {
+      previousScore: input.previous.score,
+      currentScore: input.current.score,
+      previousGeoScore,
+      currentGeoScore,
+      geoScoreDelta,
+      previousCited: input.previous.cited,
+      currentCited: input.current.cited,
+      citedDelta,
+      promptTotal: input.current.total,
+      resolvedGapLabels,
+      newGapLabels,
+      unchangedGapLabels,
+      promptsGained,
+      promptsLostLabels,
+      fullyUnchanged,
+    },
   };
 }
