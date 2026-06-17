@@ -570,29 +570,31 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             }}
           />
         )}
+      </form>
 
-        {(isPilot || isFleet) && workspaceId && (
-          <Panel title="White Label">
-            <p className="mb-4 text-sm text-muted">
-              Brand proof reports, share links, and weekly digest emails with your agency
-              identity. Fleet unlocks logo upload, colors, custom report domains, and email
-              branding.
-            </p>
-            <WhiteLabelSettingsPanel
-              workspaceId={workspaceId}
-              preferences={preferences}
-              isFleet={isFleet}
-              isPilot={isPilot}
-              togglesBusy={savingPrefs}
-              onPreferencesChange={(next, toast) => {
-                setPreferences(next);
-                void savePreferences(next, toast);
-              }}
-              onPreferencesDraft={setPreferences}
-            />
-          </Panel>
-        )}
+      {(isPilot || isFleet) && workspaceId && (
+        <Panel title="White Label" className="mt-6">
+          <p className="mb-4 text-sm text-muted">
+            Brand proof reports, share links, and weekly digest emails with your agency
+            identity. Fleet unlocks logo upload, colors, custom report domains, and email
+            branding.
+          </p>
+          <WhiteLabelSettingsPanel
+            workspaceId={workspaceId}
+            preferences={preferences}
+            isFleet={isFleet}
+            isPilot={isPilot}
+            togglesBusy={savingPrefs}
+            onPreferencesChange={(next, toastMsg) => {
+              setPreferences(next);
+              void savePreferences(next, toastMsg);
+            }}
+            onPreferencesDraft={setPreferences}
+          />
+        </Panel>
+      )}
 
+      <div className="mt-6 space-y-6">
         <Panel title="Workspace actions">
           <p className="mb-4 text-sm text-muted">
             Saves domain, profile, prompts, monitoring email, and white-label text
@@ -600,8 +602,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button
-              type="submit"
+              type="button"
               disabled={busy}
+              onClick={() => void persist(false)}
               className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-deep disabled:opacity-60"
             >
               {saving && !auditing ? "Saving…" : "Save changes"}
@@ -656,7 +659,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             onDeleted={() => void onDeleted?.()}
           />
         )}
-      </form>
+      </div>
     </>
   );
 }

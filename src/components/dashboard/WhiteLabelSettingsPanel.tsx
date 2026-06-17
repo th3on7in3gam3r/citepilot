@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { WhiteLabelProofPreview } from "@/components/report/WhiteLabelProofPreview";
+import { useToast } from "@/components/notifications/ToastProvider";
 import { useUpgradeModalOptional } from "@/contexts/UpgradeModalContext";
 import type { WorkspacePreferences } from "@/lib/settings";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/lib/white-label/types";
 import { normalizePrimaryColor, logoSrcForWorkspace } from "@/lib/white-label/theme";
 import { cnameDnsHost } from "@/lib/white-label/dns-guide";
+import { upgradeModalCooldownActive } from "@/lib/upgrade/modal-cooldown";
 
 const inputClass =
   "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-[#333] dark:bg-[#141414]";
@@ -44,8 +46,10 @@ export function WhiteLabelSettingsPanel({
     message: string;
   } | null>(null);
   const [uploading, setUploading] = useState(false);
-  const fileInputId = `wl-logo-upload-${workspaceId}`;
+  const [logoCacheKey, setLogoCacheKey] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
   const upgradeModal = useUpgradeModalOptional();
+  const toast = useToast();
 
   useEffect(() => {
     void fetch("/api/white-label/verify-domain")
@@ -114,11 +118,20 @@ export function WhiteLabelSettingsPanel({
   const logoPreviewSrc = useMemo(() => {
     const trimmed = wl.logoUrl.trim();
     if (!trimmed) return "";
-    if (trimmed.includes("/api/white-label/logo") && !trimmed.includes("workspaceId=")) {
-      return logoSrcForWorkspace(workspaceId, "");
+    let src = trimmed;
+    if (src.includes("/api/white-label/logo") && !src.includes("workspaceId=")) {
+      src = logoSrcForWorkspace(workspaceId, "");
     }
-    return trimmed;
-  }, [wl.logoUrl, workspaceId]);
+    if (logoCacheKey > 0) {
+      const joiner = src.includes("?") ? "&" : "?";
+      return `${src}${joiner}v=${logoCacheKey}`;
+    }
+    return src;
+  }, [wl.logoUrl, workspaceId, logoCacheKey]);
+
+  function openFilePicker() {
+    fileRef.current?.click();
+  }
 
   async function uploadLogo(file: File) {
     if (!isFleet) return;
@@ -136,9 +149,15 @@ export function WhiteLabelSettingsPanel({
       if (!res.ok || !json.logoUrl) {
         throw new Error(json.error ?? "Upload failed");
       }
-      patchWhiteLabel({ logoUrl: json.logoUrl });
+      const nextWl = { ...wl, logoUrl: json.logoUrl };
+      const next = { ...preferences, whiteLabel: nextWl };
+      onPreferencesDraft(next);
+      syncPreview(next);
+      setLogoCacheKey(Date.now());
+      onPreferencesChange(next, "Logo uploaded.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Logo upload failed");
+      const message = err instanceof Error ? err.message : "Logo upload failed";
+      toast.error(message);
     } finally {
       setUploading(false);
     }
@@ -199,6 +218,10 @@ export function WhiteLabelSettingsPanel({
   );
 
   function openLogoUpgrade() {
+    if (upgradeModalCooldownActive()) {
+      toast.info("Upgrade prompt was dismissed recently. Visit Pricing to compare Fleet plans.");
+      return;
+    }
     upgradeModal?.openUpgradeModal({
       feature: "white_label_logo",
       title: "Upload your agency logo",
@@ -261,38 +284,44 @@ export function WhiteLabelSettingsPanel({
             src={logoPreviewSrc}
             alt="Agency logo preview"
             className="mt-3 h-10 max-w-[200px] object-contain object-left"
+            onError={() => setLogoCacheKey(0)}
           />
         ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/svg+xml,.png,.svg"
+            className="hidden"
+            disabled={locked || uploading || togglesBusy}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void uploadLogo(file);
+              e.target.value = "";
+            }}
+          />
           {!locked ? (
-            <>
-              <input
-                id={fileInputId}
-                type="file"
-                accept="image/png,image/svg+xml"
-                className="sr-only"
-                disabled={uploading || togglesBusy}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void uploadLogo(file);
-                  e.target.value = "";
-                }}
-              />
-              <label
-                htmlFor={fileInputId}
-                aria-disabled={uploading || togglesBusy}
-                className={`inline-flex cursor-pointer items-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface ${
-                  uploading || togglesBusy ? "pointer-events-none opacity-50" : ""
-                }`}
-              >
-                {uploading ? "Uploading…" : "Upload logo"}
-              </label>
-            </>
+            <button
+              type="button"
+              disabled={uploading || togglesBusy}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openFilePicker();
+              }}
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-50"
+            >
+              {uploading ? "Uploading…" : "Upload logo"}
+            </button>
           ) : (
             <button
               type="button"
               disabled={uploading || togglesBusy}
-              onClick={openLogoUpgrade}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openLogoUpgrade();
+              }}
               className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-50"
             >
               Upload logo

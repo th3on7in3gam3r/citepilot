@@ -36,13 +36,13 @@ export function UpgradeModal({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed inset-0 z-[80] m-0 h-full max-h-none w-full max-w-none border-0 bg-transparent p-4 backdrop:bg-ink/50"
+      className="fixed inset-0 z-[80] m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4"
       onClose={onDismiss}
     >
       <div
-        className="mx-auto flex min-h-full max-w-md items-center justify-center"
+        className="mx-auto w-full max-w-md"
         onClick={(e) => {
-          if (e.target === e.currentTarget) onDismiss();
+          e.stopPropagation();
         }}
       >
         <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-xl dark:border-[#222]">
