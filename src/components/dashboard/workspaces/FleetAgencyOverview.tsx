@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
+import { fleetWorkspaceDashboardHref } from "@/lib/workspace/fleet-dashboard";
 import type { WorkspaceListItem } from "@/hooks/useWorkspace";
 
 type AgencyOverview = {
@@ -159,12 +161,21 @@ function WorkspaceOverviewCard({
 }
 
 export function FleetAgencyOverview() {
+  const router = useRouter();
   const { switchWorkspace, workspace: activeWorkspace } = useWorkspaceContext();
   const { openWizard } = useWorkspaceSwitcher();
   const toast = useToast();
   const [data, setData] = useState<AgencyOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [bulkBusy, setBulkBusy] = useState<string | null>(null);
+
+  const openWorkspace = useCallback(
+    async (id: string) => {
+      await switchWorkspace(id);
+      router.push(fleetWorkspaceDashboardHref(id));
+    },
+    [router, switchWorkspace],
+  );
 
   const load = useCallback(async () => {
     const res = await fetch("/api/workspaces/agency-overview", { credentials: "include" });
@@ -344,7 +355,7 @@ export function FleetAgencyOverview() {
               <li key={item.id}>
                 <WorkspaceOverviewCard
                   item={item}
-                  onSelect={() => void switchWorkspace(item.id)}
+                  onSelect={() => void openWorkspace(item.id)}
                 />
               </li>
             ))}
@@ -367,7 +378,7 @@ export function FleetAgencyOverview() {
               <li key={w.id}>
                 <button
                   type="button"
-                  onClick={() => void switchWorkspace(w.id)}
+                  onClick={() => void openWorkspace(w.id)}
                   className="flex w-full flex-col rounded-xl border border-red-200 bg-red-50/80 p-4 text-left transition hover:border-red-300 dark:border-red-900/50 dark:bg-red-950/30"
                 >
                   <span className="font-semibold text-ink">
@@ -396,7 +407,7 @@ export function FleetAgencyOverview() {
             <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <button
                 type="button"
-                onClick={() => void switchWorkspace(item.workspaceId)}
+                onClick={() => void openWorkspace(item.workspaceId)}
                 className="min-w-0 text-left"
               >
                 <p className="truncate text-sm font-medium text-ink hover:text-accent">

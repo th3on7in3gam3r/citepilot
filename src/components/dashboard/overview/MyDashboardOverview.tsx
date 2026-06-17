@@ -77,7 +77,11 @@ function DashboardNoWorkspace() {
   );
 }
 
-export function MyDashboardOverview() {
+export function MyDashboardOverview({
+  showAgencyBackLink = false,
+}: {
+  showAgencyBackLink?: boolean;
+}) {
   const { workspace, ready } = useWorkspaceContext();
 
   if (!ready) {
@@ -88,13 +92,15 @@ export function MyDashboardOverview() {
     return <DashboardNoWorkspace />;
   }
 
-  return <MyDashboardOverviewContent workspace={workspace} />;
+  return <MyDashboardOverviewContent workspace={workspace} showAgencyBackLink={showAgencyBackLink} />;
 }
 
 function MyDashboardOverviewContent({
   workspace,
+  showAgencyBackLink = false,
 }: {
   workspace: WorkspaceSnapshot;
+  showAgencyBackLink?: boolean;
 }) {
   const workspaceId = workspace.workspaceId ?? workspace.id;
   const { metrics: gsc, connected: gscConnected } = useGscMetrics(workspaceId);
@@ -281,6 +287,14 @@ function MyDashboardOverviewContent({
 
   return (
     <div className="space-y-5 pb-8">
+      {showAgencyBackLink && (
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:text-accent-deep"
+        >
+          ← Agency overview
+        </Link>
+      )}
       <DashboardOverviewLead workspace={workspace} />
 
       {!workspace.hasRealAudit ? (

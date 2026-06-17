@@ -9,12 +9,23 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useBilling } from "@/contexts/BillingContext";
 import { ONBOARDING_WELCOME_TOAST_KEY } from "@/lib/onboarding";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
+import { isFleetWorkspaceDashboardView } from "@/lib/workspace/fleet-dashboard";
 
 export function DashboardOverview() {
-  const { refresh } = useWorkspaceContext();
+  const { refresh, switchWorkspace, workspace } = useWorkspaceContext();
   const { isFleet, ready: billingReady } = useBilling();
   const searchParams = useSearchParams();
+  const siteId = searchParams.get("site");
+  const showFleetWorkspace = isFleetWorkspaceDashboardView(isFleet, siteId);
   const toast = useToast();
+
+  useEffect(() => {
+    if (!showFleetWorkspace || !siteId) return;
+    const activeId = workspace?.workspaceId ?? workspace?.id;
+    if (activeId !== siteId) {
+      void switchWorkspace(siteId);
+    }
+  }, [showFleetWorkspace, siteId, switchWorkspace, workspace]);
 
   useEffect(() => {
     if (searchParams.get("welcome") !== "1") return;
@@ -34,7 +45,7 @@ export function DashboardOverview() {
 
   if (!billingReady) return <DashboardPageSkeleton />;
 
-  if (isFleet) return <FleetAgencyOverview />;
+  if (isFleet && !showFleetWorkspace) return <FleetAgencyOverview />;
 
-  return <MyDashboardOverview />;
+  return <MyDashboardOverview showAgencyBackLink={showFleetWorkspace} />;
 }
