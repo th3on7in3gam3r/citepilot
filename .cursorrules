@@ -1,0 +1,124 @@
+# CitePilot — Cursor Rules
+
+## Project Overview
+CitePilot is a B2B GEO (Generative Engine Optimization) SaaS platform
+that tracks brand citations on ChatGPT, Perplexity, Gemini, Google AI, 
+Grok, and DeepSeek. It helps teams audit, monitor, and improve their 
+AI search presence.
+
+## Stack
+- Framework: Next.js 16 (App Router, TypeScript, Tailwind CSS) — read `node_modules/next/dist/docs/` before assuming APIs; this is not the Next.js you know from training data
+- Database: PostgreSQL via Neon (production), SQLite via better-sqlite3 (local dev)
+- ORM / queries: `src/lib/db/query.ts` helpers + `src/lib/db/postgres-schema.ts` (no Drizzle yet)
+- Auth: Neon Auth (`@neondatabase/auth`)
+- Payments: Stripe (Pilot $79/mo, Fleet $249/mo)
+- Email: Resend
+- Analytics: PostHog + Plausible
+- Error monitoring: Sentry
+- Hosting: Vercel
+- i18n: next-intl (marketing: en/es/fr under `src/app/[locale]/`)
+- AI APIs: OpenAI, Perplexity, Serper/SerpAPI, Tavily, Google Search Console
+
+## Tiers
+- Free: 1 workspace, 1 audit snapshot, 10 prompts
+- Pilot: $79/mo, 3 workspaces, 25 monitored prompts, weekly rescans
+- Fleet: $249/mo, unlimited workspaces, white-label, API access, bulk import
+
+## File Structure Conventions
+- `src/app/` — Next.js App Router pages and layouts
+- `src/app/api/` — API route handlers
+- `src/app/[locale]/` — localized marketing routes (home, pricing, agency)
+- `src/components/` — shared React components
+- `src/components/ui/` — base UI primitives (shadcn/ui pattern)
+- `src/components/dashboard/` — dashboard-specific components
+- `src/lib/` — shared utilities, DB queries, helpers
+- `src/lib/db/` — DB client, schema, query helpers
+- `src/lib/data/` — static data files (testimonials, competitors, templates)
+- `src/i18n/` — next-intl routing, navigation, request config
+- `messages/` — i18n translation files (en.json, es.json, fr.json)
+- `src/proxy.ts` — Next.js proxy (replaces middleware); auth, admin, CORS, i18n
+- `public/` — static assets
+
+## Code Style Rules
+1. Always use TypeScript. No `any` types — use proper types or `unknown`.
+2. Use Zod for all API input validation. Return detailed errors on 422:
+   return Response.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 422 })
+3. Use `src/lib/db/query.ts` helpers for DB access — no raw SQL unless necessary.
+4. Use `next-intl` for all user-visible strings on marketing surfaces — no hardcoded English strings. Dashboard i18n is Phase 2.
+5. All API routes must check authentication. Unauthenticated requests → 401.
+6. Admin routes (`/admin/*`, `/api/admin/*`) check `ADMIN_EMAILS` via Neon session before any other logic.
+7. Never log sensitive data (API keys, tokens, emails) to console.
+8. Use `@/` path alias for all imports — no relative `../../` chains.
+
+## Component Rules
+1. Client components: add `'use client'` only when needed (hooks, events).
+   Prefer server components by default.
+2. Forms: use react-hook-form + Zod resolver. Never uncontrolled inputs 
+   for important forms.
+3. Loading states: every async operation needs a loading skeleton or spinner.
+4. Error states: every data fetch needs an error boundary or error UI.
+5. Empty states: every list/table needs a designed empty state component.
+6. Accessibility: every interactive element needs keyboard support and 
+   proper aria labels. Minimum: aria-label on icon buttons, labels on inputs.
+
+## API Route Rules
+1. Every route handler must handle both success and error paths explicitly.
+2. Rate limiting required on: `/api/audit/*`, `/api/tools/*`, `/api/subscribe`
+3. Stripe webhook handler must verify signature with `constructEvent()`.
+4. `/api/health` returns only `{"ok":true}` publicly. Full detail requires 
+   `X-Health-Secret` header matching `HEALTH_SECRET` env var.
+5. Always return consistent JSON: `{ data: T }` for success, 
+   `{ error: string, details?: unknown }` for errors.
+
+## Database Rules
+1. Schema changes go in `src/lib/db/postgres-schema.ts`. Keep SQLite and Postgres in sync.
+2. Soft delete preferred over hard delete: add `deleted_at` timestamp column.
+3. Always index foreign keys and commonly queried columns.
+4. Use transactions for operations that touch multiple tables.
+
+## Environment Variables
+Required (never hardcode, always from `process.env`):
+- `DATABASE_URL` — Neon PostgreSQL connection string
+- `HEALTH_SECRET` — secret for `/api/health` endpoint
+- `ADMIN_EMAILS` — comma-separated admin email addresses
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `RESEND_API_KEY`
+- `POSTHOG_KEY`, `POSTHOG_HOST`
+- `SENTRY_DSN`
+- `OPENAI_API_KEY`, `PERPLEXITY_API_KEY`
+- `NEXT_PUBLIC_*` — only for values safe to expose to the browser
+
+## Naming Conventions
+- Files: kebab-case (`citation-heatmap.tsx`)
+- Components: PascalCase (`CitationHeatmap`)
+- Hooks: camelCase starting with `use` (`useWorkspace`)
+- API routes: kebab-case directories (`/api/audit-results/`)
+- DB tables: snake_case (`citation_results`)
+- Env vars: SCREAMING_SNAKE_CASE
+
+## What NOT to Do
+- Never use `any` type
+- Never store secrets in client-side code or `NEXT_PUBLIC_` vars
+- Never call AI APIs directly from client components — always via API routes
+- Never skip Zod validation on API inputs
+- Never hardcode user-facing strings on localized marketing pages — use next-intl
+- Never commit `.env` files
+- Never use `console.log` in production API routes — use structured logging
+- Never return raw DB errors to the client — sanitize error messages
+- Never skip loading/error/empty states on async UI
+
+## PostHog Event Naming Convention
+Use snake_case with category prefix:
+- `hero_cta_clicked`, `audit_started`, `audit_completed`
+- `upgrade_modal_shown`, `upgrade_modal_clicked`, `checkout_started`
+- `feature_gate_viewed`, `badge_impression`, `badge_click`
+- `tool_used`, `tool_result_viewed`
+
+## Commit to memory
+- The `/api/health` endpoint is intentionally locked — don't "fix" the 401
+- The `/admin` route returns 404 for non-admins intentionally — not a bug
+- `robots.txt` disallows `/dashboard/*` and `/admin` intentionally
+- Dark mode uses Tailwind's `class` strategy — toggle via `html.dark` class
+- `src/proxy.ts` is the Next.js 16 proxy (formerly middleware) — do not add `middleware.ts`
+- Language switcher uses full-page navigation + `NEXT_LOCALE` cookie via next-intl
+- Homepage i18n is partial (Phase 1): hero, nav, footer, FAQ, pricing, agency are translated; feature cards, testimonials, showcase steps, and dashboard remain English
