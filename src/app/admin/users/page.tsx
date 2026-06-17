@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { AdminShell, formatUsd } from "@/components/admin/AdminShell";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { formatUsd } from "@/lib/format-usd";
 import type { AdminUserRow } from "@/lib/admin/metrics";
 
 type UserDetail = {

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminShell, formatUsd } from "@/components/admin/AdminShell";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminSession } from "@/lib/admin/auth";
 import { gatherAdminOverview } from "@/lib/admin/metrics";
+import { formatUsd } from "@/lib/format-usd";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,20 @@ export default async function AdminOverviewPage() {
   const admin = await getAdminSession();
   if (!admin) notFound();
 
-  const stats = await gatherAdminOverview();
+  let stats;
+  try {
+    stats = await gatherAdminOverview();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return (
+      <AdminShell activePath="/admin" adminEmail={admin.email}>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-ink">
+          <h2 className="font-display text-lg font-bold">Could not load admin overview</h2>
+          <p className="mt-2 text-muted">{message}</p>
+        </div>
+      </AdminShell>
+    );
+  }
 
   const cards = [
     { label: "Free users", value: String(stats.plans.free) },

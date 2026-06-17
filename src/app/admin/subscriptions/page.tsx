@@ -10,7 +10,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { AdminShell, formatUsd } from "@/components/admin/AdminShell";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { formatUsd } from "@/lib/format-usd";
 
 type SubscriptionRow = {
   id: string;
