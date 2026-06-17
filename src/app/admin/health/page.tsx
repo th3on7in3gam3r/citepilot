@@ -82,19 +82,25 @@ export default function AdminHealthPage() {
           ) : (
             <>
               <p className="mt-2 text-sm text-muted">
-                Total events: {sentry.totalEvents ?? "—"}
+                Total events: {sentry.totalEvents ?? 0}
               </p>
-              <ul className="mt-3 space-y-2 text-sm">
-                {sentry.topErrors.map((issue) => (
-                  <li key={issue.title}>
-                    <span className="font-medium text-ink">{issue.title}</span>
-                    <span className="text-muted">
-                      {" "}
-                      · {issue.count} · {new Date(issue.lastSeen).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {sentry.topErrors.length === 0 ? (
+                <p className="mt-2 text-xs text-muted">
+                  No unresolved issues in the last 7 days.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2 text-sm">
+                  {sentry.topErrors.map((issue) => (
+                    <li key={issue.title}>
+                      <span className="font-medium text-ink">{issue.title}</span>
+                      <span className="text-muted">
+                        {" "}
+                        · {issue.count} · {new Date(issue.lastSeen).toLocaleDateString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </>
           )}
         </section>

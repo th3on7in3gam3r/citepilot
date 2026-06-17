@@ -122,7 +122,7 @@ export async function fetchSentryOpsStats(
     return {
       configured: true,
       errorRatePercent,
-      totalEvents: totalEvents || null,
+      totalEvents,
       topErrors,
     };
   } catch {

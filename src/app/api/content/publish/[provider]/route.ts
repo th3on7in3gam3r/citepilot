@@ -3,7 +3,7 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { getGeneratedPostBySlug } from "@/lib/blog/store";
 import { publishPostToFramer } from "@/lib/cms/framer";
-import { publishPostToGhost } from "@/lib/cms/ghost";
+import { publishPostToGhost, GhostApiError } from "@/lib/cms/ghost";
 import {
   getCmsConnection,
   getCmsPublication,
@@ -150,6 +150,10 @@ export const POST = withApiLogging(async function POST(request: Request, { param
   } catch (error) {
     const message = error instanceof Error ? error.message : "Publish failed";
     console.error("POST /api/content/publish/[provider]", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const status =
+      error instanceof GhostApiError
+        ? Math.min(502, Math.max(400, error.status))
+        : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 });

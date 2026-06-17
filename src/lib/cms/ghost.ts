@@ -20,10 +20,46 @@ function base64Url(value: Buffer | string): string {
   return Buffer.from(value).toString("base64url");
 }
 
-function ghostJwt(adminApiKey: string): string {
+function parseGhostResponse(text: string): Record<string, unknown> | null {
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    throw new GhostApiError(
+      `Ghost returned an unexpected response: ${text.slice(0, 180)}`,
+      502,
+    );
+  }
+}
+
+function ghostErrorMessage(
+  body: Record<string, unknown> | null,
+  status: number,
+): string {
+  const errors = body?.errors;
+  if (Array.isArray(errors) && errors[0] && typeof errors[0] === "object") {
+    const message = (errors[0] as { message?: string }).message;
+    if (message) return message;
+  }
+  if (typeof body?.message === "string" && body.message.trim()) {
+    return body.message;
+  }
+  return `Ghost request failed (${status})`;
+}
+
+export function ghostJwt(adminApiKey: string): string {
   const [id, secret] = adminApiKey.trim().split(":");
   if (!id || !secret) {
-    throw new GhostApiError("Ghost Admin API key must be in id:secret format", 400);
+    throw new GhostApiError(
+      "Ghost Admin API key must be in id:secret format. Copy the full key from Ghost → Settings → Integrations.",
+      400,
+    );
+  }
+  if (!/^[0-9a-f]+$/i.test(secret)) {
+    throw new GhostApiError(
+      "Ghost Admin API key looks invalid. Paste the full Admin API key from your Ghost custom integration.",
+      400,
+    );
   }
 
   const iat = Math.floor(Date.now() / 1000);
@@ -42,7 +78,8 @@ async function ghostFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${normalizeSiteUrl(credentials.siteUrl)}${path}`, {
+  const siteUrl = normalizeSiteUrl(credentials.siteUrl);
+  const res = await fetch(`${siteUrl}${path}`, {
     ...init,
     headers: {
       Authorization: `Ghost ${ghostJwt(credentials.adminApiKey)}`,
@@ -52,13 +89,9 @@ async function ghostFetch<T>(
     },
   });
   const text = await res.text();
-  const body = text ? JSON.parse(text) : null;
+  const body = parseGhostResponse(text);
   if (!res.ok) {
-    const message =
-      body?.errors?.[0]?.message ||
-      body?.message ||
-      `Ghost request failed (${res.status})`;
-    throw new GhostApiError(message, res.status);
+    throw new GhostApiError(ghostErrorMessage(body, res.status), res.status);
   }
   return body as T;
 }
@@ -91,6 +124,76 @@ async function getGhostPostForUpdate(
   return post;
 }
 
+function ghostPostPayload(input: {
+  title: string;
+  slug: string;
+  markdown: string;
+  description: string;
+}) {
+  const html = markdownToCmsHtml(input.markdown) || "<p></p>";
+  const excerpt = input.description?.trim();
+  return {
+    title: input.title,
+    slug: input.slug,
+    html,
+    status: "published" as const,
+    ...(excerpt ? { custom_excerpt: excerpt } : {}),
+  };
+}
+
+async function createGhostPost(
+  credentials: GhostCredentials,
+  input: {
+    title: string;
+    slug: string;
+    markdown: string;
+    description: string;
+  },
+): Promise<{ remoteId: string; liveUrl: string | null }> {
+  const body = await ghostFetch<{
+    posts: { id: string; url?: string | null }[];
+  }>(credentials, "/ghost/api/admin/posts/?source=html", {
+    method: "POST",
+    body: JSON.stringify({
+      posts: [ghostPostPayload(input)],
+    }),
+  });
+
+  const post = body.posts?.[0];
+  if (!post) throw new GhostApiError("Ghost publish failed", 500);
+  return { remoteId: post.id, liveUrl: post.url ?? null };
+}
+
+async function updateGhostPost(
+  credentials: GhostCredentials,
+  input: {
+    remoteId: string;
+    title: string;
+    slug: string;
+    markdown: string;
+    description: string;
+  },
+): Promise<{ remoteId: string; liveUrl: string | null }> {
+  const existing = await getGhostPostForUpdate(credentials, input.remoteId);
+  const body = await ghostFetch<{
+    posts: { id: string; url?: string | null }[];
+  }>(credentials, `/ghost/api/admin/posts/${input.remoteId}/?source=html`, {
+    method: "PUT",
+    body: JSON.stringify({
+      posts: [
+        {
+          ...ghostPostPayload(input),
+          updated_at: existing.updated_at,
+        },
+      ],
+    }),
+  });
+
+  const post = body.posts?.[0];
+  if (!post) throw new GhostApiError("Ghost update failed", 500);
+  return { remoteId: post.id, liveUrl: post.url ?? null };
+}
+
 export async function publishPostToGhost(input: {
   credentials: GhostCredentials;
   title: string;
@@ -99,58 +202,21 @@ export async function publishPostToGhost(input: {
   description: string;
   existingRemoteId?: string | null;
 }): Promise<{ remoteId: string; liveUrl: string | null }> {
-  const html = markdownToCmsHtml(input.markdown);
-
   if (input.existingRemoteId) {
-    const existing = await getGhostPostForUpdate(
-      input.credentials,
-      input.existingRemoteId,
-    );
-    const body = await ghostFetch<{
-      posts: { id: string; url?: string | null }[];
-    }>(
-      input.credentials,
-      `/ghost/api/admin/posts/${input.existingRemoteId}/?source=html`,
-      {
-        method: "PUT",
-        body: JSON.stringify({
-          posts: [
-            {
-              title: input.title,
-              slug: input.slug,
-              html,
-              excerpt: input.description,
-              status: "published",
-              updated_at: existing.updated_at,
-            },
-          ],
-        }),
-      },
-    );
-
-    const post = body.posts?.[0];
-    if (!post) throw new GhostApiError("Ghost update failed", 500);
-    return { remoteId: post.id, liveUrl: post.url ?? null };
+    try {
+      return await updateGhostPost(input.credentials, {
+        remoteId: input.existingRemoteId,
+        title: input.title,
+        slug: input.slug,
+        markdown: input.markdown,
+        description: input.description,
+      });
+    } catch (error) {
+      if (!(error instanceof GhostApiError) || error.status !== 404) {
+        throw error;
+      }
+    }
   }
 
-  const body = await ghostFetch<{
-    posts: { id: string; url?: string | null }[];
-  }>(input.credentials, "/ghost/api/admin/posts/?source=html", {
-    method: "POST",
-    body: JSON.stringify({
-      posts: [
-        {
-          title: input.title,
-          slug: input.slug,
-          html,
-          excerpt: input.description,
-          status: "published",
-        },
-      ],
-    }),
-  });
-
-  const post = body.posts?.[0];
-  if (!post) throw new GhostApiError("Ghost publish failed", 500);
-  return { remoteId: post.id, liveUrl: post.url ?? null };
+  return createGhostPost(input.credentials, input);
 }
