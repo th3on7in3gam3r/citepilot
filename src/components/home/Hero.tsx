@@ -1,6 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import { HeroProductBanner } from "@/components/home/HeroProductBanner";
 import { HeroCta } from "@/components/home/HeroCta";
+import { heroGeoAnswer } from "@/lib/marketing/answer-capsule";
 import Link from "next/link";
 
 export function Hero({ heroCtaVariant }: { heroCtaVariant?: string }) {
@@ -22,6 +23,20 @@ export function Hero({ heroCtaVariant }: { heroCtaVariant?: string }) {
           <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted dark:text-white/60 sm:mt-5 sm:text-lg">
             Free citation audit in ~60 seconds. Weekly monitoring on Pilot.
           </p>
+
+          <div
+            id="what-is-citepilot"
+            className="hero-rise hero-rise-delay-1 mx-auto mt-6 max-w-3xl rounded-2xl border border-white/10 bg-white/[0.06] p-5 text-left backdrop-blur-sm sm:mt-7"
+            aria-labelledby="hero-geo-answer-heading"
+          >
+            <h2
+              id="hero-geo-answer-heading"
+              className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/45"
+            >
+              What is CitePilot?
+            </h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-white/75">{heroGeoAnswer}</p>
+          </div>
 
           <div className="mt-7 flex flex-col items-center sm:mt-8">
             <HeroCta initialVariant={heroCtaVariant} />

@@ -24,10 +24,13 @@ export function GeoAuditFixGuide({ workspace }: { workspace: WorkspaceSnapshot }
             1
           </span>
           <div>
-            <p className="font-semibold text-ink">Deploy on your live site</p>
+            <p className="font-semibold text-ink">Content guides need live published copy</p>
             <p className="mt-0.5 leading-relaxed">
-              Re-audits crawl <strong className="text-ink">{workspace.domain}</strong>, not
-              CitePilot settings. Paste schema or content in your CMS, publish, then re-run.
+              Content guide gaps clear when your <strong className="text-ink">published homepage</strong>{" "}
+              includes matching buyer language (we scan title, meta, H1, and body text). That
+              can improve technical signals and on-site prompt alignment — but{" "}
+              <strong className="text-ink">55% of your score</strong> still comes from whether
+              AI engines actually cite you on live probes, which may not move immediately.
             </p>
           </div>
         </li>

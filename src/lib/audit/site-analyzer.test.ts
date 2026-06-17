@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { promptOverlap } from "@/lib/audit/site-analyzer";
+import { buildPromptCorpus, promptOverlap } from "@/lib/audit/site-analyzer";
+import type { SiteSignals } from "@/lib/api-types";
 
 describe("audit prompt signals", () => {
+  it("includes homepage body excerpt in prompt corpus", () => {
+    const signals: SiteSignals = {
+      title: "Home",
+      metaDescription: null,
+      h1: null,
+      bodyExcerpt:
+        "Bible Fun Land Studios offers the best Sunday school curriculum for churches under 200 seats.",
+      wordCount: 120,
+      hasJsonLd: false,
+      hasFaqSchema: false,
+      hasOrganizationSchema: false,
+      hasOgTags: false,
+      robotsAllows: true,
+      sitemapFound: true,
+      fetchOk: true,
+      geoScore: 50,
+    };
+
+    const corpus = buildPromptCorpus(signals, "biblefunlandstudios.com");
+    const overlap = promptOverlap("best Sunday school curriculum for churches", corpus);
+    expect(overlap).toBeGreaterThanOrEqual(0.35);
+  });
+
   it("scores higher overlap when prompt terms appear in corpus", () => {
     const corpus = "CitePilot is the best CRM for agencies under 50 seats";
     const high = promptOverlap("best CRM for agencies", corpus);

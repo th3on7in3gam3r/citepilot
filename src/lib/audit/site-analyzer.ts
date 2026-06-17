@@ -62,6 +62,7 @@ function analyzeHtml(html: string): Omit<SiteSignals, "robotsAllows" | "sitemapF
   const h1 = firstMatch(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const text = stripTags(html);
   const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const bodyExcerpt = text.slice(0, 3000) || null;
 
   const jsonLdBlocks =
     html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)
@@ -77,6 +78,7 @@ function analyzeHtml(html: string): Omit<SiteSignals, "robotsAllows" | "sitemapF
     title: title ? stripTags(title) : null,
     metaDescription,
     h1: h1 ? stripTags(h1) : null,
+    bodyExcerpt,
     wordCount,
     hasJsonLd,
     hasFaqSchema,
@@ -159,6 +161,20 @@ export async function analyzeSite(
     ...partial,
     geoScore: computeGeoScore(partial),
   };
+}
+
+export function buildPromptCorpus(signals: SiteSignals, domain: string): string {
+  const brand = brandFromDomain(domain);
+  return [
+    signals.title,
+    signals.metaDescription,
+    signals.h1,
+    brand,
+    domain,
+    signals.bodyExcerpt ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function promptOverlap(prompt: string, corpus: string): number {

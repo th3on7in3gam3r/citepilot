@@ -7,6 +7,8 @@ export type SiteSignals = {
   title: string | null;
   metaDescription: string | null;
   h1: string | null;
+  /** First ~3k chars of visible homepage text — used for prompt overlap checks. */
+  bodyExcerpt?: string | null;
   wordCount: number;
   hasJsonLd: boolean;
   hasFaqSchema: boolean;

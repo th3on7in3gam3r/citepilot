@@ -9,6 +9,7 @@ export function defaultSiteSignals(geoScore = 0): SiteSignals {
     title: null,
     metaDescription: null,
     h1: null,
+    bodyExcerpt: null,
     wordCount: 0,
     hasJsonLd: false,
     hasFaqSchema: false,

@@ -60,7 +60,9 @@ export function GeoAuditScoreBreakdown({ workspace }: { workspace: WorkspaceSnap
           </div>
           <p className="mt-1 text-xs text-muted">
             Whether ChatGPT, Perplexity, and other AI answers mention you for your monitored
-            prompts. This often lags on-site fixes by days or weeks.
+            prompts (live probes when configured). On technical-only audits we also scan your
+            homepage body for prompt keyword overlap — re-run after publishing Content guide
+            copy. Live citations often lag by days or weeks.
           </p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-border">
             <div

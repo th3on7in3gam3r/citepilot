@@ -46,8 +46,8 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
-  alternates: { canonical: site.url },
+  metadataBase: new URL(site.wwwUrl),
+  alternates: { canonical: site.wwwUrl },
   title: {
     default: site.homeTitle,
     template: `%s · ${site.name}`,
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: site.homeTitle,
     description: homeDescription,
     type: "website",
-    url: site.url,
+    url: site.wwwUrl,
     siteName: site.name,
     locale: "en_US",
     images: [

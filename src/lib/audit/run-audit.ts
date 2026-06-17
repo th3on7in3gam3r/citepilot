@@ -18,6 +18,7 @@ import {
   analyzeSite,
   brandFromDomain,
   buildGapsFromSignals,
+  buildPromptCorpus,
   normalizeDomain,
   promptOverlap,
 } from "@/lib/audit/site-analyzer";
@@ -49,15 +50,7 @@ function evaluatePrompts(
   liveChecks: boolean[],
 ): PromptResult[] {
   const brand = brandFromDomain(domain);
-  const corpus = [
-    signals.title,
-    signals.metaDescription,
-    signals.h1,
-    brand,
-    domain,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const corpus = buildPromptCorpus(signals, domain);
 
   return prompts.map((prompt, i) => {
     const overlap = promptOverlap(prompt, corpus);
