@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
@@ -373,13 +374,47 @@ export function WhiteLabelSettingsPanel({
         />
       </ul>
 
-      <div className="rounded-xl border border-border bg-surface/40 p-4">
-        <p className="text-sm font-semibold text-ink">Custom report domain</p>
+      <div id="white-label-dns" className="rounded-xl border border-border bg-surface/40 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="text-sm font-semibold text-ink">Custom report domain</p>
+          <Link
+            href="/help/white-label-reports"
+            className="text-xs font-semibold text-accent hover:underline"
+          >
+            Full DNS guide →
+          </Link>
+        </div>
         <p className="mt-1 text-xs text-muted">
-          Optional CNAME for short links like{" "}
+          Optional branded links like{" "}
           <code className="rounded bg-background px-1">reports.youragency.com/r/abc123</code>
         </p>
-        <label className="mt-3 block text-sm font-semibold text-ink">
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-emerald-200/80 bg-emerald-50/50 p-3 text-xs">
+            <p className="font-semibold uppercase tracking-wide text-emerald-900">
+              Step 1 · Here in CitePilot
+            </p>
+            <p className="mt-2 text-muted">
+              Enter <strong className="text-ink">your</strong> subdomain below (a domain you
+              own):
+            </p>
+            <p className="mt-2 font-mono text-ink">
+              reports.{dnsGuide.zone === dnsGuide.fullDomain ? "youragency.com" : dnsGuide.zone}
+            </p>
+          </div>
+          <div className="rounded-lg border border-sky-200/80 bg-sky-50/50 p-3 text-xs">
+            <p className="font-semibold uppercase tracking-wide text-sky-900">
+              Step 2 · Your DNS provider
+            </p>
+            <p className="mt-2 text-muted">
+              In DNS for <strong className="text-ink">{dnsGuide.zone}</strong> (Vercel, Cloudflare,
+              GoDaddy — <em>not</em> getcitepilot.com), add a CNAME pointing to CitePilot:
+            </p>
+            <p className="mt-2 font-mono text-ink">{cnameTarget}</p>
+          </div>
+        </div>
+
+        <label className="mt-4 block text-sm font-semibold text-ink">
           Your custom report domain
           <input
             type="text"
@@ -396,16 +431,16 @@ export function WhiteLabelSettingsPanel({
             className={inputClass}
           />
           <span className="mt-1.5 block text-xs font-normal text-muted">
-            A subdomain you own — not <code className="rounded bg-background px-1">{cnameTarget}</code>.
-            Example: <code className="rounded bg-background px-1">reports.youragency.com</code>
+            Example for you:{" "}
+            <code className="rounded bg-background px-1">
+              reports.{dnsGuide.zone === dnsGuide.fullDomain ? "youragency.com" : dnsGuide.zone}
+            </code>{" "}
+            — never <code className="rounded bg-background px-1">{cnameTarget}</code>
           </span>
         </label>
+
         <div className="mt-3 rounded-lg bg-background p-4 text-xs text-muted">
-          <p className="font-semibold text-ink">DNS setup tutorial</p>
-          <p className="mt-2 leading-relaxed">
-            In your DNS provider (Cloudflare, GoDaddy, Namecheap, etc.), open the zone for{" "}
-            <strong className="text-ink">{dnsGuide.zone}</strong> and add one CNAME record:
-          </p>
+          <p className="font-semibold text-ink">DNS record to add (in your domain&apos;s DNS)</p>
           <dl className="mt-3 overflow-hidden rounded-lg border border-border text-left">
             <div className="grid grid-cols-[5.5rem_1fr] border-b border-border bg-surface/60">
               <dt className="border-r border-border px-3 py-2 font-semibold text-ink">Name</dt>
@@ -420,23 +455,30 @@ export function WhiteLabelSettingsPanel({
               <dd className="px-3 py-2 font-mono text-ink">{cnameTarget}</dd>
             </div>
           </dl>
+
+          <div className="mt-3 rounded-lg border border-red-200 bg-red-50/80 px-3 py-2.5 text-red-900">
+            <p className="font-semibold">Common mistake</p>
+            <p className="mt-1 leading-relaxed">
+              Do <strong>not</strong> set Value to{" "}
+              <code className="rounded bg-white/80 px-1">{dnsGuide.fullDomain}</code> (your domain).
+              That points the record to itself — Vercel shows &quot;CNAME target cannot equal
+              itself.&quot; Value must always be{" "}
+              <code className="rounded bg-white/80 px-1">{cnameTarget}</code>.
+            </p>
+          </div>
+
           <ul className="mt-3 list-inside list-disc space-y-1.5 leading-relaxed">
             <li>
-              <strong className="text-ink">Name</strong> is the subdomain part only — for{" "}
-              <code className="rounded bg-surface px-1">{dnsGuide.fullDomain}</code>, enter{" "}
-              <code className="rounded bg-surface px-1">{dnsGuide.host}</code> (not the full URL).
+              <strong className="text-ink">Name</strong> = subdomain part only (
+              <code className="rounded bg-surface px-1">{dnsGuide.host}</code>)
             </li>
             <li>
-              Some providers label this field <strong className="text-ink">Host</strong> or{" "}
-              <strong className="text-ink">Alias</strong>; a few want the full subdomain — check
-              your provider&apos;s docs if verification fails.
+              <strong className="text-ink">Value</strong> = always{" "}
+              <code className="rounded bg-surface px-1">{cnameTarget}</code> (CitePilot — same for
+              every customer)
             </li>
-            <li>
-              <strong className="text-ink">Value</strong> is always{" "}
-              <code className="rounded bg-surface px-1">{cnameTarget}</code> — CitePilot&apos;s
-              report server. Do not enter your own domain here.
-            </li>
-            <li>DNS can take 5–30 minutes to propagate (sometimes up to 24 hours).</li>
+            <li>DNS changes go in the DNS panel for your domain, not in getcitepilot.com</li>
+            <li>Propagation usually takes 5–30 minutes</li>
           </ul>
           {dnsGuide.isApex && (
             <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-amber-950">
@@ -447,9 +489,8 @@ export function WhiteLabelSettingsPanel({
           {wl.customReportDomain.trim().toLowerCase().replace(/\.$/, "") ===
             cnameTarget.toLowerCase() && (
             <p className="mt-3 rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-red-800">
-              <strong>{cnameTarget}</strong> is CitePilot&apos;s server — enter{" "}
-              <em>your</em> subdomain above (e.g. reports.youragency.com), then point it here
-              via CNAME.
+              <strong>{cnameTarget}</strong> belongs in the DNS <em>Value</em> field only — enter
+              your subdomain above (e.g. reports.{dnsGuide.zone}).
             </p>
           )}
         </div>

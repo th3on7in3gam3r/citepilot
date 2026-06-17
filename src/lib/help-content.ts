@@ -27,6 +27,13 @@ export type HelpWorkflowStep = {
 
 export const helpGuides: HelpGuide[] = [
   {
+    title: "White-label report domain (CNAME)",
+    description:
+      "Point reports.youragency.com to CitePilot — step-by-step for Settings vs your DNS provider, with common mistakes.",
+    href: "/help/white-label-reports",
+    cta: "Open guide",
+  },
+  {
     title: "CMS publishing guide",
     description:
       "Connect Webflow, WordPress, Ghost, Shopify, or Framer and publish from the content queue.",
@@ -89,6 +96,14 @@ export const helpWorkflow: HelpWorkflowStep[] = [
 ];
 
 export const helpQuickAnswers: HelpQuickAnswer[] = [
+  {
+    q: "Where do I add the CNAME for white-label report links?",
+    a: "In your own domain's DNS — not getcitepilot.com. If your agency site is youragency.com, open DNS for that domain (Cloudflare, Vercel, GoDaddy, etc.) and add: Name = reports, Type = CNAME, Value = reports.getcitepilot.com. In CitePilot Settings → White Label, enter reports.youragency.com. See /help/white-label-reports for the full walkthrough.",
+  },
+  {
+    q: "Why does Vercel say the CNAME target cannot equal itself?",
+    a: "You entered your own subdomain (e.g. reports.youragency.com) as the CNAME Value. Value must be reports.getcitepilot.com — CitePilot's server. Name creates your subdomain; Value points it to us.",
+  },
   {
     q: "Do I need a CMS to use CitePilot?",
     a: "No. CMS publishing is optional. You can run audits, track prompts, view discussions, and generate articles without connecting a CMS.",
