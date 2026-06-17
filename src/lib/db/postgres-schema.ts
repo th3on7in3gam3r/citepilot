@@ -469,7 +469,6 @@ CREATE TABLE IF NOT EXISTS workspace_members (
 
 CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id);
 CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS admin_audit_log (
   id TEXT PRIMARY KEY,
