@@ -104,6 +104,14 @@ async function handleProxy(request: NextRequest): Promise<NextResponse> {
     if (pathname.startsWith("/api/admin")) {
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
     }
+    if (pathname.startsWith("/admin")) {
+      if (!sessionUser?.email) {
+        const signIn = new URL("/auth/sign-in", request.url);
+        signIn.searchParams.set("from", pathname);
+        return NextResponse.redirect(signIn);
+      }
+      return NextResponse.next();
+    }
     return new NextResponse("Not Found", { status: 404 });
   }
 
@@ -147,6 +155,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/:path*",
+    "/admin",
     "/admin/:path*",
     "/dashboard",
     "/dashboard/:path*",

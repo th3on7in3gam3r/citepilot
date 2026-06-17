@@ -76,6 +76,11 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: "/admin/login",
+        destination: "/auth/sign-in?from=/admin",
+        permanent: false,
+      },
+      {
         source: "/nurture",
         destination: "/tools/geo-playbook",
         permanent: true,
