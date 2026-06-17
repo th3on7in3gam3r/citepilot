@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { WhiteLabelProofPreview } from "@/components/report/WhiteLabelProofPreview";
+import { useUpgradeModalOptional } from "@/contexts/UpgradeModalContext";
 import type { WorkspacePreferences } from "@/lib/settings";
 import {
   DEFAULT_PRIMARY_COLOR,
@@ -42,7 +43,8 @@ export function WhiteLabelSettingsPanel({
     message: string;
   } | null>(null);
   const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileInputId = `wl-logo-upload-${workspaceId}`;
+  const upgradeModal = useUpgradeModalOptional();
 
   useEffect(() => {
     void fetch("/api/white-label/verify-domain")
@@ -181,6 +183,17 @@ export function WhiteLabelSettingsPanel({
 
   const locked = !isFleet;
 
+  function openLogoUpgrade() {
+    upgradeModal?.openUpgradeModal({
+      feature: "white_label_logo",
+      title: "Upload your agency logo",
+      description:
+        "Fleet unlocks logo upload for proof reports, share links, and weekly digest emails.",
+      plan: "fleet",
+      unlocks: ["Logo on proof reports", "Custom brand colors", "White-label emails"],
+    });
+  }
+
   if (!isPilot && !isFleet) {
     return (
       <FeatureGate
@@ -236,25 +249,40 @@ export function WhiteLabelSettingsPanel({
           />
         ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/png,image/svg+xml"
-            className="hidden"
-            disabled={locked || uploading}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void uploadLogo(file);
-            }}
-          />
-          <button
-            type="button"
-            disabled={locked || uploading || togglesBusy}
-            onClick={() => fileRef.current?.click()}
-            className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-50"
-          >
-            {uploading ? "Uploading…" : locked ? "Upload (Fleet)" : "Upload logo"}
-          </button>
+          {!locked ? (
+            <>
+              <input
+                id={fileInputId}
+                type="file"
+                accept="image/png,image/svg+xml"
+                className="sr-only"
+                disabled={uploading || togglesBusy}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadLogo(file);
+                  e.target.value = "";
+                }}
+              />
+              <label
+                htmlFor={fileInputId}
+                aria-disabled={uploading || togglesBusy}
+                className={`inline-flex cursor-pointer items-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface ${
+                  uploading || togglesBusy ? "pointer-events-none opacity-50" : ""
+                }`}
+              >
+                {uploading ? "Uploading…" : "Upload logo"}
+              </label>
+            </>
+          ) : (
+            <button
+              type="button"
+              disabled={uploading || togglesBusy}
+              onClick={openLogoUpgrade}
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-50"
+            >
+              Upload logo
+            </button>
+          )}
         </div>
       </div>
 
