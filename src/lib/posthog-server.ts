@@ -70,6 +70,7 @@ export async function getServerSideFlagVariant(
   flag: string,
   distinctId?: string,
   fallback = "control",
+  timeoutMs = 2000,
 ): Promise<string> {
   const client = createPostHogClient();
   if (!client) return fallback;
@@ -81,7 +82,12 @@ export async function getServerSideFlagVariant(
   }
 
   try {
-    const value = await client.getFeatureFlag(flag, id);
+    const value = await Promise.race([
+      client.getFeatureFlag(flag, id),
+      new Promise<undefined>((resolve) => {
+        setTimeout(() => resolve(undefined), timeoutMs);
+      }),
+    ]);
     return normalizeFlagVariant(value, fallback);
   } catch {
     return fallback;

@@ -1,6 +1,7 @@
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { pillars } from "@/lib/content";
+import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 
 const icons: Record<string, ReactNode> = {
@@ -24,14 +25,16 @@ const icons: Record<string, ReactNode> = {
   ),
 };
 
-export function Pillars() {
+export async function Pillars() {
+  const t = await getTranslations("pillars");
+
   return (
     <Section id="pillars" className="bg-background" ariaLabelledBy="pillars-heading">
       <SectionHeading
         id="pillars-heading"
-        eyebrow="Product"
-        title="Three pillars. One outcome: more citations."
-        description="Everything serves prompt-level citation lift — no feature buffet."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
         align="center"
       />
       <div className="mt-14 grid gap-8 md:mt-16 md:grid-cols-3 md:gap-6 lg:gap-8">
