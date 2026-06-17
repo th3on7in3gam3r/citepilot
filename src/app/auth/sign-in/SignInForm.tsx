@@ -33,19 +33,25 @@ export function SignInForm() {
       <AuthDivider />
 
       {oauthError && (
-        <p className="mb-4 rounded-xl border border-red-500/40 bg-red-900/30 px-4 py-3 text-sm text-red-300">
+        <p
+          id="sign-in-oauth-error"
+          role="alert"
+          className="mb-4 rounded-xl border border-red-500/40 bg-red-900/30 px-4 py-3 text-sm text-red-300"
+        >
           Google sign-in was canceled or failed. Try again or use email below.
         </p>
       )}
 
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="from" value={from} />
-        <label className={authLabelClass}>
+        <label htmlFor="sign-in-email" className={authLabelClass}>
           Email
           <input
+            id="sign-in-email"
             name="email"
             type="email"
             required
+            aria-required="true"
             autoComplete="email"
             suppressHydrationWarning
             className={authInputClass}
@@ -74,7 +80,9 @@ export function SignInForm() {
         </div>
 
         {state?.error && (
-          <p className="text-sm text-red-300">{state.error}</p>
+          <p id="sign-in-error" role="alert" className="text-sm text-red-300">
+            {state.error}
+          </p>
         )}
 
         <AuthSubmitButton

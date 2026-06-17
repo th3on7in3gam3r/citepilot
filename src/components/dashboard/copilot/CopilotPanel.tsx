@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useCopilot } from "@/components/dashboard/copilot/CopilotProvider";
 import { useGridFilter } from "@/components/dashboard/copilot/GridFilterProvider";
 import { WidgetConfigPanel } from "@/components/dashboard/copilot/WidgetConfigPanel";
@@ -57,6 +58,9 @@ export function CopilotPanel() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+
+  useFocusTrap(panelRef, isOpen, closeCopilot);
 
   const selectedWidget = useMemo(
     () => widgets.find((w) => w.id === selectedWidgetId) ?? null,
@@ -91,11 +95,17 @@ export function CopilotPanel() {
         onClick={closeCopilot}
       />
 
-      <aside className="fixed top-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col border-l border-[#e8edf3] bg-white shadow-2xl">
+      <aside
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="copilot-panel-title"
+        className="fixed top-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col border-l border-[#e8edf3] bg-white shadow-2xl"
+      >
         {/* Header */}
         <header className="flex shrink-0 items-center justify-between border-b border-[#eef2f6] px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#0c1512] text-[#0ea5e9]">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#0c1512] text-[#0ea5e9]" aria-hidden>
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="5" cy="5" r="1.5" />
                 <circle cx="12" cy="5" r="1.5" />
@@ -108,9 +118,9 @@ export function CopilotPanel() {
                 <circle cx="19" cy="19" r="1.5" />
               </svg>
             </span>
-            <span className="font-display text-sm font-bold text-[#0f172a]">
+            <h2 id="copilot-panel-title" className="font-display text-sm font-bold text-[#0f172a]">
               CitePilot Copilot
-            </span>
+            </h2>
           </div>
           <button
             type="button"
@@ -214,8 +224,9 @@ export function CopilotPanel() {
                 type="button"
                 onClick={pauseAgent}
                 className="flex items-center gap-1 font-medium text-[#64748b]"
+                aria-label="Pause agent"
               >
-                <span className="inline-block h-2.5 w-2.5 bg-[#64748b]" /> Paused
+                <span className="inline-block h-2.5 w-2.5 bg-[#64748b]" aria-hidden /> Pause
               </button>
             ) : agentStatus === "paused" ? (
               <button
@@ -290,7 +301,8 @@ export function CopilotPanel() {
               }}
               onFocus={() => setShowSuggestions(input.length > 0 && input.length < 20)}
               placeholder="Ask me anything — filter a table, or generate a dashboard widget…"
-              className="w-full resize-none bg-transparent px-4 py-3 pr-12 text-sm text-[#0f172a] outline-none placeholder:text-[#94a3b8]"
+              aria-label="Message Copilot"
+              className="w-full resize-none bg-transparent px-4 py-3 pr-12 text-sm text-[#0f172a] outline-none placeholder:text-[#64748b]"
               disabled={agentStatus === "running"}
             />
             <button

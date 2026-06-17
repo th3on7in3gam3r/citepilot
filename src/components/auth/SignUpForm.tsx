@@ -50,37 +50,43 @@ export function SignUpForm() {
         className="space-y-4"
         onSubmit={handleEmailSubmit}
       >
-        <label className={authLabelClass}>
+        <label htmlFor="sign-up-name" className={authLabelClass}>
           Name
           <input
+            id="sign-up-name"
             name="name"
             type="text"
             required
+            aria-required="true"
             autoComplete="name"
             suppressHydrationWarning
             className={authInputClass}
           />
         </label>
-        <label className={authLabelClass}>
+        <label htmlFor="sign-up-email" className={authLabelClass}>
           Work email
           <input
+            id="sign-up-email"
             name="email"
             type="email"
             required
+            aria-required="true"
             autoComplete="email"
             suppressHydrationWarning
             className={authInputClass}
           />
         </label>
-        <label className={authLabelClass}>
+        <label htmlFor="sign-up-domain" className={authLabelClass}>
           Website domain
           <span className="mt-1 block text-xs font-normal text-muted">
             We&apos;ll pre-fill onboarding — e.g. yourcompany.com
           </span>
           <input
+            id="sign-up-domain"
             name="domain"
             type="text"
             required
+            aria-required="true"
             autoComplete="url"
             placeholder="yourcompany.com"
             suppressHydrationWarning
@@ -98,7 +104,11 @@ export function SignUpForm() {
             <PasswordRequirements password={password} />
           </div>
         </div>
-        {state?.error && <p className="text-sm text-red-300">{state.error}</p>}
+        {state?.error && (
+          <p id="sign-up-error" role="alert" className="text-sm text-red-300">
+            {state.error}
+          </p>
+        )}
         <AuthSubmitButton
           pending={pending}
           disabled={password.length > 0 && !passwordOk}

@@ -8,16 +8,16 @@ export function HomeActionBar() {
     <section
       id="get-started"
       className="relative z-10 border-t border-border/80 bg-background pb-14 pt-10 md:pb-16 md:pt-12"
-      aria-label="Get started"
+      aria-labelledby="get-started-heading"
     >
       <Container>
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-accent">
             Get started
           </p>
-          <p className="mt-2 text-lg text-muted">
+          <h2 id="get-started-heading" className="mt-2 text-lg font-semibold text-ink">
             Run a free audit or build your full citation workspace.
-          </p>
+          </h2>
         </div>
 
         <div className="mx-auto mt-8 flex max-w-4xl flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">

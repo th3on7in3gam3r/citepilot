@@ -16,9 +16,12 @@ export async function SocialProofStats() {
   return (
     <section
       className="border-b border-border bg-background py-10 dark:bg-card md:py-12"
-      aria-label="Platform stats"
+      aria-labelledby="social-proof-heading"
     >
       <Container>
+        <h2 id="social-proof-heading" className="sr-only">
+          CitePilot platform stats
+        </h2>
         <ul className="flex flex-col divide-y divide-border md:flex-row md:items-center md:divide-x md:divide-y-0">
           {items.map((stat) => (
             <li

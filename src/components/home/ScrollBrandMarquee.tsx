@@ -31,7 +31,7 @@ export function ScrollBrandMarquee() {
       ref={sectionRef}
       className="relative bg-background"
       style={{ height: "125vh" }}
-      aria-label="Platforms and ecosystems"
+      aria-labelledby="platforms-heading"
     >
       <div className="sticky top-16 border-y border-border bg-background">
         <Container className="flex flex-col items-center py-16 md:py-20 lg:py-24">
@@ -39,9 +39,9 @@ export function ScrollBrandMarquee() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
               Platforms &amp; ecosystems
             </p>
-            <p className="font-display mt-2 text-xl font-bold text-ink md:text-2xl">
+            <h2 id="platforms-heading" className="font-display mt-2 text-xl font-bold text-ink md:text-2xl">
               Monitor citations across AI platforms
-            </p>
+            </h2>
           </div>
 
           <div className="relative w-full overflow-hidden px-2 py-8 md:py-10">
@@ -60,9 +60,11 @@ export function ScrollBrandMarquee() {
                     className={`flex w-[7.5rem] shrink-0 flex-col items-center transition-all duration-500 md:w-[8.5rem] ${
                       isActive ? "scale-110 opacity-100" : "scale-90 opacity-35"
                     }`}
+                    aria-label={`${brand.name}${isActive ? " (selected)" : ""}`}
                   >
                     <div
                       className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl border-2 text-lg font-bold transition-all duration-500 md:h-20 md:w-20 md:text-xl"
+                      aria-hidden
                       style={{
                         borderColor: isActive ? brand.color : "var(--color-border)",
                         backgroundColor: isActive ? `${brand.color}15` : "white",

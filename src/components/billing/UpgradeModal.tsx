@@ -37,6 +37,7 @@ export function UpgradeModal({
     <dialog
       ref={dialogRef}
       className="fixed inset-0 z-[80] m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4"
+      aria-labelledby="upgrade-modal-title"
       onClose={onDismiss}
     >
       <div
@@ -49,7 +50,7 @@ export function UpgradeModal({
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
             {plan === "fleet" ? "Fleet" : "Pilot"} feature
           </p>
-          <h2 className="font-display mt-2 text-xl font-bold text-foreground">
+          <h2 id="upgrade-modal-title" className="font-display mt-2 text-xl font-bold text-foreground">
             {request.title}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">

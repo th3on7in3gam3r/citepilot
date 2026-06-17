@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import {
   COMPETITOR_FILTER_COLUMNS,
   FILTER_OPERATORS,
@@ -27,6 +28,9 @@ export function FilterBuilderModal({
   onApply: () => void;
 }) {
   const [runningSec, setRunningSec] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(dialogRef, open, onClose);
 
   useEffect(() => {
     if (!generating) {
@@ -42,7 +46,13 @@ export function FilterBuilderModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="filter-builder-title"
+    >
       <button
         type="button"
         className="absolute inset-0 bg-[#0f172a]/30 backdrop-blur-[2px]"
@@ -51,21 +61,23 @@ export function FilterBuilderModal({
       />
       <div className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-[#e8edf3] bg-white shadow-2xl">
         <header className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
-          <h2 className="font-display text-lg font-bold text-[#0f172a]">Add filters</h2>
+          <h2 id="filter-builder-title" className="font-display text-lg font-bold text-[#0f172a]">
+            Add filters
+          </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg p-2 text-[#94a3b8] hover:bg-[#f8fafb]"
             aria-label="Close"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </header>
 
         <div className="max-h-[calc(90vh-8rem)] overflow-y-auto px-5 py-4">
-          <div className="mb-3 grid grid-cols-[72px_1fr_1fr_1fr_32px] gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+          <div className="mb-3 grid grid-cols-[72px_1fr_1fr_1fr_32px] gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748b]">
             <span />
             <span>Column</span>
             <span>Operator</span>
@@ -138,8 +150,11 @@ function FilterRow({
 
   if (generating) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-[#bae6fd] bg-[#e0f2fe]/60 px-4 py-3">
-        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#0ea5e9] border-t-transparent" />
+      <div
+        className="flex items-center gap-3 rounded-xl border border-[#bae6fd] bg-[#e0f2fe]/60 px-4 py-3"
+        role="status"
+      >
+        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#0ea5e9] border-t-transparent" aria-hidden />
         <span className="flex-1 text-sm font-medium text-[#0284c7]">Generating filter</span>
         <span className="text-xs text-[#64748b]">Running {runningSec}s</span>
       </div>
@@ -153,6 +168,7 @@ function FilterRow({
         onChange={(e) =>
           onUpdate({ logic: e.target.value as GridFilterCondition["logic"] })
         }
+        aria-label="Filter logic"
         className="rounded-lg border border-[#e2e8f0] px-2 py-2 text-xs font-medium text-[#334155] outline-none"
       >
         <option value="where">Where</option>
@@ -163,6 +179,7 @@ function FilterRow({
       <select
         value={row.columnId}
         onChange={(e) => onUpdate({ columnId: e.target.value })}
+        aria-label="Filter column"
         className="rounded-lg border border-[#e2e8f0] px-2 py-2.5 text-sm outline-none focus:border-[#0ea5e9]"
       >
         {COMPETITOR_FILTER_COLUMNS.map((c) => (
@@ -177,6 +194,7 @@ function FilterRow({
         onChange={(e) =>
           onUpdate({ operator: e.target.value as GridFilterCondition["operator"] })
         }
+        aria-label="Filter operator"
         className="rounded-lg border border-[#e2e8f0] px-2 py-2.5 text-sm outline-none focus:border-[#0ea5e9]"
       >
         {ops.map((o) => (
@@ -192,6 +210,7 @@ function FilterRow({
         disabled={row.operator === "is_empty"}
         onChange={(e) => onUpdate({ value: e.target.value })}
         placeholder="Value"
+        aria-label="Filter value"
         className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-sm outline-none focus:border-[#0ea5e9] disabled:bg-[#f8fafb]"
       />
 
@@ -201,7 +220,7 @@ function FilterRow({
         className="rounded-lg p-2 text-[#94a3b8] hover:bg-red-50 hover:text-red-600"
         aria-label="Remove condition"
       >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       </button>

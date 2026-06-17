@@ -108,7 +108,11 @@ export function ResetPasswordForm() {
             <PasswordRequirements password={password} />
           </div>
         </div>
-        {error && <p className="text-sm text-red-300">{error}</p>}
+        {error && (
+          <p id="reset-password-error" role="alert" className="text-sm text-red-300">
+            {error}
+          </p>
+        )}
         <AuthSubmitButton
           pending={status === "loading"}
           disabled={password.length > 0 && !passwordOk}

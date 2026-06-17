@@ -53,7 +53,10 @@ export function ForgotPasswordForm() {
       </p>
 
       {status === "sent" ? (
-        <div className="mt-6 rounded-xl border border-mint/30 bg-mint/10 px-4 py-4 text-sm text-white/80">
+        <div
+          role="status"
+          className="mt-6 rounded-xl border border-mint/30 bg-mint/10 px-4 py-4 text-sm text-white/80"
+        >
           <p className="font-semibold text-mint">Check your inbox</p>
           <p className="mt-2">
             If an account exists for {email}, you&apos;ll receive password reset
@@ -68,19 +71,27 @@ export function ForgotPasswordForm() {
         </div>
       ) : (
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
-          <label className="block text-sm font-semibold text-white/70">
+          <label htmlFor="forgot-password-email" className="block text-sm font-semibold text-white/70">
             Email
             <input
+              id="forgot-password-email"
               name="email"
               type="email"
               required
+              aria-required="true"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "forgot-password-error" : undefined}
               className={authInputClass}
             />
           </label>
-          {error && <p className="text-sm text-red-300">{error}</p>}
+          {error && (
+            <p id="forgot-password-error" role="alert" className="text-sm text-red-300">
+              {error}
+            </p>
+          )}
           <AuthSubmitButton
             pending={status === "loading"}
             pendingLabel="Sending…"

@@ -32,6 +32,7 @@ export function PasswordField({
           name={name}
           type={visible ? "text" : "password"}
           required={required}
+          aria-required={required}
           minLength={minLength}
           autoComplete={autoComplete}
           suppressHydrationWarning

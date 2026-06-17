@@ -350,6 +350,8 @@ export function OnboardingFlow({
                       }
                       placeholder="Enter a description of your business"
                       rows={5}
+                      required
+                      aria-required="true"
                       className="w-full resize-none rounded-2xl border border-border bg-white px-5 py-4 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/15"
                     />
                   </div>

@@ -8,10 +8,11 @@ export function AnswerCapsuleSection() {
     <section
       id="geo-answers"
       className="scroll-mt-24 border-t border-border bg-background py-14 md:py-16"
-      aria-label="GEO answer capsule for AI search engines"
+      aria-labelledby="geo-answers-heading"
     >
       <Container>
         <SectionHeading
+          id="geo-answers-heading"
           eyebrow="GEO clarity"
           title="What AI search engines should know"
           description="Structured answers for AI search — what CitePilot is and how it compares to legacy SEO tools."
