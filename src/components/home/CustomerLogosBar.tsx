@@ -1,4 +1,5 @@
 import { customerMarqueeNames } from "@/lib/marketing/customer-marquee";
+import { getTranslations } from "next-intl/server";
 
 function MarqueeRow({
   names,
@@ -30,7 +31,8 @@ function MarqueeRow({
   );
 }
 
-export function CustomerLogosBar() {
+export async function CustomerLogosBar() {
+  const t = await getTranslations("customerLogos");
   const firstRow = customerMarqueeNames.slice(0, 6);
   const secondRow = customerMarqueeNames.slice(6);
 
@@ -40,7 +42,7 @@ export function CustomerLogosBar() {
       aria-labelledby="customer-logos-heading"
     >
       <h2 id="customer-logos-heading" className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-        Trusted by teams at
+        {t("title")}
       </h2>
 
       <div className="customer-marquee-mask relative mt-6 space-y-4 motion-reduce:hidden md:mt-8 md:space-y-5">

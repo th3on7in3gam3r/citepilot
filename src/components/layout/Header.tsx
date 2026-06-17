@@ -5,12 +5,14 @@ import { HeaderAuthLinks } from "@/components/layout/HeaderAuthLinks";
 import { HeaderMobileNav } from "@/components/layout/HeaderMobileNav";
 import { HeaderNavDropdown } from "@/components/layout/HeaderNavDropdown";
 import { HeaderStartButton } from "@/components/layout/HeaderStartButton";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { Link as LocaleLink } from "@/i18n/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { nav } from "@/lib/site";
 
 export function Header({
   light = false,
@@ -21,6 +23,7 @@ export function Header({
 }) {
   const [scrolled, setScrolled] = useState(false);
   const { resolved } = useTheme();
+  const t = useTranslations("nav");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -31,6 +34,40 @@ export function Header({
 
   const solid = scrolled || !overlay;
   const onDark = light && !solid && resolved === "dark";
+
+  const linkClass = `text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+    onDark
+      ? "text-white/85 hover:text-white"
+      : "text-muted hover:text-ink dark:text-[#94a3b8] dark:hover:text-white"
+  }`;
+
+  const freeToolsItems = [
+    {
+      label: t("tools.citationChecker"),
+      href: "/tools/citation-checker",
+      description: t("tools.citationCheckerDesc"),
+    },
+    {
+      label: t("tools.fullAudit"),
+      href: "/audit",
+      description: t("tools.fullAuditDesc"),
+    },
+    {
+      label: t("tools.gapCalculator"),
+      href: "/tools/citation-gap-calculator",
+      description: t("tools.gapCalculatorDesc"),
+    },
+    {
+      label: t("tools.geoPlaybook"),
+      href: "/tools/geo-playbook",
+      description: t("tools.geoPlaybookDesc"),
+    },
+    {
+      label: t("tools.chromeExtension"),
+      href: "/chrome-extension",
+      description: t("tools.chromeExtensionDesc"),
+    },
+  ] as const;
 
   return (
     <header
@@ -43,31 +80,29 @@ export function Header({
       <Container className="flex h-16 items-center justify-between gap-6 md:h-[4.5rem]">
         <Logo light={onDark} />
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Main navigation">
-          {nav.main.map((item) =>
-            "children" in item && item.children ? (
-              <HeaderNavDropdown
-                key={item.label}
-                label={item.label}
-                href={item.href}
-                items={item.children}
-                onDark={onDark}
-              />
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                  onDark
-                    ? "text-white/85 hover:text-white"
-                    : "text-muted hover:text-ink dark:text-[#94a3b8] dark:hover:text-white"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ),
-          )}
+          <LocaleLink href="/#journey" className={linkClass}>
+            {t("howItWorks")}
+          </LocaleLink>
+          <Link href="/product" className={linkClass}>
+            {t("product")}
+          </Link>
+          <HeaderNavDropdown
+            label={t("freeTools")}
+            href="/tools/citation-checker"
+            items={freeToolsItems}
+            onDark={onDark}
+          />
+          <LocaleLink href="/agency" className={linkClass}>
+            {t("agencies")}
+          </LocaleLink>
+          <LocaleLink href="/pricing" className={linkClass}>
+            {t("pricing")}
+          </LocaleLink>
         </nav>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="hidden md:block">
+            <LanguageSwitcher onDark={onDark} />
+          </div>
           <div className="hidden lg:block">
             <ThemeToggle onDark={onDark} />
           </div>

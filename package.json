@@ -24,6 +24,7 @@
     "framer-api": "^0.1.10",
     "html-to-image": "^1.11.13",
     "next": "16.2.6",
+    "next-intl": "^4.13.0",
     "posthog-js": "^1.376.2",
     "posthog-node": "^5.38.0",
     "prismjs": "^1.30.0",

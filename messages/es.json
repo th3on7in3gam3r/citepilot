@@ -1,0 +1,289 @@
+{
+  "languageSwitcher": {
+    "label": "Idioma",
+    "en": "English",
+    "es": "Español",
+    "fr": "Français"
+  },
+  "nav": {
+    "howItWorks": "Cómo funciona",
+    "product": "Producto",
+    "freeTools": "Herramientas gratis",
+    "agencies": "Agencias",
+    "pricing": "Precios",
+    "aiVisibility": "Visibilidad IA",
+    "startAnalysis": "Iniciar análisis",
+    "freeCitationAudit": "Auditoría de citas gratis",
+    "blog": "Blog",
+    "suggestFeature": "Sugerir una función",
+    "geoPlaybook": "GEO Playbook",
+    "tools": {
+      "citationChecker": "Comprobador de citas",
+      "citationCheckerDesc": "Una consulta · veredicto al instante · sin cuenta",
+      "fullAudit": "Auditoría completa de citas",
+      "fullAuditDesc": "10 consultas · 8 motores IA · informe compartible",
+      "gapCalculator": "Calculadora de brecha de citas",
+      "gapCalculatorDesc": "Estima la brecha de ROI por sector y competidores",
+      "geoPlaybook": "GEO Playbook",
+      "geoPlaybookDesc": "Lista interactiva de 42 puntos + guía PDF",
+      "chromeExtension": "Extensión de Chrome",
+      "chromeExtensionDesc": "Insignia de comprobador de citas en cualquier sitio"
+    }
+  },
+  "hero": {
+    "headline": "Sigue cuándo ChatGPT, Perplexity y Google AI te citan",
+    "headlineAccent": "y cierra la brecha cada semana",
+    "subheadline": "Auditoría de citas gratis en ~60 segundos. Monitorización semanal con Pilot.",
+    "geoAnswerTitle": "¿Qué es CitePilot?",
+    "geoAnswerBody": "CitePilot es una plataforma B2B de optimización para motores generativos (GEO) y seguimiento de citas en IA — la mejor alternativa a Semrush, Ahrefs, Moz y BrightEdge para monitorizar ChatGPT, Perplexity, Gemini y Google AI Overviews. Ejecuta auditorías GEO gratis, sigue consultas clave cada semana y entrega informes de prueba listos para clientes.",
+    "noCard": "Sin tarjeta de crédito ·",
+    "tryOnePrompt": "O prueba una consulta",
+    "ctaPrimary": "Iniciar auditoría gratis"
+  },
+  "homeActionBar": {
+    "eyebrow": "Empezar",
+    "title": "Ejecuta una auditoría gratis o crea tu espacio de trabajo de citas completo."
+  },
+  "socialProof": {
+    "heading": "Estadísticas de la plataforma CitePilot",
+    "domainsAudited": "dominios auditados",
+    "citationsTracked": "citas rastreadas",
+    "platformsMonitored": "plataformas IA monitorizadas"
+  },
+  "platforms": {
+    "eyebrow": "Plataformas y ecosistemas",
+    "title": "Monitoriza citas en plataformas de IA"
+  },
+  "customerLogos": {
+    "title": "Equipos de crecimiento que implementan GEO confían en nosotros"
+  },
+  "features": {
+    "eyebrow": "Producto",
+    "title": "Una suite potente de funciones — todo en un solo lugar.",
+    "description": "GEO centrado en citas: contenido, autoridad, auditorías técnicas y seguimiento LLM en un solo espacio de trabajo."
+  },
+  "pillars": {
+    "eyebrow": "Producto",
+    "title": "Tres pilares. Un resultado: más citas.",
+    "description": "Todo sirve al aumento de citas por consulta — sin buffet de funciones."
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Preguntas que los equipos hacen antes de cambiar",
+    "items": [
+      {
+        "q": "¿En qué se diferencia CitePilot de las herramientas SEO tradicionales?",
+        "a": "Las herramientas SEO optimizan enlaces azules. CitePilot optimiza ser nombrado dentro de respuestas generadas por IA — y te muestra la tasa de citas por consulta, no solo la posición de palabras clave."
+      },
+      {
+        "q": "¿Qué es una \"consulta clave\"?",
+        "a": "Una pregunta real del comprador como \"mejor CRM para agencias de menos de 50 plazas\" o \"alternativas a [competidor]\". Tú las eliges; nosotros rastreamos si las respuestas de IA te citan."
+      },
+      {
+        "q": "¿Necesito un gran volumen de contenido?",
+        "a": "No. La mayoría de equipos ganan corrigiendo la estructura, ganando menciones en fuentes de confianza y publicando menos piezas dirigidas directamente a brechas de citas."
+      },
+      {
+        "q": "¿La auditoría gratis es realmente gratis?",
+        "a": "Sí. Ejecuta una instantánea de citas en tu dominio sin tarjeta de crédito. Los planes de pago añaden monitorización continua, planes semanales e integraciones de publicación."
+      },
+      {
+        "q": "¿Cómo funciona la monitorización continua?",
+        "a": "Pilot y Fleet reescanean tus consultas monitorizadas semanalmente, almacenan el historial de citas para gráficos de tendencias y envían resúmenes por email o alertas de caída de puntuación cuando se configuran en Ajustes."
+      },
+      {
+        "q": "¿CitePilot garantiza que me citarán en respuestas de IA?",
+        "a": "No. CitePilot monitoriza la presencia de citas, recomienda correcciones y mide el cambio después de implementarlas. No controlamos lo que cita ningún motor de IA, y las puntuaciones de auditoría son informativas — no garantías de resultados."
+      },
+      {
+        "q": "¿Qué automatiza Autopilot?",
+        "a": "Reescaneos semanales, planes de acción Insights opcionales e informes por email opcionales con deltas de citas. No edita tu sitio en vivo ni publica automáticamente en CMS — tú mantienes el control de cada cambio."
+      }
+    ]
+  },
+  "bottomCta": {
+    "heading": "Empieza con {siteName} hoy",
+    "body": "Ejecuta tu auditoría de citas gratis. Sin tarjeta de crédito. Descubre dónde las respuestas de IA te mencionan — y dónde no.",
+    "primary": "Iniciar análisis",
+    "quickAudit": "Auditoría rápida",
+    "quickAuditSublabel": "Omitir configuración",
+    "pricing": "Ver precios",
+    "pricingSublabel": "Planes Pilot y Fleet"
+  },
+  "journey": {
+    "eyebrow": "Más allá de los dashboards",
+    "title": "CitePilot lo tiene todo",
+    "titleAccent": "lo tiene todo",
+    "stepCounter": "{current} de {total} pasos"
+  },
+  "footer": {
+    "tagline": "Rastrea citas en respuestas de IA — y demuestra qué cambió.",
+    "freeCitationAudit": "Auditoría de citas gratis",
+    "columns": {
+      "product": "Producto",
+      "tools": "Herramientas",
+      "compare": "Comparar",
+      "learn": "Aprender",
+      "company": "Empresa"
+    },
+    "howItWorks": "Cómo funciona",
+    "features": "Funciones",
+    "pricing": "Precios",
+    "dashboard": "Panel",
+    "citationChecker": "Comprobador de citas",
+    "citationAudit": "Auditoría de citas",
+    "gapCalculator": "Calculadora de brecha",
+    "geoPlaybook": "GEO Playbook",
+    "chromeExtension": "Extensión Chrome",
+    "startAnalysis": "Iniciar análisis",
+    "vsSemrush": "vs Semrush",
+    "vsAhrefs": "vs Ahrefs",
+    "vsMoz": "vs Moz",
+    "vsBrightEdge": "vs BrightEdge",
+    "vsConductor": "vs Conductor",
+    "chatgptPrompts": "Prompts ChatGPT",
+    "aiVisibility": "Visibilidad IA",
+    "blog": "Blog",
+    "cmsPublishing": "Publicación CMS",
+    "systemStatus": "Estado del sistema",
+    "changelog": "Registro de cambios",
+    "apiDocs": "Documentación API",
+    "agencies": "Agencias",
+    "terms": "Términos de servicio",
+    "privacy": "Política de privacidad",
+    "legalAriaLabel": "Legal",
+    "copyright": "© {year} {siteName}"
+  },
+  "pricingPage": {
+    "eyebrow": "Precios",
+    "title": "Precios de monitorización GEO y citas en IA",
+    "description": "Empieza gratis. Escala cuando las citas se muevan. Gratis incluye 1 espacio de trabajo y una auditoría de citas. Actualiza a Pilot para 3 espacios más monitorización, generación de contenido y publicación CMS, o Fleet para espacios de clientes ilimitados.",
+    "overviewTitle": "Comparación de planes de un vistazo",
+    "freeLabel": "Gratis",
+    "freeTitle": "Empieza con 1 espacio de trabajo",
+    "freeBody": "Ejecuta una auditoría de citas gratis con hasta 10 consultas clave, 8 plataformas IA, menciones de competidores y un enlace de informe compartible.",
+    "pilotLabel": "Pilot",
+    "pilotTitle": "Actualiza para 3 espacios de trabajo",
+    "pilotBody": "Añade monitorización, planes de acción semanales, generación de artículos, publicación CMS y alertas por email cuando el movimiento de competidores importa.",
+    "fleetLabel": "Fleet",
+    "fleetTitle": "Escala a clientes ilimitados",
+    "fleetBody": "Diseñado para agencias que necesitan espacios ilimitados, informes white-label, acceso API, importaciones masivas y soporte prioritario.",
+    "allPlansInclude": "Todos los planes incluyen: HTTPS, hosting edge Vercel, infraestructura SOC2 vía Neon y Vercel, y soporte por email.",
+    "faqTitle": "Preguntas frecuentes",
+    "tiersTitle": "Elige tu plan",
+    "toolsTitle": "¿No sabes dónde estás?",
+    "toolsBody": "Usa herramientas gratis antes de actualizar — luego mide el aumento de citas en Pilot.",
+    "compareLink": "Cómo se compara CitePilot con herramientas SEO tradicionales →",
+    "citationChecker": "Comprobador de citas",
+    "gapCalculator": "Calculadora de brecha",
+    "agencyFleet": "Agencia y Fleet"
+  },
+  "pricing": {
+    "toggleAriaLabel": "Intervalo de facturación",
+    "monthly": "Mensual",
+    "annual": "Anual",
+    "save20": "Ahorra 20%",
+    "periodMo": "/mes",
+    "mostPopular": "Más popular",
+    "audit": {
+      "name": "Auditoría",
+      "price": "Gratis",
+      "description": "Instantánea de citas única para tu dominio.",
+      "feature0": "Hasta 10 consultas clave",
+      "feature1": "8 plataformas IA (en vivo + estimadas)",
+      "feature2": "Resumen de brechas y menciones de competidores",
+      "feature3": "Enlace de informe compartible",
+      "cta": "Ejecutar auditoría gratis",
+      "footnote": "Las auditorías gratis son instantáneas únicas. Actualiza a Pilot para reescaneos semanales."
+    },
+    "pilot": {
+      "name": "Pilot",
+      "price": "$79",
+      "annualPrice": "$63",
+      "annualNote": "facturado anualmente como $756/año",
+      "description": "Para fundadores y equipos pequeños que publican semanalmente.",
+      "feature0": "25 consultas monitorizadas",
+      "feature1": "Plan de acción semanal priorizado",
+      "feature2": "Seguimiento de delta de citas",
+      "feature3": "Alertas por email sobre movimientos de competidores",
+      "feature4": "CitePilot Insights (prioriza correcciones y explica brechas)",
+      "feature5": "Publicación CMS (Webflow, WordPress, Ghost, Shopify, Framer)",
+      "cta": "Suscribirse a Pilot"
+    },
+    "fleet": {
+      "name": "Fleet",
+      "price": "$249",
+      "annualPrice": "$199",
+      "annualNote": "facturado anualmente como $2.388/año",
+      "description": "Para agencias que gestionan múltiples marcas.",
+      "feature0": "Espacios de clientes ilimitados",
+      "feature1": "Informes de auditoría white-label",
+      "feature2": "Exportación JSON + claves API",
+      "feature3": "Importación masiva CSV de consultas",
+      "feature4": "Soporte prioritario",
+      "cta": "Suscribirse a Fleet"
+    },
+    "promptCount": "{count, plural, one {# consulta clave} other {# consultas clave}}"
+  },
+  "agency": {
+    "heroEyebrow": "Fleet · $249/mes",
+    "heroTitle": "Prueba de citas para cada cliente. Un espacio por marca.",
+    "heroDescription": "Ejecuta auditorías GEO ilimitadas, entrega informes white-label y muestra a los clientes exactamente dónde la IA les cita — en ChatGPT, Perplexity y Google AI.",
+    "heroCta": "Empezar con Fleet →",
+    "heroApiDocs": "Documentación API Fleet",
+    "problemTitle": "Tus clientes preguntan sobre búsqueda IA. Aún no tienes respuesta.",
+    "problem0": "No puedes monitorizar citas de 10+ clientes en una hoja de cálculo",
+    "problem1": "Los informes de clientes no muestran visibilidad IA — deberían",
+    "problem2": "Los competidores ya ofrecen GEO como servicio",
+    "featuresTitle": "Diseñado para agencias en Fleet",
+    "featuresSub": "Todo lo que necesitas para productizar GEO — sin construir tu propia infraestructura de citas.",
+    "featureWorkspacesTitle": "Espacios de clientes ilimitados",
+    "featureWorkspacesBody": "Un inicio de sesión, todas las marcas — auditorías, consultas e historial separados por cliente.",
+    "featureWhitelabelTitle": "Informes de auditoría white-label",
+    "featureWhitelabelBody": "Tu logo, tu nombre de agencia en enlaces compartidos y PDFs de prueba — no el nuestro.",
+    "featureCsvTitle": "Importación masiva CSV de consultas",
+    "featureCsvBody": "Incorpora un nuevo cliente en minutos con una lista de consultas, no entrada manual.",
+    "featureApiTitle": "Exportación JSON + claves API",
+    "featureApiBody": "Conecta datos de citas a tu stack de informes, Looker o portales de clientes.",
+    "featureSupportTitle": "Soporte prioritario",
+    "featureSupportBody": "Cuando un cliente espera un informe, respondemos como si tu equipo dependiera de ello.",
+    "workflowTitle": "Cómo usan CitePilot las agencias",
+    "workflow1Title": "Incorpora un nuevo cliente en menos de 5 minutos",
+    "workflow1Body": "Crea un espacio, importa consultas clave desde CSV y define competidores.",
+    "workflow2Title": "Entrega una línea base de citas en 60 segundos",
+    "workflow2Body": "Ejecuta una auditoría completa y comparte un enlace de informe white-label que el cliente puede abrir.",
+    "workflow3Title": "Muestra el aumento de citas en tu informe mensual",
+    "workflow3Body": "Compara puntuaciones antes/después, exporta datos de prueba y demuestra el ROI de GEO.",
+    "testimonialsTitle": "Agencias que ya implementan con CitePilot",
+    "pricingLabel": "Plan Fleet",
+    "pricingTagline": "Espacios ilimitados, informes white-label, acceso API",
+    "pricingFeature0": "✓ Espacios de clientes ilimitados",
+    "pricingFeature1": "✓ Enlaces compartibles y PDFs white-label",
+    "pricingFeature2": "✓ Claves API Fleet + exportación JSON",
+    "pricingFeature3": "✓ Importación masiva CSV de consultas",
+    "pricingFeature4": "✓ Soporte prioritario",
+    "pricingCta": "Empezar Fleet hoy →",
+    "faqTitle": "FAQ para agencias",
+    "faq0q": "¿Pueden los clientes iniciar sesión directamente?",
+    "faq0a": "Sí. Puedes gestionar todo desde tu cuenta de agencia o compartir enlaces de auditoría de solo lectura sin login. Los logins específicos por cliente están en nuestro roadmap — la mayoría de agencias entregan vía enlaces white-label hoy.",
+    "faq1q": "¿Puedo white-label el panel, no solo los informes?",
+    "faq1a": "Fleet white-label los enlaces de auditoría y exportaciones PDF con el nombre y logo de tu agencia. White-label completo del panel disponible bajo solicitud para cuentas multi-asiento — email hello@getcitepilot.com.",
+    "faq2q": "¿Hay tarifa de configuración?",
+    "faq2a": "Sin tarifa de configuración. Fleet es $249/mes con espacios ilimitados. Empieza con un espacio de cliente y escala al añadir marcas.",
+    "faq3q": "¿Puedo facturar por invoice en lugar de tarjeta?",
+    "faq3a": "Facturación anual Fleet por invoice disponible para agencias con términos de 12 meses. Contacta hello@getcitepilot.com con los datos de tu empresa.",
+    "faq4q": "¿Tienen un programa de partners para agencias?",
+    "faq4a": "Estamos construyendo un nivel partner con co-marketing y créditos de referidos para agencias que revenden auditorías GEO. Únete a la lista de espera enviando email a hello@getcitepilot.com con \"Agency partner\" en el asunto.",
+    "footerCtaTitle": "¿Listo para añadir GEO a tus servicios de agencia?",
+    "footerCtaPrimary": "Iniciar prueba gratis Fleet",
+    "footerCtaSecondary": "Reservar demo"
+  },
+  "metadata": {
+    "homeTitle": "CitePilot | Plataforma de Optimización para Motores Generativos (GEO)",
+    "homeDescription": "CitePilot es la plataforma B2B líder para auditar, rastrear y optimizar citas de marca en ChatGPT y Perplexity, con las mejores alternativas al GEO manual.",
+    "pricingTitle": "Precios de monitorización GEO y citas en IA",
+    "pricingDescription": "Empieza gratis. Escala cuando las citas se muevan. Compara planes Free, Pilot y Fleet para monitorización de citas GEO en ChatGPT, Perplexity y Google AI.",
+    "agencyTitle": "GEO para agencias — plan Fleet",
+    "agencyDescription": "Espacios de clientes ilimitados, informes white-label y prueba de citas para agencias que implementan servicios GEO en ChatGPT y Perplexity."
+  }
+}

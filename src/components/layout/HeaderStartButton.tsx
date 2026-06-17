@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { nav } from "@/lib/site";
+import { useTranslations } from "next-intl";
 
 function ArrowIcon({ className = "" }: { className?: string }) {
   return (
@@ -19,12 +21,13 @@ function ArrowIcon({ className = "" }: { className?: string }) {
 }
 
 export function HeaderStartButton({ onDark }: { onDark: boolean }) {
-  const label = nav.startAnalysis.label;
+  const t = useTranslations("nav");
+  const label = t("startAnalysis");
 
   if (onDark) {
     return (
       <Link
-        href={nav.startAnalysis.href}
+        href="/start"
         className="group relative shrink-0 rounded-full p-[1px] transition-transform duration-300 hover:scale-[1.03] active:scale-[0.98]"
       >
         <span
@@ -47,7 +50,7 @@ export function HeaderStartButton({ onDark }: { onDark: boolean }) {
 
   return (
     <Link
-      href={nav.startAnalysis.href}
+      href="/start"
       className="group relative inline-flex shrink-0 items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#6b8cff] via-accent to-accent-deep px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_rgba(14,165,233,0.4)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_6px_28px_rgba(14,165,233,0.5)] active:scale-[0.98] sm:gap-2.5 sm:px-5"
     >
       <span

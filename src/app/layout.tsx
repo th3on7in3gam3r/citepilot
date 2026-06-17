@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
 import { ReferralRefCapture } from "@/components/referrals/ReferralRefCapture";
@@ -89,14 +91,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${inter.variable} ${plusJakarta.variable} h-full scroll-smooth antialiased`}
     >
       <head>
@@ -113,7 +118,9 @@ export default function RootLayout({
         <AnalyticsScripts />
         <ReferralRefCapture />
         <BadgeRefCapture />
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        </AppProviders>
         <CookieConsentBanner />
       </body>
     </html>

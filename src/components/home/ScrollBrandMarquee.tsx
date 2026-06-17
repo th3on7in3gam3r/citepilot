@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { Container } from "@/components/ui/Container";
 import { scrollBrands } from "@/lib/brands";
 import { useScrollSection } from "@/hooks/useScrollSection";
+import { useTranslations } from "next-intl";
 
 /** Icon width + horizontal gap between brands — gap-12 = 48px, item w-[7.5rem] = 120px */
 const ITEM_STEP = 168;
@@ -11,6 +12,7 @@ const ITEM_STEP = 168;
 const HALF_ITEM = ITEM_STEP / 2;
 
 export function ScrollBrandMarquee() {
+  const t = useTranslations("platforms");
   const sectionRef = useRef<HTMLElement>(null);
   const progress = useScrollSection(sectionRef);
 
@@ -37,10 +39,10 @@ export function ScrollBrandMarquee() {
         <Container className="flex flex-col items-center py-16 md:py-20 lg:py-24">
           <div className="mb-10 text-center md:mb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-              Platforms &amp; ecosystems
+              {t("eyebrow")}
             </p>
             <h2 id="platforms-heading" className="font-display mt-2 text-xl font-bold text-ink md:text-2xl">
-              Monitor citations across AI platforms
+              {t("title")}
             </h2>
           </div>
 

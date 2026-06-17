@@ -3,14 +3,22 @@ import {
   formatPublicStat,
   getPublicPlatformStats,
 } from "@/lib/server/public-stats";
+import { getTranslations } from "next-intl/server";
 
 export async function SocialProofStats() {
+  const t = await getTranslations("socialProof");
   const { domainsAudited, citationsTracked } = await getPublicPlatformStats();
 
   const items = [
-    { value: formatPublicStat(domainsAudited), label: "domains audited" },
-    { value: formatPublicStat(citationsTracked), label: "citations tracked" },
-    { value: "8", label: "AI platforms monitored" },
+    {
+      value: formatPublicStat(domainsAudited),
+      label: t("domainsAudited"),
+    },
+    {
+      value: formatPublicStat(citationsTracked),
+      label: t("citationsTracked"),
+    },
+    { value: "8", label: t("platformsMonitored") },
   ] as const;
 
   return (
@@ -20,7 +28,7 @@ export async function SocialProofStats() {
     >
       <Container>
         <h2 id="social-proof-heading" className="sr-only">
-          CitePilot platform stats
+          {t("heading")}
         </h2>
         <ul className="flex flex-col divide-y divide-border md:flex-row md:items-center md:divide-x md:divide-y-0">
           {items.map((stat) => (

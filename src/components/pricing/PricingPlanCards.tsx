@@ -5,29 +5,37 @@ import type { BillingInterval } from "@/lib/billing/types";
 import { PricingTierActions } from "@/components/billing/PricingTierActions";
 import { FEATURE_FLAGS } from "@/lib/analytics/feature-flags";
 import { useFeatureFlagVariant } from "@/hooks/useFeatureFlagVariant";
-import { pricingTiers } from "@/lib/content";
+import { useTranslations } from "next-intl";
 
-const ANNUAL_PRICES: Record<string, { price: string; note: string }> = {
-  Pilot: { price: "$63", note: "billed annually as $756/yr" },
-  Fleet: { price: "$199", note: "billed annually as $2,388/yr" },
+type TierKey = "audit" | "pilot" | "fleet";
+
+type Tier = {
+  key: TierKey;
+  price: string;
+  annualPrice: string;
+  annualNote: string;
+  href: string;
+  highlighted: boolean;
+  featureCount: number;
 };
 
-type Tier = (typeof pricingTiers)[number];
-
 function displayPrice(
-  tierName: string,
-  monthlyPrice: string,
+  tier: Tier,
   interval: BillingInterval,
+  t: ReturnType<typeof useTranslations<"pricing">>,
 ): { price: string; period: string; note?: string } {
-  if (interval === "annual" && ANNUAL_PRICES[tierName]) {
-    const annual = ANNUAL_PRICES[tierName]!;
+  const name = t(`${tier.key}.name`);
+  if (interval === "annual" && tier.key !== "audit") {
     return {
-      price: annual.price,
-      period: "/mo",
-      note: annual.note,
+      price: t(`${tier.key}.annualPrice`),
+      period: t("periodMo"),
+      note: t(`${tier.key}.annualNote`),
     };
   }
-  return { price: monthlyPrice, period: tierName === "Audit" ? "" : "/mo" };
+  return {
+    price: tier.key === "audit" ? t("audit.price") : tier.price,
+    period: tier.key === "audit" ? "" : t("periodMo"),
+  };
 }
 
 function AnimatedPrice({
@@ -73,12 +81,14 @@ function BillingIntervalToggle({
   interval: BillingInterval;
   onChange: (interval: BillingInterval) => void;
 }) {
+  const t = useTranslations("pricing");
+
   return (
     <div className="mt-8 flex flex-col items-center gap-3">
       <div
         className="inline-flex rounded-full border border-border bg-surface p-1 dark:border-white/15 dark:bg-white/[0.04]"
         role="group"
-        aria-label="Billing interval"
+        aria-label={t("toggleAriaLabel")}
       >
         <button
           type="button"
@@ -89,7 +99,7 @@ function BillingIntervalToggle({
               : "text-muted hover:text-foreground dark:text-white/65 dark:hover:text-white"
           }`}
         >
-          Monthly
+          {t("monthly")}
         </button>
         <button
           type="button"
@@ -100,8 +110,8 @@ function BillingIntervalToggle({
               : "text-muted hover:text-foreground dark:text-white/65 dark:hover:text-white"
           }`}
         >
-          Annual
-          <span className="ml-1.5 text-xs font-bold text-mint">Save 20%</span>
+          {t("annual")}
+          <span className="ml-1.5 text-xs font-bold text-mint">{t("save20")}</span>
         </button>
       </div>
     </div>
@@ -119,9 +129,13 @@ function TierCard({
   abVariant: string;
   prominent?: boolean;
 }) {
-  const shown = displayPrice(tier.name, tier.price, interval);
-  const isPilot = tier.name === "Pilot";
-  const isFree = tier.name === "Audit";
+  const t = useTranslations("pricing");
+  const shown = displayPrice(tier, interval, t);
+  const isPilot = tier.key === "pilot";
+  const isFree = tier.key === "audit";
+  const features = Array.from({ length: tier.featureCount }, (_, i) =>
+    t(`${tier.key}.feature${i}` as "audit.feature0"),
+  );
 
   return (
     <article
@@ -133,7 +147,7 @@ function TierCard({
     >
       {isPilot && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-accent/40 bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_0_20px_rgba(14,165,233,0.35)]">
-          Most popular
+          {t("mostPopular")}
         </span>
       )}
 
@@ -142,7 +156,7 @@ function TierCard({
           prominent ? "text-2xl" : "text-lg"
         }`}
       >
-        {tier.name}
+        {t(`${tier.key}.name`)}
       </h3>
 
       <AnimatedPrice
@@ -168,10 +182,10 @@ function TierCard({
             : "text-muted dark:text-white/55"
         } ${prominent ? "md:text-base" : ""}`}
       >
-        {tier.description}
+        {t(`${tier.key}.description`)}
       </p>
       <ul className={`mt-8 flex-1 space-y-4 ${prominent ? "md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-4" : ""}`}>
-        {tier.features.map((f) => (
+        {features.map((f) => (
           <li
             key={f}
             className={`flex gap-3 text-sm leading-relaxed ${
@@ -187,24 +201,52 @@ function TierCard({
       </ul>
       <div className={`w-full ${prominent ? "mt-10 max-w-md" : "mt-10"}`}>
         <PricingTierActions
-          tierName={tier.name}
+          tierName={t(`${tier.key}.name`)}
           href={tier.href}
-          cta={tier.cta}
+          cta={t(`${tier.key}.cta`)}
           billingInterval={interval}
           abVariant={abVariant}
-          variant={
-            tier.highlighted ? "dark" : isFree ? "accent" : "primary"
-          }
+          variant={tier.highlighted ? "dark" : isFree ? "accent" : "primary"}
         />
       </div>
       {isFree && (
         <p className="mt-4 text-center text-xs leading-relaxed text-muted dark:text-white/45">
-          Free audits are one-time snapshots. Upgrade to Pilot for weekly rescans.
+          {t("audit.footnote")}
         </p>
       )}
     </article>
   );
 }
+
+const TIERS: Tier[] = [
+  {
+    key: "audit",
+    price: "Free",
+    annualPrice: "",
+    annualNote: "",
+    href: "/audit",
+    highlighted: false,
+    featureCount: 4,
+  },
+  {
+    key: "pilot",
+    price: "$79",
+    annualPrice: "$63",
+    annualNote: "",
+    href: "/start",
+    highlighted: true,
+    featureCount: 6,
+  },
+  {
+    key: "fleet",
+    price: "$249",
+    annualPrice: "$199",
+    annualNote: "",
+    href: "/start?plan=fleet",
+    highlighted: false,
+    featureCount: 5,
+  },
+];
 
 export function PricingPlanCards({
   initialLayoutVariant,
@@ -218,8 +260,8 @@ export function PricingPlanCards({
   });
   const isPilotFocus = layoutVariant === "variant_a";
 
-  const pilotTier = pricingTiers.find((t) => t.name === "Pilot");
-  const otherTiers = pricingTiers.filter((t) => t.name !== "Pilot");
+  const pilotTier = TIERS.find((t) => t.key === "pilot");
+  const otherTiers = TIERS.filter((t) => t.key !== "pilot");
 
   return (
     <>
@@ -236,7 +278,7 @@ export function PricingPlanCards({
           <div className="grid gap-6 sm:grid-cols-2">
             {otherTiers.map((tier) => (
               <TierCard
-                key={tier.name}
+                key={tier.key}
                 tier={tier}
                 interval={interval}
                 abVariant={layoutVariant}
@@ -246,9 +288,9 @@ export function PricingPlanCards({
         </div>
       ) : (
         <div className="mt-10 grid gap-8 pt-2 lg:grid-cols-3 lg:gap-6">
-          {pricingTiers.map((tier) => (
+          {TIERS.map((tier) => (
             <TierCard
-              key={tier.name}
+              key={tier.key}
               tier={tier}
               interval={interval}
               abVariant={layoutVariant}

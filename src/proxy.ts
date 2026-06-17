@@ -4,6 +4,7 @@ import { auth, getRealSessionUser, isNeonAuthEnabled } from "@/lib/auth/server";
 import { checkAdminEmailAccess, isAdminApiPublic } from "@/lib/admin-auth";
 import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
+import { intlMiddleware, shouldRunIntl } from "@/lib/i18n/intl-proxy";
 
 const dashboardAuthProxy =
   isNeonAuthEnabled() && auth
@@ -91,9 +92,12 @@ async function handleShortReportPath(request: NextRequest): Promise<NextResponse
   return NextResponse.rewrite(rewriteUrl);
 }
 
-async function handleProxy(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest) {
+  const corsResponse = resolveApiCors(request);
+  if (corsResponse) return corsResponse;
+
   const shortReport = await handleShortReportPath(request);
-  if (shortReport) return shortReport;
+  if (shortReport) return withApiCorsHeaders(request, shortReport);
 
   const { pathname } = request.nextUrl;
   const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
@@ -119,7 +123,6 @@ async function handleProxy(request: NextRequest): Promise<NextResponse> {
     dashboardAuthProxy &&
     (hasOAuthVerifier || pathname === "/dashboard" || pathname.startsWith("/dashboard/"))
   ) {
-    // OAuth verifier must not land on sign-in; exchange only runs on protected routes.
     if (
       hasOAuthVerifier &&
       (pathname.startsWith("/auth/sign-in") || pathname.startsWith("/auth/sign-up"))
@@ -130,7 +133,6 @@ async function handleProxy(request: NextRequest): Promise<NextResponse> {
       });
       return NextResponse.redirect(dashboard);
     }
-    // Let crawlers and signed-out visitors read server-rendered hub SEO copy.
     if (
       request.method === "GET" &&
       !hasOAuthVerifier &&
@@ -141,15 +143,11 @@ async function handleProxy(request: NextRequest): Promise<NextResponse> {
     return dashboardAuthProxy(request);
   }
 
-  return NextResponse.next();
-}
+  if (shouldRunIntl(pathname)) {
+    return withApiCorsHeaders(request, intlMiddleware(request));
+  }
 
-export async function proxy(request: NextRequest) {
-  const corsResponse = resolveApiCors(request);
-  if (corsResponse) return corsResponse;
-
-  const response = await handleProxy(request);
-  return withApiCorsHeaders(request, response);
+  return withApiCorsHeaders(request, NextResponse.next());
 }
 
 export const config = {
@@ -162,5 +160,6 @@ export const config = {
     "/auth/sign-in",
     "/auth/sign-up",
     "/r/:path*",
+    "/((?!api|dashboard|auth|admin|geo|report|_next|_vercel|.*\\..*).*)",
   ],
 };

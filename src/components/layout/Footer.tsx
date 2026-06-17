@@ -2,7 +2,9 @@ import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { nav, site } from "@/lib/site";
+import { localizedHref } from "@/lib/i18n/localized-href";
+import { site } from "@/lib/site";
+import { getLocale, getTranslations } from "next-intl/server";
 
 type FooterLink = { label: string; href: string };
 
@@ -44,8 +46,50 @@ function FooterLinks({ links }: { links: readonly FooterLink[] }) {
   );
 }
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear();
+  const t = await getTranslations("footer");
+  const locale = await getLocale();
+  const lh = (path: string) => localizedHref(locale, path);
+
+  const productLinks: FooterLink[] = [
+    { label: t("howItWorks"), href: `${lh("/")}#journey` },
+    { label: t("features"), href: "/product" },
+    { label: t("pricing"), href: lh("/pricing") },
+    { label: t("dashboard"), href: "/dashboard" },
+  ];
+
+  const toolsLinks: FooterLink[] = [
+    { label: t("citationChecker"), href: "/tools/citation-checker" },
+    { label: t("citationAudit"), href: "/audit" },
+    { label: t("gapCalculator"), href: "/tools/citation-gap-calculator" },
+    { label: t("geoPlaybook"), href: "/tools/geo-playbook" },
+    { label: t("chromeExtension"), href: "/chrome-extension" },
+    { label: t("startAnalysis"), href: "/start" },
+  ];
+
+  const compareLinks: FooterLink[] = [
+    { label: t("vsSemrush"), href: "/compare/semrush" },
+    { label: t("vsAhrefs"), href: "/compare/ahrefs" },
+    { label: t("vsMoz"), href: "/compare/moz" },
+    { label: t("vsBrightEdge"), href: "/compare/brightedge" },
+    { label: t("vsConductor"), href: "/compare/conductor" },
+  ];
+
+  const learnLinks: FooterLink[] = [
+    { label: t("geoPlaybook"), href: "/tools/geo-playbook" },
+    { label: t("chatgptPrompts"), href: "/chatgpt-prompts" },
+    { label: t("aiVisibility"), href: "/ai-visibility" },
+    { label: t("blog"), href: "/blog" },
+    { label: t("cmsPublishing"), href: "/help/cms-publishing" },
+  ];
+
+  const companyLinks: FooterLink[] = [
+    { label: t("systemStatus"), href: "/status" },
+    { label: t("changelog"), href: "/changelog" },
+    { label: t("apiDocs"), href: "/docs/api" },
+    { label: t("agencies"), href: lh("/agency") },
+  ];
 
   return (
     <footer className="mt-auto border-t border-border bg-surface text-ink dark:border-[#222] dark:bg-ink dark:text-white">
@@ -54,14 +98,14 @@ export function Footer() {
           <div className="sm:col-span-2 lg:col-span-2">
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted dark:text-white/55">
-              {site.tagline}
+              {t("tagline")}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
-                href={nav.cta.href}
+                href="/audit"
                 className="inline-flex items-center justify-center rounded-full border border-accent/60 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
-                {nav.cta.label}
+                {t("freeCitationAudit")}
               </Link>
               <a
                 href={`mailto:${site.supportEmail}`}
@@ -72,44 +116,44 @@ export function Footer() {
             </div>
           </div>
 
-          <FooterColumn title="Product">
-            <FooterLinks links={nav.footer.product} />
+          <FooterColumn title={t("columns.product")}>
+            <FooterLinks links={productLinks} />
           </FooterColumn>
 
-          <FooterColumn title="Tools">
-            <FooterLinks links={nav.footer.tools} />
+          <FooterColumn title={t("columns.tools")}>
+            <FooterLinks links={toolsLinks} />
           </FooterColumn>
 
-          <FooterColumn title="Compare">
-            <FooterLinks links={nav.footer.compare} />
+          <FooterColumn title={t("columns.compare")}>
+            <FooterLinks links={compareLinks} />
           </FooterColumn>
 
-          <FooterColumn title="Learn">
-            <FooterLinks links={nav.footer.learn} />
+          <FooterColumn title={t("columns.learn")}>
+            <FooterLinks links={learnLinks} />
           </FooterColumn>
 
-          <FooterColumn title="Company">
-            <FooterLinks links={nav.footer.company} />
+          <FooterColumn title={t("columns.company")}>
+            <FooterLinks links={companyLinks} />
           </FooterColumn>
         </div>
 
         <div className="mt-10 flex flex-col gap-4 border-t border-border pt-7 text-sm text-muted dark:border-white/10 dark:text-white/55 md:flex-row md:items-center md:justify-between">
-          <p>© {year} {site.name}</p>
+          <p>{t("copyright", { year, siteName: site.name })}</p>
           <nav
             className="flex flex-wrap items-center gap-x-5 gap-y-2"
-            aria-label="Legal"
+            aria-label={t("legalAriaLabel")}
           >
             <Link
               href="/terms"
               className="transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:hover:text-white/70"
             >
-              Terms of Service
+              {t("terms")}
             </Link>
             <Link
               href="/privacy"
               className="transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:hover:text-white/70"
             >
-              Privacy Policy
+              {t("privacy")}
             </Link>
           </nav>
         </div>

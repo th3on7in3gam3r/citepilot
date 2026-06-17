@@ -1,9 +1,14 @@
 import { PillButton } from "@/components/ui/PillButton";
 import { ProductCTA } from "@/components/ui/ProductCTA";
 import { Container } from "@/components/ui/Container";
-import { nav, site } from "@/lib/site";
+import { localizedHref } from "@/lib/i18n/localized-href";
+import { site } from "@/lib/site";
+import { getLocale, getTranslations } from "next-intl/server";
 
-export function BottomCTA() {
+export async function BottomCTA() {
+  const t = await getTranslations("bottomCta");
+  const locale = await getLocale();
+
   return (
     <section
       className="relative overflow-hidden bg-ink py-24 text-white dark:bg-[#050505] md:py-32 lg:py-36"
@@ -19,25 +24,24 @@ export function BottomCTA() {
       />
       <Container className="relative text-center">
         <h2 id="bottom-cta-heading" className="font-display text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-          Start {site.name} today
+          {t("heading", { siteName: site.name })}
         </h2>
         <p className="mx-auto mt-6 max-w-lg text-lg leading-relaxed text-white/65 md:mt-8">
-          Run your free citation audit. No credit card. See where AI answers
-          mention you — and where they don&apos;t.
+          {t("body")}
         </p>
         <div className="mt-12 flex flex-col items-center justify-center gap-5 sm:flex-row md:mt-14">
-          <PillButton href={nav.startAnalysis.href} variant="light" size="lg">
-            {nav.startAnalysis.label}
+          <PillButton href="/start" variant="light" size="lg">
+            {t("primary")}
           </PillButton>
-          <ProductCTA href="/audit" variant="outline-light" sublabel="Skip setup">
-            Quick audit
+          <ProductCTA href="/audit" variant="outline-light" sublabel={t("quickAuditSublabel")}>
+            {t("quickAudit")}
           </ProductCTA>
           <ProductCTA
-            href="/pricing"
+            href={localizedHref(locale, "/pricing")}
             variant="outline-light"
-            sublabel="Pilot & Fleet plans"
+            sublabel={t("pricingSublabel")}
           >
-            View pricing
+            {t("pricing")}
           </ProductCTA>
         </div>
       </Container>

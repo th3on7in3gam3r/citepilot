@@ -1,10 +1,12 @@
 "use client";
 
 import { authClient } from "@/lib/auth/client";
-import { nav } from "@/lib/site";
 import { Logo } from "@/components/ui/Logo";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { Link as LocaleLink } from "@/i18n/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -45,6 +47,7 @@ function CloseIcon() {
 
 export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -134,61 +137,78 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
               className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
               aria-label="Main navigation"
             >
-              {nav.main.map((item) => {
-                if ("children" in item && item.children) {
-                  return (
-                    <div key={item.label} className="mb-2">
-                      <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                        {item.label}
-                      </p>
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setOpen(false)}
-                          className="flex min-h-[44px] flex-col justify-center rounded-xl px-3 py-2.5 transition hover:bg-surface"
-                        >
-                          <span className="block text-sm font-semibold text-ink">
-                            {child.label}
-                          </span>
-                          {child.description && (
-                            <span className="mt-0.5 block text-xs text-muted">
-                              {child.description}
-                            </span>
-                          )}
-                        </Link>
-                      ))}
-                    </div>
-                  );
-                }
+              <LocaleLink
+                href="/#journey"
+                onClick={() => setOpen(false)}
+                className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+              >
+                {t("howItWorks")}
+              </LocaleLink>
+              <Link
+                href="/product"
+                onClick={() => setOpen(false)}
+                className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+              >
+                {t("product")}
+              </Link>
 
-                return (
+              <div className="mb-2">
+                <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  {t("freeTools")}
+                </p>
+                {[
+                  { label: t("tools.citationChecker"), href: "/tools/citation-checker", description: t("tools.citationCheckerDesc") },
+                  { label: t("tools.fullAudit"), href: "/audit", description: t("tools.fullAuditDesc") },
+                  { label: t("tools.gapCalculator"), href: "/tools/citation-gap-calculator", description: t("tools.gapCalculatorDesc") },
+                  { label: t("tools.geoPlaybook"), href: "/tools/geo-playbook", description: t("tools.geoPlaybookDesc") },
+                  { label: t("tools.chromeExtension"), href: "/chrome-extension", description: t("tools.chromeExtensionDesc") },
+                ].map((child) => (
                   <Link
-                    key={item.href}
-                    href={item.href}
+                    key={child.href}
+                    href={child.href}
                     onClick={() => setOpen(false)}
-                    className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+                    className="flex min-h-[44px] flex-col justify-center rounded-xl px-3 py-2.5 transition hover:bg-surface"
                   >
-                    {item.label}
+                    <span className="block text-sm font-semibold text-ink">{child.label}</span>
+                    {child.description && (
+                      <span className="mt-0.5 block text-xs text-muted">{child.description}</span>
+                    )}
                   </Link>
-                );
-              })}
+                ))}
+              </div>
+
+              <LocaleLink
+                href="/agency"
+                onClick={() => setOpen(false)}
+                className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+              >
+                {t("agencies")}
+              </LocaleLink>
+              <LocaleLink
+                href="/pricing"
+                onClick={() => setOpen(false)}
+                className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+              >
+                {t("pricing")}
+              </LocaleLink>
 
               <div className="my-2 border-t border-border" />
 
-              {nav.secondary.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              <Link href="/blog" onClick={() => setOpen(false)} className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink">
+                {t("blog")}
+              </Link>
+              <Link href="/feedback" onClick={() => setOpen(false)} className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink">
+                {t("suggestFeature")}
+              </Link>
+              <Link href="/tools/geo-playbook" onClick={() => setOpen(false)} className="flex min-h-[44px] items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink">
+                {t("geoPlaybook")}
+              </Link>
             </nav>
 
             <div className="shrink-0 space-y-2 border-t border-border px-4 py-4">
+              <div className="pb-2 md:hidden">
+                <LanguageSwitcher />
+              </div>
               {signedIn ? (
                 <Link
                   href="/dashboard"
@@ -207,18 +227,18 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
                 </Link>
               )}
               <Link
-                href={nav.startAnalysis.href}
+                href="/start"
                 onClick={() => setOpen(false)}
                 className="block rounded-full bg-gradient-to-r from-[#6b8cff] via-accent to-accent-deep px-4 py-3 text-center text-sm font-semibold text-white shadow-[0_4px_16px_rgba(14,165,233,0.35)]"
               >
-                {nav.startAnalysis.label}
+                {t("startAnalysis")}
               </Link>
               <Link
-                href={nav.cta.href}
+                href="/audit"
                 onClick={() => setOpen(false)}
                 className="block rounded-xl px-4 py-2 text-center text-sm font-medium text-accent transition hover:text-accent-deep"
               >
-                {nav.cta.label}
+                {t("freeCitationAudit")}
               </Link>
             </div>
           </aside>
