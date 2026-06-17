@@ -119,7 +119,9 @@ export default async function RootLayout({
         <ReferralRefCapture />
         <BadgeRefCapture />
         <AppProviders>
-          <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            {children}
+          </NextIntlClientProvider>
         </AppProviders>
         <CookieConsentBanner />
       </body>

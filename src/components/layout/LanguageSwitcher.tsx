@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { localizedPathnames, type AppLocale, routing } from "@/i18n/routing";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 
 const LOCALE_FLAGS: Record<AppLocale, string> = {
   en: "🇺🇸",
@@ -13,18 +13,13 @@ const LOCALE_FLAGS: Record<AppLocale, string> = {
 export function LanguageSwitcher({ onDark = false }: { onDark?: boolean }) {
   const locale = useLocale() as AppLocale;
   const pathname = usePathname();
-  const router = useRouter();
   const t = useTranslations("languageSwitcher");
 
   const isLocalized =
     pathname === "/" ||
     localizedPathnames.some((p) => p !== "/" && pathname === p);
 
-  function switchLocale(next: AppLocale) {
-    if (next === locale) return;
-    const target = isLocalized ? pathname : "/";
-    router.replace(target, { locale: next });
-  }
+  const target = isLocalized ? pathname : "/";
 
   return (
     <div
@@ -35,10 +30,10 @@ export function LanguageSwitcher({ onDark = false }: { onDark?: boolean }) {
       {routing.locales.map((code) => {
         const active = code === locale;
         return (
-          <button
+          <Link
             key={code}
-            type="button"
-            onClick={() => switchLocale(code)}
+            href={target}
+            locale={code}
             aria-current={active ? "true" : undefined}
             className={`rounded-full px-2.5 py-1 transition ${
               active
@@ -50,7 +45,7 @@ export function LanguageSwitcher({ onDark = false }: { onDark?: boolean }) {
           >
             <span aria-hidden>{LOCALE_FLAGS[code]}</span>{" "}
             <span className="uppercase">{code}</span>
-          </button>
+          </Link>
         );
       })}
     </div>
