@@ -12,7 +12,7 @@ import {
   type WhiteLabelPreviewState,
 } from "@/lib/white-label/types";
 import { normalizePrimaryColor, logoSrcForWorkspace } from "@/lib/white-label/theme";
-import { cnameDnsHost } from "@/lib/white-label/domains";
+import { cnameDnsHost } from "@/lib/white-label/dns-guide";
 
 const inputClass =
   "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-[#333] dark:bg-[#141414]";
