@@ -27,6 +27,26 @@ export function normalizeReportDomain(raw: string): string {
     .replace(/\.$/, "");
 }
 
+/** Host / Name field for a CNAME at common DNS providers (Cloudflare, GoDaddy, etc.). */
+export function cnameDnsHost(customDomain: string): {
+  host: string;
+  zone: string;
+  fullDomain: string;
+  isApex: boolean;
+} {
+  const fullDomain = normalizeReportDomain(customDomain) || "reports.youragency.com";
+  const parts = fullDomain.split(".").filter(Boolean);
+
+  if (parts.length <= 2) {
+    const zone = fullDomain;
+    return { host: "@", zone, fullDomain, isApex: true };
+  }
+
+  const zone = parts.slice(-2).join(".");
+  const host = parts.slice(0, -2).join(".");
+  return { host, zone, fullDomain, isApex: false };
+}
+
 export async function verifyReportDomainCname(domain: string): Promise<{
   ok: boolean;
   target: string;

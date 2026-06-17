@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { userHasFleetAccess } from "@/lib/billing/access";
 import {
-  ALLOWED_LOGO_MIME,
   getStoredLogo,
   MAX_LOGO_BYTES,
+  resolveLogoMime,
   saveStoredLogo,
 } from "@/lib/white-label/logo-store";
 import { getWorkspaceById } from "@/lib/server/workspace";
@@ -60,21 +60,22 @@ export const POST = withApiLogging(async function POST(request: Request) {
     return NextResponse.json({ error: "logo file required" }, { status: 400 });
   }
 
-  if (!ALLOWED_LOGO_MIME.has(file.type)) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const mimeType = resolveLogoMime(file, buffer);
+  if (!mimeType) {
     return NextResponse.json(
       { error: "Logo must be PNG or SVG (max 500KB)" },
       { status: 400 },
     );
   }
 
-  if (file.size > MAX_LOGO_BYTES) {
+  if (buffer.byteLength > MAX_LOGO_BYTES) {
     return NextResponse.json({ error: "Logo must be 500KB or smaller" }, { status: 400 });
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
   const saved = await saveStoredLogo({
     workspaceId,
-    mimeType: file.type,
+    mimeType,
     buffer,
   });
 

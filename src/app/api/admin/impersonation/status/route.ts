@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export const GET = withApiLogging(async function GET(request: Request) {
   const real = await getRealSessionUser(request);
   if (!real || !isAdminEmail(real.email)) {
-    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+    return NextResponse.json({ active: false });
   }
 
   const impersonation = await readImpersonationCookie(request);

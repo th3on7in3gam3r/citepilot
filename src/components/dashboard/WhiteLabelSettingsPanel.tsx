@@ -11,7 +11,8 @@ import {
   WHITE_LABEL_PREVIEW_KEY,
   type WhiteLabelPreviewState,
 } from "@/lib/white-label/types";
-import { normalizePrimaryColor } from "@/lib/white-label/theme";
+import { normalizePrimaryColor, logoSrcForWorkspace } from "@/lib/white-label/theme";
+import { cnameDnsHost } from "@/lib/white-label/domains";
 
 const inputClass =
   "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-[#333] dark:bg-[#141414]";
@@ -110,6 +111,15 @@ export function WhiteLabelSettingsPanel({
     if (!draftOnly) onPreferencesChange(next, "White label settings saved.");
   }
 
+  const logoPreviewSrc = useMemo(() => {
+    const trimmed = wl.logoUrl.trim();
+    if (!trimmed) return "";
+    if (trimmed.includes("/api/white-label/logo") && !trimmed.includes("workspaceId=")) {
+      return logoSrcForWorkspace(workspaceId, "");
+    }
+    return trimmed;
+  }, [wl.logoUrl, workspaceId]);
+
   async function uploadLogo(file: File) {
     if (!isFleet) return;
     setUploading(true);
@@ -183,6 +193,11 @@ export function WhiteLabelSettingsPanel({
 
   const locked = !isFleet;
 
+  const dnsGuide = useMemo(
+    () => cnameDnsHost(wl.customReportDomain.trim() || "reports.youragency.com"),
+    [wl.customReportDomain],
+  );
+
   function openLogoUpgrade() {
     upgradeModal?.openUpgradeModal({
       feature: "white_label_logo",
@@ -240,10 +255,10 @@ export function WhiteLabelSettingsPanel({
       <div>
         <p className="text-sm font-semibold text-ink">Logo</p>
         <p className="mt-1 text-xs text-muted">PNG or SVG, max 500KB. Shown in report headers.</p>
-        {wl.logoUrl ? (
+        {logoPreviewSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={wl.logoUrl}
+            src={logoPreviewSrc}
             alt="Agency logo preview"
             className="mt-3 h-10 max-w-[200px] object-contain object-left"
           />
@@ -336,7 +351,7 @@ export function WhiteLabelSettingsPanel({
           <code className="rounded bg-background px-1">reports.youragency.com/r/abc123</code>
         </p>
         <label className="mt-3 block text-sm font-semibold text-ink">
-          Domain
+          Your custom report domain
           <input
             type="text"
             value={wl.customReportDomain}
@@ -351,13 +366,63 @@ export function WhiteLabelSettingsPanel({
             placeholder="reports.youragency.com"
             className={inputClass}
           />
+          <span className="mt-1.5 block text-xs font-normal text-muted">
+            A subdomain you own — not <code className="rounded bg-background px-1">{cnameTarget}</code>.
+            Example: <code className="rounded bg-background px-1">reports.youragency.com</code>
+          </span>
         </label>
-        <div className="mt-3 rounded-lg bg-background p-3 text-xs text-muted">
-          <p className="font-semibold text-ink">DNS setup</p>
-          <p className="mt-1">
-            Add a CNAME record: <strong>{wl.customReportDomain || "reports.youragency.com"}</strong>{" "}
-            → <strong>{cnameTarget}</strong>
+        <div className="mt-3 rounded-lg bg-background p-4 text-xs text-muted">
+          <p className="font-semibold text-ink">DNS setup tutorial</p>
+          <p className="mt-2 leading-relaxed">
+            In your DNS provider (Cloudflare, GoDaddy, Namecheap, etc.), open the zone for{" "}
+            <strong className="text-ink">{dnsGuide.zone}</strong> and add one CNAME record:
           </p>
+          <dl className="mt-3 overflow-hidden rounded-lg border border-border text-left">
+            <div className="grid grid-cols-[5.5rem_1fr] border-b border-border bg-surface/60">
+              <dt className="border-r border-border px-3 py-2 font-semibold text-ink">Name</dt>
+              <dd className="px-3 py-2 font-mono text-ink">{dnsGuide.host}</dd>
+            </div>
+            <div className="grid grid-cols-[5.5rem_1fr] border-b border-border">
+              <dt className="border-r border-border px-3 py-2 font-semibold text-ink">Type</dt>
+              <dd className="px-3 py-2 font-mono text-ink">CNAME</dd>
+            </div>
+            <div className="grid grid-cols-[5.5rem_1fr]">
+              <dt className="border-r border-border px-3 py-2 font-semibold text-ink">Value</dt>
+              <dd className="px-3 py-2 font-mono text-ink">{cnameTarget}</dd>
+            </div>
+          </dl>
+          <ul className="mt-3 list-inside list-disc space-y-1.5 leading-relaxed">
+            <li>
+              <strong className="text-ink">Name</strong> is the subdomain part only — for{" "}
+              <code className="rounded bg-surface px-1">{dnsGuide.fullDomain}</code>, enter{" "}
+              <code className="rounded bg-surface px-1">{dnsGuide.host}</code> (not the full URL).
+            </li>
+            <li>
+              Some providers label this field <strong className="text-ink">Host</strong> or{" "}
+              <strong className="text-ink">Alias</strong>; a few want the full subdomain — check
+              your provider&apos;s docs if verification fails.
+            </li>
+            <li>
+              <strong className="text-ink">Value</strong> is always{" "}
+              <code className="rounded bg-surface px-1">{cnameTarget}</code> — CitePilot&apos;s
+              report server. Do not enter your own domain here.
+            </li>
+            <li>DNS can take 5–30 minutes to propagate (sometimes up to 24 hours).</li>
+          </ul>
+          {dnsGuide.isApex && (
+            <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-amber-950">
+              Root domains (like <code>{dnsGuide.fullDomain}</code>) usually cannot use CNAME. Use a
+              subdomain such as <code>reports.{dnsGuide.zone}</code> instead.
+            </p>
+          )}
+          {wl.customReportDomain.trim().toLowerCase().replace(/\.$/, "") ===
+            cnameTarget.toLowerCase() && (
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-red-800">
+              <strong>{cnameTarget}</strong> is CitePilot&apos;s server — enter{" "}
+              <em>your</em> subdomain above (e.g. reports.youragency.com), then point it here
+              via CNAME.
+            </p>
+          )}
         </div>
         <button
           type="button"

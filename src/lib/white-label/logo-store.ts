@@ -3,6 +3,33 @@ import { dbGet, dbRun } from "@/lib/db";
 export const MAX_LOGO_BYTES = 500 * 1024;
 export const ALLOWED_LOGO_MIME = new Set(["image/png", "image/svg+xml"]);
 
+export function resolveLogoMime(file: File, buffer?: Buffer): string | null {
+  const type = file.type.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (ALLOWED_LOGO_MIME.has(type)) return type;
+
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext === "png") return "image/png";
+  if (ext === "svg") return "image/svg+xml";
+
+  if (buffer) {
+    if (
+      buffer.length >= 8 &&
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47
+    ) {
+      return "image/png";
+    }
+    const head = buffer.subarray(0, Math.min(buffer.length, 256)).toString("utf8").trim();
+    if (head.startsWith("<svg") || head.startsWith("<?xml")) {
+      return "image/svg+xml";
+    }
+  }
+
+  return null;
+}
+
 type LogoRow = {
   workspace_id: string;
   mime_type: string;

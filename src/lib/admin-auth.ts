@@ -13,7 +13,10 @@ export function adminSecretFromEnv(): string | undefined {
 }
 
 export function isAdminApiPublic(pathname: string): boolean {
-  return pathname === "/api/admin/logout";
+  return (
+    pathname === "/api/admin/logout" ||
+    pathname === "/api/admin/impersonation/status"
+  );
 }
 
 export function isAdminLoginPage(_pathname: string): boolean {
