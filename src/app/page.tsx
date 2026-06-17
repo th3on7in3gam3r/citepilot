@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { SiteJsonLd } from "@/components/marketing/SiteJsonLd";
 import { FEATURE_FLAGS } from "@/lib/analytics/feature-flags";
 import { getServerSideFlagVariant } from "@/lib/posthog-server";
+import { MainContent } from "@/components/layout/MainContent";
 import { Suspense } from "react";
 
 export default async function Home() {
@@ -17,9 +18,9 @@ export default async function Home() {
         <CancelledBanner />
       </Suspense>
       <Header light overlay />
-      <main>
+      <MainContent>
         <HomePage heroCtaVariant={heroCtaVariant} />
-      </main>
+      </MainContent>
       <Footer />
     </>
   );

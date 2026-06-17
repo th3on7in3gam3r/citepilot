@@ -31,7 +31,7 @@ export default function ChatGptPromptsPage() {
     <>
       <ChatGptPromptsJsonLd />
       <Header />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <ChatGptPromptsLanding />
       </main>
       <Footer />

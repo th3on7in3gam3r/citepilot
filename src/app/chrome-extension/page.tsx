@@ -31,7 +31,7 @@ export default function ChromeExtensionPage() {
     <>
       <ChromeExtensionInstallJsonLd />
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <MarketingDarkHero
           eyebrow="Free Chrome extension"
           title="See AI citations for any site you visit"

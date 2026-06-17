@@ -70,7 +70,11 @@ function LiftSparkline() {
 
 export function HeroProductBanner() {
   return (
-    <div className="hero-rise hero-rise-delay-3 relative mx-auto w-full max-w-4xl lg:max-w-[54rem]">
+    <div
+      className="hero-rise hero-rise-delay-3 relative mx-auto w-full max-w-4xl lg:max-w-[54rem]"
+      role="img"
+      aria-label="Product preview showing citation dashboard with live metrics across AI platforms"
+    >
       <div className="hero-stage">
         <div className="hero-stage-inner relative">
           <div className="hero-stage-spotlight" aria-hidden />
@@ -132,7 +136,7 @@ export function HeroProductBanner() {
         </div>
       </div>
 
-      <p className="mt-4 text-center text-[11px] font-medium tracking-wide text-white/45 sm:text-xs">
+      <p className="mt-4 text-center text-[11px] font-medium tracking-wide text-white/55 sm:text-xs">
         ChatGPT · Perplexity · Gemini · Grok · DeepSeek · Google AI Overviews
       </p>
     </div>

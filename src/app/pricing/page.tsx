@@ -13,6 +13,7 @@ import { pricingPageFaqItems } from "@/lib/marketing/site-faq";
 import { getServerSideFlagVariant } from "@/lib/posthog-server";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
+import { MainContent } from "@/components/layout/MainContent";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -39,7 +40,7 @@ export default async function PricingPage() {
   return (
     <>
       <Header light overlay />
-      <main className="bg-background">
+      <MainContent className="bg-background">
         <MarketingDarkHero
           eyebrow="Pricing"
           title="GEO and AI citation monitoring pricing"
@@ -179,7 +180,7 @@ export default async function PricingPage() {
             <PricingSeoIntro />
           </div>
         </Container>
-      </main>
+      </MainContent>
       <Footer />
     </>
   );

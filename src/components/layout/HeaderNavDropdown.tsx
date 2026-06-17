@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 export type NavDropdownItem = {
   label: string;
@@ -22,6 +22,7 @@ export function HeaderNavDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
@@ -31,13 +32,30 @@ export function HeaderNavDropdown({
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   return (
     <div ref={rootRef} className="relative">
       <button
         type="button"
+        id={`${menuId}-trigger`}
         aria-expanded={open}
         aria-haspopup="true"
+        aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
         className={`inline-flex items-center gap-1 text-sm font-medium transition ${
           onDark
             ? "text-white/75 hover:text-white"
@@ -61,6 +79,9 @@ export function HeaderNavDropdown({
 
       {open && (
         <div
+          id={menuId}
+          role="menu"
+          aria-labelledby={`${menuId}-trigger`}
           className={`absolute top-full left-1/2 z-50 mt-3 w-72 -translate-x-1/2 rounded-2xl border p-2 shadow-xl ${
             onDark
               ? "border-white/10 bg-[#0a101c]/95 backdrop-blur-md"
@@ -71,6 +92,7 @@ export function HeaderNavDropdown({
             <Link
               key={item.href}
               href={item.href}
+              role="menuitem"
               onClick={() => setOpen(false)}
               className={`block rounded-xl px-3 py-2.5 transition ${
                 onDark ? "hover:bg-white/10" : "hover:bg-cream"
@@ -101,6 +123,7 @@ export function HeaderNavDropdown({
           >
             <Link
               href={href}
+              role="menuitem"
               onClick={() => setOpen(false)}
               className={`block rounded-xl px-3 py-2 text-xs font-semibold ${
                 onDark ? "text-glow hover:bg-white/10" : "text-accent hover:bg-cream"

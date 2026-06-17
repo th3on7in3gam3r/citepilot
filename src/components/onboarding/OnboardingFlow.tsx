@@ -269,7 +269,8 @@ export function OnboardingFlow({
           </Link>
         </header>
 
-        <main className="flex flex-1 flex-col px-6 pb-10 md:px-10 lg:px-14 lg:pb-14">
+        <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col px-6 pb-10 md:px-10 lg:px-14 lg:pb-14">
+          <h1 className="sr-only">Start GEO and AI citation analysis</h1>
           <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center py-6 lg:py-10">
             <OnboardingStepProgress step={step} />
 
@@ -330,43 +331,45 @@ export function OnboardingFlow({
               {step === 2 && (
                 <div className="space-y-8">
                   <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-ink">
+                    <label htmlFor="onboarding-description" className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-ink">
                         Business description
-                      </h3>
+                      </span>
                       <button
                         type="button"
                         className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-ink transition hover:border-accent/40 hover:bg-surface"
                       >
-                        <span className="text-accent">✦</span> Generate with AI
+                        <span className="text-accent" aria-hidden>✦</span> Generate with AI
                       </button>
-                    </div>
+                    </label>
                     <textarea
+                      id="onboarding-description"
                       value={answers.description}
                       onChange={(e) =>
                         setAnswers((a) => ({ ...a, description: e.target.value }))
                       }
                       placeholder="Enter a description of your business"
                       rows={5}
-                      className="w-full resize-none rounded-2xl border border-border bg-white px-5 py-4 text-base text-ink outline-none transition placeholder:text-muted/50 focus:border-accent focus:ring-2 focus:ring-accent/15"
+                      className="w-full resize-none rounded-2xl border border-border bg-white px-5 py-4 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/15"
                     />
                   </div>
 
                   <div>
-                    <h3 className="flex items-center gap-2 text-sm font-bold text-ink">
+                    <label htmlFor="onboarding-audience" className="flex items-center gap-2 text-sm font-bold text-ink">
                       Target audience
                       <span className="font-normal text-muted">
                         {answers.audiences.length}/2
                       </span>
-                    </h3>
+                    </label>
                     <div className="relative mt-2">
                       <input
+                        id="onboarding-audience"
                         type="text"
                         value={audienceInput}
                         onChange={(e) => setAudienceInput(e.target.value)}
                         placeholder="e.g. marketing leaders at SaaS startups"
                         disabled={answers.audiences.length >= 2}
-                        className="w-full rounded-full border border-border bg-white py-4 pl-5 pr-14 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:bg-surface"
+                        className="w-full rounded-full border border-border bg-white py-4 pl-5 pr-14 text-base outline-none placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:bg-surface"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -441,6 +444,7 @@ export function OnboardingFlow({
                             type="button"
                             onClick={() => removeCompetitor(i)}
                             className="text-muted hover:text-ink"
+                            aria-label={`Remove competitor ${c}`}
                           >
                             ×
                           </button>
@@ -449,13 +453,17 @@ export function OnboardingFlow({
                     </div>
                   )}
 
+                  <label htmlFor="onboarding-competitor" className="sr-only">
+                    Competitor domain
+                  </label>
                   <div className="relative">
                     <input
+                      id="onboarding-competitor"
                       type="text"
                       value={competitorInput}
                       onChange={(e) => setCompetitorInput(e.target.value)}
                       placeholder="competitor.com"
-                      className="w-full rounded-full border border-border bg-white py-4 pl-5 pr-14 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
+                      className="w-full rounded-full border border-border bg-white py-4 pl-5 pr-14 text-base outline-none placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/15"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
@@ -467,6 +475,7 @@ export function OnboardingFlow({
                       type="button"
                       onClick={addCompetitor}
                       disabled={!competitorInput.trim()}
+                      aria-label="Add competitor"
                       className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-accent text-lg text-white transition hover:bg-accent-deep disabled:opacity-40"
                     >
                       +
@@ -477,15 +486,20 @@ export function OnboardingFlow({
 
               {step === 4 && (
                 <div>
-                  <h3 className="text-sm font-bold text-ink">Buyer question</h3>
+                  <label htmlFor="onboarding-buyer-question" className="text-sm font-bold text-ink">
+                    Buyer question
+                  </label>
                   <input
+                    id="onboarding-buyer-question"
                     type="text"
+                    required
+                    aria-required="true"
                     value={answers.buyerQuestion}
                     onChange={(e) =>
                       setAnswers((a) => ({ ...a, buyerQuestion: e.target.value }))
                     }
                     placeholder="e.g. best CRM for agencies under 50 seats"
-                    className="mt-2 w-full rounded-full border border-border bg-white px-6 py-4 text-lg outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
+                    className="mt-2 w-full rounded-full border border-border bg-white px-6 py-4 text-lg outline-none placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/15"
                     onKeyDown={(e) => e.key === "Enter" && canContinue() && next()}
                   />
                   {showPromptSuggestions && (

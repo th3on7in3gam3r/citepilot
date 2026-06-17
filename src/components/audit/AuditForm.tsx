@@ -133,34 +133,45 @@ export function AuditForm() {
         <p className="mt-1 text-sm text-muted">Enter your domain and the buyer questions your customers ask AI.</p>
 
         <div className="mt-6 space-y-5">
-          <label className="block text-sm font-semibold text-ink">
-            Domain
+          <div>
+            <label htmlFor="audit-domain" className="block text-sm font-semibold text-ink">
+              Domain
+            </label>
             <input
+              id="audit-domain"
               type="text"
               required
+              aria-required="true"
               placeholder="acme.com"
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-border px-4 py-3 text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "audit-form-error" : undefined}
+              className="mt-2 w-full rounded-xl border border-border px-4 py-3 text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
-          </label>
+          </div>
 
-          <label className="block text-sm font-semibold text-ink">
-            Buyer questions
-            <span className="mt-1 block text-xs font-normal text-muted">
+          <div>
+            <label htmlFor="audit-prompts" className="block text-sm font-semibold text-ink">
+              Buyer questions
+            </label>
+            <span id="audit-prompts-hint" className="mt-1 block text-xs font-normal text-muted">
               One per line — real questions buyers ask AI.{" "}
               {promptLimitMax === null
                 ? "Unlimited on Fleet."
                 : `Up to ${promptLimitMax} prompts on your plan.`}
             </span>
             <textarea
+              id="audit-prompts"
               required
+              aria-required="true"
+              aria-describedby="audit-prompts-hint"
               rows={5}
               value={prompts}
               onChange={(e) => setPrompts(e.target.value)}
               className="mt-2 w-full resize-none rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
-          </label>
+          </div>
         </div>
 
         {overPromptLimit && (
@@ -185,7 +196,11 @@ export function AuditForm() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div
+            id="audit-form-error"
+            role="alert"
+            className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          >
             {error}
           </div>
         )}

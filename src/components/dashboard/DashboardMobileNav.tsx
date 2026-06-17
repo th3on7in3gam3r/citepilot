@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,15 +8,21 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { DashboardNavLink } from "@/components/dashboard/DashboardNavLink";
 import { WorkspaceSwitcher } from "@/components/dashboard/WorkspaceSwitcher";
 import { Logo } from "@/components/ui/Logo";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { dashboardNav } from "@/lib/dashboard";
 import { isDashboardNavActive } from "@/lib/dashboard-nav";
+
+const DASHBOARD_MOBILE_MENU_ID = "dashboard-mobile-menu";
 
 export function DashboardMobileNav({ ready }: { ready: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const main = dashboardNav.filter((item) => item.section !== "footer");
   const footer = dashboardNav.filter((item) => item.section === "footer");
+
+  useFocusTrap(dialogRef, open, () => setOpen(false));
 
   useEffect(() => {
     effectInit(() => setOpen(false));
@@ -26,13 +32,8 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -44,6 +45,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-ink hover:bg-surface"
         aria-label="Open menu"
         aria-expanded={open}
+        aria-controls={DASHBOARD_MOBILE_MENU_ID}
       >
         <svg
           width="20"
@@ -60,14 +62,23 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+        <div
+          ref={dialogRef}
+          className="fixed inset-0 z-50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dashboard-mobile-menu-title"
+        >
           <button
             type="button"
             className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
             aria-label="Close menu"
             onClick={() => setOpen(false)}
           />
-          <aside className="absolute top-0 left-0 flex h-full w-[min(100%,18rem)] flex-col border-r border-border bg-white shadow-xl">
+          <aside
+            id={DASHBOARD_MOBILE_MENU_ID}
+            className="absolute top-0 left-0 flex h-full w-[min(100%,18rem)] flex-col border-r border-border bg-white shadow-xl"
+          >
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
               <Logo className="text-base" />
               <button
@@ -90,13 +101,17 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
               </button>
             </div>
 
+            <h2 id="dashboard-mobile-menu-title" className="sr-only">
+              Dashboard navigation
+            </h2>
+
             {ready && (
               <div className="border-b border-border px-4 py-3">
                 <WorkspaceSwitcher />
               </div>
             )}
 
-            <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+            <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
               {main.map((item) => (
                 <DashboardNavLink
                   key={item.id}

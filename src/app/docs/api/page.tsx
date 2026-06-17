@@ -24,7 +24,7 @@ export default function ApiDocsPage() {
   return (
     <>
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <MarketingDarkHero
           eyebrow="Developers"
           title={apiDocsLanding.title}

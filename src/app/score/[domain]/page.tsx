@@ -70,7 +70,7 @@ export default async function PublicScorePage({ params }: Props) {
   return (
     <>
       <Header />
-      <main className="bg-cream pt-16 md:pt-[4.5rem]">
+      <main id="main-content" tabIndex={-1} className="bg-cream pt-16 md:pt-[4.5rem]">
         <Container className="py-10 md:py-14">
           <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
             <div className="min-w-0 space-y-10">

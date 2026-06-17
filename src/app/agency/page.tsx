@@ -22,7 +22,7 @@ export default function AgencyPage() {
   return (
     <>
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <AgencyLanding />
       </main>
       <Footer />

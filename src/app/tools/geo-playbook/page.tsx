@@ -34,7 +34,7 @@ export default function GeoPlaybookToolPage() {
       <GeoPlaybookJsonLd />
       <ToolSoftwareApplicationJsonLd tool={toolMeta} />
       <Header />
-      <main className="bg-cream pt-16 md:pt-[4.5rem]">
+      <main id="main-content" tabIndex={-1} className="bg-cream pt-16 md:pt-[4.5rem]">
         <Container className="border-b border-border py-6">
           <p className="text-xs text-muted">
             Last updated:{" "}

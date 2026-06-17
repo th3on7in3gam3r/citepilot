@@ -30,7 +30,7 @@ export default function CitationCheckerToolPage() {
     <>
       <ToolSoftwareApplicationJsonLd tool={citationCheckerTool} />
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <MarketingDarkHero
           eyebrow="Free tool"
           title={citationCheckerTool.h1}

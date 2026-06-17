@@ -13,11 +13,15 @@ function FooterColumn({
   title: string;
   children: ReactNode;
 }) {
+  const id = `footer-${title.toLowerCase().replace(/\s+/g, "-")}`;
   return (
-    <div>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/35">
+    <div aria-labelledby={id}>
+      <h3
+        id={id}
+        className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/55"
+      >
         {title}
-      </p>
+      </h3>
       <div className="mt-3.5">{children}</div>
     </div>
   );
@@ -89,7 +93,7 @@ export function Footer() {
           </FooterColumn>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-7 text-sm text-muted dark:border-white/10 dark:text-white/40 md:flex-row md:items-center md:justify-between">
+        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-7 text-sm text-muted dark:border-white/10 dark:text-white/55 md:flex-row md:items-center md:justify-between">
           <p>© {year} {site.name}</p>
           <nav
             className="flex flex-wrap items-center gap-x-5 gap-y-2"

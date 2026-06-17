@@ -77,9 +77,9 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4 lg:hidden dark:border-[#222]">
           <DashboardMobileNav ready={ready} />
-          <span className="font-display min-w-0 flex-1 truncate text-lg font-bold text-ink">
+          <h1 className="font-display min-w-0 flex-1 truncate text-lg font-bold text-ink lg:hidden">
             {title}
-          </span>
+          </h1>
           <Link
             href="/dashboard/settings"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted hover:bg-surface hover:text-ink"
@@ -120,7 +120,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           <DashboardTopBar title={title} backHref={backHref} backLabel={backLabel} />
         </div>
         <ImpersonationBanner />
-        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8">
+        <main id="main-content" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8">
           <DashboardUsageLimitBanner />
           <IntegrationHealthBanner />
           <GeoScoreBadgePrompt />

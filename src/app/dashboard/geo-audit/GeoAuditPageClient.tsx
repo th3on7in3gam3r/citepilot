@@ -21,6 +21,7 @@ import { GeoAuditScanDelta } from "@/components/dashboard/geo-audit/GeoAuditScan
 import { GeoAuditScoreBreakdown } from "@/components/dashboard/geo-audit/GeoAuditScoreBreakdown";
 import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
 import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
+import { getFixActionLabel } from "@/lib/geo/fixes";
 
 const feature = productFeatures.find((f) => f.id === "geo-audit")!;
 
@@ -234,12 +235,10 @@ export function GeoAuditPageClient() {
       {workspace.siteSignals && <GeoAuditSiteSignals signals={workspace.siteSignals} />}
       <Panel title="Priority fixes" className="mt-6" id="priority-fixes">
         <p className="mb-4 text-sm text-muted">
-          From your latest live crawl. Use Quick Fix to copy code or enable the GEO Snippet —
-          then publish on {workspace.domain} and re-run. Check{" "}
-          <a href="#scan-delta" className="font-semibold text-accent hover:underline">
-            Since your last scan
-          </a>{" "}
-          to confirm gaps cleared.
+          From your latest live crawl. Schema and meta tags use{" "}
+          <strong className="font-semibold text-ink">Quick Fix</strong> (GEO Snippet or copy-paste).
+          Prompt and content gaps open a <strong className="font-semibold text-ink">Content guide</strong>{" "}
+          — those require publishing new copy on {workspace.domain}. Re-run the audit after deploying.
         </p>
         <ul className="space-y-3 text-sm text-muted">
           {gaps.map((g) => (
@@ -254,7 +253,7 @@ export function GeoAuditPageClient() {
                   onClick={() => handleOpenFix(g)}
                   className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 hover:border-rose-200 transition duration-150 cursor-pointer"
                 >
-                  Quick Fix ✦
+                  {getFixActionLabel(g, workspace.domain)} ✦
                 </button>
               </div>
               {workspaceId && (

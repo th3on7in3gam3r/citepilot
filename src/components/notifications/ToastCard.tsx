@@ -51,10 +51,12 @@ export function ToastCard({
 
   const isDark = toast.theme !== "light";
 
+  const isError = toast.type === "error";
+
   return (
     <div
-      role="status"
-      aria-live="polite"
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
       className={`w-[min(100vw-2rem,380px)] overflow-hidden rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.18)] ring-1 ${
         isDark
           ? `bg-[#0f172a] text-white ring-white/10`

@@ -15,7 +15,7 @@ export function LegalDocument({
   return (
     <>
       <Header />
-      <main className="bg-cream pt-16 md:pt-[4.5rem]">
+      <main id="main-content" tabIndex={-1} className="bg-cream pt-16 md:pt-[4.5rem]">
         <Container className="py-16 md:py-20 lg:py-24">
           <article className="mx-auto max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-wider text-accent">

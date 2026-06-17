@@ -3,9 +3,12 @@
 import { authClient } from "@/lib/auth/client";
 import { nav } from "@/lib/site";
 import { Logo } from "@/components/ui/Logo";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const MOBILE_MENU_ID = "header-mobile-menu";
 
 function MenuIcon() {
   return (
@@ -44,6 +47,9 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(dialogRef, open, () => setOpen(false));
 
   useEffect(() => {
     setOpen(false);
@@ -68,13 +74,8 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -90,19 +91,29 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border lg:hidden ${toggleClass}`}
         aria-label="Open menu"
         aria-expanded={open}
+        aria-controls={MOBILE_MENU_ID}
       >
         <MenuIcon />
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true">
+        <div
+          ref={dialogRef}
+          className="fixed inset-0 z-[60] lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="header-mobile-menu-title"
+        >
           <button
             type="button"
             className="absolute inset-0 bg-ink/50 backdrop-blur-[2px]"
             aria-label="Close menu"
             onClick={() => setOpen(false)}
           />
-          <aside className="absolute top-0 right-0 flex h-full w-[min(100%,20rem)] flex-col border-l border-border bg-background shadow-xl dark:border-[#222] dark:bg-[#111]">
+          <aside
+            id={MOBILE_MENU_ID}
+            className="absolute top-0 right-0 flex h-full w-[min(100%,20rem)] flex-col border-l border-border bg-background shadow-xl dark:border-[#222] dark:bg-[#111]"
+          >
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
               <Logo className="text-base" />
               <button
@@ -115,7 +126,14 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
               </button>
             </div>
 
-            <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+            <h2 id="header-mobile-menu-title" className="sr-only">
+              Main navigation
+            </h2>
+
+            <nav
+              className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
+              aria-label="Main navigation"
+            >
               {nav.main.map((item) => {
                 if ("children" in item && item.children) {
                   return (

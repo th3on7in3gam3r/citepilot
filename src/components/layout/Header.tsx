@@ -42,7 +42,7 @@ export function Header({
     >
       <Container className="flex h-16 items-center justify-between gap-6 md:h-[4.5rem]">
         <Logo light={onDark} />
-        <nav className="hidden items-center gap-8 lg:flex">
+        <nav className="hidden items-center gap-8 lg:flex" aria-label="Main navigation">
           {nav.main.map((item) =>
             "children" in item && item.children ? (
               <HeaderNavDropdown

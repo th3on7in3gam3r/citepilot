@@ -45,7 +45,7 @@ export function DashboardRail() {
         />
       </Link>
 
-      <nav className="flex flex-1 flex-col items-center gap-2">
+      <nav className="flex flex-1 flex-col items-center gap-2" aria-label="Dashboard">
         {items.map((item) => {
           const active = isDashboardNavActive(pathname, item.href);
           return (
@@ -53,6 +53,8 @@ export function DashboardRail() {
               key={item.id}
               href={item.href}
               title={item.label}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
               className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
                 active
                   ? "bg-white/10 text-[#0ea5e9]"
@@ -73,6 +75,8 @@ export function DashboardRail() {
               key={item.id}
               href={item.href}
               title={item.label}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
               className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
                 active
                   ? "bg-white/10 text-[#0ea5e9]"
@@ -87,6 +91,7 @@ export function DashboardRail() {
           href="/dashboard/settings"
           className="mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-[#162a22] text-[#10b981] border border-[#10b981]/25 hover:border-[#10b981]/50 hover:bg-[#1f3a30] transition-all duration-200 shadow-[0_2px_6px_rgba(0,0,0,0.2)]"
           title="Account settings"
+          aria-label="Account settings"
         >
           {initial ? (
             <span className="font-display text-xs font-bold tracking-wider">{initial}</span>

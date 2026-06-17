@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
+import { getFixActionLabel } from "@/lib/geo/fixes";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
@@ -737,7 +738,7 @@ function MyDashboardOverviewContent({
                   onClick={() => handleOpenFix(gap)}
                   className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100/50 rounded-lg hover:bg-rose-100/70 hover:border-rose-200 transition duration-150 cursor-pointer opacity-70 group-hover/item:opacity-100"
                 >
-                  Quick Fix ✦
+                  {getFixActionLabel(gap, workspace.domain)} ✦
                 </button>
               </li>
             ))}

@@ -26,7 +26,7 @@ export default function CitationGapCalculatorPage() {
     <>
       <ToolSoftwareApplicationJsonLd tool={citationGapCalculatorTool} />
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <MarketingDarkHero
           eyebrow="Free tool"
           title={citationGapCalculatorTool.h1}

@@ -57,7 +57,7 @@ export function AdminShell({
           })}
         </nav>
       </header>
-      <main className="mx-auto max-w-7xl px-6 py-10 md:px-10">{children}</main>
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-7xl px-6 py-10 md:px-10">{children}</main>
     </div>
   );
 }

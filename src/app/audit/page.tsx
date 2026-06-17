@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/Header";
 import { auditLanding, auditLandingFaqs } from "@/lib/marketing/audit-landing";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
+import { MainContent } from "@/components/layout/MainContent";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -40,7 +41,7 @@ export default function AuditPage() {
   return (
     <>
       <Header />
-      <main className="bg-[#04060c] pt-16 md:pt-[4.5rem]">
+      <MainContent className="bg-[#04060c] pt-16 md:pt-[4.5rem]">
         {/* Hero — dark cinematic matching brand */}
         <div className="relative overflow-hidden border-b border-white/[0.06]">
           {/* Glow orbs */}
@@ -154,7 +155,7 @@ export default function AuditPage() {
         </div>
 
         <ProductTransparencySection variant="light" />
-      </main>
+      </MainContent>
       <Footer />
     </>
   );

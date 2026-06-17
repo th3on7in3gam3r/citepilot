@@ -72,6 +72,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div
         className="pointer-events-none fixed top-4 right-4 z-[90] flex flex-col gap-3 sm:top-5 sm:right-5"
         aria-label="Notifications"
+        aria-live="polite"
+        role="region"
       >
         {toasts.map((toast) => (
           <div key={toast.id} className="pointer-events-auto">

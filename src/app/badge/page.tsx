@@ -39,7 +39,7 @@ export default async function BadgePage({
   return (
     <>
       <Header />
-      <main className="bg-background pt-16 md:pt-[4.5rem]">
+      <main id="main-content" tabIndex={-1} className="bg-background pt-16 md:pt-[4.5rem]">
         <Container className="py-12 md:py-16">
           <div className="mx-auto max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-wider text-accent">

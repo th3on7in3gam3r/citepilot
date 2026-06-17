@@ -172,7 +172,7 @@ function ProofReportInner() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10 print:py-6">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6 py-10 print:py-6">
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <ReportStat label="Citation score" value={`${workspace.citationScore}/100`} />
           <ReportStat label="Visibility score" value={`${workspace.visibilityScore}%`} />

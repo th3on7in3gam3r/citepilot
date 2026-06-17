@@ -26,8 +26,9 @@ const icons: Record<string, ReactNode> = {
 
 export function Pillars() {
   return (
-    <Section id="pillars" className="bg-background">
+    <Section id="pillars" className="bg-background" ariaLabelledBy="pillars-heading">
       <SectionHeading
+        id="pillars-heading"
         eyebrow="Product"
         title="Three pillars. One outcome: more citations."
         description="Everything serves prompt-level citation lift — no feature buffet."

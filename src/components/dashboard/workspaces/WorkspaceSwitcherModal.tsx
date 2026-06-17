@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { FeatureGate } from "@/components/billing/FeatureGate";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { recordRecentWorkspace, getRecentWorkspaceIds } from "@/lib/workspace/recent";
@@ -38,6 +39,9 @@ export function WorkspaceSwitcherModal({ open, onClose }: WorkspaceSwitcherModal
   const { openWizard } = useWorkspaceSwitcher();
   const [query, setQuery] = useState("");
   const [switching, setSwitching] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(dialogRef, open, onClose);
 
   const activeId = workspace?.workspaceId ?? workspace?.id;
 
@@ -86,10 +90,11 @@ export function WorkspaceSwitcherModal({ open, onClose }: WorkspaceSwitcherModal
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[120] flex items-start justify-center bg-black/50 p-4 pt-[8vh] backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Switch workspace"
+      aria-labelledby="workspace-switcher-title"
       onClick={onClose}
     >
       <div
@@ -99,7 +104,9 @@ export function WorkspaceSwitcherModal({ open, onClose }: WorkspaceSwitcherModal
         <div className="border-b border-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-display text-lg font-bold text-ink">Workspaces</h2>
+              <h2 id="workspace-switcher-title" className="font-display text-lg font-bold text-ink">
+                Workspaces
+              </h2>
               {limits && (
                 <p className="mt-0.5 text-xs text-muted">{limitsLabel(limits)}</p>
               )}
@@ -113,7 +120,11 @@ export function WorkspaceSwitcherModal({ open, onClose }: WorkspaceSwitcherModal
               ✕
             </button>
           </div>
+          <label htmlFor="workspace-switcher-search" className="sr-only">
+            Search workspaces
+          </label>
           <input
+            id="workspace-switcher-search"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

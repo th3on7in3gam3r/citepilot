@@ -26,8 +26,9 @@ export function FeatureSuite() {
   }, []);
 
   return (
-    <Section id="features" className="bg-background">
+    <Section id="features" className="bg-background" ariaLabelledBy="features-heading">
       <SectionHeading
+        id="features-heading"
         eyebrow="Product"
         title="A powerful suite of features — all in one place."
         description="Citation-first GEO: content, authority, technical audits, and LLM tracking in a single workspace."

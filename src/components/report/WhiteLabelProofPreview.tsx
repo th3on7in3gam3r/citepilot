@@ -91,7 +91,7 @@ export function WhiteLabelProofPreview({
           />
         </div>
       </header>
-      <main className={embed ? "px-4 py-4" : "mx-auto max-w-5xl px-6 py-8"}>
+      <main id="main-content" tabIndex={-1} className={embed ? "px-4 py-4" : "mx-auto max-w-5xl px-6 py-8"}>
         <div className="grid gap-3 sm:grid-cols-3">
           <ReportStat label="Citation score" value="72" accent />
           <ReportStat label="Prompts cited" value="4 / 6" />

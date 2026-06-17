@@ -128,7 +128,7 @@ export function ComparisonPage({ competitor }: { competitor: Competitor }) {
     <>
       <CompareJsonLd competitor={competitor} />
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <div className="relative overflow-hidden border-b border-white/[0.06]">
           <div className="hero-premium-orb hero-premium-orb--cyan" aria-hidden />
           <div className="hero-premium-grid" aria-hidden />

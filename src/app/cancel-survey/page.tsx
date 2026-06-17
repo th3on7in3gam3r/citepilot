@@ -17,7 +17,7 @@ export default function CancelSurveyPage() {
           <Logo />
         </Container>
       </header>
-      <main className="px-6 py-10">
+      <main id="main-content" tabIndex={-1} className="px-6 py-10">
         <Container className="max-w-xl">
           <h1 className="font-display text-2xl font-bold text-ink">Before you go</h1>
           <p className="mt-2 text-sm text-muted">

@@ -30,7 +30,7 @@ export default function AiVisibilityPage() {
     <>
       <AiVisibilityJsonLd />
       <Header />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <AiVisibilityLanding />
       </main>
       <Footer />

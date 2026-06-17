@@ -32,7 +32,7 @@ export default function WhiteLabelReportsHelpPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-cream pt-24">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-cream pt-24">
         <Container className="pb-16">
           <section className="rounded-[2rem] border border-border bg-white p-8 shadow-sm md:p-12">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">

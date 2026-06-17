@@ -4,6 +4,7 @@ import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
 import { ReferralRefCapture } from "@/components/referrals/ReferralRefCapture";
 import { BadgeRefCapture } from "@/components/widget/BadgeRefCapture";
+import { SkipToContent } from "@/components/accessibility/SkipToContent";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
@@ -108,6 +109,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://checkout.stripe.com" />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        <SkipToContent />
         <AnalyticsScripts />
         <ReferralRefCapture />
         <BadgeRefCapture />
