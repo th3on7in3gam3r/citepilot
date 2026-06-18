@@ -6,11 +6,13 @@ Run through this **24 hours before** launch and again on launch morning.
 
 ## Pre-launch env
 
+**Full step-by-step guide:** [`launch/ENV_SETUP.md`](./ENV_SETUP.md)
+
 ```bash
 LAUNCH_MODE=true                    # 24–48h window — raises free audit rate limit
-PH_LAUNCH_DATE=2026-06-03           # Used in emails + coupon expiry
-PH_PRODUCT_HUNT_URL=https://...     # Live listing URL (add at 12:01 AM PST)
-NEXT_PUBLIC_FOUNDER_NAME=...        # Maker note + emails
+PH_LAUNCH_DATE=2026-06-03           # From Product Hunt scheduler (YYYY-MM-DD)
+PH_PRODUCT_HUNT_URL=https://...     # Live listing URL — set at 12:01 AM PST launch day
+NEXT_PUBLIC_FOUNDER_NAME=...        # Your name — /launch maker note + emails
 FOUNDER_EMAIL=hello@getcitepilot.com
 ```
 

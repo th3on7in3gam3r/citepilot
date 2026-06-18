@@ -16,7 +16,7 @@ const DISCOUNT_PERCENT = 30;
 const DURATION_MONTHS = 3;
 const MAX_REDEMPTIONS = 30;
 
-function launchExpiryUnix(): number {
+function launchExpiryUnix() {
   const raw = process.env.PH_LAUNCH_DATE?.trim();
   const base = raw ? new Date(raw) : new Date();
   if (Number.isNaN(base.getTime())) {
