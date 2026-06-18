@@ -44,7 +44,10 @@ export type AnalyticsEvent =
   | "cancel_survey_submitted"
   | "feature_request_submitted"
   | "hero_cta_clicked"
-  | "first_scan_completed";
+  | "first_scan_completed"
+  | "ph_launch_page_visited"
+  | "ph_launch_cta_clicked"
+  | "ph_launch_signup_completed";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

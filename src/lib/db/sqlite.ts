@@ -525,7 +525,10 @@ function migrateSchema(db: Database.Database): void {
       dismissed_at TEXT,
       shared_proof INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
-      onboarding_completed_at TEXT
+      onboarding_completed_at TEXT,
+      signup_source TEXT,
+      signup_campaign TEXT,
+      signup_medium TEXT
     );
 
     CREATE TABLE IF NOT EXISTS user_totp (
@@ -730,6 +733,15 @@ function migrateSchema(db: Database.Database): void {
     !onboardingCols.some((c) => c.name === "onboarding_completed_at")
   ) {
     db.exec(`ALTER TABLE user_onboarding ADD COLUMN onboarding_completed_at TEXT`);
+  }
+  if (onboardingCols.length > 0 && !onboardingCols.some((c) => c.name === "signup_source")) {
+    db.exec(`ALTER TABLE user_onboarding ADD COLUMN signup_source TEXT`);
+  }
+  if (onboardingCols.length > 0 && !onboardingCols.some((c) => c.name === "signup_campaign")) {
+    db.exec(`ALTER TABLE user_onboarding ADD COLUMN signup_campaign TEXT`);
+  }
+  if (onboardingCols.length > 0 && !onboardingCols.some((c) => c.name === "signup_medium")) {
+    db.exec(`ALTER TABLE user_onboarding ADD COLUMN signup_medium TEXT`);
   }
 
   db.exec(`

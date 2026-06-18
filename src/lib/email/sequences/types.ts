@@ -2,7 +2,10 @@ export type EmailSequenceName =
   | "free_onboarding"
   | "post_audit"
   | "pilot_retention"
-  | "churn_prevention";
+  | "churn_prevention"
+  | "ph_prelaunch"
+  | "ph_launch_day"
+  | "ph_welcome";
 
 export type GapFixType = "schema" | "content" | "entity";
 

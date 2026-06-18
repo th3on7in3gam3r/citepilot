@@ -6,8 +6,18 @@ import { passwordMeetsRequirements } from "@/lib/auth/password-requirements";
 import { claimReferralForUser } from "@/lib/referrals/process";
 import { REFERRAL_COOKIE } from "@/lib/referrals/constants";
 import { ensureUserReferral } from "@/lib/referrals/store";
-import { triggerFreeOnboarding } from "@/lib/email/sequences/engine";
+import {
+  triggerFreeOnboarding,
+  triggerProductHuntWelcome,
+} from "@/lib/email/sequences/engine";
 import { trackBadgeReferralSignup } from "@/lib/widget/track-referral";
+import { trackServerEvent } from "@/lib/analytics/track-server";
+import { persistSignupAttribution } from "@/lib/launch/signup-attribution";
+import {
+  isProductHuntAttribution,
+  parseAttributionCookie,
+  PH_ATTRIBUTION_COOKIE,
+} from "@/lib/launch/utm";
 import { redirect } from "next/navigation";
 
 function cleanDomain(raw: string): string {
@@ -61,7 +71,27 @@ export async function signUpWithEmail(
       await claimReferralForUser(userId, refCode);
     }
     await trackBadgeReferralSignup(userId);
-    await triggerFreeOnboarding(userId, email);
+
+    const phRaw = cookieStore.get(PH_ATTRIBUTION_COOKIE)?.value;
+    const attribution = parseAttributionCookie(phRaw);
+    await persistSignupAttribution(userId, attribution);
+
+    const userName = (formData.get("name") as string) || email.split("@")[0] || "User";
+    const fromProductHunt = isProductHuntAttribution(attribution);
+    if (fromProductHunt) {
+      await triggerProductHuntWelcome(userId, email, userName);
+      await trackServerEvent("ph_launch_signup_completed", {
+        distinctId: userId,
+        utm_source: attribution?.source,
+        utm_campaign: attribution?.campaign,
+        utm_medium: attribution?.medium,
+      });
+    } else {
+      await triggerFreeOnboarding(userId, email);
+    }
+
+    const phQuery = fromProductHunt ? "&ph_signup=1" : "";
+    redirect(`/start?domain=${encodeURIComponent(domain)}${phQuery}`);
   }
 
   redirect(`/start?domain=${encodeURIComponent(domain)}`);

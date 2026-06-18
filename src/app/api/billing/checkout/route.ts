@@ -12,6 +12,7 @@ import {
   stripePilotPriceId,
 } from "@/lib/stripe/config";
 import { getStripe } from "@/lib/stripe/server";
+import { validatePilotPromoCode } from "@/lib/stripe/promo";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
@@ -35,6 +36,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as {
       plan?: BillingPlan;
       interval?: "monthly" | "annual";
+      promoCode?: string;
     };
     const plan = body.plan === "fleet" ? "fleet" : "pilot";
     const interval = body.interval === "annual" ? "annual" : "monthly";
@@ -72,26 +74,45 @@ export const POST = withApiLogging(async function POST(request: Request) {
     const base = appBaseUrl();
     const billing = await getBillingByUserId(userId);
 
+    let discounts: { promotion_code: string }[] | undefined;
+    let promoApplied: string | undefined;
+    const promoCode = body.promoCode?.trim();
+    if (promoCode) {
+      if (plan !== "pilot" || interval !== "monthly") {
+        return NextResponse.json(
+          { error: "Promo codes apply to Pilot monthly only" },
+          { status: 400 },
+        );
+      }
+      const validation = await validatePilotPromoCode(promoCode);
+      if (!validation.valid || !validation.promotionCodeId) {
+        return NextResponse.json({ error: validation.message }, { status: 400 });
+      }
+      discounts = [{ promotion_code: validation.promotionCodeId }];
+      promoApplied = validation.message;
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: billing?.stripeCustomerId ?? undefined,
       customer_email: billing?.stripeCustomerId ? undefined : sessionUser.email,
       client_reference_id: userId,
-      metadata: { userId, plan },
+      metadata: { userId, plan, promoCode: promoCode?.toUpperCase() ?? "" },
       subscription_data: {
-        metadata: { userId, plan },
+        metadata: { userId, plan, promoCode: promoCode?.toUpperCase() ?? "" },
       },
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${base}/dashboard?upgraded=true&plan=${plan}`,
       cancel_url: `${base}/pricing?billing=canceled`,
-      allow_promotion_codes: true,
+      allow_promotion_codes: !discounts,
+      discounts,
     });
 
     if (!session.url) {
       return NextResponse.json({ error: "Could not start checkout" }, { status: 502 });
     }
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url, promoApplied });
   } catch (error) {
     console.error("POST /api/billing/checkout", error);
     return NextResponse.json({ error: "Checkout failed" }, { status: 500 });

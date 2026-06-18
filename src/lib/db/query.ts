@@ -117,6 +117,15 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS onboarding_completed_at TEXT`,
       );
+      await pool.query(
+        `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_source TEXT`,
+      );
+      await pool.query(
+        `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_campaign TEXT`,
+      );
+      await pool.query(
+        `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_medium TEXT`,
+      );
       await pool.query(`
         CREATE TABLE IF NOT EXISTS admin_audit_log (
           id TEXT PRIMARY KEY,

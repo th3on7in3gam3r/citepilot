@@ -22,6 +22,9 @@ export const SEQUENCE_SCHEDULES: Record<
     { emailNumber: 1, delayDays: 0 },
     { emailNumber: 2, delayDays: 3 },
   ],
+  ph_prelaunch: [{ emailNumber: 1, delayDays: 0 }],
+  ph_launch_day: [{ emailNumber: 1, delayDays: 0 }],
+  ph_welcome: [{ emailNumber: 1, delayDays: 0 }],
 };
 
 export const PILOT_PRICE_LABEL = "$79/mo";

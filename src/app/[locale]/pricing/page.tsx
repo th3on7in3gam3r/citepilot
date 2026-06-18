@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductHuntPromoBar } from "@/components/launch/ProductHuntPromoBar";
 import { PricingFaqAccordion } from "@/components/pricing/PricingFaqAccordion";
 import { PricingPlanCards } from "@/components/pricing/PricingPlanCards";
 import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
@@ -125,6 +126,7 @@ export default async function PricingPage({ params }: Props) {
             >
               {t("tiersTitle")}
             </h2>
+            <ProductHuntPromoBar />
             <PricingPlanCards initialLayoutVariant={pricingLayoutVariant} />
           </section>
 

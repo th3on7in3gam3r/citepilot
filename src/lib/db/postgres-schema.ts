@@ -253,7 +253,10 @@ CREATE TABLE IF NOT EXISTS user_onboarding (
   dismissed_at TEXT,
   shared_proof INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
-  onboarding_completed_at TEXT
+  onboarding_completed_at TEXT,
+  signup_source TEXT,
+  signup_campaign TEXT,
+  signup_medium TEXT
 );
 
 CREATE TABLE IF NOT EXISTS user_totp (

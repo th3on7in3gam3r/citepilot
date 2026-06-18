@@ -1,4 +1,5 @@
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { PhSignupTracker } from "@/components/launch/PhSignupTracker";
 import { getSessionUserId } from "@/lib/auth/server";
 import { FEATURE_FLAGS } from "@/lib/analytics/feature-flags";
 import { getServerSideFlagVariant } from "@/lib/posthog-server";
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 export default async function StartPage({
   searchParams,
 }: {
-  searchParams: Promise<{ full?: string; domain?: string }>;
+  searchParams: Promise<{ full?: string; domain?: string; ph_signup?: string }>;
 }) {
   const params = await searchParams;
   const userId = await getSessionUserId();
@@ -34,9 +35,12 @@ export default async function StartPage({
   }
 
   return (
-    <OnboardingFlow
-      initialDomain={params.domain}
-      initialPromptVariant={promptVariant}
-    />
+    <>
+      <PhSignupTracker enabled={params.ph_signup === "1"} />
+      <OnboardingFlow
+        initialDomain={params.domain}
+        initialPromptVariant={promptVariant}
+      />
+    </>
   );
 }

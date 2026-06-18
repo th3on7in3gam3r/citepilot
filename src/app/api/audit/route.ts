@@ -20,8 +20,9 @@ import { trackServerEvent } from "@/lib/analytics/track-server";
 import { captureServerException } from "@/lib/observability/sentry";
 import {
   AUDIT_AUTH_RATE_LIMIT_PER_HOUR,
-  AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR,
+  auditPublicRateLimitPerHour,
 } from "@/lib/rate-limit/constants";
+import { isLaunchMode, PH_PROMO_CODE } from "@/lib/launch/config";
 import {
   clientIpFromRequest,
   enforceHourlyRateLimit,
@@ -43,10 +44,10 @@ export const POST = withApiLogging(async function POST(request: Request) {
         : `audit:ip:${clientIpFromRequest(request)}`,
       sessionUserId
         ? AUDIT_AUTH_RATE_LIMIT_PER_HOUR
-        : AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR,
+        : auditPublicRateLimitPerHour(),
       sessionUserId
         ? `Audit limit reached (${AUDIT_AUTH_RATE_LIMIT_PER_HOUR}/hour). Try again later.`
-        : `Free audit limit reached (${AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR}/hour per IP). Sign in or try again later.`,
+        : `Free audit limit reached (${auditPublicRateLimitPerHour()}/hour per IP). Sign in or try again later.`,
     );
     if (auditRate instanceof NextResponse) return auditRate;
 
@@ -169,6 +170,9 @@ export const POST = withApiLogging(async function POST(request: Request) {
       ...audit,
       promptLimit: await getPromptLimitsForUser(userId, prompts.length),
       promptsTrimmed: trimmed,
+      ...(isLaunchMode()
+        ? { special_offer: `Use ${PH_PROMO_CODE} for 30% off Pilot` }
+        : {}),
     });
     if (trimmed) {
       response.headers.set("X-CitePilot-Prompts-Trimmed", "1");
