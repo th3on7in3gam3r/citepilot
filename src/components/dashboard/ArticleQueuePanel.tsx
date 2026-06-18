@@ -399,37 +399,38 @@ export function ArticleQueuePanel({
             return (
               <li
                 key={post.slug}
-                className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between"
+                className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0"
               >
-                <div className="min-w-0 flex-1">
-                  <Link
-                    href={post.url}
-                    className="font-medium text-accent hover:underline"
-                    target="_blank"
-                  >
-                    {post.title}
-                  </Link>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <StatusBadge tone="blog">CitePilot blog</StatusBadge>
-                    {onWebflow && <StatusBadge tone="live">Live on Webflow</StatusBadge>}
-                    {post.publications.map((publication) => (
-                      <StatusBadge key={publication.provider} tone="live">
-                        Live on {providerLabels[publication.provider]}
-                      </StatusBadge>
-                    ))}
-                    {!onWebflow && post.publications.length === 0 && (
-                      <StatusBadge tone="draft">CMS pending</StatusBadge>
-                    )}
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted">
-                    {post.description}
-                  </p>
-                  <p className="mt-2 text-xs text-muted">
-                    Draft {new Date(post.publishedAt).toLocaleDateString()}
-                    {publicationDate(post) ? ` · ${publicationDate(post)}` : ""}
-                  </p>
+                <Link
+                  href={post.url}
+                  className="font-medium text-accent hover:underline"
+                  target="_blank"
+                >
+                  {post.title}
+                </Link>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge tone="blog">CitePilot blog</StatusBadge>
+                  {onWebflow && <StatusBadge tone="live">Live on Webflow</StatusBadge>}
+                  {post.publications.map((publication) => (
+                    <StatusBadge key={publication.provider} tone="live">
+                      Live on {providerLabels[publication.provider]}
+                    </StatusBadge>
+                  ))}
+                  {!onWebflow && post.publications.length === 0 && (
+                    <StatusBadge tone="draft">CMS pending</StatusBadge>
+                  )}
                 </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-sm text-muted">
+                      {post.description}
+                    </p>
+                    <p className="mt-2 text-xs text-muted">
+                      Draft {new Date(post.publishedAt).toLocaleDateString()}
+                      {publicationDate(post) ? ` · ${publicationDate(post)}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
                   {onWebflow && post.webflow?.liveUrl && (
                     <a
                       href={post.webflow.liveUrl}
@@ -479,6 +480,7 @@ export function ArticleQueuePanel({
                   >
                     Delete
                   </button>
+                  </div>
                 </div>
               </li>
             );
