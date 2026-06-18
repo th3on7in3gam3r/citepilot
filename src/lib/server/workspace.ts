@@ -530,6 +530,7 @@ export async function deleteWorkspaceDependents(id: string): Promise<void> {
   await dbRun(`DELETE FROM backlink_network WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM backlink_profiles WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM browser_scan_usage WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM audit_shares WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM workspace_content_strategies WHERE workspace_id = ?`, [

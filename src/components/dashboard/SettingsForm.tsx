@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { AccountDeletePanel } from "@/components/dashboard/settings/AccountDeletePanel";
+import { BrowserScanUsagePanel } from "@/components/dashboard/settings/BrowserScanUsagePanel";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
 import { NotificationPreferencesPanel } from "@/components/dashboard/NotificationPreferencesPanel";
@@ -651,6 +652,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         <AccountDeletePanel />
 
         {isPilot && <ReferralPanel />}
+
+        {workspaceId && <BrowserScanUsagePanel workspaceId={workspaceId} />}
 
         <BillingPlanPanel />
 

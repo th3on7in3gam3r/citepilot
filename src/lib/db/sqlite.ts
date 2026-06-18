@@ -941,6 +941,35 @@ function migrateSchema(db: Database.Database): void {
     db.exec(`ALTER TABLE workspaces ADD COLUMN next_scan_at TEXT`);
   }
 
+  const probeCheckCols = db
+    .prepare(`PRAGMA table_info(platform_citation_checks)`)
+    .all() as { name: string }[];
+  if (!probeCheckCols.some((c) => c.name === "probe_notes")) {
+    db.exec(`ALTER TABLE platform_citation_checks ADD COLUMN probe_notes TEXT`);
+  }
+  if (!probeCheckCols.some((c) => c.name === "scan_unavailable")) {
+    db.exec(
+      `ALTER TABLE platform_citation_checks ADD COLUMN scan_unavailable INTEGER NOT NULL DEFAULT 0`,
+    );
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS browser_scan_usage (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      prompt TEXT NOT NULL,
+      success INTEGER NOT NULL DEFAULT 1,
+      cost_cents INTEGER NOT NULL DEFAULT 8,
+      scanned_at TEXT NOT NULL,
+      notes TEXT,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_browser_scan_usage_workspace_day
+      ON browser_scan_usage(workspace_id, scanned_at);
+  `);
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS scan_jobs (
       id TEXT PRIMARY KEY,

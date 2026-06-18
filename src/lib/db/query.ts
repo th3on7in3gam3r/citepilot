@@ -304,6 +304,27 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS next_scan_at TEXT`,
       );
+      await pool.query(
+        `ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS probe_notes TEXT`,
+      );
+      await pool.query(
+        `ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS scan_unavailable INTEGER NOT NULL DEFAULT 0`,
+      );
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS browser_scan_usage (
+          id TEXT PRIMARY KEY,
+          workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+          platform TEXT NOT NULL,
+          prompt TEXT NOT NULL,
+          success INTEGER NOT NULL DEFAULT 1,
+          cost_cents INTEGER NOT NULL DEFAULT 8,
+          scanned_at TEXT NOT NULL,
+          notes TEXT
+        )
+      `);
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_browser_scan_usage_workspace_day ON browser_scan_usage(workspace_id, scanned_at)`,
+      );
     })();
   }
   await globalForPg.citepilotPgReady;

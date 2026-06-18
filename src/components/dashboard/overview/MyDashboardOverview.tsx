@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { PlatformScanBadge } from "@/components/dashboard/PlatformScanBadge";
+import { effectInit } from "@/lib/react/effect-init";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { getFixActionLabel } from "@/lib/geo/fixes";
@@ -108,6 +110,20 @@ function MyDashboardOverviewContent({
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
   const [isFixOpen, setIsFixOpen] = useState(false);
+  const [userPlan, setUserPlan] = useState<"free" | "pilot" | "fleet">("free");
+
+  effectInit(() => {
+    let cancelled = false;
+    void fetch("/api/billing/limits", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { prompts?: { plan?: "free" | "pilot" | "fleet" } } | null) => {
+        if (!cancelled && data?.prompts?.plan) setUserPlan(data.prompts.plan);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  });
 
   function handleOpenFix(gapText: string) {
     setSelectedGap(gapText);
@@ -818,6 +834,7 @@ function MyDashboardOverviewContent({
                     >
                       <span className="font-semibold truncate max-w-[100px]">{p.name}</span>
                       <div className="flex items-center gap-1.5">
+                        <PlatformScanBadge platformName={p.name} plan={userPlan} compact />
                         <span className={`h-1.5 w-1.5 rounded-full ${p.cited ? "bg-emerald-500 animate-pulse" : "bg-slate-300"}`} />
                         <span className={`text-[9px] font-bold uppercase tracking-wider ${p.cited ? "text-emerald-600" : "text-slate-400"}`}>
                           {p.cited ? "Cited" : "Gap"}

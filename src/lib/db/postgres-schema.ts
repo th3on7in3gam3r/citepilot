@@ -585,4 +585,20 @@ CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(worksp
 
 ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS duration_ms INTEGER;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS next_scan_at TEXT;
+
+ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS probe_notes TEXT;
+ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS scan_unavailable INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS browser_scan_usage (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  platform TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  success INTEGER NOT NULL DEFAULT 1,
+  cost_cents INTEGER NOT NULL DEFAULT 8,
+  scanned_at TEXT NOT NULL,
+  notes TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_browser_scan_usage_workspace_day ON browser_scan_usage(workspace_id, scanned_at);
 `;

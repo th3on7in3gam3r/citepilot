@@ -13,6 +13,7 @@
     "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.2",
     "@neondatabase/auth": "^0.4.1-beta",
     "@neondatabase/serverless": "^1.1.0",
     "@sentry/nextjs": "^10.54.0",

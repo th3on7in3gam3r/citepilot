@@ -3,6 +3,16 @@ import { brandFromDomain } from "@/lib/audit/site-analyzer";
 import type { BillingPlan } from "@/lib/billing/types";
 import type { SiteSignals } from "@/lib/api-types";
 import {
+  browserScannerConfigured,
+  delayBetweenBrowserScans,
+  isScanUnavailableNotes,
+  scanWithBrowser,
+} from "@/lib/scanners/browser-scanner";
+import {
+  BROWSER_PLATFORM_ID_BY_NAME,
+  type BrowserScanPlatformName,
+} from "@/lib/scanners/platform-config";
+import {
   googleSearchConfigured,
   googleSearchContextText,
   searchGoogle,
@@ -17,6 +27,8 @@ export type PlatformProbeResult = {
   promptIndex: number;
   cited: boolean;
   checkMode: PlatformCheckMode;
+  notes?: string | null;
+  scanUnavailable?: boolean;
 };
 
 export type PlatformPresenceRow = {
@@ -42,8 +54,21 @@ const LIVE_PLATFORM_PROVIDERS: Record<string, LiveProvider | null> = {
 const PROBE_TIMEOUT_MS = 8_000;
 /** Hard stop for all live probes in one audit (parallel with site fetch). */
 const LIVE_PROBE_WALL_MS = 20_000;
+/** Wall time for browser-based probes (Grok, Google AI Overviews UI). */
+const BROWSER_PROBE_WALL_MS = 110_000;
 /** Max concurrent live probes (OpenAI + Perplexity + Serper). */
 const PROBE_CONCURRENCY = 5;
+
+const BROWSER_PLATFORMS: BrowserScanPlatformName[] = [
+  "Grok",
+  "Google AI Overviews",
+];
+
+const MAX_BROWSER_SCANS_PER_AUDIT: Record<BillingPlan, number> = {
+  free: 0,
+  pilot: 4,
+  fleet: 8,
+};
 
 /** Cap total live API calls so audits finish before gateway timeouts. */
 const MAX_LIVE_PROBE_CALLS: Record<BillingPlan, number> = {
@@ -58,6 +83,38 @@ type ProbeTask = {
   platform: string;
   provider: LiveProvider;
 };
+
+type BrowserProbeTask = {
+  promptIndex: number;
+  prompt: string;
+  platform: BrowserScanPlatformName;
+};
+
+function shouldUseBrowserForGoogle(plan: BillingPlan): boolean {
+  return plan !== "free" && browserScannerConfigured();
+}
+
+function browserPlatformsForPlan(plan: BillingPlan): BrowserScanPlatformName[] {
+  if (plan === "free" || !browserScannerConfigured()) return [];
+  return BROWSER_PLATFORMS;
+}
+
+function browserResultToProbe(
+  result: Awaited<ReturnType<typeof scanWithBrowser>>,
+  platform: BrowserScanPlatformName,
+  promptIndex: number,
+): PlatformProbeResult {
+  const scanUnavailable = isScanUnavailableNotes(result.notes);
+  return {
+    platform,
+    prompt: result.prompt,
+    promptIndex,
+    cited: scanUnavailable ? false : result.cited,
+    checkMode: "live",
+    notes: result.notes,
+    scanUnavailable,
+  };
+}
 
 function textMentionsBrand(text: string, domain: string, brand: string): boolean {
   const lower = text.toLowerCase();
@@ -194,10 +251,14 @@ async function runPool<T>(
 function probeBudget(plan: BillingPlan): {
   maxPrompts: number;
   livePlatforms: string[];
+  browserPlatforms: BrowserScanPlatformName[];
 } {
   const configuredLive = PLATFORMS.filter((name) => {
     const provider = LIVE_PLATFORM_PROVIDERS[name];
     if (!provider) return false;
+    if (name === "Google AI Overviews" && shouldUseBrowserForGoogle(plan)) {
+      return false;
+    }
     if (provider === "openai") return Boolean(process.env.OPENAI_API_KEY);
     if (provider === "perplexity") return Boolean(process.env.PERPLEXITY_API_KEY);
     if (provider === "google") return googleSearchConfigured();
@@ -219,7 +280,11 @@ function probeBudget(plan: BillingPlan): {
     );
   }
 
-  return { maxPrompts, livePlatforms };
+  return {
+    maxPrompts,
+    livePlatforms,
+    browserPlatforms: browserPlatformsForPlan(plan),
+  };
 }
 
 function inferPlatformPresence(
@@ -266,11 +331,74 @@ function aggregateLivePresence(
   return out;
 }
 
+async function runBrowserPlatformProbes(input: {
+  domain: string;
+  prompts: string[];
+  plan: BillingPlan;
+  workspaceId?: string | null;
+  browserPlatforms: BrowserScanPlatformName[];
+}): Promise<PlatformProbeResult[]> {
+  const checks: PlatformProbeResult[] = [];
+  if (input.browserPlatforms.length === 0) return checks;
+
+  const domain = input.domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const workspaceId = input.workspaceId?.trim();
+  const scanCap = MAX_BROWSER_SCANS_PER_AUDIT[input.plan];
+  if (!workspaceId || scanCap === 0) return checks;
+
+  const browserTasks: BrowserProbeTask[] = [];
+  for (let promptIndex = 0; promptIndex < input.prompts.length; promptIndex++) {
+    const prompt = input.prompts[promptIndex]!;
+    for (const platform of input.browserPlatforms) {
+      browserTasks.push({ promptIndex, prompt, platform });
+    }
+  }
+
+  const tasks = browserTasks.slice(0, scanCap);
+  const probeStarted = Date.now();
+
+  for (let i = 0; i < tasks.length; i++) {
+    if (Date.now() - probeStarted > BROWSER_PROBE_WALL_MS) break;
+    const task = tasks[i]!;
+    const browserPlatformId = BROWSER_PLATFORM_ID_BY_NAME[task.platform];
+
+    try {
+      const result = await scanWithBrowser({
+        platform: browserPlatformId,
+        searchPrompt: task.prompt,
+        brandDomain: domain,
+        workspaceId,
+        plan: input.plan,
+      });
+      checks.push(browserResultToProbe(result, task.platform, task.promptIndex));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Browser scan failed";
+      checks.push({
+        platform: task.platform,
+        prompt: task.prompt,
+        promptIndex: task.promptIndex,
+        cited: false,
+        checkMode: "live",
+        notes: message,
+        scanUnavailable: message.toLowerCase().includes("limit"),
+      });
+    }
+
+    if (i < tasks.length - 1) {
+      await delayBetweenBrowserScans();
+    }
+  }
+
+  return checks;
+}
+
 /** Live probes only — safe to run in parallel with analyzeSite(). */
 export async function runLivePlatformProbes(input: {
   domain: string;
   prompts: string[];
   plan: BillingPlan;
+  workspaceId?: string | null;
 }): Promise<PlatformProbeResult[]> {
   const domain = input.domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
   const brand = brandFromDomain(domain);
@@ -308,7 +436,15 @@ export async function runLivePlatformProbes(input: {
     }
   });
 
-  return checks;
+  const browserChecks = await runBrowserPlatformProbes({
+    domain,
+    prompts: promptsToProbe,
+    plan: input.plan,
+    workspaceId: input.workspaceId,
+    browserPlatforms: budget.browserPlatforms,
+  });
+
+  return [...checks, ...browserChecks];
 }
 
 export function buildPlatformPresence(
@@ -335,6 +471,7 @@ export async function runPlatformMonitoring(input: {
   prompts: string[];
   plan: BillingPlan;
   siteSignals: SiteSignals;
+  workspaceId?: string | null;
 }): Promise<{
   checks: PlatformProbeResult[];
   platforms: PlatformPresenceRow[];
@@ -343,6 +480,7 @@ export async function runPlatformMonitoring(input: {
     domain: input.domain,
     prompts: input.prompts,
     plan: input.plan,
+    workspaceId: input.workspaceId,
   });
   const platforms = buildPlatformPresence(
     checks,

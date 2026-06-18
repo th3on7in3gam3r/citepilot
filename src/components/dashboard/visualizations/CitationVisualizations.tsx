@@ -29,6 +29,16 @@ export function CitationVisualizations({
   const [payload, setPayload] = useState<VizPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userPlan, setUserPlan] = useState<"free" | "pilot" | "fleet">("free");
+
+  useEffect(() => {
+    void fetch("/api/billing/limits", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { prompts?: { plan?: "free" | "pilot" | "fleet" } } | null) => {
+        if (data?.prompts?.plan) setUserPlan(data.prompts.plan);
+      })
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!workspaceId) {
@@ -95,7 +105,7 @@ export function CitationVisualizations({
           <p className="mb-3 text-xs text-amber-700">{error} Showing cached workspace data.</p>
         ) : null}
         <PremiumVisualizationGate feature="citation_heatmap">
-          <CitationHeatmap data={payload.heatmap} />
+          <CitationHeatmap data={payload.heatmap} plan={userPlan} />
         </PremiumVisualizationGate>
       </Panel>
 

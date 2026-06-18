@@ -103,7 +103,12 @@ export async function runCitationAudit(input: {
       workspaceId: input.workspaceId ?? undefined,
       geoSnippetFixes,
     }),
-    runLivePlatformProbes({ domain, prompts, plan }),
+    runLivePlatformProbes({
+      domain,
+      prompts,
+      plan,
+      workspaceId: input.workspaceId ?? null,
+    }),
   ]);
 
   const platforms = buildPlatformPresence(checks, signals, prompts.length);

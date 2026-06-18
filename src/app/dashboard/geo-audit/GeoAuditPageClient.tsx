@@ -17,6 +17,7 @@ import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 import { publicScorePageUrl } from "@/lib/score/public-score-url";
 import { GeoAuditFixGuide } from "@/components/dashboard/geo-audit/GeoAuditFixGuide";
+import { GeoAuditScanProgress } from "@/components/dashboard/geo-audit/GeoAuditScanProgress";
 import { GeoAuditScanDelta } from "@/components/dashboard/geo-audit/GeoAuditScanDelta";
 import { GeoAuditScoreBreakdown } from "@/components/dashboard/geo-audit/GeoAuditScoreBreakdown";
 import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
@@ -40,6 +41,7 @@ export function GeoAuditPageClient() {
   const [lastAuditId, setLastAuditId] = useState<string | null>(null);
   const [lastAuditScore, setLastAuditScore] = useState<number | null>(null);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(PROMPT_LIMIT_FREE);
+  const [userPlan, setUserPlan] = useState<"free" | "pilot" | "fleet">("free");
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
   const [isFixOpen, setIsFixOpen] = useState(false);
@@ -75,9 +77,12 @@ export function GeoAuditPageClient() {
     try {
       const r = await fetch("/api/billing/limits", { credentials: "include" });
       if (r.ok) {
-        const d = (await r.json()) as { prompts?: { max: number | null } };
+        const d = (await r.json()) as {
+          prompts?: { max: number | null; plan?: "free" | "pilot" | "fleet" };
+        };
         limit = d?.prompts?.max ?? PROMPT_LIMIT_FREE;
         setPromptLimitMax(limit);
+        if (d.prompts?.plan) setUserPlan(d.prompts.plan);
       }
     } catch {
       // use default
@@ -166,12 +171,7 @@ export function GeoAuditPageClient() {
           </button>
         </div>
         {auditing && (
-          <div className="mt-4">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-              <div className="h-full animate-pulse rounded-full bg-accent" style={{ width: "60%" }} />
-            </div>
-            <p className="mt-2 text-xs text-muted">Scanning AI surfaces — this takes about 30–60 seconds…</p>
-          </div>
+          <GeoAuditScanProgress includesBrowserScans={userPlan !== "free"} />
         )}
       </Panel>
 
