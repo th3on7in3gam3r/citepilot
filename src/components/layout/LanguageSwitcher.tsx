@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname as useNextPathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { localizedPathnames, type AppLocale, routing } from "@/i18n/routing";
+import { type AppLocale, routing } from "@/i18n/routing";
 import { getPathname, usePathname } from "@/i18n/navigation";
+import {
+  isLocalizedMarketingPathname,
+  localizedMarketingTarget,
+  stripLocaleFromPathname,
+} from "@/lib/i18n/localized-path";
 
 const LOCALE_FLAGS: Record<AppLocale, string> = {
   en: "🇺🇸",
@@ -11,22 +17,41 @@ const LOCALE_FLAGS: Record<AppLocale, string> = {
   fr: "🇫🇷",
 };
 
+function resolvePathname(intlPathname: string, nextPathname: string | null): string {
+  const candidates = [intlPathname, nextPathname ?? ""].filter(Boolean);
+  for (const candidate of candidates) {
+    const stripped = stripLocaleFromPathname(candidate);
+    if (isLocalizedMarketingPathname(stripped)) return stripped;
+  }
+  return stripLocaleFromPathname(nextPathname ?? intlPathname);
+}
+
 export function LanguageSwitcher({ onDark = false }: { onDark?: boolean }) {
   const locale = useLocale() as AppLocale;
-  const pathname = usePathname();
+  const intlPathname = usePathname();
+  const nextPathname = useNextPathname();
   const t = useTranslations("languageSwitcher");
   const [pending, setPending] = useState<AppLocale | null>(null);
 
-  const isLocalized =
-    pathname === "/" ||
-    localizedPathnames.some((p) => p !== "/" && pathname === p);
-
-  const target = isLocalized ? pathname : "/";
+  const pathname = resolvePathname(intlPathname, nextPathname);
+  const isLocalized = isLocalizedMarketingPathname(pathname);
+  const rawPath = nextPathname ?? intlPathname;
+  const urlLocale =
+    routing.locales.find((code) => {
+      const prefix = `/${code}`;
+      return rawPath === prefix || rawPath.startsWith(`${prefix}/`);
+    }) ?? (isLocalized ? routing.defaultLocale : locale);
+  const activeLocale: AppLocale = isLocalized ? urlLocale : routing.defaultLocale;
+  const target = localizedMarketingTarget(pathname);
 
   function switchLocale(next: AppLocale) {
-    if (next === locale || pending) return;
+    if (next === activeLocale || pending) return;
     setPending(next);
-    const href = getPathname({ href: target, locale: next, forcePrefix: true });
+    const href = getPathname({
+      href: target,
+      locale: next,
+      forcePrefix: next !== routing.defaultLocale,
+    });
     window.location.assign(href);
   }
 
@@ -38,7 +63,7 @@ export function LanguageSwitcher({ onDark = false }: { onDark?: boolean }) {
       aria-busy={pending != null ? true : undefined}
     >
       {routing.locales.map((code) => {
-        const active = code === locale;
+        const active = code === activeLocale;
         const switching = pending === code;
         return (
           <button

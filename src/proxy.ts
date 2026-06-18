@@ -6,6 +6,8 @@ import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
 import { intlMiddleware, shouldRunIntl } from "@/lib/i18n/intl-proxy";
 import { isNonLocalizedRootPath } from "@/lib/i18n/intl-paths";
+import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
+import { routing } from "@/i18n/routing";
 import { enforceTwoFactorAccess } from "@/lib/security/fleet-2fa";
 
 const dashboardAuthProxy =
@@ -159,7 +161,14 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isNonLocalizedRootPath(pathname)) {
-    return withApiCorsHeaders(request, NextResponse.next());
+    const response = NextResponse.next();
+    // App routes outside [locale] are English-only — keep nav/switcher on EN.
+    response.cookies.set(LOCALE_COOKIE_NAME, routing.defaultLocale, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    return withApiCorsHeaders(request, response);
   }
 
   return withApiCorsHeaders(request, NextResponse.next());
