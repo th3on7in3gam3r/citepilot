@@ -20,30 +20,93 @@ function normalizeShopDomain(value: string): string {
     : `${trimmed}.myshopify.com`;
 }
 
+function normalizeAccessToken(value: string): string {
+  return value.trim();
+}
+
+function looksLikeHtml(text: string, contentType: string): boolean {
+  if (contentType.includes("text/html")) return true;
+  const trimmed = text.trimStart().toLowerCase();
+  return trimmed.startsWith("<!doctype") || trimmed.startsWith("<html");
+}
+
+function friendlyShopifyHttpError(status: number, domain: string): string {
+  if (status === 401) {
+    return "Shopify rejected the access token. Regenerate the Admin API token and ensure the custom app is installed on this store.";
+  }
+  if (status === 403) {
+    return "Shopify denied access. Enable write_content (and read_content) on your custom app, reinstall it, and copy the new token.";
+  }
+  if (status === 404) {
+    return `Shopify store not found at ${domain}. Use the .myshopify.com admin domain (e.g. my-store.myshopify.com).`;
+  }
+  return `Shopify request failed (${status})`;
+}
+
 async function shopifyGraphql<T>(
   credentials: ShopifyCredentials,
   query: string,
   variables: Record<string, unknown> = {},
 ): Promise<T> {
   const domain = normalizeShopDomain(credentials.shopDomain);
+  const accessToken = normalizeAccessToken(credentials.accessToken);
+  if (!accessToken) {
+    throw new ShopifyApiError("Admin access token is required.", 400);
+  }
+
   const res = await fetch(`https://${domain}/admin/api/2026-04/graphql.json`, {
     method: "POST",
     headers: {
-      "X-Shopify-Access-Token": credentials.accessToken,
+      "X-Shopify-Access-Token": accessToken,
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify({ query, variables }),
   });
-  const body = (await res.json().catch(() => ({}))) as {
-    data?: T;
-    errors?: { message?: string }[];
-  };
-  if (!res.ok || body.errors?.length) {
-    const message =
-      body.errors?.[0]?.message || `Shopify request failed (${res.status})`;
-    throw new ShopifyApiError(message, res.status);
+  const text = await res.text();
+  const contentType = res.headers.get("content-type") ?? "";
+
+  if (looksLikeHtml(text, contentType)) {
+    throw new ShopifyApiError(
+      `Shopify returned HTML instead of JSON for ${domain}. Confirm the shop domain ends with .myshopify.com and the access token is from an installed custom app.`,
+      502,
+    );
   }
-  return body.data as T;
+
+  let body: {
+    data?: T;
+    errors?: { message?: string; extensions?: { code?: string } }[];
+  };
+  try {
+    body = text ? (JSON.parse(text) as typeof body) : {};
+  } catch {
+    throw new ShopifyApiError(
+      "Shopify returned an invalid response. Check the shop domain and access token.",
+      502,
+    );
+  }
+
+  if (!res.ok) {
+    throw new ShopifyApiError(friendlyShopifyHttpError(res.status, domain), res.status);
+  }
+
+  if (body.errors?.length) {
+    const first = body.errors[0];
+    const code = first?.extensions?.code ?? "";
+    if (code === "ACCESS_DENIED" || /access denied|not authorized/i.test(first?.message ?? "")) {
+      throw new ShopifyApiError(
+        "Shopify access denied. Your custom app needs read_content and write_content scopes, then must be reinstalled to refresh the token.",
+        403,
+      );
+    }
+    throw new ShopifyApiError(first?.message || "Shopify GraphQL request failed", 400);
+  }
+
+  if (!body.data) {
+    throw new ShopifyApiError("Shopify returned an empty GraphQL response.", 502);
+  }
+
+  return body.data;
 }
 
 type ShopifyBlogInfo = {

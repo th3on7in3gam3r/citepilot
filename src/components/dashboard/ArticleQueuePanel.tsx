@@ -402,14 +402,14 @@ export function ArticleQueuePanel({
                 className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={post.url}
-                      className="font-medium text-accent hover:underline"
-                      target="_blank"
-                    >
-                      {post.title}
-                    </Link>
+                  <Link
+                    href={post.url}
+                    className="font-medium text-accent hover:underline"
+                    target="_blank"
+                  >
+                    {post.title}
+                  </Link>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StatusBadge tone="blog">CitePilot blog</StatusBadge>
                     {onWebflow && <StatusBadge tone="live">Live on Webflow</StatusBadge>}
                     {post.publications.map((publication) => (

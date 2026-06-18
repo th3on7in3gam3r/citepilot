@@ -491,15 +491,26 @@ export function CmsConnectionsPanel({
           removing={removing === "shopify"}
           onSave={() => void saveProvider("shopify")}
           onRemove={() => void disconnectProvider("shopify")}
-          note="Best for stores that already use Shopify's built-in blog."
+          note="Publishes to Shopify’s built-in blog (no products required). Use a Partner development store to test for free."
         >
           <div className="grid gap-3">
+            <div className="rounded-xl border border-border bg-surface/60 px-4 py-3 text-xs leading-relaxed text-muted">
+              <p className="font-semibold text-ink">Setup checklist</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-4">
+                <li>Create a free store at partners.shopify.com (development store is fine).</li>
+                <li>In Shopify admin: Settings → Apps → Develop apps → Create app.</li>
+                <li>Enable Admin API scopes: <span className="font-semibold text-ink">read_content</span> and{" "}
+                  <span className="font-semibold text-ink">write_content</span>.
+                </li>
+                <li>Install the app, then copy the Admin API access token (<span className="font-semibold text-ink">shpat_…</span>).</li>
+              </ol>
+            </div>
             <Field
               label="Shop domain"
               value={forms.shopify.shopDomain}
               onChange={(value) => updateForm("shopify", "shopDomain", value)}
               placeholder="store-name.myshopify.com"
-              help="Use the .myshopify.com admin domain for the store."
+              help="Use the .myshopify.com admin domain (not your custom storefront URL)."
             />
             <Field
               label="Admin access token"
@@ -507,7 +518,7 @@ export function CmsConnectionsPanel({
               value={forms.shopify.accessToken}
               onChange={(value) => updateForm("shopify", "accessToken", value)}
               placeholder="shpat_..."
-              help="The token needs permission to create and update blog articles."
+              help="From your custom app after install. Needs read_content + write_content."
             />
           </div>
         </ProviderCard>
