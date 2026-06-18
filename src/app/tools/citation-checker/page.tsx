@@ -13,6 +13,8 @@ import { citationCheckerTool } from "@/lib/marketing/tools-pages";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: clampSeoTitle(citationCheckerTool.title),
   description: clampMetaDescription(citationCheckerTool.description),

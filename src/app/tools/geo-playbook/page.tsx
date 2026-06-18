@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+export const revalidate = 3600;
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { GeoPlaybookJsonLd } from "@/components/marketing/GeoPlaybookJsonLd";

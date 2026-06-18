@@ -4,7 +4,7 @@ import { HeroCta } from "@/components/home/HeroCta";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-export async function Hero({ heroCtaVariant }: { heroCtaVariant?: string }) {
+export async function Hero() {
   const t = await getTranslations("hero");
 
   return (
@@ -41,7 +41,7 @@ export async function Hero({ heroCtaVariant }: { heroCtaVariant?: string }) {
           </div>
 
           <div className="mt-7 flex flex-col items-center sm:mt-8">
-            <HeroCta initialVariant={heroCtaVariant} />
+            <HeroCta />
             <p className="mt-3 text-xs text-muted dark:text-white/55">
               {t("noCard")}{" "}
               <Link

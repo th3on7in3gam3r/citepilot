@@ -8,6 +8,8 @@ import { apiDocsLanding } from "@/lib/marketing/api-docs-data";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: clampSeoTitle(apiDocsLanding.shortTitle),
   description: clampMetaDescription(apiDocsLanding.description),

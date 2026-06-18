@@ -260,15 +260,16 @@ async function loadProfile(
   workspaceId: string,
   domain: string,
 ): Promise<BacklinkProfile> {
-  const row = await dbGet<ProfileRow>(
-    `SELECT * FROM backlink_profiles WHERE workspace_id = ?`,
-    [workspaceId],
-  );
-
-  const sourceRows = await dbAll<SourceRow>(
-    `SELECT * FROM backlink_sources WHERE workspace_id = ? ORDER BY discovered_at DESC LIMIT 30`,
-    [workspaceId],
-  );
+  const [row, sourceRows] = await Promise.all([
+    dbGet<ProfileRow>(
+      `SELECT * FROM backlink_profiles WHERE workspace_id = ?`,
+      [workspaceId],
+    ),
+    dbAll<SourceRow>(
+      `SELECT * FROM backlink_sources WHERE workspace_id = ? ORDER BY discovered_at DESC LIMIT 30`,
+      [workspaceId],
+    ),
+  ]);
 
   if (!row) {
     return {

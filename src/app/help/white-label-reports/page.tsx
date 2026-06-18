@@ -4,6 +4,8 @@ import { Container } from "@/components/ui/Container";
 import { reportsCnameTarget } from "@/lib/white-label/dns-guide";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
+
+export const revalidate = 3600;
 import Link from "next/link";
 
 const CNAME_TARGET = reportsCnameTarget();

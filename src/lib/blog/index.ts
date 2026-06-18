@@ -4,8 +4,10 @@ import { purgeRemovedBlogPosts } from "./purge";
 import { isRemovedBlogSlug } from "./removed-slugs";
 import {
   getGeneratedPostBySlug,
+  listGeneratedPostSummaries,
   listGeneratedPosts,
   rowToBlogPost,
+  rowToBlogPostSummary,
 } from "./store";
 
 const staticPosts: BlogPost[] = [
@@ -22,6 +24,31 @@ export async function getAllPosts(): Promise<BlogPost[]> {
   const staticSlugs = new Set(staticPosts.map((p) => p.slug));
   const merged = [
     ...staticPosts,
+    ...generated.filter((p) => !staticSlugs.has(p.slug)),
+  ];
+  return merged
+    .filter(isPublicPost)
+    .sort(
+      (a, b) =>
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+    );
+}
+
+/** Index-safe post list — excludes markdown and section bodies. */
+export async function getAllPostSummaries(): Promise<BlogPost[]> {
+  await purgeRemovedBlogPosts();
+  const generated = (await listGeneratedPostSummaries()).map(rowToBlogPostSummary);
+  const staticSlugs = new Set(staticPosts.map((p) => p.slug));
+  const staticSummaries = staticPosts.map(
+    ({ markdown: _md, sections, faqs, takeaways, ...summary }) => ({
+      ...summary,
+      sections,
+      faqs,
+      takeaways,
+    }),
+  );
+  const merged = [
+    ...staticSummaries,
     ...generated.filter((p) => !staticSlugs.has(p.slug)),
   ];
   return merged

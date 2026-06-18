@@ -248,14 +248,9 @@ const TIERS: Tier[] = [
   },
 ];
 
-export function PricingPlanCards({
-  initialLayoutVariant,
-}: {
-  initialLayoutVariant?: string;
-}) {
+export function PricingPlanCards() {
   const [interval, setInterval] = useState<BillingInterval>("monthly");
   const layoutVariant = useFeatureFlagVariant(FEATURE_FLAGS.PRICING_PAGE_LAYOUT, {
-    initialVariant: initialLayoutVariant,
     fallback: "control",
   });
   const isPilotFocus = layoutVariant === "variant_a";

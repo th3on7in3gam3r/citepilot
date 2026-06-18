@@ -7,11 +7,51 @@ const globalForPg = globalThis as unknown as {
   citepilotPgReady?: Promise<void>;
 };
 
-/** Neon / Postgres URL — accepts DATABASE_URL (Vercel default) or NEON_URL */
+/**
+ * Neon / Postgres URL for runtime queries.
+ * Prefer DATABASE_URL_POOLED (PgBouncer) to reduce serverless cold-start latency.
+ * Use DATABASE_URL_DIRECT for migrations and one-off admin scripts.
+ */
 export function postgresConnectionString(): string | undefined {
-  const url =
+  const pooled = process.env.DATABASE_URL_POOLED?.trim();
+  if (pooled) return pooled;
+
+  const direct =
     process.env.DATABASE_URL?.trim() || process.env.NEON_URL?.trim();
-  return url || undefined;
+  if (!direct) return undefined;
+
+  return preferNeonPooler(direct);
+}
+
+/** Upgrade a direct Neon host to the -pooler endpoint when pooling env is unset. */
+function preferNeonPooler(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    if (!host.includes(".neon.tech") || host.includes("-pooler.")) {
+      return url;
+    }
+    parsed.hostname = host.replace(
+      /^ep-([^.]+)\./,
+      "ep-$1-pooler.",
+    );
+    if (!parsed.searchParams.has("pgbouncer")) {
+      parsed.searchParams.set("pgbouncer", "true");
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+/** Direct (non-pooled) URL for migrations and DDL. */
+export function postgresDirectConnectionString(): string | undefined {
+  return (
+    process.env.DATABASE_URL_DIRECT?.trim() ||
+    process.env.DATABASE_URL?.trim() ||
+    process.env.NEON_URL?.trim() ||
+    undefined
+  );
 }
 
 export function postgresEnvVar(): "DATABASE_URL" | "NEON_URL" | null {

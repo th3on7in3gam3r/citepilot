@@ -8,12 +8,14 @@ import { BlogPostCard } from "@/components/blog/BlogPostCard";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { Container } from "@/components/ui/Container";
 import {
-  getAllPosts,
+  getAllPostSummaries,
   getPillarById,
   getPostsByPillar,
 } from "@/lib/blog";
 import type { EditorialPillarId } from "@/lib/content-strategy";
 import { EDITORIAL_PILLARS } from "@/lib/content-strategy";
+
+export const revalidate = 1800;
 
 type Props = { params: Promise<{ pillar: string }> };
 
@@ -37,7 +39,7 @@ export default async function BlogCategoryPage({ params }: Props) {
   if (!pillar) notFound();
 
   const posts = getPostsByPillar(
-    await getAllPosts(),
+    await getAllPostSummaries(),
     pillar.id as EditorialPillarId,
   );
 

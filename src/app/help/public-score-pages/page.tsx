@@ -4,6 +4,8 @@ import { Container } from "@/components/ui/Container";
 import { VERIFICATION_DNS_PREFIX } from "@/lib/score/verification-constants";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
+
+export const revalidate = 3600;
 import Link from "next/link";
 
 export const metadata: Metadata = {

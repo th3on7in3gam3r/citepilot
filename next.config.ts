@@ -1,8 +1,16 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import bundleAnalyzer from "@next/bundle-analyzer";
 import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+const marketingCacheControl =
+  "public, s-maxage=3600, stale-while-revalidate=86400";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -61,11 +69,72 @@ const nextConfig: NextConfig = {
         headers: previewCsp,
       },
       {
+        source: "/",
+        headers: [{ key: "Cache-Control", value: marketingCacheControl }],
+      },
+      {
+        source: "/:locale(en|es|fr)",
+        headers: [{ key: "Cache-Control", value: marketingCacheControl }],
+      },
+      {
+        source: "/pricing",
+        headers: [{ key: "Cache-Control", value: marketingCacheControl }],
+      },
+      {
+        source: "/:locale(en|es|fr)/pricing",
+        headers: [{ key: "Cache-Control", value: marketingCacheControl }],
+      },
+      {
+        source: "/agency",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      {
+        source: "/:locale(en|es|fr)/agency",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      {
+        source: "/blog",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=1800, stale-while-revalidate=7200",
+          },
+        ],
+      },
+      {
+        source: "/blog/:slug*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      {
         source: "/launch",
         headers: [
           {
             key: "Cache-Control",
             value: "public, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/press",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=86400, stale-while-revalidate=604800",
           },
         ],
       },
@@ -117,6 +186,12 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/:path*",
+        has: [{ type: "host", value: "getcitepilot.com" }],
+        destination: "https://www.getcitepilot.com/:path*",
+        permanent: true,
+      },
+      {
         source: "/vs/:slug",
         destination: "/compare/:slug",
         permanent: true,
@@ -138,7 +213,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(withNextIntl(nextConfig), {
+export default withSentryConfig(withBundleAnalyzer(withNextIntl(nextConfig)), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,

@@ -9,6 +9,8 @@ import { citationGapCalculatorTool } from "@/lib/marketing/tools-pages";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: clampSeoTitle(citationGapCalculatorTool.title),
   description: clampMetaDescription(citationGapCalculatorTool.description),

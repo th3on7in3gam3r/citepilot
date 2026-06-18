@@ -3,6 +3,8 @@ import { Header } from "@/components/layout/Header";
 import { Container } from "@/components/ui/Container";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
+
+export const revalidate = 3600;
 import Link from "next/link";
 
 export const metadata: Metadata = {

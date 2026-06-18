@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 
 const description = `Download CitePilot logos, screenshots, and brand assets. Press contact: ${pressEmail}`;
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: clampSeoTitle("Press & Media Kit"),

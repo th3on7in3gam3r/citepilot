@@ -9,6 +9,7 @@ import { ProductHuntUtmCapture } from "@/components/launch/ProductHuntUtmCapture
 import { BadgeRefCapture } from "@/components/widget/BadgeRefCapture";
 import { SkipToContent } from "@/components/accessibility/SkipToContent";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { pickClientMessages } from "@/lib/i18n/client-messages";
 import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 import { themeInitScript } from "@/lib/theme";
@@ -98,7 +99,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
-  const messages = await getMessages();
+  const messages = pickClientMessages(await getMessages());
 
   return (
     <html

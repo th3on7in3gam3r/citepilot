@@ -104,6 +104,35 @@ function estimateReadingMinutes(markdown: string): number {
   return Math.max(3, Math.round(words / 200));
 }
 
+const BLOG_SUMMARY_COLUMNS = `
+  slug, title, description, pillar, audience, content_type,
+  published_at, seo_title, tldr, reading_minutes,
+  cover_image_url, cover_image_alt
+`.replace(/\s+/g, " ");
+
+export type BlogPostSummaryRow = {
+  slug: string;
+  title: string;
+  description: string;
+  pillar: string;
+  audience: string;
+  content_type: string;
+  published_at: string;
+  seo_title: string;
+  tldr: string;
+  reading_minutes: number;
+  cover_image_url: string | null;
+  cover_image_alt: string | null;
+};
+
+export async function listGeneratedPostSummaries(): Promise<BlogPostSummaryRow[]> {
+  return dbAll<BlogPostSummaryRow>(
+    `SELECT ${BLOG_SUMMARY_COLUMNS}
+     FROM blog_posts
+     ORDER BY published_at DESC, created_at DESC`,
+  );
+}
+
 export async function listGeneratedPosts(): Promise<BlogPostRow[]> {
   return dbAll<BlogPostRow>(
     `SELECT * FROM blog_posts ORDER BY published_at DESC, created_at DESC`,
@@ -303,6 +332,28 @@ export function dedupeBlogPostsBySlug(rows: BlogPostRow[]): BlogPostRow[] {
     (a, b) =>
       new Date(b.published_at).getTime() - new Date(a.published_at).getTime(),
   );
+}
+
+export function rowToBlogPostSummary(row: BlogPostSummaryRow): BlogPost {
+  const cover = resolveRowCover(row as BlogPostRow);
+  return {
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    pillar: row.pillar as EditorialPillarId,
+    audience: row.audience as AudienceSegment,
+    contentType: row.content_type as ContentType,
+    author: DEFAULT_BLOG_AUTHOR,
+    publishedAt: row.published_at,
+    readingMinutes: row.reading_minutes,
+    seoTitle: row.seo_title,
+    tldr: row.tldr,
+    sections: [],
+    faqs: [],
+    takeaways: [],
+    source: "generated",
+    ...cover,
+  };
 }
 
 export function rowToBlogPost(row: BlogPostRow): BlogPost {

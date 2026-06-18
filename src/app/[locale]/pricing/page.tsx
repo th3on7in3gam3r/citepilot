@@ -8,14 +8,14 @@ import { Header } from "@/components/layout/Header";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
-import { FEATURE_FLAGS } from "@/lib/analytics/feature-flags";
 import { pricingPageFaqItems } from "@/lib/marketing/site-faq";
-import { getServerSideFlagVariant } from "@/lib/posthog-server";
 import { localeAlternates } from "@/lib/i18n/metadata";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { MainContent } from "@/components/layout/MainContent";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
+
+export const revalidate = 3600;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -36,10 +36,6 @@ export default async function PricingPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("pricingPage");
-
-  const pricingLayoutVariant = await getServerSideFlagVariant(
-    FEATURE_FLAGS.PRICING_PAGE_LAYOUT,
-  );
 
   return (
     <>
@@ -127,7 +123,7 @@ export default async function PricingPage({ params }: Props) {
               {t("tiersTitle")}
             </h2>
             <ProductHuntPromoBar />
-            <PricingPlanCards initialLayoutVariant={pricingLayoutVariant} />
+            <PricingPlanCards />
           </section>
 
           <ProductTransparencySection variant="dark" />

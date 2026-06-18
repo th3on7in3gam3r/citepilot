@@ -10,6 +10,8 @@ import {
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 
+export const revalidate = 3600;
+
 const title = "Changelog & Roadmap";
 const description =
   "What we ship and what's next. CitePilot is actively maintained — weekly citation monitoring, CMS publish, Fleet API, and more.";

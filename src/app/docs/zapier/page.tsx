@@ -5,6 +5,8 @@ import { site } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Zapier Integration",
   description: `Connect ${site.name} to Zapier with outgoing webhooks — pipe citation events into Slack, Notion, Google Sheets, and 5,000+ apps.`,

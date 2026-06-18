@@ -6,6 +6,8 @@ import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 
+export const revalidate = 86400;
+
 type Props = {
   params: Promise<{ locale: string }>;
 };

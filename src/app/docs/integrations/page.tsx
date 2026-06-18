@@ -5,6 +5,8 @@ import { site } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Integrations Guide",
   description: `Connect ${site.name} to CMS platforms, Slack, Zapier, and Make.com.`,

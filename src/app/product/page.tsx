@@ -13,6 +13,8 @@ import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: clampSeoTitle(productLanding.shortTitle),
   description: clampMetaDescription(productLanding.description),

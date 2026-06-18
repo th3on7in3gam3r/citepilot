@@ -10,7 +10,7 @@ import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
 import { BlogPostMeta } from "@/components/blog/BlogPostMeta";
 import { MarkdownArticle } from "@/components/blog/MarkdownArticle";
 import { Container } from "@/components/ui/Container";
-import { getPostBySlug } from "@/lib/blog";
+import { getPostBySlug, getAllSlugs } from "@/lib/blog";
 import { blogPostImageUrl } from "@/lib/blog/covers";
 import { pillarHref } from "@/lib/blog/utils";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
@@ -19,7 +19,12 @@ import { EDITORIAL_PILLARS } from "@/lib/content-strategy";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  const slugs = await getAllSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

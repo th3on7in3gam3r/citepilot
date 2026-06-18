@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { dbGet } from "@/lib/db";
 
 export type PublicPlatformStats = {
@@ -5,18 +6,18 @@ export type PublicPlatformStats = {
   citationsTracked: number;
 };
 
-export async function getPublicPlatformStats(): Promise<PublicPlatformStats> {
-  const domainsRow = await dbGet<{ c: number | string }>(
-    `SELECT COUNT(DISTINCT domain) as c FROM audit_runs`,
-  );
-
-  const citationsRow = await dbGet<{ c: number | string }>(
-    `SELECT COUNT(*) as c FROM platform_citation_checks`,
-  );
-
-  const citationsFromAudits = await dbGet<{ c: number | string }>(
-    `SELECT COALESCE(SUM(total_prompts), 0) as c FROM audit_runs`,
-  );
+async function fetchPublicPlatformStats(): Promise<PublicPlatformStats> {
+  const [domainsRow, citationsRow, citationsFromAudits] = await Promise.all([
+    dbGet<{ c: number | string }>(
+      `SELECT COUNT(DISTINCT domain) as c FROM audit_runs`,
+    ),
+    dbGet<{ c: number | string }>(
+      `SELECT COUNT(*) as c FROM platform_citation_checks`,
+    ),
+    dbGet<{ c: number | string }>(
+      `SELECT COALESCE(SUM(total_prompts), 0) as c FROM audit_runs`,
+    ),
+  ]);
 
   const platformChecks = Number(citationsRow?.c ?? 0);
   const citationsTracked =
@@ -29,6 +30,13 @@ export async function getPublicPlatformStats(): Promise<PublicPlatformStats> {
     citationsTracked,
   };
 }
+
+/** Cached public stats — avoids cold DB hits on every homepage ISR miss. */
+export const getPublicPlatformStats = unstable_cache(
+  fetchPublicPlatformStats,
+  ["public-platform-stats"],
+  { revalidate: 3600 },
+);
 
 function formatStat(value: number): string {
   return value.toLocaleString("en-US");

@@ -7,6 +7,8 @@ import { aiVisibilityLanding } from "@/lib/marketing/ai-visibility-landing";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 
+export const revalidate = 3600;
+
 const pageUrl = `${site.url.replace(/\/$/, "")}${aiVisibilityLanding.path}`;
 
 export const metadata: Metadata = {

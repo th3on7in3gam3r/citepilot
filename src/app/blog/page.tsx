@@ -11,12 +11,12 @@ import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { Container } from "@/components/ui/Container";
 import {
   countPostsByPillar,
-  getAllPosts,
+  getAllPostSummaries,
   getPillarsForCategoryGrid,
 } from "@/lib/blog";
 import { site } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "GEO, SEO & AI Citation Guides",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndexPage() {
-  const posts = await getAllPosts();
+  const posts = await getAllPostSummaries();
   const counts = countPostsByPillar(posts);
   const gridPillars = getPillarsForCategoryGrid(posts);
   const featured = posts[0];
