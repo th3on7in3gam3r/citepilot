@@ -22,30 +22,79 @@ function authHeader(credentials: WordPressCredentials): string {
   ).toString("base64")}`;
 }
 
+/** REST route without /wp-json prefix, e.g. `/wp/v2/users/me`. */
+function restPaths(route: string): string[] {
+  const normalized = route.startsWith("/") ? route : `/${route}`;
+  return [
+    `/wp-json${normalized}`,
+    `/index.php?rest_route=${encodeURIComponent(normalized)}`,
+  ];
+}
+
+function looksLikeHtml(text: string, contentType: string): boolean {
+  if (contentType.includes("text/html")) return true;
+  const trimmed = text.trimStart().toLowerCase();
+  return trimmed.startsWith("<!doctype") || trimmed.startsWith("<html");
+}
+
 async function wpFetch<T>(
   credentials: WordPressCredentials,
-  path: string,
+  route: string,
   init?: RequestInit,
 ): Promise<T> {
   const siteUrl = normalizeSiteUrl(credentials.siteUrl);
-  const res = await fetch(`${siteUrl}${path}`, {
-    ...init,
-    headers: {
-      Authorization: authHeader(credentials),
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
-  const text = await res.text();
-  const body = text ? JSON.parse(text) : null;
-  if (!res.ok) {
-    const message =
-      body?.message ||
-      body?.code ||
-      `WordPress request failed (${res.status})`;
-    throw new WordPressApiError(message, res.status);
+  let lastError: WordPressApiError | null = null;
+
+  for (const path of restPaths(route)) {
+    const res = await fetch(`${siteUrl}${path}`, {
+      ...init,
+      headers: {
+        Authorization: authHeader(credentials),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...init?.headers,
+      },
+    });
+    const text = await res.text();
+    const contentType = res.headers.get("content-type") ?? "";
+
+    if (looksLikeHtml(text, contentType)) {
+      lastError = new WordPressApiError(
+        "WordPress REST API returned HTML instead of JSON. In wp-admin open Settings → Permalinks, choose Post name, and click Save Changes.",
+        502,
+      );
+      continue;
+    }
+
+    let body: { message?: string; code?: string } | null = null;
+    try {
+      body = text ? (JSON.parse(text) as { message?: string; code?: string }) : null;
+    } catch {
+      lastError = new WordPressApiError(
+        "WordPress REST API returned an invalid response. Check the site URL and try saving Permalinks in WordPress.",
+        502,
+      );
+      continue;
+    }
+
+    if (!res.ok) {
+      const message =
+        body?.message ||
+        body?.code ||
+        `WordPress request failed (${res.status})`;
+      throw new WordPressApiError(message, res.status);
+    }
+
+    return body as T;
   }
-  return body as T;
+
+  throw (
+    lastError ??
+    new WordPressApiError(
+      "Could not reach the WordPress REST API. Confirm the site URL and Application Password.",
+      502,
+    )
+  );
 }
 
 export async function testWordPressConnection(
@@ -53,8 +102,8 @@ export async function testWordPressConnection(
 ): Promise<{ displayName: string; siteUrl: string; detail: string }> {
   const siteUrl = normalizeSiteUrl(credentials.siteUrl);
   const [user, root] = await Promise.all([
-    wpFetch<{ name?: string }>(credentials, "/wp-json/wp/v2/users/me"),
-    fetch(`${siteUrl}/wp-json`).then((res) => res.json() as Promise<{ name?: string }>),
+    wpFetch<{ name?: string }>(credentials, "/wp/v2/users/me"),
+    wpFetch<{ name?: string }>(credentials, "/"),
   ]);
 
   return {
@@ -75,13 +124,13 @@ export async function publishPostToWordPress(input: {
   existingRemoteId?: string | null;
 }): Promise<{ remoteId: string; liveUrl: string | null }> {
   const html = markdownToCmsHtml(input.markdown);
-  const methodPath = input.existingRemoteId
-    ? `/wp-json/wp/v2/posts/${input.existingRemoteId}`
-    : "/wp-json/wp/v2/posts";
+  const restRoute = input.existingRemoteId
+    ? `/wp/v2/posts/${input.existingRemoteId}`
+    : "/wp/v2/posts";
 
   const post = await wpFetch<{ id: number | string; link?: string }>(
     input.credentials,
-    methodPath,
+    restRoute,
     {
       method: "POST",
       body: JSON.stringify({
