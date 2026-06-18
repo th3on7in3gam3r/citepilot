@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { useCopilot } from "@/components/dashboard/copilot/CopilotProvider";
 import { WorkspaceSwitcher } from "@/components/dashboard/WorkspaceSwitcher";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -22,7 +23,11 @@ export function DashboardTopBar({
   const upgradeModal = useUpgradeModalOptional();
   const [showAddSiteForm, setShowAddSiteForm] = useState(false);
   const [initial, setInitial] = useState<string | null>(null);
+  const [userLabel, setUserLabel] = useState<string | null>(null);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  const accountMenuId = useId();
 
   const crumbs = dashboardBreadcrumbs(pathname);
 
@@ -33,8 +38,32 @@ export function DashboardTopBar({
       const email = data.user.email || "";
       const letter = name.trim() ? name[0] : email.trim() ? email[0] : "";
       if (letter) setInitial(letter.toUpperCase());
+      setUserLabel(name.trim() || email.trim() || null);
     });
   }, []);
+
+  useEffect(() => {
+    setAccountMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function onPointerDown(e: MouseEvent) {
+      if (!accountMenuRef.current?.contains(e.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setAccountMenuOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [accountMenuOpen]);
 
   useEffect(() => {
     void fetch("/api/billing/status", { credentials: "include" })
@@ -138,28 +167,63 @@ export function DashboardTopBar({
               <span className="hidden sm:inline">Copilot</span>
             </button>
 
-            <button
-              type="button"
+            <Link
+              href="/dashboard/settings#notifications"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-surface hover:text-ink dark:hover:bg-[#141414]"
-              aria-label="Notifications"
+              aria-label="Notification settings"
+              title="Citation alerts & notification settings"
             >
               <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-            </button>
-
-            <Link
-              href="/dashboard/settings"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent ring-1 ring-accent/20 transition hover:bg-accent/15"
-              aria-label="Account settings"
-              title="Account settings"
-            >
-              {initial ?? (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              )}
             </Link>
+
+            <div ref={accountMenuRef} className="relative">
+              <button
+                type="button"
+                id={`${accountMenuId}-trigger`}
+                aria-expanded={accountMenuOpen}
+                aria-haspopup="menu"
+                aria-controls={accountMenuId}
+                onClick={() => setAccountMenuOpen((open) => !open)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent ring-1 ring-accent/20 transition hover:bg-accent/15"
+                aria-label="Account menu"
+                title="Account menu"
+              >
+                {initial ?? (
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                )}
+              </button>
+
+              {accountMenuOpen && (
+                <div
+                  id={accountMenuId}
+                  role="menu"
+                  aria-labelledby={`${accountMenuId}-trigger`}
+                  className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-lg dark:border-[#333] dark:bg-[#111]"
+                >
+                  {userLabel && (
+                    <p className="truncate px-3 py-2 text-xs font-medium text-muted" title={userLabel}>
+                      {userLabel}
+                    </p>
+                  )}
+                  <Link
+                    href="/dashboard/settings"
+                    role="menuitem"
+                    onClick={() => setAccountMenuOpen(false)}
+                    className="block px-3 py-2 text-sm font-medium text-ink transition hover:bg-surface dark:hover:bg-[#141414]"
+                  >
+                    Account settings
+                  </Link>
+                  <div className="my-1 border-t border-border dark:border-[#333]" />
+                  <div className="px-3 py-2" role="none">
+                    <SignOutButton className="w-full text-left text-sm font-medium text-muted transition hover:text-ink disabled:opacity-60" />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="ml-auto h-9 w-40 animate-pulse rounded-lg bg-surface dark:bg-[#141414]" />
