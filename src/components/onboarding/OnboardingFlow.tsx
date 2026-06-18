@@ -566,7 +566,7 @@ export function OnboardingFlow({
       </div>
 
       <OnboardingAside />
-      <OnboardingExitIntent active={!completed} completed={completed} />
+      <OnboardingExitIntent active={!completed} completed={completed} step={step} />
     </div>
   );
 }
