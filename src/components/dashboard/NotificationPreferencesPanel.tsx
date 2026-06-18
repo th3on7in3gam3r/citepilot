@@ -675,7 +675,10 @@ export function NotificationPreferencesPanel({
         ) : (
           <>
             <p className="mt-1 text-xs text-muted">
-              Receive HMAC-signed POST payloads for selected events.
+              Receive HMAC-signed flat JSON payloads for Zapier, Make.com, and custom endpoints.{" "}
+              <a href="/docs/integrations" className="font-semibold text-accent hover:underline">
+                Integration guide →
+              </a>
             </p>
 
             {webhooks.length > 0 ? (

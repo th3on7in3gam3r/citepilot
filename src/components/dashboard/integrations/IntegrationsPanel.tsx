@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
 import { SlackAlertsPanel } from "@/components/dashboard/SlackAlertsPanel";
+import { WebhookIntegrationPanel } from "@/components/dashboard/integrations/WebhookIntegrationPanel";
 import { effectInit } from "@/lib/react/effect-init";
 import { useBilling } from "@/contexts/BillingContext";
 import { useToast } from "@/components/notifications/ToastProvider";
@@ -304,7 +306,7 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
       <DashboardPageHeader
         headingLevel="h2"
         title="Integrations"
-        description="Connect CMS platforms to publish articles, and Slack for citation digests and alerts."
+        description="Connect CMS platforms to publish articles, Slack for alerts, and Zapier/Make for no-code automations."
       />
 
       <section className="mb-10">
@@ -313,6 +315,44 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
           Webflow, WordPress, Ghost, Shopify, and Framer — publish from your article queue.
         </p>
         <div className="mt-4">{cmsSection}</div>
+      </section>
+
+      <section className="mb-10">
+        <h3 className="font-display text-base font-bold text-ink">Zapier & Make</h3>
+        <p className="mt-1 text-sm text-muted">
+          Pipe CitePilot events into Slack, Notion, Google Sheets, HubSpot, and 5,000+ apps — no code
+          required.{" "}
+          <Link href="/docs/integrations" className="font-semibold text-accent hover:underline">
+            Integration guide →
+          </Link>
+        </p>
+        <article className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FF4A00] text-xs font-bold text-white">
+                Z
+              </span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#6D00CC] text-xs font-bold text-white">
+                M
+              </span>
+              <div>
+                <h3 className="font-display font-bold text-ink">Zapier & Make.com</h3>
+                <p className="text-xs text-muted">
+                  Outgoing webhooks · Flat JSON · Fleet plan
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/docs/zapier"
+              className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface"
+            >
+              Setup guide
+            </Link>
+          </div>
+          <div className="mt-5">
+            <WebhookIntegrationPanel workspaceId={workspaceId} />
+          </div>
+        </article>
       </section>
 
       <section>

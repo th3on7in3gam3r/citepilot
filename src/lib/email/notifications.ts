@@ -13,6 +13,7 @@ import {
   getRecentAuditsForWorkspace,
 } from "@/lib/audit/run-audit";
 import {
+  dispatchAuditCompletedWebhooks,
   dispatchCitationChangeAlerts,
   dispatchWeeklySlackDigest,
   recordEmailAlertEvent,
@@ -302,6 +303,15 @@ ${deltaScore != null ? `<p>Change since last audit: ${deltaScore >= 0 ? "+" : ""
       previousAudit,
     }).catch((err) =>
       console.error("[alerts] citation dispatch failed", err),
+    );
+
+    await dispatchAuditCompletedWebhooks({
+      workspaceId: input.workspaceId,
+      userId,
+      audit: input.audit,
+      previousAudit,
+    }).catch((err) =>
+      console.error("[alerts] audit.completed webhook failed", err),
     );
   }
 

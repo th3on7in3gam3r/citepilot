@@ -44,7 +44,10 @@ export const POST = withApiLogging(async function POST(request: Request) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const payload = sampleWebhookPayload(ws.domain);
+  const payload = sampleWebhookPayload({
+    workspaceId,
+    domain: ws.domain,
+  });
 
   if (body.endpointId) {
     const endpoints = await listWebhookEndpoints(workspaceId, userId);
@@ -91,7 +94,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
       headers: {
         "Content-Type": "application/json",
         "X-CitePilot-Signature": signature,
-        "User-Agent": "CitePilot-Webhooks/1.0",
+        "User-Agent": "CitePilot-Webhooks/1.0 (Zapier-compatible)",
       },
       body: bodyStr,
       signal: AbortSignal.timeout(15_000),
