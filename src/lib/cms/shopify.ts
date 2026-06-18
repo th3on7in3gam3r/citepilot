@@ -113,7 +113,21 @@ type ShopifyBlogInfo = {
   id: string;
   title: string;
   handle: string;
+  shopName: string;
 };
+
+async function resolveShopifyAuthorName(
+  credentials: ShopifyCredentials,
+  preferred?: string,
+): Promise<string> {
+  if (preferred?.trim()) return preferred.trim();
+
+  const data = await shopifyGraphql<{ shop: { name: string } }>(
+    credentials,
+    `query CitePilotShopName { shop { name } }`,
+  );
+  return data.shop.name.trim() || "Store";
+}
 
 async function ensureShopifyBlog(
   credentials: ShopifyCredentials,
@@ -128,14 +142,17 @@ async function ensureShopifyBlog(
   `;
   const data = await shopifyGraphql<{
     shop: { name: string };
-    blogs: { nodes: ShopifyBlogInfo[] };
+    blogs: { nodes: { id: string; title: string; handle: string }[] };
   }>(credentials, query);
 
-  if (data.blogs.nodes[0]) return data.blogs.nodes[0];
+  const shopName = data.shop.name.trim() || "Store";
+  if (data.blogs.nodes[0]) {
+    return { ...data.blogs.nodes[0], shopName };
+  }
 
   const create = await shopifyGraphql<{
     blogCreate: {
-      blog: ShopifyBlogInfo | null;
+      blog: { id: string; title: string; handle: string } | null;
       userErrors: { message: string }[];
     };
   }>(
@@ -163,7 +180,7 @@ async function ensureShopifyBlog(
     throw new ShopifyApiError(error?.message || "Could not create Shopify blog", 400);
   }
 
-  return create.blogCreate.blog;
+  return { ...create.blogCreate.blog, shopName };
 }
 
 export async function testShopifyConnection(
@@ -172,7 +189,12 @@ export async function testShopifyConnection(
   displayName: string;
   siteUrl: string;
   detail: string;
-  remoteDefaults: { blogId: string; blogTitle: string; blogHandle: string };
+  remoteDefaults: {
+    blogId: string;
+    blogTitle: string;
+    blogHandle: string;
+    shopName: string;
+  };
 }> {
   const domain = normalizeShopDomain(credentials.shopDomain);
   const blog = await ensureShopifyBlog(credentials);
@@ -185,6 +207,7 @@ export async function testShopifyConnection(
       blogId: blog.id,
       blogTitle: blog.title,
       blogHandle: blog.handle,
+      shopName: blog.shopName,
     },
   };
 }
@@ -197,10 +220,13 @@ export async function publishPostToShopify(input: {
   slug: string;
   markdown: string;
   description: string;
+  authorName?: string;
   existingRemoteId?: string | null;
 }): Promise<{ remoteId: string; liveUrl: string | null }> {
   const domain = normalizeShopDomain(input.credentials.shopDomain);
   const html = markdownToCmsHtml(input.markdown);
+  const authorName = await resolveShopifyAuthorName(input.credentials, input.authorName);
+  const author = { name: authorName };
 
   if (input.existingRemoteId) {
     const data = await shopifyGraphql<{
@@ -226,6 +252,7 @@ export async function publishPostToShopify(input: {
           handle: input.slug,
           body: html,
           summary: input.description,
+          author,
           isPublished: true,
           redirectNewHandle: true,
         },
@@ -265,6 +292,7 @@ export async function publishPostToShopify(input: {
         handle: input.slug,
         body: html,
         summary: input.description,
+        author,
         isPublished: true,
       },
     },

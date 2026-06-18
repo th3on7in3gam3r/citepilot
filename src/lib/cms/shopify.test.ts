@@ -141,6 +141,7 @@ describe("testShopifyConnection", () => {
         blogId: "gid://shopify/Blog/1",
         blogTitle: "News",
         blogHandle: "news",
+        shopName: "Demo Store",
       },
     });
   });

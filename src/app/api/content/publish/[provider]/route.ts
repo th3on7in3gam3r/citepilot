@@ -113,6 +113,7 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         credentials: connection.credentials as ShopifyCredentials,
         blogId: defaults.blogId,
         blogHandle: defaults.blogHandle,
+        authorName: defaults.shopName,
         title: row.title,
         slug: row.slug,
         markdown: row.markdown,

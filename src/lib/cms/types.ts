@@ -63,6 +63,7 @@ export type CmsRemoteDefaultsByProvider = {
     blogId: string;
     blogTitle: string;
     blogHandle: string;
+    shopName?: string;
     maskedAccessToken?: string;
   };
   framer: {
