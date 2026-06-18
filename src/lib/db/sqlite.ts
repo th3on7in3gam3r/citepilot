@@ -528,6 +528,19 @@ function migrateSchema(db: Database.Database): void {
       onboarding_completed_at TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS user_totp (
+      user_id TEXT PRIMARY KEY,
+      totp_secret TEXT,
+      pending_secret TEXT,
+      totp_enabled INTEGER NOT NULL DEFAULT 0,
+      totp_backup_codes TEXT NOT NULL DEFAULT '[]',
+      totp_enabled_at TEXT,
+      failed_attempts INTEGER NOT NULL DEFAULT 0,
+      locked_until TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS user_referrals (
       user_id TEXT PRIMARY KEY,
       referral_code TEXT NOT NULL UNIQUE,
@@ -677,6 +690,21 @@ function migrateSchema(db: Database.Database): void {
   ) {
     db.exec(`ALTER TABLE user_onboarding ADD COLUMN onboarding_completed_at TEXT`);
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_totp (
+      user_id TEXT PRIMARY KEY,
+      totp_secret TEXT,
+      pending_secret TEXT,
+      totp_enabled INTEGER NOT NULL DEFAULT 0,
+      totp_backup_codes TEXT NOT NULL DEFAULT '[]',
+      totp_enabled_at TEXT,
+      failed_attempts INTEGER NOT NULL DEFAULT 0,
+      locked_until TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  `);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS admin_audit_log (

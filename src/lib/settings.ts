@@ -48,6 +48,8 @@ export type WorkspacePreferences = {
   monitoringEmail: string;
   /** One-time explain-gap Insight on Free (per workspace) */
   freeExplainGapUsed: boolean;
+  /** Fleet: require all workspace members to enable 2FA */
+  require2faForMembers: boolean;
   autopilot: AutopilotPreferences;
   /** Paid monitoring — one prompt per line; falls back to buyer question when empty */
   monitoredPrompts: string[];
@@ -69,6 +71,7 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
   proofReportEmail: true,
   monitoringEmail: "",
   freeExplainGapUsed: false,
+  require2faForMembers: false,
   autopilot: { ...defaultAutopilotPreferences },
   monitoredPrompts: [],
   whiteLabel: {
@@ -120,6 +123,9 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
       freeExplainGapUsed:
         parsed.freeExplainGapUsed ??
         defaultWorkspacePreferences.freeExplainGapUsed,
+      require2faForMembers:
+        parsed.require2faForMembers ??
+        defaultWorkspacePreferences.require2faForMembers,
       autopilot: {
         ...defaultAutopilotPreferences,
         ...(parsed.autopilot ?? {}),

@@ -16,6 +16,11 @@ const tabs = [
     match: (path: string) => path.startsWith("/dashboard/settings/integrations"),
   },
   {
+    href: "/dashboard/settings/security",
+    label: "Security",
+    match: (path: string) => path.startsWith("/dashboard/settings/security"),
+  },
+  {
     href: "/dashboard/settings#notifications",
     label: "Notifications",
     match: (path: string) => false,

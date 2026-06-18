@@ -2,6 +2,8 @@ import { createNeonAuth } from "@neondatabase/auth/next/server";
 import { headers } from "next/headers";
 import { readImpersonationCookie } from "@/lib/admin/impersonation";
 import { isAdminEmail } from "@/lib/admin/emails";
+import { isTotpEnabledForUser } from "@/lib/security/totp-store";
+import { isTwoFactorVerified } from "@/lib/security/totp-session";
 
 export function isNeonAuthEnabled(): boolean {
   const baseUrl = process.env.NEON_AUTH_BASE_URL?.trim();
@@ -33,6 +35,16 @@ async function cookieHeaderFromRequest(
   return store.get("cookie") ?? undefined;
 }
 
+async function gateSessionUserId(
+  userId: string | null,
+  request?: Request,
+): Promise<string | null> {
+  if (!userId) return null;
+  if (!(await isTotpEnabledForUser(userId))) return userId;
+  if (await isTwoFactorVerified(userId, request)) return userId;
+  return null;
+}
+
 export async function getSessionUserId(request?: Request): Promise<string | null> {
   const impersonation = await readImpersonationCookie(request);
   if (impersonation) {
@@ -55,7 +67,7 @@ export async function getSessionUserId(request?: Request): Promise<string | null
       : {}),
   });
 
-  return session?.user?.id ?? null;
+  return gateSessionUserId(session?.user?.id ?? null, request);
 }
 
 export async function getSessionUser(request?: Request): Promise<{
@@ -90,8 +102,10 @@ export async function getSessionUser(request?: Request): Promise<{
 
   const user = session?.user;
   if (!user?.id) return null;
+  const userId = await gateSessionUserId(user.id, request);
+  if (!userId) return null;
   return {
-    id: user.id,
+    id: userId,
     name: user.name ?? "",
     email: user.email ?? "",
   };

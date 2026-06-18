@@ -5,6 +5,7 @@ import { checkAdminEmailAccess, isAdminApiPublic } from "@/lib/admin-auth";
 import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
 import { intlMiddleware, shouldRunIntl } from "@/lib/i18n/intl-proxy";
+import { enforceTwoFactorAccess } from "@/lib/security/fleet-2fa";
 
 const dashboardAuthProxy =
   isNeonAuthEnabled() && auth
@@ -103,6 +104,15 @@ export async function proxy(request: NextRequest) {
   const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
 
   const sessionUser = await getRealSessionUser(request);
+  const twoFactorBlock = await enforceTwoFactorAccess(
+    request,
+    pathname,
+    sessionUser?.id,
+  );
+  if (twoFactorBlock) {
+    return withApiCorsHeaders(request, twoFactorBlock);
+  }
+
   const admin = await checkAdminEmailAccess(pathname, sessionUser?.email);
   if (admin.protected && !admin.allowed && !isAdminApiPublic(pathname)) {
     if (pathname.startsWith("/api/admin")) {

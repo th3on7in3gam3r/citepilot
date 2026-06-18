@@ -148,6 +148,20 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `CREATE INDEX IF NOT EXISTS idx_audit_domain ON audit_runs(domain)`,
       );
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS user_totp (
+          user_id TEXT PRIMARY KEY,
+          totp_secret TEXT,
+          pending_secret TEXT,
+          totp_enabled INTEGER NOT NULL DEFAULT 0,
+          totp_backup_codes TEXT NOT NULL DEFAULT '[]',
+          totp_enabled_at TEXT,
+          failed_attempts INTEGER NOT NULL DEFAULT 0,
+          locked_until TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
     })();
   }
   await globalForPg.citepilotPgReady;
