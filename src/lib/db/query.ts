@@ -209,6 +209,52 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `CREATE INDEX IF NOT EXISTS idx_compliance_log_user ON compliance_log(user_id, created_at DESC)`,
       );
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS scan_jobs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          trigger TEXT NOT NULL DEFAULT 'bulk',
+          status TEXT NOT NULL DEFAULT 'queued',
+          total INTEGER NOT NULL DEFAULT 0,
+          completed INTEGER NOT NULL DEFAULT 0,
+          failed INTEGER NOT NULL DEFAULT 0,
+          skipped INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS scan_job_items (
+          id TEXT PRIMARY KEY,
+          job_id TEXT NOT NULL REFERENCES scan_jobs(id),
+          workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+          status TEXT NOT NULL DEFAULT 'queued',
+          error TEXT,
+          audit_id TEXT REFERENCES audit_runs(id),
+          duration_ms INTEGER,
+          started_at TEXT,
+          completed_at TEXT,
+          created_at TEXT NOT NULL
+        )
+      `);
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_scan_jobs_user ON scan_jobs(user_id, created_at DESC)`,
+      );
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_scan_jobs_status ON scan_jobs(status)`,
+      );
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_scan_job_items_job ON scan_job_items(job_id)`,
+      );
+      await pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(workspace_id, status)`,
+      );
+      await pool.query(
+        `ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS duration_ms INTEGER`,
+      );
+      await pool.query(
+        `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS next_scan_at TEXT`,
+      );
     })();
   }
   await globalForPg.citepilotPgReady;

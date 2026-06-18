@@ -21,6 +21,11 @@ const tabs = [
     match: (path: string) => path.startsWith("/dashboard/settings/security"),
   },
   {
+    href: "/dashboard/settings/scan-schedule",
+    label: "Scan schedule",
+    match: (path: string) => path.startsWith("/dashboard/settings/scan-schedule"),
+  },
+  {
     href: "/dashboard/settings#notifications",
     label: "Notifications",
     match: (path: string) => false,

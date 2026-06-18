@@ -86,7 +86,8 @@ export async function runCitationAudit(input: {
   workspaceId?: string | null;
   competitors?: string[];
   plan?: BillingPlan;
-  trigger?: "manual" | "scheduled";
+  trigger?: "manual" | "scheduled" | "bulk" | "api";
+  startedAtMs?: number;
 }): Promise<AuditPayload> {
   const domain = normalizeDomain(input.domain);
   const prompts = input.prompts.map((p) => p.trim()).filter(Boolean);
@@ -135,7 +136,15 @@ export async function runCitationAudit(input: {
     createdAt: new Date().toISOString(),
   };
 
-  await persistAudit(payload, prompts, checks, input.trigger ?? "manual");
+  const durationMs =
+    input.startedAtMs != null ? Date.now() - input.startedAtMs : null;
+  await persistAudit(
+    payload,
+    prompts,
+    checks,
+    input.trigger ?? "manual",
+    durationMs,
+  );
   return payload;
 }
 
@@ -143,13 +152,14 @@ async function persistAudit(
   audit: AuditPayload,
   prompts: string[],
   platformChecks: PlatformProbeResult[],
-  trigger: "manual" | "scheduled",
+  trigger: "manual" | "scheduled" | "bulk" | "api",
+  durationMs: number | null,
 ): Promise<void> {
   await dbRun(
     `INSERT INTO audit_runs (
       id, workspace_id, domain, prompts, score, cited_count, total_prompts,
-      platforms, gaps, site_signals, prompt_results, mode, trigger, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      platforms, gaps, site_signals, prompt_results, mode, trigger, duration_ms, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       audit.id,
       audit.workspaceId,
@@ -164,6 +174,7 @@ async function persistAudit(
       JSON.stringify(audit.promptResults),
       audit.mode,
       trigger,
+      durationMs,
       audit.createdAt,
     ],
   );

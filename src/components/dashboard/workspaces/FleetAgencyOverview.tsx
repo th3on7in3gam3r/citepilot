@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -9,6 +9,16 @@ import { useToast } from "@/components/notifications/ToastProvider";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 import { fleetWorkspaceDashboardHref } from "@/lib/workspace/fleet-dashboard";
 import type { WorkspaceListItem } from "@/hooks/useWorkspace";
+
+type BulkScanStatus = {
+  jobId: string | null;
+  status: "idle" | "queued" | "running" | "completed" | "failed";
+  total: number;
+  completed: number;
+  failed: number;
+  skipped: number;
+  progressLabel: string | null;
+};
 
 type AgencyOverview = {
   workspaceCount: number;
@@ -81,6 +91,61 @@ function KpiCard({
   );
 }
 
+function BulkScanProgressBar({
+  status,
+  onDismiss,
+}: {
+  status: BulkScanStatus;
+  onDismiss: () => void;
+}) {
+  const done = status.completed + status.failed + status.skipped;
+  const pct = status.total > 0 ? Math.round((done / status.total) * 100) : 0;
+  const complete = status.status === "completed" || status.status === "failed";
+
+  return (
+    <div
+      className={`rounded-2xl border px-4 py-3 ${
+        complete
+          ? "border-mint/40 bg-mint/5"
+          : "border-accent/30 bg-accent/5"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-ink">
+          {complete
+            ? `All ${status.total} workspaces scanned ✓`
+            : status.progressLabel ?? `Scanning ${status.total} workspaces…`}
+        </p>
+        {complete && (
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/workspaces"
+              className="text-sm font-semibold text-accent hover:underline"
+            >
+              View results →
+            </Link>
+            <button
+              type="button"
+              onClick={onDismiss}
+              className="text-xs text-muted hover:text-ink"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+      </div>
+      {!complete && (
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/80">
+          <div
+            className="h-full rounded-full bg-accent transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WorkspaceOverviewCard({
   item,
   onSelect,
@@ -127,7 +192,13 @@ function WorkspaceOverviewCard({
         </div>
         <div>
           <p className="text-muted">Last scan</p>
-          <p className="mt-0.5 font-semibold text-ink">{formatScanDate(item.lastScanAt)}</p>
+          <p className="mt-0.5 font-semibold text-ink">
+            {item.scanInProgress ? (
+              <span className="text-accent">Scan in progress…</span>
+            ) : (
+              formatScanDate(item.lastScanAt)
+            )}
+          </p>
         </div>
         <div>
           <p className="text-muted">Status</p>
@@ -167,7 +238,10 @@ export function FleetAgencyOverview() {
   const toast = useToast();
   const [data, setData] = useState<AgencyOverview | null>(null);
   const [loading, setLoading] = useState(true);
-  const [bulkBusy, setBulkBusy] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState<BulkScanStatus | null>(null);
+  const [dismissedJobId, setDismissedJobId] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const openWorkspace = useCallback(
     async (id: string) => {
@@ -186,9 +260,39 @@ export function FleetAgencyOverview() {
     setData((await res.json()) as AgencyOverview);
   }, []);
 
+  const pollBulkStatus = useCallback(async (jobId?: string | null) => {
+    const qs = jobId ? `?jobId=${encodeURIComponent(jobId)}` : "";
+    const res = await fetch(`/api/scans/bulk-status${qs}`, { credentials: "include" });
+    if (!res.ok) return;
+    const body = (await res.json()) as BulkScanStatus & { ok?: boolean };
+    setBulkStatus(body);
+    if (body.status === "completed" || body.status === "failed") {
+      void load();
+    }
+    return body;
+  }, [load]);
+
   useEffect(() => {
     void load().finally(() => setLoading(false));
-  }, [load]);
+    void pollBulkStatus().then((s) => {
+      if (s && (s.status === "queued" || s.status === "running")) {
+        setBulkStatus(s);
+      }
+    });
+  }, [load, pollBulkStatus]);
+
+  useEffect(() => {
+    if (!bulkStatus || bulkStatus.status === "idle") return;
+    if (bulkStatus.status !== "queued" && bulkStatus.status !== "running") return;
+
+    pollRef.current = setInterval(() => {
+      void pollBulkStatus(bulkStatus.jobId);
+    }, 10_000);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [bulkStatus, pollBulkStatus]);
 
   const activeId = activeWorkspace?.workspaceId ?? activeWorkspace?.id;
 
@@ -204,42 +308,69 @@ export function FleetAgencyOverview() {
     });
   }, [data]);
 
-  async function runBulk(action: "scan" | "export") {
+  async function runAllScans() {
+    if (!data) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/scans/bulk-run", {
+        method: "POST",
+        credentials: "include",
+      });
+      const body = (await res.json()) as {
+        error?: string;
+        jobId?: string;
+        queued?: number;
+        estimatedMinutes?: number;
+      };
+      if (!res.ok) {
+        toast.error(body.error ?? "Bulk scan failed");
+        return;
+      }
+      toast.success(
+        `Queued ${body.queued ?? 0} workspace scan${body.queued === 1 ? "" : "s"} (~${body.estimatedMinutes ?? "?"} min)`,
+      );
+      const status = await pollBulkStatus(body.jobId);
+      if (status) setBulkStatus(status);
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function runBulkExport() {
     if (!data) return;
     const ids = data.workspaces.map((w) => w.id);
     if (ids.length === 0) return;
 
-    setBulkBusy(action);
+    setBulkBusy(true);
     try {
       const res = await fetch("/api/workspaces/bulk", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, workspaceIds: ids }),
+        body: JSON.stringify({ action: "export", workspaceIds: ids }),
       });
       const body = (await res.json()) as {
-        ok?: boolean;
         exports?: { workspaceId: string; url: string }[];
-        results?: { ok: boolean }[];
       };
       if (!res.ok) {
-        toast.error("Bulk action failed");
+        toast.error("Bulk export failed");
         return;
       }
-      if (action === "export" && body.exports) {
+      if (body.exports) {
         for (const exp of body.exports) {
           window.open(exp.url, "_blank");
         }
         toast.success(`Opened ${body.exports.length} export${body.exports.length === 1 ? "" : "s"}`);
-      } else if (action === "scan") {
-        const ok = body.results?.filter((r) => r.ok).length ?? 0;
-        toast.success(`Launched scans for ${ok} workspace${ok === 1 ? "" : "s"}`);
-        void load();
       }
     } finally {
-      setBulkBusy(null);
+      setBulkBusy(false);
     }
   }
+
+  const showProgress =
+    bulkStatus &&
+    bulkStatus.jobId !== dismissedJobId &&
+    bulkStatus.status !== "idle";
 
   if (loading) return <DashboardPageSkeleton />;
 
@@ -264,19 +395,21 @@ export function FleetAgencyOverview() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={bulkBusy === "scan"}
-            onClick={() => void runBulk("scan")}
+            disabled={bulkBusy || bulkStatus?.status === "running" || bulkStatus?.status === "queued"}
+            onClick={() => void runAllScans()}
             className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50"
           >
-            {bulkBusy === "scan" ? "Running…" : "Run all scans"}
+            {bulkBusy || bulkStatus?.status === "running" || bulkStatus?.status === "queued"
+              ? "Scanning…"
+              : "Run all scans"}
           </button>
           <button
             type="button"
-            disabled={bulkBusy === "export"}
-            onClick={() => void runBulk("export")}
+            disabled={bulkBusy}
+            onClick={() => void runBulkExport()}
             className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50"
           >
-            {bulkBusy === "export" ? "Exporting…" : "Export all reports"}
+            Export all reports
           </button>
           <button
             type="button"
@@ -287,6 +420,13 @@ export function FleetAgencyOverview() {
           </button>
         </div>
       </div>
+
+      {showProgress && (
+        <BulkScanProgressBar
+          status={bulkStatus}
+          onDismiss={() => setDismissedJobId(bulkStatus.jobId)}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard

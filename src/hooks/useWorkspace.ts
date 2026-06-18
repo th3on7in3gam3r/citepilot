@@ -40,6 +40,7 @@ export type WorkspaceListItem = {
   status?: "active" | "paused";
   archivedAt?: string | null;
   scoreDeltaWeek?: number | null;
+  scanInProgress?: boolean;
 };
 
 export type WorkspaceLimitsInfo = WorkspaceLimits;

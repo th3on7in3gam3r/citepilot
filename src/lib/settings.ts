@@ -31,6 +31,25 @@ export const defaultAutopilotPreferences: AutopilotPreferences = {
   autoInsights: true,
 };
 
+export type ScanScheduleFrequency = "weekly" | "biweekly" | "monthly";
+export type ScanScheduleHour = 6 | 8 | 10 | 12;
+
+export type ScanSchedulePreferences = {
+  frequency: ScanScheduleFrequency;
+  /** 0=Sunday … 6=Saturday */
+  dayOfWeek: number;
+  hour: ScanScheduleHour;
+  /** IANA timezone, e.g. America/New_York */
+  timezone: string;
+};
+
+export const defaultScanSchedulePreferences: ScanSchedulePreferences = {
+  frequency: "weekly",
+  dayOfWeek: 1,
+  hour: 8,
+  timezone: "UTC",
+};
+
 export type ScoreDropThresholdPercent = 5 | 10 | 20;
 
 export type WorkspacePreferences = {
@@ -58,6 +77,8 @@ export type WorkspacePreferences = {
   appliedFixes: string[];
   /** JSON-LD blocks included in the hosted GEO snippet script */
   geoSnippetFixes: string[];
+  /** Automatic scan schedule (Pilot+) */
+  scanSchedule: ScanSchedulePreferences;
 };
 
 export const defaultWorkspacePreferences: WorkspacePreferences = {
@@ -87,7 +108,33 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
   },
   appliedFixes: [],
   geoSnippetFixes: [],
+  scanSchedule: { ...defaultScanSchedulePreferences },
 };
+
+function normalizeScanSchedule(
+  raw: Partial<ScanSchedulePreferences> | undefined,
+): ScanSchedulePreferences {
+  const base = defaultScanSchedulePreferences;
+  const frequency =
+    raw?.frequency === "biweekly" ||
+    raw?.frequency === "monthly" ||
+    raw?.frequency === "weekly"
+      ? raw.frequency
+      : base.frequency;
+  const dayOfWeek =
+    typeof raw?.dayOfWeek === "number" && raw.dayOfWeek >= 0 && raw.dayOfWeek <= 6
+      ? raw.dayOfWeek
+      : base.dayOfWeek;
+  const hour =
+    raw?.hour === 6 || raw?.hour === 8 || raw?.hour === 10 || raw?.hour === 12
+      ? raw.hour
+      : base.hour;
+  const timezone =
+    typeof raw?.timezone === "string" && raw.timezone.trim()
+      ? raw.timezone.trim()
+      : base.timezone;
+  return { frequency, dayOfWeek, hour, timezone };
+}
 
 export function parsePreferences(raw: string | null | undefined): WorkspacePreferences {
   if (!raw) return { ...defaultWorkspacePreferences };
@@ -144,6 +191,7 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
         : Array.isArray(parsed.appliedFixes)
           ? parsed.appliedFixes.filter((f): f is string => typeof f === "string")
           : defaultWorkspacePreferences.geoSnippetFixes,
+      scanSchedule: normalizeScanSchedule(parsed.scanSchedule),
     };
   } catch {
     return { ...defaultWorkspacePreferences };
@@ -201,5 +249,8 @@ export function mergePreferences(
       : current.whiteLabel,
     appliedFixes: patch.appliedFixes ?? current.appliedFixes,
     geoSnippetFixes: patch.geoSnippetFixes ?? current.geoSnippetFixes,
+    scanSchedule: patch.scanSchedule
+      ? normalizeScanSchedule({ ...current.scanSchedule, ...patch.scanSchedule })
+      : current.scanSchedule,
   };
 }

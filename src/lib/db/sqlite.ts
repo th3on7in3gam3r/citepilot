@@ -914,6 +914,56 @@ function migrateSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL;
   `);
+
+  const auditDurationCols = db
+    .prepare(`PRAGMA table_info(audit_runs)`)
+    .all() as { name: string }[];
+  if (!auditDurationCols.some((c) => c.name === "duration_ms")) {
+    db.exec(`ALTER TABLE audit_runs ADD COLUMN duration_ms INTEGER`);
+  }
+
+  const workspaceNextScanCols = db
+    .prepare(`PRAGMA table_info(workspaces)`)
+    .all() as { name: string }[];
+  if (!workspaceNextScanCols.some((c) => c.name === "next_scan_at")) {
+    db.exec(`ALTER TABLE workspaces ADD COLUMN next_scan_at TEXT`);
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS scan_jobs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      trigger TEXT NOT NULL DEFAULT 'bulk',
+      status TEXT NOT NULL DEFAULT 'queued',
+      total INTEGER NOT NULL DEFAULT 0,
+      completed INTEGER NOT NULL DEFAULT 0,
+      failed INTEGER NOT NULL DEFAULT 0,
+      skipped INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS scan_job_items (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL,
+      workspace_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'queued',
+      error TEXT,
+      audit_id TEXT,
+      duration_ms INTEGER,
+      started_at TEXT,
+      completed_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (job_id) REFERENCES scan_jobs(id),
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+      FOREIGN KEY (audit_id) REFERENCES audit_runs(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_scan_jobs_user ON scan_jobs(user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_scan_jobs_status ON scan_jobs(status);
+    CREATE INDEX IF NOT EXISTS idx_scan_job_items_job ON scan_job_items(job_id);
+    CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(workspace_id, status);
+  `);
 }
 
 export function getDb(): Database.Database {

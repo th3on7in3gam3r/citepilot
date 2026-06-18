@@ -548,4 +548,38 @@ CREATE TABLE IF NOT EXISTS domain_score_profiles (
 
 CREATE INDEX IF NOT EXISTS idx_domain_score_profiles_public ON domain_score_profiles(is_public);
 CREATE INDEX IF NOT EXISTS idx_audit_domain ON audit_runs(domain);
+
+CREATE TABLE IF NOT EXISTS scan_jobs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  trigger TEXT NOT NULL DEFAULT 'bulk',
+  status TEXT NOT NULL DEFAULT 'queued',
+  total INTEGER NOT NULL DEFAULT 0,
+  completed INTEGER NOT NULL DEFAULT 0,
+  failed INTEGER NOT NULL DEFAULT 0,
+  skipped INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS scan_job_items (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL REFERENCES scan_jobs(id),
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  status TEXT NOT NULL DEFAULT 'queued',
+  error TEXT,
+  audit_id TEXT REFERENCES audit_runs(id),
+  duration_ms INTEGER,
+  started_at TEXT,
+  completed_at TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_scan_jobs_user ON scan_jobs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scan_jobs_status ON scan_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_scan_job_items_job ON scan_job_items(job_id);
+CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(workspace_id, status);
+
+ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS duration_ms INTEGER;
+ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS next_scan_at TEXT;
 `;

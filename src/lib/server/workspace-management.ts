@@ -8,6 +8,7 @@ import {
   getWorkspaceById,
   toSnapshot,
 } from "@/lib/server/workspace";
+import { listActiveScanWorkspaceIds } from "@/lib/scans/queue";
 import { listWorkspaceIdsForMember } from "@/lib/server/workspace-members";
 
 export type WorkspaceStatus = "active" | "paused";
@@ -26,6 +27,7 @@ export type WorkspaceListMeta = {
   status: WorkspaceStatus;
   archivedAt: string | null;
   scoreDeltaWeek: number | null;
+  scanInProgress?: boolean;
 };
 
 export type AgencyOverview = {
@@ -308,7 +310,12 @@ export async function transferWorkspace(
 
 export async function getAgencyOverview(userId: string): Promise<AgencyOverview> {
   const items = await listWorkspaceMetaForUser(userId);
-  const scored = items.filter((w) => w.hasRealAudit);
+  const scanning = await listActiveScanWorkspaceIds(items.map((w) => w.id));
+  const workspaces = items.map((w) => ({
+    ...w,
+    scanInProgress: scanning.has(w.id),
+  }));
+  const scored = workspaces.filter((w) => w.hasRealAudit);
   const weightedCitationScore =
     scored.length > 0
       ? Math.round(
@@ -316,7 +323,7 @@ export async function getAgencyOverview(userId: string): Promise<AgencyOverview>
         )
       : 0;
 
-  const needsAttention = items
+  const needsAttention = workspaces
     .filter(
       (w) =>
         w.hasRealAudit &&
@@ -348,13 +355,13 @@ export async function getAgencyOverview(userId: string): Promise<AgencyOverview>
   );
 
   return {
-    workspaceCount: items.length,
+    workspaceCount: workspaces.length,
     weightedCitationScore,
-    totalPrompts: items.reduce((sum, w) => sum + w.promptCount, 0),
-    activeCount: items.filter((w) => w.status === "active").length,
-    pausedCount: items.filter((w) => w.status === "paused").length,
+    totalPrompts: workspaces.reduce((sum, w) => sum + w.promptCount, 0),
+    activeCount: workspaces.filter((w) => w.status === "active").length,
+    pausedCount: workspaces.filter((w) => w.status === "paused").length,
     auditedCount: scored.length,
-    workspaces: items,
+    workspaces,
     needsAttention,
     recentActivity: recentActivity.map((r) => ({
       id: r.id,

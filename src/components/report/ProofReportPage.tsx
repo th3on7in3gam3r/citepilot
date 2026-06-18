@@ -20,6 +20,7 @@ import {
 } from "@/components/report/ReportBrandingHeader";
 import { ReportThemeStyles } from "@/components/report/ReportThemeStyles";
 import { ProofReportGetOwnCta } from "@/components/report/ProofReportGetOwnCta";
+import { ScanHistoryPanel } from "@/components/dashboard/scans/ScanHistoryPanel";
 import { defaultWorkspacePreferences } from "@/lib/settings";
 import { brandingFromPreferences, reportDocumentTitle } from "@/lib/white-label/theme";
 import { site } from "@/lib/site";
@@ -381,6 +382,22 @@ function ProofReportInner() {
             </table>
           </div>
         </section>
+
+        {workspace.workspaceId || workspace.id ? (
+          <section className="mt-10 rounded-2xl border border-border bg-white p-6 shadow-sm print:shadow-none">
+            <h2 className="font-display text-lg font-bold text-ink">Scan history</h2>
+            <p className="mt-1 text-sm text-muted">
+              Audit trail proving monitoring is active — every scan with trigger, duration, and citation change.
+            </p>
+            <div className="mt-4">
+              <ScanHistoryPanel
+                workspaceId={workspace.workspaceId ?? workspace.id ?? ""}
+                compact
+              />
+            </div>
+          </section>
+        ) : null}
+
         <ProofReportGetOwnCta domainHint={workspace.domain} />
       </main>
       <div className="mx-auto max-w-5xl px-6 pb-10">

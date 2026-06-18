@@ -18,6 +18,7 @@ import {
   keywordRankingSummary,
   type KeywordRow,
 } from "@/lib/site-details/keyword-data";
+import { formatRelativeScanTime } from "@/lib/scans/history-format";
 
 type Tab = "active" | "pending";
 type Range = "1d" | "7d" | "30d" | "start";
@@ -38,8 +39,14 @@ export function KeywordsSection({
   const [newKeyword, setNewKeyword] = useState("");
   const [adding, setAdding] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [rescanning, setRescanning] = useState(false);
+  const [scanInProgress, setScanInProgress] = useState(false);
+  const [remainingLabel, setRemainingLabel] = useState<string | null>(null);
+  const [isPilot, setIsPilot] = useState(false);
   const promptInputRef = useRef<HTMLInputElement>(null);
   const searchParams = useSearchParams();
+
+  const workspaceId = workspace.workspaceId ?? workspace.id ?? "";
 
   useEffect(() => {
     if (searchParams.get("tour") !== "focus-prompt") return;
@@ -51,13 +58,64 @@ export function KeywordsSection({
     return () => window.clearTimeout(timer);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!workspaceId) return;
+    void fetch(`/api/workspaces/${workspaceId}/scan`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { inProgress?: boolean; remainingLabel?: string } | null) => {
+        setScanInProgress(Boolean(d?.inProgress));
+        setRemainingLabel(d?.remainingLabel ?? null);
+      })
+      .catch(() => undefined);
+    void fetch("/api/billing/status", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { plan?: string } | null) =>
+        setIsPilot(d?.plan === "pilot" || d?.plan === "fleet"),
+      )
+      .catch(() => setIsPilot(false));
+  }, [workspaceId]);
+
+  async function handleRescanAll() {
+    if (!workspaceId || rescanning) return;
+    setRescanning(true);
+    try {
+      const res = await fetch(`/api/workspaces/${workspaceId}/scan`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const body = (await res.json()) as {
+        error?: string;
+        remainingLabel?: string;
+        inProgress?: boolean;
+      };
+      if (!res.ok) {
+        toast.error(body.error ?? "Re-scan failed");
+        if (body.inProgress) setScanInProgress(true);
+        return;
+      }
+      setScanInProgress(true);
+      setRemainingLabel(body.remainingLabel ?? null);
+      toast.success("Re-scan queued", {
+        description: "All prompts in this workspace will be scanned shortly.",
+      });
+      void refresh();
+    } catch {
+      toast.error("Re-scan failed");
+    } finally {
+      setRescanning(false);
+    }
+  }
+
+  const lastScanIso =
+    workspace.citationHistory?.[workspace.citationHistory.length - 1]?.recordedAt ??
+    (workspace.hasRealAudit ? workspace.updatedAt : null);
+  const lastScanLabel = formatRelativeScanTime(lastScanIso);
+
   const allRows = useMemo(() => buildKeywordRows(workspace), [workspace]);
   const activeRows = allRows.filter((r) => r.active);
   const pendingRows = allRows.filter((r) => !r.active);
   const rows = tab === "active" ? activeRows : pendingRows;
   const summary = keywordRankingSummary(allRows);
-
-  const workspaceId = workspace.workspaceId ?? workspace.id ?? "";
 
   const displayDomain = workspace.domain
     .replace(/^https?:\/\//, "")
@@ -134,8 +192,27 @@ export function KeywordsSection({
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[#94a3b8]">Domain</p>
           <p className="mt-1 font-semibold text-[#0f172a]">{displayDomain}</p>
+          <p className="mt-2 text-xs text-[#64748b]">
+            Last scanned:{" "}
+            <span className="font-semibold text-[#0f172a]">
+              {scanInProgress ? "Scan in progress…" : lastScanLabel}
+            </span>
+            {isPilot && remainingLabel && !scanInProgress && (
+              <span className="ml-2 text-[#94a3b8]">· {remainingLabel}</span>
+            )}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {isPilot && (
+            <button
+              type="button"
+              disabled={rescanning || scanInProgress}
+              onClick={() => void handleRescanAll()}
+              className="rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#0f172a] transition hover:bg-[#f8fafb] disabled:opacity-60"
+            >
+              {scanInProgress ? "Scanning…" : rescanning ? "Queueing…" : "Re-scan all prompts"}
+            </button>
+          )}
           <Link
             href="/dashboard/analytics"
             className="rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#0f172a] transition hover:bg-[#f8fafb]"
