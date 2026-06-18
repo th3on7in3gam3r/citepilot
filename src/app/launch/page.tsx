@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Footer } from "@/components/layout/Footer";
 import { LaunchPageContent } from "@/components/launch/LaunchPageContent";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
@@ -26,5 +27,10 @@ export const metadata: Metadata = {
 };
 
 export default function LaunchPage() {
-  return <LaunchPageContent />;
+  return (
+    <>
+      <LaunchPageContent />
+      <Footer />
+    </>
+  );
 }

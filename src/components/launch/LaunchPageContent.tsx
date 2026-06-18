@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Container } from "@/components/ui/Container";
 import {
@@ -216,7 +215,6 @@ export function LaunchPageContent() {
           </Container>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

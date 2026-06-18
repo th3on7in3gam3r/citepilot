@@ -1,3 +1,4 @@
+import { Footer } from "@/components/layout/Footer";
 import { PressJsonLd } from "@/components/press/PressJsonLd";
 import { PressPageContent } from "@/components/press/PressPageContent";
 import { pressEmail } from "@/lib/press/content";
@@ -28,6 +29,7 @@ export default function PressPage() {
     <>
       <PressJsonLd />
       <PressPageContent />
+      <Footer />
     </>
   );
 }
