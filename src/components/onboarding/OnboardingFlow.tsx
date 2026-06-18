@@ -21,6 +21,7 @@ import {
   TOTAL_STEPS,
   type OnboardingAnswers,
 } from "@/lib/onboarding";
+import { domainFormatStatus } from "@/lib/onboarding/domain-validation";
 import {
   FEATURE_FLAGS,
   ONBOARDING_PROMPT_EXAMPLES,
@@ -145,6 +146,7 @@ export function OnboardingFlow({
   }, []);
 
   function next() {
+    if (!canContinue() || submitting) return;
     if (step < TOTAL_STEPS - 1) {
       const nextStep = step + 1;
       setStep(nextStep);
@@ -199,6 +201,21 @@ export function OnboardingFlow({
             })
             .catch(() => undefined);
         }
+
+        router.push("/dashboard?welcome=1");
+        return;
+      }
+
+      if (res.status === 401) {
+        setSubmitting(false);
+        setCompleted(false);
+        const signUp = new URL("/auth/sign-up", window.location.origin);
+        signUp.searchParams.set("from", "/start");
+        if (answers.domain.trim()) {
+          signUp.searchParams.set("domain", answers.domain.trim());
+        }
+        router.push(`${signUp.pathname}${signUp.search}`);
+        return;
       }
     } catch {
       /* proceed to dashboard with sessionStorage fallback */
@@ -207,10 +224,34 @@ export function OnboardingFlow({
     router.push("/dashboard?welcome=1");
   }
 
+  function continueDisabledHint(): string | undefined {
+    if (submitting) return undefined;
+    switch (step) {
+      case 0: {
+        const format = domainFormatStatus(answers.domain);
+        if (format === "empty") return "Enter your website to continue";
+        if (format === "invalid") return "Enter a valid domain (e.g. yoursite.com)";
+        return undefined;
+      }
+      case 1:
+        return answers.businessType.length === 0 ? "Select a business type" : undefined;
+      case 2:
+        return answers.description.trim().length <= 10
+          ? "Add a short description (at least 10 characters)"
+          : undefined;
+      case 4:
+        return answers.buyerQuestion.trim().length <= 5
+          ? "Enter a buyer question (at least 6 characters)"
+          : undefined;
+      default:
+        return undefined;
+    }
+  }
+
   function canContinue(): boolean {
     switch (step) {
       case 0:
-        return domainStatus === "valid" || domainStatus === "unreachable";
+        return domainFormatStatus(answers.domain) === "valid";
       case 1:
         return answers.businessType.length > 0;
       case 2:
@@ -269,7 +310,7 @@ export function OnboardingFlow({
           </Link>
         </header>
 
-        <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col px-6 pb-10 md:px-10 lg:px-14 lg:pb-14">
+        <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col px-6 pb-28 md:px-10 md:pb-10 lg:px-14 lg:pb-14">
           <h1 className="sr-only">Start GEO and AI citation analysis</h1>
           <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center py-6 lg:py-10">
             <OnboardingStepProgress step={step} />
@@ -541,12 +582,15 @@ export function OnboardingFlow({
             <OnboardingContinue
               onClick={next}
               disabled={!canContinue() || submitting}
+              disabledHint={continueDisabledHint()}
               label={
                 submitting
                   ? "Starting your audit…"
                   : isLast
                     ? "Run my analysis"
-                    : "Continue"
+                    : step === 0
+                      ? "Start"
+                      : "Continue"
               }
             />
 
