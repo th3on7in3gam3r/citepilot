@@ -87,6 +87,7 @@ export async function Footer() {
   const companyLinks: FooterLink[] = [
     { label: t("systemStatus"), href: "/status" },
     { label: t("changelog"), href: "/changelog" },
+    { label: t("press"), href: "/press" },
     { label: t("apiDocs"), href: "/docs/api" },
     { label: t("agencies"), href: lh("/agency") },
   ];

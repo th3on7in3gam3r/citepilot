@@ -11,7 +11,7 @@ type SlideConfig = {
   headline: string;
   sub?: string;
   caption?: string;
-  mock?: "heatmap" | "actions" | "competitors" | "proof";
+  mock?: "heatmap" | "actions" | "competitors" | "proof" | "prompts" | "digest";
 };
 
 const SLIDES: Record<string, SlideConfig> = {
@@ -38,6 +38,16 @@ const SLIDES: Record<string, SlideConfig> = {
     headline: "Proof report",
     caption: "Show clients citation lift over time. Shareable in one link.",
     mock: "proof",
+  },
+  "6": {
+    headline: "Prompt tracking",
+    caption: "Monitor money prompts across ChatGPT, Perplexity, and Google AI",
+    mock: "prompts",
+  },
+  "7": {
+    headline: "Weekly digest",
+    caption: "Citation changes and alerts delivered to your inbox",
+    mock: "digest",
   },
 };
 
@@ -179,6 +189,65 @@ function MockPanel({ type }: { type: SlideConfig["mock"] }) {
           Citation rate this month · 4/8 prompts cited
         </div>
         <div style={{ fontSize: 16, color: "#38bdf8" }}>Shareable proof link →</div>
+      </div>
+    );
+  }
+
+  if (type === "prompts") {
+    const rows = [
+      { prompt: "Best CRM for startups", cited: true },
+      { prompt: "Top project management tools", cited: false },
+      { prompt: "Alternatives to Salesforce", cited: true },
+    ];
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24, width: 560 }}>
+        {rows.map((row) => (
+          <div
+            key={row.prompt}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "14px 18px",
+              borderRadius: 12,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontSize: 18,
+            }}
+          >
+            <span>{row.prompt}</span>
+            <span style={{ color: row.cited ? "#10b981" : "#f87171", fontWeight: 700 }}>
+              {row.cited ? "Cited" : "Missing"}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "digest") {
+    return (
+      <div
+        style={{
+          marginTop: 24,
+          padding: 24,
+          borderRadius: 16,
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+          width: 520,
+        }}
+      >
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>
+          Weekly citation digest
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 700 }}>3 prompts gained citations this week</div>
+        <div style={{ fontSize: 16, color: "rgba(255,255,255,0.75)" }}>
+          ChatGPT ↑ · Perplexity → · Google AI ↑
+        </div>
+        <div style={{ fontSize: 15, color: "#38bdf8" }}>View full report →</div>
       </div>
     );
   }

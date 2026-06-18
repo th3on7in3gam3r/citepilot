@@ -32,6 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/ai-visibility",
     "/docs/api",
     "/changelog",
+    "/launch",
+    "/press",
     "/status",
     "/terms",
     "/privacy",
@@ -60,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${base}${path}`,
         lastModified: new Date(),
         changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),
-        priority: path === "" ? 1 : toolPaths.has(path) || path === "/audit" ? 0.9 : 0.7,
+        priority: path === "" ? 1 : toolPaths.has(path) || path === "/audit" ? 0.9 : path === "/press" || path === "/launch" ? 0.5 : 0.7,
       },
     ];
   });

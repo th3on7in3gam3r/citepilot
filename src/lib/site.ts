@@ -8,6 +8,7 @@ export const site = {
   /** Apex redirects static assets to www — use for OG images and logos in metadata. */
   wwwUrl: "https://www.getcitepilot.com",
   supportEmail: "hello@getcitepilot.com",
+  pressEmail: "press@getcitepilot.com",
   foundingDate: "2025",
   social: {
     twitter: "https://twitter.com/citepilot",
@@ -92,6 +93,7 @@ export const nav = {
     company: [
       { label: "System Status", href: "/status" },
       { label: "Changelog", href: "/changelog" },
+      { label: "Press", href: "/press" },
       { label: "API docs", href: "/docs/api" },
       { label: "Agencies", href: "/agency" },
     ],

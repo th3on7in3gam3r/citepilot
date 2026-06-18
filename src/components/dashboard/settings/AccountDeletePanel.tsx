@@ -1,5 +1,6 @@
 "use client";
 
+import { redirectHomeAfterSignOut } from "@/lib/i18n/locale-cookie";
 import { useEffect, useState } from "react";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { useToast } from "@/components/notifications/ToastProvider";
@@ -92,7 +93,7 @@ export function AccountDeletePanel() {
       } catch {
         /* ignore */
       }
-      window.location.assign("/?deleted=1");
+      redirectHomeAfterSignOut("deleted=1");
     } finally {
       setBusy(false);
     }

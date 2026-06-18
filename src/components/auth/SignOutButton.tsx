@@ -3,6 +3,7 @@
 import { useState } from "react";
 import posthog from "posthog-js";
 import { authClient } from "@/lib/auth/client";
+import { redirectHomeAfterSignOut } from "@/lib/i18n/locale-cookie";
 
 export function SignOutButton({ className }: { className?: string }) {
   const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ export function SignOutButton({ className }: { className?: string }) {
     } catch {
       /* ignore */
     }
-    window.location.assign("/");
+    redirectHomeAfterSignOut();
   }
 
   return (

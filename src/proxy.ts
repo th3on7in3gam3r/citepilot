@@ -5,6 +5,7 @@ import { checkAdminEmailAccess, isAdminApiPublic } from "@/lib/admin-auth";
 import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
 import { intlMiddleware, shouldRunIntl } from "@/lib/i18n/intl-proxy";
+import { isNonLocalizedRootPath } from "@/lib/i18n/intl-paths";
 import { enforceTwoFactorAccess } from "@/lib/security/fleet-2fa";
 
 const dashboardAuthProxy =
@@ -155,6 +156,10 @@ export async function proxy(request: NextRequest) {
 
   if (shouldRunIntl(pathname)) {
     return withApiCorsHeaders(request, intlMiddleware(request));
+  }
+
+  if (isNonLocalizedRootPath(pathname)) {
+    return withApiCorsHeaders(request, NextResponse.next());
   }
 
   return withApiCorsHeaders(request, NextResponse.next());

@@ -312,9 +312,23 @@ LAUNCH_MODE=true
 
 ---
 
+## Press inbox (`press@getcitepilot.com`)
+
+The `/press` page lists **press@getcitepilot.com** for media inquiries. Set up forwarding in [Resend](https://resend.com):
+
+1. Verify domain **getcitepilot.com** in Resend (if not already)
+2. **Domains** → your domain → **Routing** (or use your DNS provider)
+3. Create alias **press@getcitepilot.com** → forward to **jerlessm@gmail.com** (or your main inbox)
+4. Alternatively in Resend: use **Inbound** routing rules if enabled on your plan
+
+The app does not send from `press@` by default — `EMAIL_FROM` stays `alerts@getcitepilot.com`. Press email is receive-only for journalists.
+
+---
+
 ## Related docs
 
 - `launch/MONITORING.md` — cron emails, PostHog funnel, Sentry alerts
 - `launch/PH_LISTING.md` — tagline, gallery, maker comment
 - `launch/SOCIAL_COPY.md` — Twitter / LinkedIn templates
+- `/press` — public media kit page
 - `.env.example` — full list of app env vars
