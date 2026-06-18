@@ -541,6 +541,47 @@ function migrateSchema(db: Database.Database): void {
       updated_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS user_accounts (
+      user_id TEXT PRIMARY KEY,
+      email TEXT,
+      deletion_status TEXT NOT NULL DEFAULT 'active',
+      deleted_at TEXT,
+      deletion_requested_at TEXT,
+      cancellation_token TEXT,
+      cancellation_token_expires_at TEXT,
+      stripe_customer_id TEXT,
+      stripe_subscription_id TEXT,
+      previous_plan TEXT,
+      previous_billing_status TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_accounts_cancellation_token ON user_accounts(cancellation_token) WHERE cancellation_token IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS account_export_jobs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'processing',
+      export_data TEXT,
+      error_message TEXT,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      completed_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_account_export_jobs_user ON account_export_jobs(user_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS compliance_log (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      metadata TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_compliance_log_user ON compliance_log(user_id, created_at DESC);
+
     CREATE TABLE IF NOT EXISTS user_referrals (
       user_id TEXT PRIMARY KEY,
       referral_code TEXT NOT NULL UNIQUE,
@@ -704,6 +745,50 @@ function migrateSchema(db: Database.Database): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_accounts (
+      user_id TEXT PRIMARY KEY,
+      email TEXT,
+      deletion_status TEXT NOT NULL DEFAULT 'active',
+      deleted_at TEXT,
+      deletion_requested_at TEXT,
+      cancellation_token TEXT,
+      cancellation_token_expires_at TEXT,
+      stripe_customer_id TEXT,
+      stripe_subscription_id TEXT,
+      previous_plan TEXT,
+      previous_billing_status TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_accounts_cancellation_token ON user_accounts(cancellation_token) WHERE cancellation_token IS NOT NULL;
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS account_export_jobs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'processing',
+      export_data TEXT,
+      error_message TEXT,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      completed_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_account_export_jobs_user ON account_export_jobs(user_id, created_at DESC);
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS compliance_log (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      metadata TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_compliance_log_user ON compliance_log(user_id, created_at DESC);
   `);
 
   db.exec(`

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { AccountDeletePanel } from "@/components/dashboard/settings/AccountDeletePanel";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
 import { NotificationPreferencesPanel } from "@/components/dashboard/NotificationPreferencesPanel";
@@ -646,6 +647,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             <SignOutButton className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-60" />
           </div>
         </Panel>
+
+        <AccountDeletePanel />
 
         {isPilot && <ReferralPanel />}
 
