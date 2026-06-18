@@ -122,3 +122,40 @@ Use snake_case with category prefix:
 - `src/proxy.ts` is the Next.js 16 proxy (formerly middleware) — do not add `middleware.ts`
 - Language switcher uses full-page navigation + `NEXT_LOCALE` cookie via next-intl
 - Homepage i18n is partial (Phase 1): hero, nav, footer, FAQ, pricing, agency are translated; feature cards, testimonials, showcase steps, and dashboard remain English
+
+## Security Audit Mode
+
+When I say **"audit this file"**, **"security review"**, or **"run security audit"**, act as a senior security auditor. Return findings in this format:
+
+```
+🔴 CRITICAL / 🟠 HIGH / 🟡 MEDIUM / 🔵 LOW / ⚪ OBSERVATION
+File: [filename:line]
+Finding: [what the issue is]
+Risk: [what an attacker could do]
+Fix: [exact code change needed]
+```
+
+Log completed audits in `SECURITY_AUDIT.md`. Follow the session playbook in `docs/audit-runner.md`.
+
+**Always check for:**
+
+1. Missing authentication (every protected API route must verify Neon Auth session)
+2. Missing Zod validation on all inputs (body, query, params)
+3. Stripe price IDs or plan tiers passed from client (never allowed — use server env)
+4. Webhook handlers missing `constructEvent()` signature verification
+5. Secrets or tokens returned in API responses
+6. `console.log()` with emails, tokens, API keys, or PII
+7. `NEXT_PUBLIC_*` vars containing anything sensitive
+8. Raw DB errors returned to client (sanitize to generic messages)
+9. Rate limiting missing on public-facing endpoints (`/api/audit/*`, `/api/tools/*`)
+10. IDOR — workspace/user IDs in URL must be authorized against session
+11. CORS — only allowed origins from `src/lib/cors.ts` (not wildcard on sensitive routes)
+12. Cron routes must require `CRON_SECRET` (`Authorization: Bearer …`)
+
+**CitePilot-specific paths:**
+
+- Auth gate: `src/proxy.ts` (not `middleware.ts`)
+- Stripe webhook: `src/app/api/billing/webhook/route.ts`
+- DB: `src/lib/db/query.ts` + `src/lib/db/postgres-schema.ts`
+- Encryption: `CMS_ENCRYPTION_KEY`, `TOTP_ENCRYPTION_KEY`
+- Audit log: `SECURITY_AUDIT.md`
