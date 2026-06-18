@@ -135,6 +135,26 @@ export const dashboardNav: DashboardNavItem[] = [
   },
 ];
 
+/** Sidebar groupings for the dashboard shell (Marketadt-style nav). */
+export const dashboardNavGroups: { label: string; itemIds: string[] }[] = [
+  {
+    label: "Monitor",
+    itemIds: ["overview", "workspaces", "analytics", "geo-audit"],
+  },
+  {
+    label: "Research",
+    itemIds: ["content", "competitors", "backlinks", "discussions"],
+  },
+  {
+    label: "Alerts",
+    itemIds: ["alerts"],
+  },
+  {
+    label: "Account",
+    itemIds: ["settings", "help", "feedback"],
+  },
+];
+
 export type WorkspaceSnapshot = {
   domain: string;
   businessType: string;

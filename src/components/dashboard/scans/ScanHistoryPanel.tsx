@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import {
+  DashboardTable,
+  DashboardTableBody,
+  DashboardTableHead,
+  DashboardTableRow,
+  DashboardTableTd,
+  DashboardTableTh,
+} from "@/components/dashboard/layout/DashboardTable";
 import { formatScanTrigger } from "@/lib/scans/history-format";
 import type { AuditTrigger } from "@/lib/scans/types";
 
@@ -69,29 +77,29 @@ export function ScanHistoryPanel({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
-            <th className="px-3 py-2 font-semibold">Date</th>
-            <th className="px-3 py-2 font-semibold">Trigger</th>
-            <th className="px-3 py-2 font-semibold">Duration</th>
-            <th className="px-3 py-2 font-semibold">Prompts</th>
-            <th className="px-3 py-2 font-semibold">Citation rate</th>
-            <th className="px-3 py-2 font-semibold">Change</th>
-          </tr>
-        </thead>
-        <tbody>
+    <>
+      <DashboardTable minWidth="640px">
+        <DashboardTableHead>
+          <DashboardTableRow header>
+            <DashboardTableTh>Date</DashboardTableTh>
+            <DashboardTableTh>Trigger</DashboardTableTh>
+            <DashboardTableTh>Duration</DashboardTableTh>
+            <DashboardTableTh>Prompts</DashboardTableTh>
+            <DashboardTableTh>Citation rate</DashboardTableTh>
+            <DashboardTableTh>Change</DashboardTableTh>
+          </DashboardTableRow>
+        </DashboardTableHead>
+        <DashboardTableBody>
           {rows.map((row) => (
-            <tr key={row.id} className="border-b border-border/60">
-              <td className="px-3 py-2.5 text-ink">{formatDate(row.createdAt)}</td>
-              <td className="px-3 py-2.5 text-ink">
+            <DashboardTableRow key={row.id}>
+              <DashboardTableTd className="text-ink">{formatDate(row.createdAt)}</DashboardTableTd>
+              <DashboardTableTd className="text-ink">
                 {row.triggerLabel || formatScanTrigger(row.trigger)}
-              </td>
-              <td className="px-3 py-2.5 text-muted">{formatDuration(row.durationMs)}</td>
-              <td className="px-3 py-2.5 text-ink">{row.promptsScanned}</td>
-              <td className="px-3 py-2.5 font-semibold text-ink">{row.citationRate}%</td>
-              <td className="px-3 py-2.5">
+              </DashboardTableTd>
+              <DashboardTableTd className="text-muted">{formatDuration(row.durationMs)}</DashboardTableTd>
+              <DashboardTableTd className="text-ink">{row.promptsScanned}</DashboardTableTd>
+              <DashboardTableTd className="font-semibold text-ink">{row.citationRate}%</DashboardTableTd>
+              <DashboardTableTd>
                 {row.scoreDelta == null ? (
                   <span className="text-muted">—</span>
                 ) : row.scoreDelta === 0 ? (
@@ -105,11 +113,11 @@ export function ScanHistoryPanel({
                     {row.scoreDelta > 0 ? `+${row.scoreDelta}` : row.scoreDelta} pts
                   </span>
                 )}
-              </td>
-            </tr>
+              </DashboardTableTd>
+            </DashboardTableRow>
           ))}
-        </tbody>
-      </table>
+        </DashboardTableBody>
+      </DashboardTable>
       {compact && (
         <Link
           href="/dashboard/settings/scan-schedule"
@@ -118,7 +126,7 @@ export function ScanHistoryPanel({
           View full scan history →
         </Link>
       )}
-    </div>
+    </>
   );
 }
 

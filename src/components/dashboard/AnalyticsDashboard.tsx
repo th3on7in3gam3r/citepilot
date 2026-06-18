@@ -7,6 +7,19 @@ import { AnalyticsChartsGrid } from "@/components/dashboard/analytics/AnalyticsC
 import { CitationVisualizations } from "@/components/dashboard/visualizations/CitationVisualizations";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import {
+  DashboardFilterBar,
+  DashboardFilterSelect,
+  DashboardFilterTabs,
+} from "@/components/dashboard/layout/DashboardToolbar";
+import {
+  DashboardTable,
+  DashboardTableBody,
+  DashboardTableHead,
+  DashboardTableRow,
+  DashboardTableTd,
+  DashboardTableTh,
+} from "@/components/dashboard/layout/DashboardTable";
 import { GooeyFilter, LiquidToggle } from "@/components/ui/liquid-toggle";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { PromptRow } from "@/lib/features";
@@ -18,8 +31,16 @@ import {
   type CompetitorBenchmarkResult,
   type CorrelationInsight,
 } from "@/lib/dashboard-data";
+import {
+  DASHBOARD_PERIOD_OPTIONS,
+  DASHBOARD_PLATFORM_OPTIONS,
+  filterPromptRowsByPlatform,
+  type DashboardPeriod,
+  type DashboardPlatformFilter,
+} from "@/lib/dashboard/overview-filters";
 
 type Tab = "google" | "llms";
+type PromptFilter = "all" | "cited" | "gaps";
 
 const sentimentStyle = {
   Positive: "bg-emerald-50 text-emerald-700",
@@ -86,6 +107,9 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
   const workspaceId = workspace.workspaceId ?? workspace.id;
   const [tab, setTab] = useState<Tab>("llms");
   const [gscConnected, setGscConnected] = useState(false);
+  const [periodFilter, setPeriodFilter] = useState<DashboardPeriod>("90d");
+  const [platformFilter, setPlatformFilter] = useState<DashboardPlatformFilter>("all");
+  const [promptFilter, setPromptFilter] = useState<PromptFilter>("all");
 
   const loadGscStatus = useCallback(async () => {
     if (!workspaceId) return;
@@ -112,19 +136,45 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
     () => promptRowsForWorkspace(workspace),
     [workspace],
   );
+  const filteredRows = useMemo(() => {
+    let next = filterPromptRowsByPlatform(rows, platformFilter);
+    if (promptFilter === "cited") next = next.filter((row) => row.cited);
+    if (promptFilter === "gaps") next = next.filter((row) => !row.cited);
+    return next;
+  }, [rows, platformFilter, promptFilter]);
   const benchmark = useMemo(
-    () => buildCompetitorBenchmark(workspace, rows),
-    [workspace, rows],
+    () => buildCompetitorBenchmark(workspace, filteredRows),
+    [workspace, filteredRows],
   );
   const correlations = useMemo(
-    () => buildCorrelationInsights(workspace, rows),
-    [workspace, rows],
+    () => buildCorrelationInsights(workspace, filteredRows),
+    [workspace, filteredRows],
   );
 
   return (
     <>
       <GooeyFilter />
-      <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-border p-4 shadow-sm dark:border-accent/15">
+      <DashboardFilterBar>
+        <DashboardFilterSelect
+          label="Site"
+          value={workspace.domain}
+          options={[{ value: workspace.domain, label: workspace.domain }]}
+        />
+        <DashboardFilterSelect
+          label="Period"
+          value={periodFilter}
+          options={DASHBOARD_PERIOD_OPTIONS}
+          onChange={(value) => setPeriodFilter(value as DashboardPeriod)}
+        />
+        <DashboardFilterSelect
+          label="Platforms"
+          value={platformFilter}
+          options={DASHBOARD_PLATFORM_OPTIONS}
+          onChange={(value) => setPlatformFilter(value as DashboardPlatformFilter)}
+        />
+      </DashboardFilterBar>
+
+      <div className="dash-gradient-panel mt-5 overflow-hidden rounded-2xl border border-border p-4 shadow-sm dark:border-accent/15">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -143,10 +193,6 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
               onChange={setTab}
               gscConnected={gscConnected}
             />
-            <select className="rounded-full border border-border bg-card px-4 py-2 text-sm text-muted shadow-sm dark:border-[#333]">
-              <option>Last 30 days</option>
-              <option>Last 90 days</option>
-            </select>
           </div>
         </div>
       </div>
@@ -154,7 +200,10 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
       {tab === "llms" ? (
         <LLMPanel
           workspace={workspace}
-          rows={rows}
+          rows={filteredRows}
+          allRows={rows}
+          promptFilter={promptFilter}
+          onPromptFilterChange={setPromptFilter}
           benchmark={benchmark}
           correlations={correlations}
         />
@@ -231,11 +280,17 @@ function AnalyticsSourceToggle({
 function LLMPanel({
   workspace,
   rows,
+  allRows,
+  promptFilter,
+  onPromptFilterChange,
   benchmark,
   correlations,
 }: {
   workspace: WorkspaceSnapshot;
   rows: PromptRow[];
+  allRows: PromptRow[];
+  promptFilter: PromptFilter;
+  onPromptFilterChange: (value: PromptFilter) => void;
   benchmark: CompetitorBenchmarkResult;
   correlations: CorrelationInsight[];
 }) {
@@ -312,7 +367,22 @@ function LLMPanel({
             <PromptsCard workspace={workspace} />
           </div>
         </div>
-        <PromptTable rows={rows} hasRealAudit={workspace.hasRealAudit} />
+        <div className="mt-5 space-y-3">
+          <DashboardFilterTabs
+            items={[
+              { id: "all", label: "All prompts", count: allRows.length },
+              { id: "cited", label: "Cited", count: allRows.filter((row) => row.cited).length },
+              {
+                id: "gaps",
+                label: "Gaps",
+                count: allRows.filter((row) => !row.cited).length,
+              },
+            ]}
+            value={promptFilter}
+            onChange={onPromptFilterChange}
+          />
+          <PromptTable rows={rows} hasRealAudit={workspace.hasRealAudit} />
+        </div>
       </Panel>
       <CompetitorBenchmarkPanel workspace={workspace} benchmark={benchmark} />
       <CorrelationInsightsPanel insights={correlations} />
@@ -904,83 +974,48 @@ function PromptTable({
   }
 
   return (
-    <div className="mt-6 space-y-3">
-      {rows.map((row) => (
-        <div
-          key={row.prompt}
-          className="rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.96))] px-5 py-4 shadow-sm"
-        >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="font-semibold text-ink">{row.prompt}</p>
-              <p className="mt-1 text-sm text-muted">
-                {row.leader === "You"
-                  ? "Your brand currently leads this tracked prompt."
-                  : `${row.leader} currently leads this tracked prompt.`}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
-                {row.visibility === null
-                  ? "—"
-                  : row.fromAudit
-                    ? row.cited
-                      ? "Cited"
-                      : "Not cited"
-                    : `Visibility ${row.visibility}%`}
-              </span>
+    <DashboardTable minWidth="640px">
+      <DashboardTableHead>
+        <DashboardTableRow header>
+          <DashboardTableTh>Money prompt</DashboardTableTh>
+          <DashboardTableTh>Status</DashboardTableTh>
+          <DashboardTableTh>Leader</DashboardTableTh>
+          <DashboardTableTh>Platforms</DashboardTableTh>
+          <DashboardTableTh>Sentiment</DashboardTableTh>
+        </DashboardTableRow>
+      </DashboardTableHead>
+      <DashboardTableBody>
+        {rows.map((row) => (
+          <DashboardTableRow key={row.prompt}>
+            <DashboardTableTd className="max-w-[280px] font-medium text-ink">
+              {row.prompt}
+            </DashboardTableTd>
+            <DashboardTableTd>
               <span
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${sentimentStyle[row.sentiment]}`}
+                className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                  row.cited
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-amber-50 text-amber-700"
+                }`}
+              >
+                {row.fromAudit ? (row.cited ? "Cited" : "Gap") : `Visibility ${row.visibility ?? "—"}%`}
+              </span>
+            </DashboardTableTd>
+            <DashboardTableTd className="text-muted">{row.leader}</DashboardTableTd>
+            <DashboardTableTd className="max-w-[180px] truncate text-xs text-muted">
+              {row.models.join(", ")}
+            </DashboardTableTd>
+            <DashboardTableTd>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${sentimentStyle[row.sentiment]}`}
               >
                 {row.sentiment}
               </span>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 lg:grid-cols-[1.3fr_0.9fr_0.8fr]">
-            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                Visible in
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {row.models.map((m) => (
-                  <span
-                    key={m}
-                    className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-muted"
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                Prompt leader
-              </p>
-              <p className="mt-2 font-semibold text-ink">{row.leader}</p>
-            </div>
-
-            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                Strength
-              </p>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-card">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#7b93f0] via-accent to-glow"
-                  style={{
-                    width:
-                      row.visibility === null
-                        ? "0%"
-                        : `${Math.max(8, Math.min(100, row.visibility))}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+            </DashboardTableTd>
+          </DashboardTableRow>
+        ))}
+      </DashboardTableBody>
+    </DashboardTable>
   );
 }
 

@@ -67,7 +67,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { ready } = useWorkspaceContext();
   const { openCopilot } = useCopilot();
-  const { title, backHref, backLabel } = pageHeader(pathname);
+  const { title } = pageHeader(pathname);
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[var(--dashboard-bg)]">
@@ -117,7 +117,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           </button>
         </div>
         <div className="hidden lg:block">
-          <DashboardTopBar title={title} backHref={backHref} backLabel={backLabel} />
+          <DashboardTopBar title={title} />
         </div>
         <ImpersonationBanner />
         <main id="main-content" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8">

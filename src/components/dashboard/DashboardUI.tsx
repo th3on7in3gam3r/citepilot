@@ -72,7 +72,7 @@ export function Panel({
   return (
     <section
       id={id}
-      className={`rounded-2xl border border-border bg-card p-6 shadow-sm dark:border-[#222] dark:bg-[#111] dark:shadow-black/20 ${id ? "scroll-mt-24" : ""} ${className}`}
+      className={`dash-content-card p-6 ${id ? "scroll-mt-24" : ""} ${className}`}
     >
       {title && (
         <h2 className="mb-4 font-display text-lg font-bold text-ink">{title}</h2>

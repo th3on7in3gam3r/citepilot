@@ -23,8 +23,10 @@
   --color-glow: #22d3ee;
   --color-mint: #10b981;
   --hero-bg: #04060c;
-  --dashboard-bg: #f4f6f8;
+  --dashboard-bg: #f0f2f5;
   --dashboard-panel: #ffffff;
+  --dashboard-sidebar: #ffffff;
+  --dashboard-sidebar-border: #e8ecf1;
 }
 
 .dark {
@@ -42,6 +44,8 @@
   --color-border: #222222;
   --dashboard-bg: #0a0a0a;
   --dashboard-panel: #111111;
+  --dashboard-sidebar: #0f0f0f;
+  --dashboard-sidebar-border: #222222;
 }
 
 @theme inline {
@@ -489,6 +493,58 @@ html.dark .dash-gradient-panel {
 
 html.dark .dash-metric-card {
   background: var(--card);
+}
+
+.dash-sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-muted);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.dash-sidebar-link:hover {
+  background: color-mix(in srgb, var(--dashboard-sidebar) 70%, var(--color-surface));
+  color: var(--color-ink);
+}
+
+.dash-sidebar-link[data-active="true"] {
+  background: var(--dashboard-panel);
+  color: var(--color-accent);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.dash-sidebar-link[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1.25rem;
+  width: 3px;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+
+html.dark .dash-sidebar-link[data-active="true"] {
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
+.dash-content-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--dashboard-panel);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+html.dark .dash-content-card {
+  box-shadow: none;
 }
 
 /* Intentional light surfaces in dark UI (e.g. pricing toggle pill) */

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { CompetitorAnalysisGrid } from "@/components/dashboard/competitors/CompetitorAnalysisGrid";
 import { CompetitorCard } from "@/components/dashboard/competitors/CompetitorCard";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { FeatureGate } from "@/components/billing/FeatureGate";
@@ -196,6 +197,12 @@ export function CompetitorsPageClient() {
             .
           </p>
         </Panel>
+      )}
+
+      {workspace.hasRealAudit && (
+        <div className="mt-6">
+          <CompetitorAnalysisGrid workspace={workspace} />
+        </div>
       )}
 
       {loading && (

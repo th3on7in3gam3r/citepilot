@@ -4,103 +4,109 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DashboardIcon } from "@/components/dashboard/DashboardIcon";
+import { DashboardNavLink } from "@/components/dashboard/DashboardNavLink";
 import { authClient } from "@/lib/auth/client";
-import { dashboardNav } from "@/lib/dashboard";
-import { isDashboardNavActive } from "@/lib/dashboard-nav";
+import { dashboardNav, dashboardNavGroups } from "@/lib/dashboard";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 export function DashboardRail() {
   const pathname = usePathname();
-  const items = dashboardNav.filter((item) => item.section !== "footer");
-  const footer = dashboardNav.filter((item) => item.section === "footer" && item.id !== "settings");
+  const { workspace, limits, ready } = useWorkspaceContext();
   const [initial, setInitial] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+
+  const navById = Object.fromEntries(dashboardNav.map((item) => [item.id, item]));
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
-      if (data?.user) {
-        const name = data.user.name || "";
-        const email = data.user.email || "";
-        const letter = name.trim() ? name[0] : email.trim() ? email[0] : "";
-        if (letter) {
-          setInitial(letter.toUpperCase());
-        }
-      }
+      if (!data?.user) return;
+      const name = data.user.name || "";
+      const userEmail = data.user.email || "";
+      setEmail(userEmail);
+      const letter = name.trim() ? name[0] : userEmail.trim() ? userEmail[0] : "";
+      if (letter) setInitial(letter.toUpperCase());
     });
   }, []);
 
-  return (
-    <aside className="flex h-[100dvh] w-[72px] shrink-0 flex-col items-center bg-[#0c1512] py-5">
-      <Link
-        href="/dashboard"
-        className="mb-8 flex h-11 w-11 items-center justify-center rounded-xl transition hover:opacity-90"
-        aria-label="CitePilot dashboard"
-      >
-        <Image
-          src="/logo-mark.svg"
-          alt="CitePilot"
-          width={44}
-          height={44}
-          className="h-11 w-11"
-          priority
-        />
-      </Link>
+  const planLabel =
+    limits?.plan === "fleet" ? "Fleet" : limits?.plan === "pilot" ? "Pilot" : "Free";
 
-      <nav className="flex flex-1 flex-col items-center gap-2" aria-label="Dashboard">
-        {items.map((item) => {
-          const active = isDashboardNavActive(pathname, item.href);
+  return (
+    <aside
+      className="flex h-[100dvh] w-[240px] shrink-0 flex-col border-r border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-sidebar)]"
+      aria-label="Dashboard sidebar"
+    >
+      <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-[var(--dashboard-sidebar-border)] px-5">
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5">
+          <Image
+            src="/logo-mark.svg"
+            alt=""
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0"
+            priority
+          />
+          <span className="font-display truncate text-base font-bold tracking-tight text-ink">
+            CitePilot
+          </span>
+        </Link>
+      </div>
+
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
+        {dashboardNavGroups.map((group) => {
+          const items = group.itemIds
+            .map((id) => navById[id])
+            .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+          if (items.length === 0) return null;
+
           return (
-            <Link
-              key={item.id}
-              href={item.href}
-              title={item.label}
-              aria-label={item.label}
-              aria-current={active ? "page" : undefined}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
-                active
-                  ? "bg-white/10 text-[#0ea5e9]"
-                  : "text-[#94a3b8] hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <DashboardIcon icon={item.icon} className="h-5 w-5" />
-            </Link>
+            <div key={group.label} className="mb-5 last:mb-0">
+              <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                {group.label}
+              </p>
+              <ul className="space-y-0.5">
+                {items.map((item) => (
+                  <li key={item.id}>
+                    <DashboardNavLink item={item} variant="rail" />
+                  </li>
+                ))}
+              </ul>
+            </div>
           );
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col items-center gap-2">
-        {footer.map((item) => {
-          const active = isDashboardNavActive(pathname, item.href);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              title={item.label}
-              aria-label={item.label}
-              aria-current={active ? "page" : undefined}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
-                active
-                  ? "bg-white/10 text-[#0ea5e9]"
-                  : "text-[#94a3b8] hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <DashboardIcon icon={item.icon} className="h-5 w-5" />
-            </Link>
-          );
-        })}
-        <Link
-          href="/dashboard/settings"
-          className="mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-[#162a22] text-[#10b981] border border-[#10b981]/25 hover:border-[#10b981]/50 hover:bg-[#1f3a30] transition-all duration-200 shadow-[0_2px_6px_rgba(0,0,0,0.2)]"
-          title="Account settings"
-          aria-label="Account settings"
-        >
-          {initial ? (
-            <span className="font-display text-xs font-bold tracking-wider">{initial}</span>
-          ) : (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          )}
-        </Link>
+      <div className="shrink-0 border-t border-[var(--dashboard-sidebar-border)] p-3">
+        {ready && workspace ? (
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-3 rounded-lg border border-border bg-surface/80 px-3 py-2.5 transition hover:border-accent/30 hover:bg-surface"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
+              {initial ?? "?"}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-ink">
+                {workspace.domain}
+              </span>
+              <span className="block truncate text-xs text-muted">
+                {planLabel}
+                {email ? ` · ${email.split("@")[0]}` : ""}
+              </span>
+            </span>
+          </Link>
+        ) : (
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-sm font-bold">
+              {initial ?? "?"}
+            </span>
+            Account settings
+          </Link>
+        )}
       </div>
     </aside>
   );

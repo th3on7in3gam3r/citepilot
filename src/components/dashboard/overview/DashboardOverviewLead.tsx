@@ -13,42 +13,55 @@ export function DashboardOverviewLead({ workspace }: { workspace: WorkspaceSnaps
   return (
     <div
       data-tour="workspace"
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+      className="dash-content-card flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
     >
-      <div className="min-w-0">
-        <p className="text-sm text-muted">
-          Tracking{" "}
-          <span className="font-semibold text-ink">{workspace.domain}</span>
-          {workspace.hasRealAudit ? (
-            <>
-              {" "}
-              · citation score{" "}
-              <span className="font-semibold text-accent-deep">
-                {workspace.citationScore}
-              </span>
-            </>
-          ) : (
-            " · estimates until your first audit"
-          )}
-        </p>
-        {!workspace.hasRealAudit && (
-          <p className="mt-1 text-xs text-muted">
-            Run a GEO audit to replace projections with measured platform and prompt data.{" "}
-            <Link href="/audit" className="font-semibold text-accent hover:underline">
-              Free 60-second audit →
-            </Link>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-sm font-bold text-accent">
+          {workspace.domain.charAt(0).toUpperCase()}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate font-display text-base font-bold text-ink">
+            {workspace.domain}
           </p>
-        )}
+          <p className="mt-0.5 text-sm text-muted">
+            {workspace.hasRealAudit ? (
+              <>
+                Citation score{" "}
+                <span className="font-semibold text-accent">{workspace.citationScore}</span>
+                {" · "}
+                {workspace.promptsTracked} prompts tracked
+              </>
+            ) : (
+              "Estimates until your first audit completes"
+            )}
+          </p>
+          {!workspace.hasRealAudit && (
+            <p className="mt-1 text-xs text-muted">
+              Run a GEO audit for measured platform data.{" "}
+              <Link href="/audit" className="font-semibold text-accent hover:underline">
+                Free 60-second audit →
+              </Link>
+            </p>
+          )}
+        </div>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-3 text-xs">
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
         {updated && (
-          <span className="text-muted">Updated {updated}</span>
+          <span className="rounded-lg border border-border bg-[var(--dashboard-bg)] px-3 py-1.5 text-xs font-medium text-muted">
+            Updated {updated}
+          </span>
         )}
         <Link
-          href="/dashboard/help"
-          className="font-semibold text-accent hover:underline"
+          href="/dashboard/geo-audit"
+          className="rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
         >
-          Dashboard guide
+          Run audit
+        </Link>
+        <Link
+          href="/dashboard/help"
+          className="rounded-lg border border-border px-3.5 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
+        >
+          Guide
         </Link>
       </div>
     </div>

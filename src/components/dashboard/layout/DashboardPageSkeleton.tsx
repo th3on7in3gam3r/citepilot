@@ -2,12 +2,12 @@
 export function DashboardPageSkeleton() {
   return (
     <div className="animate-pulse space-y-5 pb-8">
-      <div className="h-10 rounded-xl bg-white" />
-      <div className="h-24 rounded-2xl border border-[#e8edf3] bg-white" />
-      <div className="h-72 rounded-2xl border border-[#e8edf3] bg-white" />
+      <div className="h-16 rounded-xl bg-[var(--dashboard-panel)]" />
+      <div className="h-14 rounded-xl border border-border bg-[var(--dashboard-panel)]" />
+      <div className="h-72 rounded-xl border border-border bg-[var(--dashboard-panel)]" />
       <div className="grid gap-5 lg:grid-cols-2">
-        <div className="h-52 rounded-2xl border border-[#e8edf3] bg-white" />
-        <div className="h-52 rounded-2xl border border-[#e8edf3] bg-white" />
+        <div className="h-52 rounded-xl border border-border bg-[var(--dashboard-panel)]" />
+        <div className="h-52 rounded-xl border border-border bg-[var(--dashboard-panel)]" />
       </div>
     </div>
   );

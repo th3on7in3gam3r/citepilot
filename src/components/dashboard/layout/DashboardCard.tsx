@@ -10,7 +10,7 @@ export function DashboardCard({
   dataStatus,
   children,
   className = "",
-  accent = "default",
+  accent = "none",
 }: {
   title?: string;
   action?: string;
@@ -30,17 +30,17 @@ export function DashboardCard({
 
   return (
     <section
-      className={`group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-[#222] dark:bg-[#111] dark:shadow-black/20 dark:hover:shadow-black/30 ${className}`}
+      className={`dash-content-card overflow-hidden transition-shadow duration-200 hover:shadow-md dark:border-[#222] dark:bg-[#111] dark:hover:shadow-black/20 ${className}`}
     >
       {accent !== "none" && (
         <div
-          className={`absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${accentColors[accent]}`}
+          className={`h-[3px] bg-gradient-to-r ${accentColors[accent]}`}
           aria-hidden
         />
       )}
 
       {(title || action || dataStatus) && (
-        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-[14px] dark:border-[#222]">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4 dark:border-[#222]">
           <div className="flex min-w-0 items-center gap-2">
             {title ? (
               <h2 className="truncate text-sm font-semibold text-ink">{title}</h2>
@@ -52,7 +52,7 @@ export function DashboardCard({
           {action && actionHref ? (
             <Link
               href={actionHref}
-              className="text-xs font-medium text-muted transition-colors hover:text-accent"
+              className="shrink-0 text-xs font-semibold text-accent transition-colors hover:text-accent-deep"
             >
               {action} →
             </Link>

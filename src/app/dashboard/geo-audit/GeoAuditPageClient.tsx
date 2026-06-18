@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
+import {
+  DashboardFilterBar,
+  DashboardFilterSelect,
+} from "@/components/dashboard/layout/DashboardToolbar";
 import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
 import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
 import { ShareAuditResultsCard } from "@/components/dashboard/ShareAuditResultsCard";
@@ -23,6 +27,16 @@ import { GeoAuditScoreBreakdown } from "@/components/dashboard/geo-audit/GeoAudi
 import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
 import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
 import { getFixActionLabel } from "@/lib/geo/fixes";
+import { PLATFORMS } from "@/lib/dashboard";
+import {
+  DASHBOARD_PERIOD_OPTIONS,
+  DASHBOARD_PLATFORM_OPTIONS,
+  filterPlatformRows,
+  periodDisplayLabel,
+  type DashboardPeriod,
+  type DashboardPlatformFilter,
+} from "@/lib/dashboard/overview-filters";
+import { platformRowsFromWorkspace } from "@/lib/dashboard-data";
 
 const feature = productFeatures.find((f) => f.id === "geo-audit")!;
 
@@ -45,11 +59,19 @@ export function GeoAuditPageClient() {
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
   const [isFixOpen, setIsFixOpen] = useState(false);
+  const [periodFilter, setPeriodFilter] = useState<DashboardPeriod>("90d");
+  const [platformFilter, setPlatformFilter] = useState<DashboardPlatformFilter>("all");
 
   function handleOpenFix(gapText: string) {
     setSelectedGap(gapText);
     setIsFixOpen(true);
   }
+
+  const filteredPlatformRows = useMemo(() => {
+    if (!workspace) return [];
+    const rows = platformRowsFromWorkspace(workspace, PLATFORMS);
+    return filterPlatformRows(rows, platformFilter);
+  }, [workspace, platformFilter]);
 
   if (!ready || !workspace) return null;
 
@@ -63,6 +85,9 @@ export function GeoAuditPageClient() {
   );
   const workspaceId =
     workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId() ?? undefined;
+
+  const platformCitedCount = filteredPlatformRows.filter((row) => row.cited).length;
+  const platformTotal = Math.max(1, filteredPlatformRows.length);
 
   async function handleRunAudit() {
     if (!workspaceId || !workspace) {
@@ -139,6 +164,37 @@ export function GeoAuditPageClient() {
           </Link>
         }
       />
+
+      <DashboardFilterBar
+        actions={
+          <button
+            type="button"
+            onClick={() => void handleRunAudit()}
+            disabled={auditing}
+            className="rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep disabled:opacity-60"
+          >
+            {auditing ? "Running…" : workspace.hasRealAudit ? "Re-run audit" : "Run audit"}
+          </button>
+        }
+      >
+        <DashboardFilterSelect
+          label="Site"
+          value={workspace.domain}
+          options={[{ value: workspace.domain, label: workspace.domain }]}
+        />
+        <DashboardFilterSelect
+          label="Period"
+          value={periodFilter}
+          options={DASHBOARD_PERIOD_OPTIONS}
+          onChange={(value) => setPeriodFilter(value as DashboardPeriod)}
+        />
+        <DashboardFilterSelect
+          label="Platforms"
+          value={platformFilter}
+          options={DASHBOARD_PLATFORM_OPTIONS}
+          onChange={(value) => setPlatformFilter(value as DashboardPlatformFilter)}
+        />
+      </DashboardFilterBar>
 
       {/* Run Audit Panel */}
       <Panel className="mb-6 border-l-4 border-l-accent">
@@ -221,8 +277,36 @@ export function GeoAuditPageClient() {
           value={`${promptsCited}/${promptTotal}`}
           sub="AI mentions"
         />
-        <StatCard label="Gaps open" value={String(gaps.length)} />
+        <StatCard
+          label="Platform coverage"
+          value={`${platformCitedCount}/${platformTotal}`}
+          sub={periodDisplayLabel(periodFilter)}
+        />
       </div>
+
+      {filteredPlatformRows.length > 0 && (
+        <Panel title="Platform coverage" className="mt-6">
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {filteredPlatformRows.map((platform) => (
+              <li
+                key={platform.name}
+                className="flex items-center justify-between rounded-xl border border-border bg-surface/50 px-4 py-3 text-sm"
+              >
+                <span className="font-medium text-ink">{platform.name}</span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                    platform.cited
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-surface text-muted"
+                  }`}
+                >
+                  {platform.cited ? "Cited" : "Not cited"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
 
       {workspace.hasRealAudit && (
         <>

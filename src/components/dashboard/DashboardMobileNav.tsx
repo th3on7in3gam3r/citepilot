@@ -10,7 +10,7 @@ import { DashboardNavLink } from "@/components/dashboard/DashboardNavLink";
 import { WorkspaceSwitcher } from "@/components/dashboard/WorkspaceSwitcher";
 import { Logo } from "@/components/ui/Logo";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import { dashboardNav } from "@/lib/dashboard";
+import { dashboardNav, dashboardNavGroups } from "@/lib/dashboard";
 import { isDashboardNavActive } from "@/lib/dashboard-nav";
 
 const DASHBOARD_MOBILE_MENU_ID = "dashboard-mobile-menu";
@@ -25,8 +25,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
     setMounted(true);
   }, []);
 
-  const main = dashboardNav.filter((item) => item.section !== "footer");
-  const footer = dashboardNav.filter((item) => item.section === "footer");
+  const navById = Object.fromEntries(dashboardNav.map((item) => [item.id, item]));
 
   useFocusTrap(dialogRef, open, () => setOpen(false));
 
@@ -85,7 +84,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
           />
           <aside
             id={DASHBOARD_MOBILE_MENU_ID}
-            className="absolute top-0 left-0 z-10 flex h-full w-[min(100%,18rem)] flex-col border-r border-border bg-white shadow-2xl dark:border-[#222] dark:bg-[#0a0a0a]"
+            className="absolute top-0 left-0 z-10 flex h-full w-[min(100%,18rem)] flex-col border-r border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-sidebar)] shadow-2xl dark:border-[#222]"
           >
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
               <Logo className="text-base" />
@@ -119,26 +118,35 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
               </div>
             )}
 
-            <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
-              {main.map((item) => (
-                <DashboardNavLink
-                  key={item.id}
-                  item={item}
-                  active={isDashboardNavActive(pathname, item.href)}
-                  onNavigate={() => setOpen(false)}
-                />
-              ))}
+            <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4" aria-label="Dashboard">
+              {dashboardNavGroups.map((group) => {
+                const items = group.itemIds
+                  .map((id) => navById[id])
+                  .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+                if (items.length === 0) return null;
+
+                return (
+                  <div key={group.label} className="mb-4 last:mb-0">
+                    <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                      {group.label}
+                    </p>
+                    <div className="space-y-0.5">
+                      {items.map((item) => (
+                        <DashboardNavLink
+                          key={item.id}
+                          item={item}
+                          active={isDashboardNavActive(pathname, item.href)}
+                          onNavigate={() => setOpen(false)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </nav>
 
             <div className="shrink-0 border-t border-border px-3 py-4">
-              {footer.map((item) => (
-                <DashboardNavLink
-                  key={item.id}
-                  item={item}
-                  active={isDashboardNavActive(pathname, item.href)}
-                  onNavigate={() => setOpen(false)}
-                />
-              ))}
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
