@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const MOBILE_MENU_ID = "header-mobile-menu";
 
@@ -50,7 +51,12 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useFocusTrap(dialogRef, open, () => setOpen(false));
 
@@ -99,23 +105,25 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
         <MenuIcon />
       </button>
 
-      {open && (
+      {open &&
+        mounted &&
+        createPortal(
         <div
           ref={dialogRef}
-          className="fixed inset-0 z-[60] lg:hidden"
+          className="fixed inset-0 z-[100] isolate lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-labelledby="header-mobile-menu-title"
         >
           <button
             type="button"
-            className="absolute inset-0 bg-ink/50 backdrop-blur-[2px]"
+            className="absolute inset-0 z-0 bg-ink/60 backdrop-blur-sm"
             aria-label="Close menu"
             onClick={() => setOpen(false)}
           />
           <aside
             id={MOBILE_MENU_ID}
-            className="absolute top-0 right-0 flex h-full w-[min(100%,20rem)] flex-col border-l border-border bg-background shadow-xl dark:border-[#222] dark:bg-[#111]"
+            className="absolute top-0 right-0 z-10 flex h-full w-[min(100%,20rem)] flex-col border-l border-border bg-white shadow-2xl dark:border-[#222] dark:bg-[#0a0a0a]"
           >
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
               <Logo className="text-base" />
@@ -242,7 +250,8 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
               </Link>
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
