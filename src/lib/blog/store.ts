@@ -86,7 +86,11 @@ export function parseMarkdownMeta(markdown: string): {
   return { seoTitle, description, title, tldr, ...cover };
 }
 
-function resolveRowCover(row: BlogPostRow): {
+function resolveRowCover(row: {
+  cover_image_url?: string | null;
+  cover_image_alt?: string | null;
+  markdown?: string | null;
+}): {
   coverImageUrl?: string;
   coverImageAlt?: string;
 } {
@@ -96,7 +100,10 @@ function resolveRowCover(row: BlogPostRow): {
       ...(row.cover_image_alt ? { coverImageAlt: row.cover_image_alt } : {}),
     };
   }
-  return parseCoverImageMeta(row.markdown);
+  if (row.markdown?.trim()) {
+    return parseCoverImageMeta(row.markdown);
+  }
+  return {};
 }
 
 function estimateReadingMinutes(markdown: string): number {
@@ -335,7 +342,7 @@ export function dedupeBlogPostsBySlug(rows: BlogPostRow[]): BlogPostRow[] {
 }
 
 export function rowToBlogPostSummary(row: BlogPostSummaryRow): BlogPost {
-  const cover = resolveRowCover(row as BlogPostRow);
+  const cover = resolveRowCover(row);
   return {
     slug: row.slug,
     title: row.title,

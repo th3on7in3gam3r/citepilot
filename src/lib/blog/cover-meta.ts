@@ -1,8 +1,10 @@
 /** Parse cover image from markdown HTML comments (generated posts). */
-export function parseCoverImageMeta(markdown: string): {
+export function parseCoverImageMeta(markdown: string | null | undefined): {
   coverImageUrl?: string;
   coverImageAlt?: string;
 } {
+  if (!markdown?.trim()) return {};
+
   const coverImageUrl = markdown
     .match(/<!--\s*cover-image:\s*(.+?)\s*-->/i)?.[1]
     ?.trim();
