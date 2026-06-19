@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
+import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
 
 export function DashboardOverviewLead({ workspace }: { workspace: WorkspaceSnapshot }) {
   const updated = workspace.updatedAt
@@ -20,9 +21,14 @@ export function DashboardOverviewLead({ workspace }: { workspace: WorkspaceSnaps
           {workspace.domain.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">
-          <p className="truncate font-display text-base font-bold text-ink">
-            {workspace.domain}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-display text-base font-bold text-ink">
+              {workspace.domain}
+            </p>
+            {workspace.hasRealAudit && (
+              <CiteStatusBadge score={workspace.citationScore} size="sm" />
+            )}
+          </div>
           <p className="mt-0.5 text-sm text-muted">
             {workspace.hasRealAudit ? (
               <>

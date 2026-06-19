@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useToast } from "@/components/notifications/ToastProvider";
+import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 import { fleetWorkspaceDashboardHref } from "@/lib/workspace/fleet-dashboard";
 import type { WorkspaceListItem } from "@/hooks/useWorkspace";
@@ -66,12 +67,6 @@ function formatScanDate(iso: string | null | undefined): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function scoreBadgeClass(score: number, hasAudit: boolean): string {
-  if (!hasAudit) return "bg-surface text-muted";
-  if (score >= 70) return "bg-mint/15 text-mint";
-  if (score >= 40) return "bg-amber-100 text-amber-800";
-  return "bg-red-100 text-red-700";
-}
 
 function KpiCard({
   label,
@@ -178,11 +173,13 @@ function WorkspaceOverviewCard({
             <p className="truncate text-xs text-muted">{item.domain}</p>
           )}
         </div>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-1 text-sm font-bold ${scoreBadgeClass(item.citationScore, item.hasRealAudit)}`}
-        >
-          {item.hasRealAudit ? item.citationScore : "—"}
-        </span>
+        {item.hasRealAudit ? (
+          <CiteStatusBadge score={item.citationScore} size="sm" />
+        ) : (
+          <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-sm font-bold text-muted">
+            —
+          </span>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 text-xs">

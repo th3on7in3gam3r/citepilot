@@ -22,6 +22,9 @@ import { DashboardFilterBar, DashboardFilterSelect, DashboardFilterTabs } from "
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { DashboardWorkspaceEmpty } from "@/components/dashboard/overview/DashboardWorkspaceEmpty";
 import { DashboardOverviewLead } from "@/components/dashboard/overview/DashboardOverviewLead";
+import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
+import { CiteStatusMilestones } from "@/components/dashboard/CiteStatusMilestones";
+import { useCiteStatusCelebration } from "@/hooks/useCiteStatusCelebration";
 import { PromptSparkline } from "@/components/dashboard/PromptSparkline";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -134,6 +137,8 @@ function MyDashboardOverviewContent({
   const [promptFilter, setPromptFilter] = useState<"all" | "cited" | "gaps">("all");
   const [periodFilter, setPeriodFilter] = useState<DashboardPeriod>("90d");
   const [platformFilter, setPlatformFilter] = useState<DashboardPlatformFilter>("all");
+
+  useCiteStatusCelebration(workspace);
 
   effectInit(() => {
     let cancelled = false;
@@ -796,8 +801,9 @@ function MyDashboardOverviewContent({
               <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Score</p>
-                  <div className="flex items-baseline gap-1.5 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
                     <span className="text-3xl font-extrabold tracking-tight text-ink">{workspace.citationScore}%</span>
+                    <CiteStatusBadge score={workspace.citationScore} size="sm" />
                     {workspace.weeklyLiftAvailable && (
                       <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
                         {workspace.weeklyLift}
@@ -841,6 +847,7 @@ function MyDashboardOverviewContent({
                   ))}
                 </div>
               </div>
+              <CiteStatusMilestones workspace={workspace} compact />
             </div>
           </DashboardCard>
         </div>

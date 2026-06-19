@@ -25,6 +25,8 @@ import { GeoAuditScanProgress } from "@/components/dashboard/geo-audit/GeoAuditS
 import { GeoAuditScanDelta } from "@/components/dashboard/geo-audit/GeoAuditScanDelta";
 import { GeoAuditScoreBreakdown } from "@/components/dashboard/geo-audit/GeoAuditScoreBreakdown";
 import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
+import { CiteStatusCard } from "@/components/dashboard/CiteStatusCard";
+import { useCiteStatusCelebration } from "@/hooks/useCiteStatusCelebration";
 import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
 import { getFixActionLabel } from "@/lib/geo/fixes";
 import { PLATFORMS } from "@/lib/dashboard";
@@ -72,6 +74,8 @@ export function GeoAuditPageClient() {
     const rows = platformRowsFromWorkspace(workspace, PLATFORMS);
     return filterPlatformRows(rows, platformFilter);
   }, [workspace, platformFilter]);
+
+  useCiteStatusCelebration(workspace);
 
   if (!ready || !workspace) return null;
 
@@ -230,6 +234,8 @@ export function GeoAuditPageClient() {
           <GeoAuditScanProgress includesBrowserScans={userPlan !== "free"} />
         )}
       </Panel>
+
+      {workspace.hasRealAudit && <CiteStatusCard workspace={workspace} />}
 
       {workspace.hasRealAudit && (
         <Panel className="mb-6 border border-border bg-surface/50">

@@ -9,6 +9,7 @@ import { ScorePlatformGrid } from "@/components/score/ScorePlatformGrid";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Container } from "@/components/ui/Container";
+import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import {
   faviconUrl,
@@ -116,7 +117,10 @@ export default async function PublicScorePage({ params }: Props) {
                     </p>
                   </div>
                   <div className="pb-2">
-                    <p className="font-display text-lg font-bold text-ink">{band.label}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CiteStatusBadge score={audit.score} />
+                      <p className="font-display text-lg font-bold text-ink">{band.label}</p>
+                    </div>
                     <p className="mt-1 max-w-md text-sm text-muted">{band.description}</p>
                   </div>
                 </div>
