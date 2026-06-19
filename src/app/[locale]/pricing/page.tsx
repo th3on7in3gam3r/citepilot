@@ -126,7 +126,7 @@ export default async function PricingPage({ params }: Props) {
             <PricingPlanCards />
           </section>
 
-          <ProductTransparencySection variant="dark" />
+          <ProductTransparencySection />
 
           <section
             className="mx-auto mt-14 max-w-3xl text-center"

@@ -63,7 +63,7 @@ export default function ProductPage() {
           </div>
         </MarketingDarkHero>
 
-        <ProductTransparencySection variant="dark" showFaqs />
+        <ProductTransparencySection onDarkCanvas showFaqs />
         <FeatureSuite />
         <Pillars />
         <StickyProductShowcase />

@@ -156,7 +156,7 @@ export default function AuditPage() {
           </Container>
         </div>
 
-        <ProductTransparencySection variant="light" />
+        <ProductTransparencySection />
       </MainContent>
       <Footer />
     </>
