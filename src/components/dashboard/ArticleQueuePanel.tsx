@@ -430,13 +430,8 @@ export function ArticleQueuePanel({
                     </span>
                   ))}
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm text-muted">
-                      {post.description}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <p className="text-sm leading-relaxed text-muted">{post.description}</p>
+                <div className="flex flex-wrap items-center gap-2">
                   {onWebflow && post.webflow?.liveUrl && (
                     <a
                       href={post.webflow.liveUrl}
@@ -486,7 +481,6 @@ export function ArticleQueuePanel({
                   >
                     Delete
                   </button>
-                  </div>
                 </div>
               </li>
             );
