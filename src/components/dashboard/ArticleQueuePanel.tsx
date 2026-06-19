@@ -287,19 +287,21 @@ export function ArticleQueuePanel({
     return post.publications.some((p) => p.provider === provider);
   }
 
-  function publicationDate(post: QueuePost): string {
-    const labels: string[] = [];
+  function publicationDateSegments(post: QueuePost): string[] {
+    const segments = [`Draft ${new Date(post.publishedAt).toLocaleDateString()}`];
     if (post.webflow?.publishedAt) {
-      labels.push(`Webflow ${new Date(post.webflow.publishedAt).toLocaleDateString()}`);
+      segments.push(
+        `Webflow ${new Date(post.webflow.publishedAt).toLocaleDateString()}`,
+      );
     }
     for (const publication of post.publications) {
-      labels.push(
+      segments.push(
         `${providerLabels[publication.provider]} ${new Date(
           publication.publishedAt,
         ).toLocaleDateString()}`,
       );
     }
-    return labels.join(" · ");
+    return segments;
   }
 
   return (
@@ -420,14 +422,18 @@ export function ArticleQueuePanel({
                     <StatusBadge tone="draft">CMS pending</StatusBadge>
                   )}
                 </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                  {publicationDateSegments(post).map((segment, index) => (
+                    <span key={`${index}-${segment}`} className="inline-flex items-center gap-x-2">
+                      {index > 0 ? <span aria-hidden="true">·</span> : null}
+                      <span className="whitespace-nowrap">{segment}</span>
+                    </span>
+                  ))}
+                </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm text-muted">
                       {post.description}
-                    </p>
-                    <p className="mt-2 text-xs text-muted">
-                      Draft {new Date(post.publishedAt).toLocaleDateString()}
-                      {publicationDate(post) ? ` · ${publicationDate(post)}` : ""}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
