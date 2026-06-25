@@ -162,7 +162,11 @@ export function GenerateArticlePanel({
         post?: { slug: string; title: string; url: string };
       };
       if (!res.ok) {
-        toast.error(data.error ?? "Generation failed");
+        const fallback =
+          res.status === 502 || res.status === 504
+            ? "Generation timed out or failed upstream — try News/Tutorial format or retry in a minute."
+            : "Generation failed";
+        toast.error(data.error ?? fallback);
         setLoading(false);
         return;
       }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { buildPostFromMarkdown } from "@/lib/blog/store";
@@ -17,7 +17,7 @@ import { captureServerException } from "@/lib/observability/sentry";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
-export const maxDuration = 180;
+export const maxDuration = 300;
 
 export const POST = withApiLogging(async function POST(request: Request) {
   const key = process.env.OPENAI_API_KEY;
@@ -101,12 +101,27 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
         max_tokens: 8000,
         temperature: 0.65,
       }),
+      signal: AbortSignal.timeout(240 /* seconds */ * 1000),
     });
 
     if (!res.ok) {
-      const err = await res.text();
-      console.error("OpenAI article generate", err);
-      return NextResponse.json({ error: "Generation failed" }, { status: 502 });
+      const errText = await res.text();
+      console.error("OpenAI article generate", errText);
+      let message = "Generation failed — try again in a minute.";
+      try {
+        const parsed = JSON.parse(errText) as { error?: { message?: string } };
+        const openAiMsg = parsed.error?.message ?? "";
+        if (/rate.?limit/i.test(openAiMsg)) {
+          message = "OpenAI rate limit — wait a minute and try again.";
+        } else if (/insufficient|quota|billing/i.test(openAiMsg)) {
+          message = "OpenAI credits exhausted — check your API key billing.";
+        } else if (openAiMsg) {
+          message = `Generation failed: ${openAiMsg.slice(0, 160)}`;
+        }
+      } catch {
+        /* non-JSON error body */
+      }
+      return NextResponse.json({ error: message }, { status: 502 });
     }
 
     const data = (await res.json()) as {
@@ -131,7 +146,12 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
       workspaceId: input.workspaceId,
     });
 
-    const cover = await ensureBlogCoverForPost(row);
+    // Cover art is slow (DALL·E); generate after responding so the client does not 502.
+    after(() => {
+      void ensureBlogCoverForPost(row).catch((err) => {
+        console.warn(`[blog-cover] ${row.slug}:`, err);
+      });
+    });
 
     return NextResponse.json({
       brief,
@@ -140,10 +160,19 @@ ${brief.faqPrompts.map((q) => `- ${q}`).join("\n")}`;
         slug: post.slug,
         title: post.title,
         url: `/blog/${post.slug}`,
-        coverImageUrl: cover?.coverImageUrl ?? post.coverImageUrl ?? null,
+        coverImageUrl: post.coverImageUrl ?? null,
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return NextResponse.json(
+        {
+          error:
+            "Article generation timed out. Try a shorter format (News or Tutorial) or retry in a minute.",
+        },
+        { status: 504 },
+      );
+    }
     captureServerException(error, { route: "POST /api/content/generate" });
     console.error("POST /api/content/generate", error);
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });

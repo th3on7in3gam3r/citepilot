@@ -8,6 +8,7 @@ function isBenignExtensionMessage(args: unknown[]): boolean {
     text.includes("Could not establish connection") ||
     text.includes("Receiving end does not exist") ||
     text.includes("message port closed") ||
+    text.includes("before a response was received") ||
     text.includes("runtime.lastError") ||
     text.includes("Unchecked runtime.lastError")
   );
