@@ -9,11 +9,13 @@ function absoluteAssetUrl(pathOrUrl: string): string {
   return `${base}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
 }
 
-function dataUriFromStoredLogo(mimeType: string, buffer: Buffer): string {
-  return `data:${mimeType};base64,${buffer.toString("base64")}`;
+/** Public logo URL for email `<img>` tags — keeps HTML small (Gmail clips at ~102KB). */
+export function hostedWhiteLabelLogoUrl(workspaceId: string): string {
+  const base = appBaseUrl().replace(/\/$/, "");
+  return `${base}/api/white-label/logo?workspaceId=${encodeURIComponent(workspaceId)}`;
 }
 
-/** Email-safe logo src — never returns API routes that 404 without a stored asset. */
+/** Email-safe logo src — never inline base64 (Gmail clips the message). */
 export async function resolveEmailLogoSrc(input: {
   workspaceId?: string;
   logoUrl?: string;
@@ -22,6 +24,7 @@ export async function resolveEmailLogoSrc(input: {
 
   if (explicit && !explicit.includes("/api/white-label/logo")) {
     const absolute = absoluteAssetUrl(explicit);
+    if (absolute.startsWith("data:")) return undefined;
     return absolute || undefined;
   }
 
@@ -30,12 +33,12 @@ export async function resolveEmailLogoSrc(input: {
   const stored = await getStoredLogo(input.workspaceId);
   if (!stored) return undefined;
 
-  // PNG/JPEG data URIs render reliably in Gmail; SVG is blocked in many clients.
+  // PNG/JPEG hosted URLs render in Gmail; SVG is blocked in many clients.
   if (stored.mimeType === "image/svg+xml") {
     return undefined;
   }
 
-  return dataUriFromStoredLogo(stored.mimeType, stored.buffer);
+  return hostedWhiteLabelLogoUrl(input.workspaceId);
 }
 
 export function agencyDisplayName(agencyName: string, domain: string): string {
