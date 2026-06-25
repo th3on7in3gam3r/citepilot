@@ -184,6 +184,11 @@ export async function runAudit(input: {
     body: JSON.stringify(input),
   });
   if (!res.ok) {
+    if (res.status === 504) {
+      throw new Error(
+        "Audit timed out before finishing. Refresh Overview in a minute — partial results may have saved. Try fewer prompts if it keeps failing.",
+      );
+    }
     const err = (await res.json().catch(() => ({}))) as {
       error?: string;
       code?: string;

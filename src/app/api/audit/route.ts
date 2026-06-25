@@ -33,7 +33,7 @@ import { requireWorkspaceAccess } from "@/lib/auth/workspace-access";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export const POST = withApiLogging(async function POST(request: Request) {
   try {

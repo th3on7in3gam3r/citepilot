@@ -55,7 +55,7 @@ const PROBE_TIMEOUT_MS = 8_000;
 /** Hard stop for all live probes in one audit (parallel with site fetch). */
 const LIVE_PROBE_WALL_MS = 20_000;
 /** Wall time for browser-based probes (Grok, Google AI Overviews UI). */
-const BROWSER_PROBE_WALL_MS = 110_000;
+const BROWSER_PROBE_WALL_MS = 85_000;
 /** Max concurrent live probes (OpenAI + Perplexity + Serper). */
 const PROBE_CONCURRENCY = 5;
 

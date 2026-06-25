@@ -134,7 +134,9 @@ export function GeoAuditPageClient() {
     }
 
     setAuditing(true);
-    toast.info("Running GEO audit…", { description: "This may take up to a minute." });
+    toast.info("Running GEO audit…", {
+      description: "Pilot scans can take up to 2 minutes with live browser checks.",
+    });
 
     trackEvent("audit_started", { workspaceId, domain: ws.domain, source: "geo-audit" });
 
