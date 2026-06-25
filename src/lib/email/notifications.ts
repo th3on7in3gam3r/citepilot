@@ -39,6 +39,7 @@ import {
 } from "@/lib/notifications/preferences-store";
 import { buildWeeklyDigestEmail } from "@/lib/email/templates/weekly-digest";
 import { resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
+import { resolveUserEmail } from "@/lib/email/recipient";
 import { whiteLabelFromName } from "@/lib/white-label/email-layout";
 
 const DIGEST_JOB = "weekly-digest";
@@ -530,7 +531,10 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
 
     const prefs = parsePreferences(row.preferences);
 
-    const to = prefs.monitoringEmail?.trim();
+    const to = recipientEmail(
+      prefs,
+      row.user_id ? await resolveUserEmail(row.user_id) : null,
+    );
 
     if (await wasCronDispatched(DIGEST_JOB, row.id, periodKey)) {
       result.alreadySent++;

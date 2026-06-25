@@ -11,6 +11,7 @@ import { planForUser } from "@/lib/billing/limits-server";
 import { isPaidPlan } from "@/lib/billing/types";
 import { getBillingByUserId } from "@/lib/billing/store";
 import { dbAll, dbGet } from "@/lib/db";
+import { resolveUserEmail } from "@/lib/email/recipient";
 import { parsePreferences } from "@/lib/settings";
 
 const RESCAN_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -103,17 +104,21 @@ export async function runScheduledRescanBatch(): Promise<{
         trigger: "scheduled",
       });
 
+      const userEmail = row.user_id
+        ? await resolveUserEmail(row.user_id)
+        : null;
+
       void sendAuditCompleteEmail({
         workspaceId: row.id,
         audit,
-        userEmail: null,
+        userEmail,
       }).catch((err) => console.error("Scheduled rescan email failed", err));
 
       void sendScheduledProofReportEmail({
         workspaceId: row.id,
         audit,
         userId: row.user_id,
-        userEmail: null,
+        userEmail,
       }).catch((err) =>
         console.error("Scheduled proof report email failed", err),
       );
