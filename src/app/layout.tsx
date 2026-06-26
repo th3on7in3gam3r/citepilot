@@ -13,6 +13,7 @@ import { pickClientMessages } from "@/lib/i18n/client-messages";
 import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 import { themeInitScript } from "@/lib/theme";
+import { extensionConsoleNoiseScript } from "@/lib/extension-console-noise";
 import "./globals.css";
 
 const homeDescription = clampMetaDescription(site.description);
@@ -108,6 +109,7 @@ export default async function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: extensionConsoleNoiseScript }} />
         <link rel="preconnect" href="https://plausible.io" />
         <link rel="preconnect" href="https://us.i.posthog.com" />
         <link rel="preconnect" href="https://us-assets.i.posthog.com" />

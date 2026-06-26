@@ -1,38 +1,33 @@
 "use client";
 
 import { useEffect } from "react";
+import { isBenignExtensionConsoleMessage } from "@/lib/extension-console-noise";
 
-function isBenignExtensionMessage(args: unknown[]): boolean {
-  const text = args.map((arg) => String(arg)).join(" ");
-  return (
-    text.includes("Could not establish connection") ||
-    text.includes("Receiving end does not exist") ||
-    text.includes("message port closed") ||
-    text.includes("before a response was received") ||
-    text.includes("runtime.lastError") ||
-    text.includes("Unchecked runtime.lastError")
-  );
+function patchConsoleMethod(
+  method: "error" | "warn" | "log" | "info" | "debug",
+): () => void {
+  const original = console[method];
+  if (typeof original !== "function") return () => {};
+
+  console[method] = (...args: unknown[]) => {
+    if (isBenignExtensionConsoleMessage(args)) return;
+    original.apply(console, args);
+  };
+
+  return () => {
+    console[method] = original;
+  };
 }
 
-/** Hides benign Chrome extension messaging noise from third-party scripts. */
+/** Re-applies console filters after hydration (inline script runs earlier in <head>). */
 export function SuppressExtensionConsoleNoise() {
   useEffect(() => {
-    const originalError = console.error;
-    const originalWarn = console.warn;
-
-    console.error = (...args: unknown[]) => {
-      if (isBenignExtensionMessage(args)) return;
-      originalError(...args);
-    };
-
-    console.warn = (...args: unknown[]) => {
-      if (isBenignExtensionMessage(args)) return;
-      originalWarn(...args);
-    };
+    const restore = (["error", "warn", "log", "info", "debug"] as const).map(
+      patchConsoleMethod,
+    );
 
     const onWindowError = (event: ErrorEvent) => {
-      const message = event.message ?? "";
-      if (isBenignExtensionMessage([message])) {
+      if (isBenignExtensionConsoleMessage([event.message ?? ""])) {
         event.preventDefault();
       }
     };
@@ -40,8 +35,7 @@ export function SuppressExtensionConsoleNoise() {
     window.addEventListener("error", onWindowError);
 
     return () => {
-      console.error = originalError;
-      console.warn = originalWarn;
+      restore.forEach((fn) => fn());
       window.removeEventListener("error", onWindowError);
     };
   }, []);
