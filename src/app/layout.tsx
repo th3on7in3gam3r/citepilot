@@ -60,8 +60,8 @@ export const metadata: Metadata = {
   description: homeDescription,
   icons: {
     icon: [
-      { url: "/favicon.ico", type: "image/x-icon" },
       { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
       { url: "/images/branding/citepilot-icon.png", sizes: "512x512", type: "image/png" },
     ],
     apple: "/apple-touch-icon.png",

@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogLayout } from "@/components/blog/BlogLayout";
+import { BlogHero } from "@/components/blog/BlogHero";
 import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
 import { BlogPillarChips } from "@/components/blog/BlogCategoryGrid";
 import { BlogPostCard } from "@/components/blog/BlogPostCard";
-import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { Container } from "@/components/ui/Container";
 import {
   getAllPostSummaries,
@@ -45,25 +45,45 @@ export default async function BlogCategoryPage({ params }: Props) {
 
   return (
     <BlogLayout>
-      <MarketingDarkHero
+      <BlogHero
         eyebrow="Topic"
         title={pillar.title}
         description={pillar.description}
+        stats={[
+          {
+            value: String(posts.length),
+            label: posts.length === 1 ? "article" : "articles",
+          },
+        ]}
       >
         <Link
           href="/blog"
-          className="mt-6 inline-block text-sm text-white/50 hover:text-glow"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/50 transition hover:text-glow"
         >
-          ← All articles
+          <span aria-hidden>←</span> All articles
         </Link>
-      </MarketingDarkHero>
+      </BlogHero>
 
-      <Container className="py-14 md:py-20">
+      <Container className="pb-16 pt-10 md:pb-24 md:pt-12">
         <BlogPillarChips activePillarId={pillar.id} />
 
-        <div className="mt-10 space-y-5">
+        <section className="mt-10" aria-labelledby="topic-articles-heading">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <h2
+              id="topic-articles-heading"
+              className="font-display text-2xl font-bold text-white md:text-3xl"
+            >
+              Articles in this topic
+            </h2>
+            {posts.length > 0 && (
+              <p className="text-sm text-white/45">
+                {posts.length} article{posts.length === 1 ? "" : "s"}
+              </p>
+            )}
+          </div>
+
           {posts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 px-6 py-12 text-center">
+            <div className="rounded-2xl border border-dashed border-white/12 px-6 py-14 text-center">
               <p className="font-display text-lg font-bold text-white">
                 No articles in this topic yet
               </p>
@@ -72,21 +92,21 @@ export default async function BlogCategoryPage({ params }: Props) {
               </p>
               <Link
                 href="/blog"
-                className="mt-6 inline-block text-sm font-semibold text-glow"
+                className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-glow transition hover:text-white"
               >
-                Browse all articles →
+                Browse all articles <span aria-hidden>→</span>
               </Link>
             </div>
           ) : (
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {posts.map((post) => (
-              <BlogPostCard key={post.slug} post={post} />
-            ))}
-          </div>
-        )}
-        </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {posts.map((post) => (
+                <BlogPostCard key={post.slug} post={post} />
+              ))}
+            </div>
+          )}
+        </section>
 
-        <div className="mt-14">
+        <div className="mt-16 md:mt-20">
           <BlogNewsletterSignup variant="card" />
         </div>
       </Container>

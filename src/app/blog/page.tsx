@@ -3,11 +3,11 @@ import {
   BlogCategoryGrid,
   BlogPillarChips,
 } from "@/components/blog/BlogCategoryGrid";
+import { BlogHero } from "@/components/blog/BlogHero";
 import { BlogLayout } from "@/components/blog/BlogLayout";
 import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
 import { BlogPostCard } from "@/components/blog/BlogPostCard";
 import { BlogSearch } from "@/components/blog/BlogSearch";
-import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { Container } from "@/components/ui/Container";
 import {
   countPostsByPillar,
@@ -30,42 +30,44 @@ export default async function BlogIndexPage() {
   const counts = countPostsByPillar(posts);
   const gridPillars = getPillarsForCategoryGrid(posts);
   const featured = posts[0];
+  const topicCount = gridPillars.length;
 
   return (
     <BlogLayout>
-      <MarketingDarkHero
+      <BlogHero
         eyebrow="CitePilot editorial"
         title="GEO & SEO guides for teams who measure citations"
         description="Practical playbooks on Google rankings, LLM citations, and technical SEO — written for clarity in search and AI answers."
+        stats={[
+          { value: String(posts.length), label: posts.length === 1 ? "guide" : "guides" },
+          ...(topicCount > 0
+            ? [{ value: String(topicCount), label: topicCount === 1 ? "topic" : "topics" }]
+            : []),
+        ]}
       />
 
-      <Container className="py-14 md:py-20">
-        <BlogPillarChips />
-
-        {gridPillars.length > 0 ? (
-          <BlogCategoryGrid pillars={gridPillars} counts={counts} />
-        ) : (
-          <p className="mt-8 text-sm text-white/45">
-            More topic sections unlock as we publish — browse all articles below
-            or filter by topic above.
-          </p>
-        )}
-
+      <Container className="pb-16 pt-10 md:pb-24 md:pt-12">
         {featured && (
-          <div className="mt-12">
+          <section aria-labelledby="featured-heading">
+            <h2 id="featured-heading" className="sr-only">
+              Featured article
+            </h2>
             <BlogPostCard post={featured} featured />
-          </div>
+          </section>
         )}
+
+        <div className={featured ? "mt-10" : ""}>
+          <BlogPillarChips />
+        </div>
 
         {posts.length > 1 ? (
-          <div className="mt-12">
-            <h2 className="font-display text-lg font-bold text-white">
-              All articles
-            </h2>
-            <div className="mt-6">
-              <BlogSearch posts={posts} featuredSlug={featured?.slug} />
-            </div>
-          </div>
+          <section className="mt-12" aria-labelledby="articles-heading">
+            <BlogSearch
+              posts={posts}
+              featuredSlug={featured?.slug}
+              totalCount={posts.length - (featured ? 1 : 0)}
+            />
+          </section>
         ) : (
           !featured && (
             <p className="mt-12 text-center text-white/50">
@@ -74,7 +76,17 @@ export default async function BlogIndexPage() {
           )
         )}
 
-        <div className="mt-14">
+        {gridPillars.length > 0 ? (
+          <BlogCategoryGrid pillars={gridPillars} counts={counts} />
+        ) : (
+          posts.length > 0 && (
+            <p className="mt-16 text-center text-sm text-white/40">
+              More topic sections unlock as we publish additional guides.
+            </p>
+          )
+        )}
+
+        <div className="mt-16 md:mt-20">
           <BlogNewsletterSignup variant="card" />
         </div>
       </Container>

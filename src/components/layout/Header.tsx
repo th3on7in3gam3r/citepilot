@@ -17,9 +17,12 @@ import { useEffect, useState } from "react";
 export function Header({
   light = false,
   overlay = false,
+  darkHero = false,
 }: {
   light?: boolean;
   overlay?: boolean;
+  /** Force light nav text on a dark hero regardless of theme (blog, etc.). */
+  darkHero?: boolean;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const { resolved } = useTheme();
@@ -33,7 +36,10 @@ export function Header({
   }, []);
 
   const solid = scrolled || !overlay;
-  const onDark = light && !solid && resolved === "dark";
+  const onDark =
+    darkHero && !solid
+      ? true
+      : light && !solid && resolved === "dark";
 
   const linkClass = `text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
     onDark
