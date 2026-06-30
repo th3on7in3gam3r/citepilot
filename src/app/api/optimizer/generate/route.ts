@@ -3,6 +3,10 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { trackServerEvent } from "@/lib/analytics/track-server";
 import { buildOptimizerContext } from "@/lib/optimizer/build-context";
+import {
+  attachSerpToContextJson,
+  fetchSerpContext,
+} from "@/lib/search/serp-context";
 import { completeOptimizer } from "@/lib/optimizer/complete";
 import {
   buildBaselinePlan,
@@ -88,7 +92,11 @@ export const POST = withApiLogging(async function POST(request: Request) {
       );
     }
 
-    const contextJson = buildOptimizerContext(snapshot);
+    const serp = await fetchSerpContext(snapshot);
+    const contextJson = attachSerpToContextJson(
+      buildOptimizerContext(snapshot),
+      serp,
+    );
     const claudeResult = await completeOptimizer(
       OPTIMIZER_SYSTEM_PROMPT,
       buildOptimizerUserMessage(contextJson),

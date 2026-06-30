@@ -16,6 +16,10 @@ import {
 } from "@/lib/copilot/prompts";
 import { buildCopilotContext } from "@/lib/copilot/workspace-context";
 import {
+  attachSerpToContextJson,
+  fetchSerpContext,
+} from "@/lib/search/serp-context";
+import {
   enrichSnapshotWithBacklinks,
   getWorkspaceById,
   toSnapshot,
@@ -117,7 +121,11 @@ export const POST = withApiLogging(async function POST(request: Request) {
       }
     }
 
-    const contextJson = buildCopilotContext(snapshot);
+    const serp = await fetchSerpContext(snapshot);
+    const contextJson = attachSerpToContextJson(
+      buildCopilotContext(snapshot),
+      serp,
+    );
     const userMessage =
       kind === "prioritize"
         ? buildPrioritizeUserMessage(contextJson)

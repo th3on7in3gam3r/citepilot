@@ -23,6 +23,8 @@ Schema:
 
 Rules:
 - priority 1 = fix this week; 5 = nice to have
+- When liveSerp is present, prioritize fixes that close gaps vs competitors ranking above the brand in organic or AI Overviews.
+- If liveSerp is missing, rely on audit gaps and site signals only.
 - category "seo" = meta tags, sitemap, H1, technical HTML
 - category "aeo" = FAQ schema, answer capsules, JSON-LD, entity signals
 - category "llm" = platform-specific citation alignment, comparison pages, third-party mentions
