@@ -55,8 +55,8 @@ export function buildOptimizerContext(
     scanDelta: snapshot.scanDelta
       ? {
           scoreDelta: snapshot.scanDelta.scoreDelta,
-          newGaps: snapshot.scanDelta.newGapLabels?.slice(0, 6),
-          resolvedGaps: snapshot.scanDelta.resolvedGapLabels?.slice(0, 6),
+          newGaps: snapshot.scanDelta.detail?.newGapLabels?.slice(0, 6),
+          resolvedGaps: snapshot.scanDelta.detail?.resolvedGapLabels?.slice(0, 6),
         }
       : null,
   };

@@ -11,6 +11,7 @@ export type AnalyticsEvent =
   | "cms_published"
   | "second_audit_completed"
   | "insights_completed"
+  | "optimizer_generated"
   | "autopilot_run"
   | "citation_checker_started"
   | "citation_checker_completed"
