@@ -127,15 +127,14 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
                 if (items.length === 0) return null;
 
                 return (
-                  <div key={group.label} className="mb-4 last:mb-0">
-                    <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                      {group.label}
-                    </p>
-                    <div className="space-y-0.5">
+                  <div key={group.label} className="dash-nav-group">
+                    <p className="dash-nav-group__label">{group.label}</p>
+                    <div className="mt-1.5 space-y-0.5">
                       {items.map((item) => (
                         <DashboardNavLink
                           key={item.id}
                           item={item}
+                          variant="rail"
                           active={isDashboardNavActive(pathname, item.href)}
                           onNavigate={() => setOpen(false)}
                         />

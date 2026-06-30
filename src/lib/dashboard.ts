@@ -153,19 +153,23 @@ export const dashboardNav: DashboardNavItem[] = [
   },
 ];
 
-/** Sidebar groupings for the dashboard shell (Marketadt-style nav). */
+/** Sidebar groupings for the dashboard shell. */
 export const dashboardNavGroups: { label: string; itemIds: string[] }[] = [
   {
-    label: "Monitor",
-    itemIds: ["overview", "workspaces", "analytics", "geo-audit", "optimizer"],
+    label: "Overview",
+    itemIds: ["overview", "workspaces"],
+  },
+  {
+    label: "Visibility",
+    itemIds: ["analytics", "geo-audit", "optimizer"],
   },
   {
     label: "Research",
     itemIds: ["content", "competitors", "backlinks", "discussions"],
   },
   {
-    label: "Alerts",
-    itemIds: ["alerts"],
+    label: "Operations",
+    itemIds: ["alerts", "uptime"],
   },
   {
     label: "Account",

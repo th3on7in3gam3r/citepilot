@@ -27,10 +27,13 @@ export function DashboardNavLink({
         onClick={onNavigate}
         data-active={active ? "true" : undefined}
         aria-current={active ? "page" : undefined}
-        className="dash-sidebar-link"
+        title={item.description}
+        className="dash-sidebar-link group"
       >
-        <DashboardIcon icon={item.icon} className="h-[18px] w-[18px] shrink-0" />
-        <span className="truncate">{item.label}</span>
+        <span className="dash-sidebar-link__icon" aria-hidden>
+          <DashboardIcon icon={item.icon} className="h-[17px] w-[17px]" />
+        </span>
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
       </Link>
     );
   }
@@ -40,14 +43,13 @@ export function DashboardNavLink({
       href={item.href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-        active
-          ? "bg-white text-accent shadow-sm dark:bg-surface"
-          : "text-muted hover:bg-surface hover:text-ink"
-      }`}
+      title={item.description}
+      className={`dash-sidebar-link group ${active ? "dash-sidebar-link--active" : ""}`}
     >
-      <DashboardIcon icon={item.icon} className="h-[18px] w-[18px] shrink-0" />
-      {item.label}
+      <span className="dash-sidebar-link__icon" aria-hidden>
+        <DashboardIcon icon={item.icon} className="h-[17px] w-[17px]" />
+      </span>
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
     </Link>
   );
 }
