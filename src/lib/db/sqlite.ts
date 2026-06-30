@@ -1004,6 +1004,55 @@ function migrateSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_scan_jobs_status ON scan_jobs(status);
     CREATE INDEX IF NOT EXISTS idx_scan_job_items_job ON scan_job_items(job_id);
     CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(workspace_id, status);
+
+    CREATE TABLE IF NOT EXISTS uptime_monitors (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      workspace_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      monitor_type TEXT NOT NULL,
+      url TEXT NOT NULL,
+      method TEXT NOT NULL DEFAULT 'GET',
+      interval_seconds INTEGER NOT NULL DEFAULT 300,
+      timeout_ms INTEGER NOT NULL DEFAULT 10000,
+      expected_status_min INTEGER NOT NULL DEFAULT 200,
+      expected_status_max INTEGER NOT NULL DEFAULT 399,
+      keyword TEXT,
+      keyword_present INTEGER NOT NULL DEFAULT 1,
+      port INTEGER,
+      cron_job_name TEXT,
+      ssl_warn_days INTEGER NOT NULL DEFAULT 14,
+      auth_type TEXT NOT NULL DEFAULT 'none',
+      auth_config_encrypted TEXT,
+      headers_json TEXT NOT NULL DEFAULT '{}',
+      enabled INTEGER NOT NULL DEFAULT 1,
+      last_status TEXT NOT NULL DEFAULT 'unknown',
+      last_checked_at TEXT,
+      last_latency_ms INTEGER,
+      last_error TEXT,
+      consecutive_failures INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_uptime_monitors_user ON uptime_monitors(user_id);
+    CREATE INDEX IF NOT EXISTS idx_uptime_monitors_workspace ON uptime_monitors(workspace_id);
+    CREATE INDEX IF NOT EXISTS idx_uptime_monitors_due ON uptime_monitors(enabled, last_checked_at);
+
+    CREATE TABLE IF NOT EXISTS uptime_check_results (
+      id TEXT PRIMARY KEY,
+      monitor_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      latency_ms INTEGER,
+      status_code INTEGER,
+      message TEXT,
+      metadata TEXT NOT NULL DEFAULT '{}',
+      checked_at TEXT NOT NULL,
+      FOREIGN KEY (monitor_id) REFERENCES uptime_monitors(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_uptime_results_monitor ON uptime_check_results(monitor_id, checked_at DESC);
   `);
 }
 

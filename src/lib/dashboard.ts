@@ -31,6 +31,7 @@ export type DashboardNavItem = {
     | "optimizer"
     | "discussions"
     | "alerts"
+    | "uptime"
     | "settings"
     | "help"
     | "feedback";
@@ -116,6 +117,14 @@ export const dashboardNav: DashboardNavItem[] = [
     href: "/dashboard/alerts",
     description: "Slack, webhook, and email alert history",
     icon: "alerts",
+    section: "main",
+  },
+  {
+    id: "uptime",
+    label: "Uptime",
+    href: "/dashboard/uptime",
+    description: "HTTP, SSL, port, keyword, and cron monitors with instant alerts",
+    icon: "uptime",
     section: "main",
   },
   {
