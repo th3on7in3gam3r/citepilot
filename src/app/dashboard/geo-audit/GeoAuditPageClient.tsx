@@ -330,7 +330,13 @@ export function GeoAuditPageClient() {
           From your latest live crawl. Schema and meta tags use{" "}
           <strong className="font-semibold text-ink">Quick Fix</strong> (GEO Snippet or copy-paste).
           Prompt and content gaps open a <strong className="font-semibold text-ink">Content guide</strong>{" "}
-          — those require publishing new copy on {workspace.domain}. Re-run the audit after deploying.
+          — those require publishing new copy on {workspace.domain}. Re-run the audit after deploying.{" "}
+          <Link
+            href="/dashboard/optimizer"
+            className="font-semibold text-accent hover:underline"
+          >
+            Generate all fixes →
+          </Link>
         </p>
         <ul className="space-y-3 text-sm text-muted">
           {gaps.map((g) => (

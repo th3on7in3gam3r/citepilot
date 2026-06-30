@@ -160,6 +160,10 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
     a: "One-shot AI guidance grounded in your workspace audit — not a general chat. On Overview, use “Prioritize with CitePilot” for your top 3 weekly actions. On GEO Audit, use “Explain with CitePilot” on any gap. Requires a completed audit and Pilot or Fleet.",
   },
   {
+    q: "What is Site Optimizer?",
+    a: "Site Optimizer is a Pilot+ tool (Monitor → Site Optimizer). It reads your latest GEO audit — gaps, money prompts, robots.txt, and schema signals — and generates a prioritized plan with copy-paste code plus file placement, or prompts for content gaps. Open it from the sidebar, GEO Audit, or Overview after a completed audit.",
+  },
+  {
     q: "What is CitePilot Autopilot?",
     a: "Autopilot is a Pilot+ feature that runs after your weekly Monday re-scan. It summarizes what changed since the last scan, optionally generates a prioritized 7-day plan using CitePilot Insights, and can email a client-ready report with proof link and share URL to your monitoring email. Turn it on per workspace under Settings → CitePilot Autopilot, and you can also run it on-demand.",
   },

@@ -761,6 +761,12 @@ function MyDashboardOverviewContent({
               </li>
             ))}
           </ul>
+          <Link
+            href="/dashboard/optimizer"
+            className="mt-4 inline-flex text-xs font-semibold text-accent hover:underline"
+          >
+            Generate all fixes →
+          </Link>
         </DashboardCard>
       </div>
 

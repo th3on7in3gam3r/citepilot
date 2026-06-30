@@ -28,6 +28,7 @@ export type DashboardNavItem = {
     | "competitors"
     | "backlinks"
     | "audit"
+    | "optimizer"
     | "discussions"
     | "alerts"
     | "settings"
@@ -94,6 +95,14 @@ export const dashboardNav: DashboardNavItem[] = [
     section: "main",
   },
   {
+    id: "optimizer",
+    label: "Site Optimizer",
+    href: "/dashboard/optimizer",
+    description: "AI fixes for SEO, AEO, LLM citations, and robots.txt",
+    icon: "optimizer",
+    section: "main",
+  },
+  {
     id: "discussions",
     label: "Discussions",
     href: "/dashboard/discussions",
@@ -139,7 +148,7 @@ export const dashboardNav: DashboardNavItem[] = [
 export const dashboardNavGroups: { label: string; itemIds: string[] }[] = [
   {
     label: "Monitor",
-    itemIds: ["overview", "workspaces", "analytics", "geo-audit"],
+    itemIds: ["overview", "workspaces", "analytics", "geo-audit", "optimizer"],
   },
   {
     label: "Research",
