@@ -504,7 +504,7 @@ export function CmsConnectionsPanel({
           removing={removing === "hashnode"}
           onSave={() => void saveProvider("hashnode")}
           onRemove={() => void disconnectProvider("hashnode")}
-          note="Free dev-friendly blogging with a public GraphQL API — a good Ghost replacement."
+          note="Requires Hashnode Pro (Dashboard → Billing). Free blogs can still be created, but API publish needs Pro."
         >
           <div className="grid gap-3">
             <Field
@@ -520,7 +520,7 @@ export function CmsConnectionsPanel({
               value={forms.hashnode.publicationId}
               onChange={(value) => updateForm("hashnode", "publicationId", value)}
               placeholder="66778899abcdef123456789"
-              help="From your dashboard URL: hashnode.com/{publicationId}/dashboard"
+              help="Paste your dashboard URL or the 24-character ID from hashnode.com/dashboards/{id}. Requires Hashnode Pro for API access."
             />
           </div>
         </ProviderCard>

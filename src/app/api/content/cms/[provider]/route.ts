@@ -3,7 +3,7 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { testFramerConnection } from "@/lib/cms/framer";
 import { testGhostConnection } from "@/lib/cms/ghost";
-import { testHashnodeConnection } from "@/lib/cms/hashnode";
+import { testHashnodeConnection, normalizeHashnodePublicationId } from "@/lib/cms/hashnode";
 import { deleteCmsConnection, getCmsConnection, upsertCmsConnection } from "@/lib/cms/store";
 import { testShopifyConnection } from "@/lib/cms/shopify";
 import { CMS_PROVIDERS, type CmsConnectionSummary, type CmsProvider } from "@/lib/cms/types";
@@ -182,7 +182,7 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     if (provider === "hashnode") {
       const credentials = {
         accessToken: getString(body, "accessToken")!,
-        publicationId: getString(body, "publicationId")!,
+        publicationId: normalizeHashnodePublicationId(getString(body, "publicationId")!),
       };
       const checked = await testHashnodeConnection(credentials);
       await upsertCmsConnection({

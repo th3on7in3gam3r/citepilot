@@ -34,8 +34,8 @@ const providerCards = [
   {
     name: "Hashnode",
     needs: "Personal access token and publication ID",
-    bestFor: "Free dev-friendly blogs with a public GraphQL publish API.",
-    note: "Strong Ghost replacement — connect with a token from hashnode.com/settings/developer and your publication ID from the dashboard URL.",
+    bestFor: "Dev-friendly blogs when you have Hashnode Pro for API access.",
+    note: "Hashnode retired free API access in 2026 — upgrade to Pro (Dashboard → Billing) to publish from CitePilot. Paste your dashboard URL or publication ID.",
   },
   {
     name: "Shopify",
@@ -69,7 +69,7 @@ const quickAnswers = [
   },
   {
     q: "What if I do not have WordPress, Ghost, Shopify, Framer, or Webflow?",
-    a: "Skip CMS setup for now. Keep creating drafts inside CitePilot until you or a client already has a real destination site. Hashnode is a free option if you need a blog quickly.",
+    a: "Skip CMS setup for now. Keep creating drafts inside CitePilot until you or a client already has a real destination site. WordPress on cheap hosting is the easiest free publish target.",
   },
   {
     q: "When should I connect a CMS?",

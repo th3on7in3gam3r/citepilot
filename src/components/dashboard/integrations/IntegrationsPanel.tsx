@@ -532,7 +532,8 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
               placeholder="Paste token from Hashnode developer settings"
             />
             <p className="mt-1 text-xs text-muted">
-              hashnode.com/settings/developer → Generate New Token
+              hashnode.com/settings/developer → Generate New Token. API access
+              requires Hashnode Pro on your publication.
             </p>
           </Field>
           <Field label="Publication ID">
@@ -542,7 +543,7 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
                 setHashnodeForm((f) => ({ ...f, publicationId: e.target.value }))
               }
               className={inputClass}
-              placeholder="From hashnode.com/{id}/dashboard"
+              placeholder="https://hashnode.com/dashboards/{id} or just the ID"
             />
           </Field>
           <ModalActions

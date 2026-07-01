@@ -11,10 +11,49 @@ export class HashnodeApiError extends Error {
   }
 }
 
+/** Extract a 24-char publication ObjectId from raw input or dashboard URLs. */
+export function normalizeHashnodePublicationId(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+
+  const fromDashboards = trimmed.match(/dashboards\/([a-f0-9]{24})/i);
+  if (fromDashboards?.[1]) return fromDashboards[1];
+
+  const fromLegacyDashboard = trimmed.match(
+    /hashnode\.com\/([a-f0-9]{24})\/dashboard/i,
+  );
+  if (fromLegacyDashboard?.[1]) return fromLegacyDashboard[1];
+
+  const fromRaw = trimmed.match(/^([a-f0-9]{24})$/i);
+  if (fromRaw?.[1]) return fromRaw[1];
+
+  const fromAnyUrl = trimmed.match(/([a-f0-9]{24})/i);
+  if (fromAnyUrl?.[1]) return fromAnyUrl[1];
+
+  return trimmed;
+}
+
+function normalizedCredentials(
+  credentials: HashnodeCredentials,
+): HashnodeCredentials {
+  return {
+    ...credentials,
+    publicationId: normalizeHashnodePublicationId(credentials.publicationId),
+  };
+}
+
+const HASHNODE_PRO_MESSAGE =
+  "Hashnode's GraphQL API now requires Hashnode Pro on your publication. Upgrade in your blog dashboard → Billing → Upgrade to Pro, then reconnect. See hashnode.com/changelog/2026-05-13-graphql-api-paid-access";
+
 type GqlResponse<T> = {
   data?: T;
   errors?: Array<{ message: string }>;
 };
+
+function isHtmlResponse(text: string): boolean {
+  const start = text.trimStart().slice(0, 64).toLowerCase();
+  return start.startsWith("<!doctype") || start.startsWith("<html");
+}
 
 async function hashnodeRequest<T>(
   credentials: HashnodeCredentials,
@@ -31,6 +70,7 @@ async function hashnodeRequest<T>(
 
   const res = await fetch(HASHNODE_GQL_URL, {
     method: "POST",
+    redirect: "manual",
     headers: {
       "Content-Type": "application/json",
       Authorization: token,
@@ -38,7 +78,15 @@ async function hashnodeRequest<T>(
     body: JSON.stringify({ query, variables }),
   });
 
+  if (res.status >= 300 && res.status < 400) {
+    throw new HashnodeApiError(HASHNODE_PRO_MESSAGE, 402);
+  }
+
   const text = await res.text();
+  if (isHtmlResponse(text)) {
+    throw new HashnodeApiError(HASHNODE_PRO_MESSAGE, 402);
+  }
+
   let body: GqlResponse<T>;
   try {
     body = JSON.parse(text) as GqlResponse<T>;
@@ -69,10 +117,16 @@ async function hashnodeRequest<T>(
 export async function testHashnodeConnection(
   credentials: HashnodeCredentials,
 ): Promise<{ displayName: string; siteUrl: string; detail: string }> {
-  const publicationId = credentials.publicationId.trim();
+  const publicationId = normalizeHashnodePublicationId(credentials.publicationId);
   if (!publicationId) {
     throw new HashnodeApiError(
-      "Publication ID is required. Copy it from your Hashnode dashboard URL: hashnode.com/{publicationId}/dashboard",
+      "Publication ID is required. Paste the ID from hashnode.com/dashboards/{id} or just the 24-character ID.",
+      400,
+    );
+  }
+  if (!/^[a-f0-9]{24}$/i.test(publicationId)) {
+    throw new HashnodeApiError(
+      "Publication ID looks invalid. Copy it from hashnode.com/dashboards/{your-id} — it should be a 24-character hex string.",
       400,
     );
   }
@@ -85,7 +139,7 @@ export async function testHashnodeConnection(
       url: string;
     } | null;
   }>(
-    credentials,
+    normalizedCredentials({ ...credentials, publicationId }),
     `query Publication($id: ObjectId!) {
       publication(id: $id) {
         id
@@ -128,7 +182,7 @@ function publishInput(input: {
   return {
     title: input.title,
     slug: input.slug,
-    publicationId: input.credentials.publicationId.trim(),
+    publicationId: normalizeHashnodePublicationId(input.credentials.publicationId),
     contentMarkdown: input.markdown,
     ...(subtitle ? { subtitle } : {}),
     ...(metaDescription
@@ -144,10 +198,11 @@ async function createHashnodePost(input: {
   markdown: string;
   description: string;
 }): Promise<{ remoteId: string; liveUrl: string | null }> {
+  const credentials = normalizedCredentials(input.credentials);
   const data = await hashnodeRequest<{
     publishPost: { post: { id: string; url: string | null } | null } | null;
   }>(
-    input.credentials,
+    credentials,
     `mutation PublishPost($input: PublishPostInput!) {
       publishPost(input: $input) {
         post {
@@ -156,7 +211,7 @@ async function createHashnodePost(input: {
         }
       }
     }`,
-    { input: publishInput(input) },
+    { input: publishInput({ ...input, credentials }) },
   );
 
   const post = data.publishPost?.post;
@@ -175,13 +230,14 @@ async function updateHashnodePost(input: {
   markdown: string;
   description: string;
 }): Promise<{ remoteId: string; liveUrl: string | null }> {
+  const credentials = normalizedCredentials(input.credentials);
   const subtitle = input.description.trim().slice(0, 280);
   const metaDescription = input.description.trim().slice(0, 320);
 
   const data = await hashnodeRequest<{
     updatePost: { post: { id: string; url: string | null } | null } | null;
   }>(
-    input.credentials,
+    credentials,
     `mutation UpdatePost($input: UpdatePostInput!) {
       updatePost(input: $input) {
         post {
@@ -196,7 +252,7 @@ async function updateHashnodePost(input: {
         title: input.title,
         slug: input.slug,
         contentMarkdown: input.markdown,
-        publicationId: input.credentials.publicationId.trim(),
+        publicationId: credentials.publicationId,
         ...(subtitle ? { subtitle } : {}),
         ...(metaDescription
           ? { metaTags: { title: input.title, description: metaDescription } }
@@ -224,7 +280,7 @@ export async function publishPostToHashnode(input: {
   if (input.existingRemoteId) {
     try {
       return await updateHashnodePost({
-        credentials: input.credentials,
+        credentials: normalizedCredentials(input.credentials),
         remoteId: input.existingRemoteId,
         title: input.title,
         slug: input.slug,
@@ -238,5 +294,8 @@ export async function publishPostToHashnode(input: {
     }
   }
 
-  return createHashnodePost(input);
+  return createHashnodePost({
+    ...input,
+    credentials: normalizedCredentials(input.credentials),
+  });
 }
