@@ -4,6 +4,7 @@ import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access"
 import { getGeneratedPostBySlug } from "@/lib/blog/store";
 import { publishPostToFramer } from "@/lib/cms/framer";
 import { publishPostToGhost, GhostApiError } from "@/lib/cms/ghost";
+import { publishPostToHashnode, HashnodeApiError } from "@/lib/cms/hashnode";
 import {
   getCmsConnection,
   getCmsPublication,
@@ -16,6 +17,7 @@ import {
   type CmsRemoteDefaultsByProvider,
   type FramerCredentials,
   type GhostCredentials,
+  type HashnodeCredentials,
   type ShopifyCredentials,
   type WordPressCredentials,
 } from "@/lib/cms/types";
@@ -107,6 +109,15 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         description: row.description,
         existingRemoteId: existing?.remoteId,
       });
+    } else if (provider === "hashnode") {
+      result = await publishPostToHashnode({
+        credentials: connection.credentials as HashnodeCredentials,
+        title: row.title,
+        slug: row.slug,
+        markdown: row.markdown,
+        description: row.description,
+        existingRemoteId: existing?.remoteId,
+      });
     } else if (provider === "shopify") {
       const defaults = connection.remoteDefaults as CmsRemoteDefaultsByProvider["shopify"];
       result = await publishPostToShopify({
@@ -152,7 +163,7 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     const message = error instanceof Error ? error.message : "Publish failed";
     console.error("POST /api/content/publish/[provider]", error);
     const status =
-      error instanceof GhostApiError
+      error instanceof GhostApiError || error instanceof HashnodeApiError
         ? Math.min(502, Math.max(400, error.status))
         : 500;
     return NextResponse.json({ error: message }, { status });

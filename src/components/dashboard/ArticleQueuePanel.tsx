@@ -53,6 +53,7 @@ const providerLabels: Record<CmsProvider, string> = {
   webflow: "Webflow",
   wordpress: "WordPress",
   ghost: "Ghost",
+  hashnode: "Hashnode",
   shopify: "Shopify",
   framer: "Framer",
 };
@@ -61,6 +62,7 @@ const publishTargets: CmsProvider[] = [
   "webflow",
   "wordpress",
   "ghost",
+  "hashnode",
   "shopify",
   "framer",
 ];
@@ -156,6 +158,9 @@ export function ArticleQueuePanel({
       ).length,
       ghost: posts.filter((post) =>
         post.publications.some((item) => item.provider === "ghost"),
+      ).length,
+      hashnode: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "hashnode"),
       ).length,
       shopify: posts.filter((post) =>
         post.publications.some((item) => item.provider === "shopify"),

@@ -18,6 +18,7 @@ const providerOrder: CmsProvider[] = [
   "webflow",
   "wordpress",
   "ghost",
+  "hashnode",
   "shopify",
   "framer",
 ];
@@ -26,6 +27,7 @@ const logoColors: Record<CmsProvider, string> = {
   webflow: "#146EF5",
   wordpress: "#21759B",
   ghost: "#15171A",
+  hashnode: "#2962FF",
   shopify: "#96BF48",
   framer: "#0055FF",
 };
@@ -74,6 +76,10 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
     appPassword: "",
   });
   const [ghostForm, setGhostForm] = useState({ siteUrl: "", adminApiKey: "" });
+  const [hashnodeForm, setHashnodeForm] = useState({
+    accessToken: "",
+    publicationId: "",
+  });
   const [shopifyForm, setShopifyForm] = useState({ shopDomain: "", accessToken: "" });
 
   const load = useCallback(async () => {
@@ -147,6 +153,8 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
         body = { ...body, ...wordpressForm };
       } else if (provider === "ghost") {
         body = { ...body, ...ghostForm };
+      } else if (provider === "hashnode") {
+        body = { ...body, ...hashnodeForm };
       } else if (provider === "shopify") {
         body = { ...body, ...shopifyForm };
       }
@@ -240,7 +248,7 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
     <FeatureGate
       feature="cms_publish"
       title="CMS integrations"
-      description="Connect Webflow, WordPress, Ghost, Shopify, or Framer and publish generated articles in one click."
+      description="Connect Webflow, WordPress, Ghost, Hashnode, Shopify, or Framer and publish generated articles in one click."
       highlights={[
         "Workspace-level credentials",
         "Test connections before publishing",
@@ -312,7 +320,7 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
       <section className="mb-10">
         <h3 className="font-display text-base font-bold text-ink">Publishing (CMS)</h3>
         <p className="mt-1 text-sm text-muted">
-          Webflow, WordPress, Ghost, Shopify, and Framer — publish from your article queue.
+          Webflow, WordPress, Ghost, Hashnode, Shopify, and Framer — publish from your article queue.
         </p>
         <div className="mt-4">{cmsSection}</div>
       </section>
@@ -507,6 +515,40 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
             saving={saving || testing}
             onTest={() => void testProvider("ghost")}
             onSave={() => void connectProvider("ghost")}
+          />
+        </ConnectModal>
+      )}
+
+      {activeId === "hashnode" && (
+        <ConnectModal title="Connect Hashnode" onClose={() => setActiveId(null)}>
+          <Field label="Personal access token">
+            <input
+              type="password"
+              value={hashnodeForm.accessToken}
+              onChange={(e) =>
+                setHashnodeForm((f) => ({ ...f, accessToken: e.target.value }))
+              }
+              className={inputClass}
+              placeholder="Paste token from Hashnode developer settings"
+            />
+            <p className="mt-1 text-xs text-muted">
+              hashnode.com/settings/developer → Generate New Token
+            </p>
+          </Field>
+          <Field label="Publication ID">
+            <input
+              value={hashnodeForm.publicationId}
+              onChange={(e) =>
+                setHashnodeForm((f) => ({ ...f, publicationId: e.target.value }))
+              }
+              className={inputClass}
+              placeholder="From hashnode.com/{id}/dashboard"
+            />
+          </Field>
+          <ModalActions
+            saving={saving || testing}
+            onTest={() => void testProvider("hashnode")}
+            onSave={() => void connectProvider("hashnode")}
           />
         </ConnectModal>
       )}

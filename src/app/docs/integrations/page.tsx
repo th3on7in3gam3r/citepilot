@@ -35,7 +35,7 @@ const integrations = [
     setup: "Settings → Integrations → Slack → Connect",
   },
   {
-    name: "Webflow, WordPress, Ghost, Shopify, Framer",
+    name: "Webflow, WordPress, Ghost, Hashnode, Shopify, Framer",
     plan: "Pilot+",
     summary: "Publish generated articles directly to your CMS.",
     href: "/help/cms-publishing",

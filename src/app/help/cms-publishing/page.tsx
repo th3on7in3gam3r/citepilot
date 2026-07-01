@@ -9,7 +9,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "CMS Publishing Guide",
-  description: `How ${site.name} connects to Webflow, WordPress, Ghost, Shopify, and Framer for article publishing.`,
+  description: `How ${site.name} connects to Webflow, WordPress, Ghost, Hashnode, Shopify, and Framer for article publishing.`,
 };
 
 const providerCards = [
@@ -30,6 +30,12 @@ const providerCards = [
     needs: "Site URL and a Ghost Admin API key in id:secret format",
     bestFor: "Publisher-style blogs already using Ghost as their CMS.",
     note: "Good fit when the blog is separate from the main app and editorial workflow already lives in Ghost.",
+  },
+  {
+    name: "Hashnode",
+    needs: "Personal access token and publication ID",
+    bestFor: "Free dev-friendly blogs with a public GraphQL publish API.",
+    note: "Strong Ghost replacement — connect with a token from hashnode.com/settings/developer and your publication ID from the dashboard URL.",
   },
   {
     name: "Shopify",
@@ -63,7 +69,7 @@ const quickAnswers = [
   },
   {
     q: "What if I do not have WordPress, Ghost, Shopify, Framer, or Webflow?",
-    a: "Skip CMS setup for now. Keep creating drafts inside CitePilot until you or a client already has a real destination site.",
+    a: "Skip CMS setup for now. Keep creating drafts inside CitePilot until you or a client already has a real destination site. Hashnode is a free option if you need a blog quickly.",
   },
   {
     q: "When should I connect a CMS?",

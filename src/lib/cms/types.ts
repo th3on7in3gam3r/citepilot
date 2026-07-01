@@ -2,6 +2,7 @@ export const CMS_PROVIDERS = [
   "webflow",
   "wordpress",
   "ghost",
+  "hashnode",
   "shopify",
   "framer",
 ] as const;
@@ -25,6 +26,11 @@ export type GhostCredentials = {
   adminApiKey: string;
 };
 
+export type HashnodeCredentials = {
+  accessToken: string;
+  publicationId: string;
+};
+
 export type ShopifyCredentials = {
   shopDomain: string;
   accessToken: string;
@@ -43,6 +49,7 @@ export type CmsCredentialsByProvider = {
   webflow: WebflowCredentials;
   wordpress: WordPressCredentials;
   ghost: GhostCredentials;
+  hashnode: HashnodeCredentials;
   shopify: ShopifyCredentials;
   framer: FramerCredentials;
 };
@@ -59,6 +66,7 @@ export type CmsRemoteDefaultsByProvider = {
   };
   wordpress: { maskedAppPassword?: string };
   ghost: { maskedAdminApiKey?: string };
+  hashnode: { maskedAccessToken?: string };
   shopify: {
     blogId: string;
     blogTitle: string;

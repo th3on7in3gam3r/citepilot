@@ -77,6 +77,7 @@ export const cmsPlatforms: CmsPlatform[] = [
   { id: "wordpress", name: "WordPress", available: true },
   { id: "shopify", name: "Shopify", available: true },
   { id: "ghost", name: "Ghost", available: true },
+  { id: "hashnode", name: "Hashnode", available: true },
   { id: "framer", name: "Framer", available: true },
 ];
 

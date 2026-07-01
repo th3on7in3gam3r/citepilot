@@ -3,6 +3,7 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { testFramerConnection } from "@/lib/cms/framer";
 import { testGhostConnection } from "@/lib/cms/ghost";
+import { testHashnodeConnection } from "@/lib/cms/hashnode";
 import { deleteCmsConnection, getCmsConnection, upsertCmsConnection } from "@/lib/cms/store";
 import { testShopifyConnection } from "@/lib/cms/shopify";
 import { CMS_PROVIDERS, type CmsConnectionSummary, type CmsProvider } from "@/lib/cms/types";
@@ -173,6 +174,25 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         credentials,
         remoteDefaults: {
           maskedAdminApiKey: maskSecret(credentials.adminApiKey),
+        },
+      });
+      return NextResponse.json(toSummary(provider, checked));
+    }
+
+    if (provider === "hashnode") {
+      const credentials = {
+        accessToken: getString(body, "accessToken")!,
+        publicationId: getString(body, "publicationId")!,
+      };
+      const checked = await testHashnodeConnection(credentials);
+      await upsertCmsConnection({
+        workspaceId,
+        provider,
+        displayName: checked.displayName,
+        siteUrl: checked.siteUrl,
+        credentials,
+        remoteDefaults: {
+          maskedAccessToken: maskSecret(credentials.accessToken),
         },
       });
       return NextResponse.json(toSummary(provider, checked));

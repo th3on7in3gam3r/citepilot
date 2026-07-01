@@ -39,6 +39,10 @@ type ProviderForms = {
     siteUrl: string;
     adminApiKey: string;
   };
+  hashnode: {
+    accessToken: string;
+    publicationId: string;
+  };
   shopify: {
     shopDomain: string;
     accessToken: string;
@@ -57,6 +61,7 @@ const providerLabels: Record<CmsProvider, string> = {
   webflow: "Webflow",
   wordpress: "WordPress",
   ghost: "Ghost",
+  hashnode: "Hashnode",
   shopify: "Shopify",
   framer: "Framer",
 };
@@ -71,6 +76,10 @@ function emptyForms(): ProviderForms {
     ghost: {
       siteUrl: "",
       adminApiKey: "",
+    },
+    hashnode: {
+      accessToken: "",
+      publicationId: "",
     },
     shopify: {
       shopDomain: "",
@@ -276,7 +285,7 @@ export function CmsConnectionsPanel({
       <FeatureGate
         feature="cms_publish"
         title="CMS publishing"
-        description="Connect WordPress, Webflow, Ghost, Shopify, or Framer and push generated articles live in one click."
+        description="Connect WordPress, Webflow, Ghost, Hashnode, Shopify, or Framer and push generated articles live in one click."
         cta="Upgrade to Pilot →"
         highlights={[
           "Workspace-level CMS credentials",
@@ -306,7 +315,7 @@ export function CmsConnectionsPanel({
           <h3 className="font-display text-lg font-bold text-ink">New here?</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             Connect a CMS only if this workspace already has a real site on
-            WordPress, Ghost, Shopify, Framer, or Webflow. If you do not have one of
+            WordPress, Ghost, Hashnode, Shopify, Framer, or Webflow. If you do not have one of
             those yet, skip this section for now and keep generating drafts inside
             CitePilot.
           </p>
@@ -333,6 +342,10 @@ export function CmsConnectionsPanel({
             <li>
               <span className="font-semibold text-ink">Ghost:</span> site URL, Admin
               API key
+            </li>
+            <li>
+              <span className="font-semibold text-ink">Hashnode:</span> personal access
+              token, publication ID
             </li>
             <li>
               <span className="font-semibold text-ink">Shopify:</span> shop domain,
@@ -480,6 +493,34 @@ export function CmsConnectionsPanel({
               onChange={(value) => updateForm("ghost", "adminApiKey", value)}
               placeholder="id:secret"
               help="Copy the Admin API key from Ghost Integrations exactly as shown."
+            />
+          </div>
+        </ProviderCard>
+
+        <ProviderCard
+          title="Hashnode"
+          status={providerMap.get("hashnode")}
+          saving={saving === "hashnode"}
+          removing={removing === "hashnode"}
+          onSave={() => void saveProvider("hashnode")}
+          onRemove={() => void disconnectProvider("hashnode")}
+          note="Free dev-friendly blogging with a public GraphQL API — a good Ghost replacement."
+        >
+          <div className="grid gap-3">
+            <Field
+              label="Personal access token"
+              type="password"
+              value={forms.hashnode.accessToken}
+              onChange={(value) => updateForm("hashnode", "accessToken", value)}
+              placeholder="hn_..."
+              help="Generate at hashnode.com/settings/developer → Generate New Token."
+            />
+            <Field
+              label="Publication ID"
+              value={forms.hashnode.publicationId}
+              onChange={(value) => updateForm("hashnode", "publicationId", value)}
+              placeholder="66778899abcdef123456789"
+              help="From your dashboard URL: hashnode.com/{publicationId}/dashboard"
             />
           </div>
         </ProviderCard>
