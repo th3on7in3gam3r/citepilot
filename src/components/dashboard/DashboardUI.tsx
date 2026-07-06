@@ -4,7 +4,7 @@ export function DashboardPageHeader({
   title,
   description,
   action,
-  headingLevel = "h1",
+  headingLevel = "h2",
 }: {
   title: string;
   description?: string;
@@ -12,18 +12,22 @@ export function DashboardPageHeader({
   headingLevel?: "h1" | "h2";
 }) {
   const Heading = headingLevel;
+  const titleClass =
+    headingLevel === "h1"
+      ? "text-xl font-semibold tracking-tight text-ink md:text-2xl"
+      : "text-lg font-semibold tracking-tight text-ink";
 
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <Heading className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
-          {title}
-        </Heading>
+    <div className="mb-6 flex flex-col gap-4 border-b border-[var(--dashboard-sidebar-border)] pb-6 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <Heading className={titleClass}>{title}</Heading>
         {description && (
-          <p className="mt-2 max-w-2xl text-muted">{description}</p>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+            {description}
+          </p>
         )}
       </div>
-      {action}
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );
 }
@@ -40,12 +44,11 @@ export function StatCard({
   trend?: string;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md dark:border-[#222] dark:bg-[#111] dark:shadow-black/20 dark:hover:shadow-black/30">
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-accent to-glow opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+    <div className="dash-content-card p-5 transition-shadow hover:shadow-md">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
         {label}
       </p>
-      <p className="font-display mt-2 text-3xl font-bold tracking-tight text-ink">
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-ink">
         {value}
         {sub && (
           <span className="ml-1 text-base font-normal text-muted">{sub}</span>
@@ -75,7 +78,7 @@ export function Panel({
       className={`dash-content-card p-6 ${id ? "scroll-mt-24" : ""} ${className}`}
     >
       {title && (
-        <h2 className="mb-4 font-display text-lg font-bold text-ink">{title}</h2>
+        <h2 className="mb-4 text-sm font-semibold text-ink">{title}</h2>
       )}
       {children}
     </section>

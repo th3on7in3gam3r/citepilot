@@ -48,7 +48,7 @@ function pageHeader(pathname: string): {
   }
   if (pathname.startsWith("/dashboard/content")) {
     return {
-      title: "Site details",
+      title: "Content",
       backHref: "/dashboard",
       backLabel: "Overview",
     };
@@ -70,25 +70,25 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   const { title } = pageHeader(pathname);
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[var(--dashboard-bg)]">
+    <div className="dash-main flex h-[100dvh] overflow-hidden">
       <div className="hidden shrink-0 lg:block">
         <DashboardRail />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4 lg:hidden dark:border-[#222]">
+        <div className="dash-topbar flex h-14 shrink-0 items-center gap-3 px-4 lg:hidden">
           <DashboardMobileNav ready={ready} />
-          <h1 className="font-display min-w-0 flex-1 truncate text-lg font-bold text-ink lg:hidden">
+          <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-ink">
             {title}
           </h1>
           <Link
             href="/dashboard/settings"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted hover:bg-surface hover:text-ink"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] text-muted hover:bg-surface hover:text-ink"
             aria-label="Settings"
             title="Settings"
           >
             <svg
-              width="18"
-              height="18"
+              width="17"
+              height="17"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -111,7 +111,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={openCopilot}
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1.5 text-[10px] font-semibold text-accent-deep dark:text-accent"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-accent/20 bg-accent/5 px-2.5 py-1.5 text-[10px] font-semibold text-accent-deep dark:text-accent"
           >
             ✦ Copilot
           </button>
@@ -120,14 +120,20 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           <DashboardTopBar title={title} />
         </div>
         <ImpersonationBanner />
-        <main id="main-content" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8">
-          <DashboardUsageLimitBanner />
-          <IntegrationHealthBanner />
-          <GeoScoreBadgePrompt />
-          <Suspense fallback={null}>
-            <ProductTour />
-          </Suspense>
-          {children}
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6 lg:px-8"
+        >
+          <div className="dash-page">
+            <DashboardUsageLimitBanner />
+            <IntegrationHealthBanner />
+            <GeoScoreBadgePrompt />
+            <Suspense fallback={null}>
+              <ProductTour />
+            </Suspense>
+            {children}
+          </div>
         </main>
       </div>
     </div>

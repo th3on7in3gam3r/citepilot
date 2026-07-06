@@ -29,9 +29,7 @@ export function DashboardCard({
   };
 
   return (
-    <section
-      className={`dash-content-card overflow-hidden transition-shadow duration-200 hover:shadow-md dark:border-[#222] dark:bg-[#111] dark:hover:shadow-black/20 ${className}`}
-    >
+    <section className={`dash-content-card overflow-hidden transition-shadow duration-200 hover:shadow-md ${className}`}>
       {accent !== "none" && (
         <div
           className={`h-[3px] bg-gradient-to-r ${accentColors[accent]}`}
@@ -40,7 +38,7 @@ export function DashboardCard({
       )}
 
       {(title || action || dataStatus) && (
-        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4 dark:border-[#222]">
+        <header className="flex items-center justify-between gap-3 border-b border-[var(--dashboard-sidebar-border)] px-5 py-4">
           <div className="flex min-w-0 items-center gap-2">
             {title ? (
               <h2 className="truncate text-sm font-semibold text-ink">{title}</h2>

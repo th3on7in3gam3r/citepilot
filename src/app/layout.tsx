@@ -105,6 +105,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} h-full scroll-smooth antialiased`}
     >
       <head>

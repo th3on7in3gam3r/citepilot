@@ -38,7 +38,7 @@ export function SettingsSubNav() {
   return (
     <nav
       aria-label="Settings sections"
-      className="mb-6 flex flex-wrap gap-2 border-b border-border pb-4"
+      className="mb-6 flex flex-wrap gap-1 border-b border-[var(--dashboard-sidebar-border)]"
     >
       {tabs.map((tab) => {
         const active = tab.match(pathname);
@@ -46,10 +46,10 @@ export function SettingsSubNav() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            className={`-mb-px border-b-2 px-3 py-2.5 text-sm font-medium transition ${
               active
-                ? "bg-ink text-white"
-                : "border border-border bg-card text-ink hover:bg-surface"
+                ? "border-accent text-ink"
+                : "border-transparent text-muted hover:border-[var(--dashboard-sidebar-border)] hover:text-ink"
             }`}
             aria-current={active ? "page" : undefined}
           >

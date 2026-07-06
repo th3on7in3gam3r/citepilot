@@ -12,6 +12,22 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { dashboardBreadcrumbs } from "@/lib/dashboard-breadcrumbs";
 import { authClient } from "@/lib/auth/client";
 
+function TopBarButton({
+  children,
+  className = "",
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className={`inline-flex h-9 items-center justify-center rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] px-3 text-xs font-semibold text-ink transition hover:bg-surface ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function DashboardTopBar({
   title = "Overview",
 }: {
@@ -77,18 +93,22 @@ export function DashboardTopBar({
   const showUpgrade = !isPaid;
 
   return (
-    <header className="sticky top-0 z-20 shrink-0 border-b border-border bg-card dark:border-[#222]">
-      <div className="flex min-h-[64px] flex-wrap items-center gap-3 px-5 py-3 lg:px-8">
-        <div className="min-w-0 flex-1 basis-[200px]">
+    <header className="dash-topbar sticky top-0 z-20 shrink-0">
+      <div className="flex min-h-[60px] flex-wrap items-center gap-3 px-5 py-2.5 lg:px-8">
+        <div className="min-w-0 flex-1 basis-[220px]">
           <nav
             aria-label="Breadcrumb"
-            className="mb-0.5 flex flex-wrap items-center gap-1 text-xs text-muted"
+            className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-muted"
           >
             {crumbs.map((crumb, index) => {
               const isLast = index === crumbs.length - 1;
               return (
-                <span key={`${crumb.label}-${index}`} className="inline-flex items-center gap-1">
-                  {index > 0 && <span aria-hidden className="text-border">›</span>}
+                <span key={`${crumb.label}-${index}`} className="inline-flex items-center gap-1.5">
+                  {index > 0 && (
+                    <span aria-hidden className="text-[var(--dashboard-sidebar-border)]">
+                      /
+                    </span>
+                  )}
                   {crumb.href && !isLast ? (
                     <Link
                       href={crumb.href}
@@ -97,21 +117,19 @@ export function DashboardTopBar({
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className={isLast ? "font-medium text-ink/80" : undefined}>
-                      {crumb.label}
-                    </span>
+                    <span className={isLast ? "text-ink/70" : undefined}>{crumb.label}</span>
                   )}
                 </span>
               );
             })}
           </nav>
-          <h1 className="font-display truncate text-xl font-bold tracking-tight text-ink">
+          <h1 className="truncate text-[1.125rem] font-semibold tracking-tight text-ink">
             {title}
           </h1>
         </div>
 
         {ready ? (
-          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-2.5">
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
             <div className="hidden min-w-[180px] max-w-[240px] flex-1 md:block">
               <WorkspaceSwitcher
                 variant="bar"
@@ -120,19 +138,19 @@ export function DashboardTopBar({
               />
             </div>
 
-            <div className="hidden items-center gap-1 rounded-lg border border-border bg-surface p-1 lg:flex dark:border-[#333] dark:bg-[#141414]">
+            <div className="hidden items-center gap-1 rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] p-1 lg:flex">
               <Link
                 href="/dashboard/geo-audit"
                 data-tour="run-scan"
-                className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-card hover:text-ink dark:hover:bg-[#111]"
+                className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-ink"
               >
                 Run audit
               </Link>
-              <span className="h-4 w-px bg-border dark:bg-[#333]" aria-hidden />
+              <span className="h-4 w-px bg-[var(--dashboard-sidebar-border)]" aria-hidden />
               <button
                 type="button"
                 onClick={() => setShowAddSiteForm(true)}
-                className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-card hover:text-ink dark:hover:bg-[#111]"
+                className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-ink"
               >
                 Add site
               </button>
@@ -150,30 +168,29 @@ export function DashboardTopBar({
                     plan: "pilot",
                   })
                 }
-                className="hidden rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white shadow-[0_2px_8px_rgba(14,165,233,0.35)] transition hover:bg-accent-deep sm:inline-flex"
+                className="hidden rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-accent-deep sm:inline-flex"
               >
-                Upgrade to PRO
+                Upgrade to Pilot
               </button>
             )}
 
             <ThemeToggle />
 
-            <button
-              type="button"
+            <TopBarButton
               onClick={openCopilot}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-3 py-2 text-xs font-semibold text-accent-deep transition hover:bg-accent/15 dark:text-accent"
+              className="gap-1.5 border-accent/20 bg-accent/5 text-accent-deep dark:text-accent"
             >
               <span aria-hidden>✦</span>
               <span className="hidden sm:inline">Copilot</span>
-            </button>
+            </TopBarButton>
 
             <Link
               href="/dashboard/settings#notifications"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-surface hover:text-ink dark:hover:bg-[#141414]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] text-muted transition hover:bg-surface hover:text-ink"
               aria-label="Notification settings"
               title="Citation alerts & notification settings"
             >
-              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <svg className="h-[17px] w-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </Link>
@@ -202,7 +219,7 @@ export function DashboardTopBar({
                   id={accountMenuId}
                   role="menu"
                   aria-labelledby={`${accountMenuId}-trigger`}
-                  className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-lg dark:border-[#333] dark:bg-[#111]"
+                  className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] py-1 shadow-lg"
                 >
                   {userLabel && (
                     <p className="truncate px-3 py-2 text-xs font-medium text-muted" title={userLabel}>
@@ -213,11 +230,11 @@ export function DashboardTopBar({
                     href="/dashboard/settings"
                     role="menuitem"
                     onClick={() => setAccountMenuOpen(false)}
-                    className="block px-3 py-2 text-sm font-medium text-ink transition hover:bg-surface dark:hover:bg-[#141414]"
+                    className="block px-3 py-2 text-sm font-medium text-ink transition hover:bg-surface"
                   >
                     Account settings
                   </Link>
-                  <div className="my-1 border-t border-border dark:border-[#333]" />
+                  <div className="my-1 border-t border-[var(--dashboard-sidebar-border)]" />
                   <div className="px-3 py-2" role="none">
                     <SignOutButton className="w-full text-left text-sm font-medium text-muted transition hover:text-ink disabled:opacity-60" />
                   </div>
@@ -226,7 +243,7 @@ export function DashboardTopBar({
             </div>
           </div>
         ) : (
-          <div className="ml-auto h-9 w-40 animate-pulse rounded-lg bg-surface dark:bg-[#141414]" />
+          <div className="ml-auto h-9 w-40 animate-pulse rounded-lg bg-surface" />
         )}
       </div>
     </header>

@@ -6,12 +6,10 @@ import { effectInit } from "@/lib/react/effect-init";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
-import { DashboardNavLink } from "@/components/dashboard/DashboardNavLink";
+import { DashboardBrand } from "@/components/dashboard/layout/DashboardBrand";
+import { DashboardSidebarNav } from "@/components/dashboard/layout/DashboardSidebarNav";
 import { WorkspaceSwitcher } from "@/components/dashboard/WorkspaceSwitcher";
-import { Logo } from "@/components/ui/Logo";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import { dashboardNav, dashboardNavGroups } from "@/lib/dashboard";
-import { isDashboardNavActive } from "@/lib/dashboard-nav";
 
 const DASHBOARD_MOBILE_MENU_ID = "dashboard-mobile-menu";
 
@@ -24,8 +22,6 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const navById = Object.fromEntries(dashboardNav.map((item) => [item.id, item]));
 
   useFocusTrap(dialogRef, open, () => setOpen(false));
 
@@ -84,10 +80,10 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
           />
           <aside
             id={DASHBOARD_MOBILE_MENU_ID}
-            className="absolute top-0 left-0 z-10 flex h-full w-[min(100%,18rem)] flex-col border-r border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-sidebar)] shadow-2xl dark:border-[#222]"
+            className="dash-rail absolute top-0 left-0 z-10 flex h-full w-[min(100%,272px)] flex-col shadow-2xl"
           >
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
-              <Logo className="text-base" />
+            <div className="dash-rail__brand flex items-center justify-between gap-2 pr-2">
+              <DashboardBrand onNavigate={() => setOpen(false)} />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -113,39 +109,17 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
             </h2>
 
             {ready && (
-              <div className="border-b border-border px-4 py-3">
+              <div className="border-b border-[var(--dashboard-sidebar-border)] px-4 py-3">
                 <WorkspaceSwitcher />
               </div>
             )}
 
-            <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4" aria-label="Dashboard">
-              {dashboardNavGroups.map((group) => {
-                const items = group.itemIds
-                  .map((id) => navById[id])
-                  .filter((item): item is NonNullable<typeof item> => Boolean(item));
+            <DashboardSidebarNav
+              className="min-h-0 flex-1 overflow-y-auto px-3 py-3"
+              onNavigate={() => setOpen(false)}
+            />
 
-                if (items.length === 0) return null;
-
-                return (
-                  <div key={group.label} className="dash-nav-group">
-                    <p className="dash-nav-group__label">{group.label}</p>
-                    <div className="mt-1.5 space-y-0.5">
-                      {items.map((item) => (
-                        <DashboardNavLink
-                          key={item.id}
-                          item={item}
-                          variant="rail"
-                          active={isDashboardNavActive(pathname, item.href)}
-                          onNavigate={() => setOpen(false)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </nav>
-
-            <div className="shrink-0 border-t border-border px-3 py-4">
+            <div className="dash-rail__footer shrink-0 px-3 py-4">
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
