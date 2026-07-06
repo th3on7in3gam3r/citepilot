@@ -269,7 +269,7 @@ export function GrowthLoopPageClient() {
               View articles
             </Link>
             <Link
-              href="/dashboard/settings?tab=integrations"
+              href="/dashboard/settings/integrations"
               className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
             >
               CMS settings
@@ -286,7 +286,7 @@ export function GrowthLoopPageClient() {
           {!status.cmsConnected && status.autoPublish && (
             <p className="mt-4 text-sm text-amber-700 dark:text-amber-300">
               Connect WordPress or Webflow in{" "}
-              <Link href="/dashboard/settings?tab=integrations" className="font-semibold underline">
+              <Link href="/dashboard/settings/integrations" className="font-semibold underline">
                 Settings → Integrations
               </Link>{" "}
               so articles publish to your site automatically.
@@ -376,7 +376,7 @@ export function GrowthLoopPageClient() {
                 <p className="text-sm text-muted">
                   No CMS connected yet — articles will save to your CitePilot blog until you{" "}
                   <Link
-                    href="/dashboard/settings?tab=integrations"
+                    href="/dashboard/settings/integrations"
                     className="font-semibold text-accent hover:underline"
                   >
                     connect WordPress or Webflow
