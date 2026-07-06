@@ -235,7 +235,7 @@ const TIERS: Tier[] = [
     annualNote: "",
     href: "/start",
     highlighted: true,
-    featureCount: 6,
+    featureCount: 7,
   },
   {
     key: "fleet",

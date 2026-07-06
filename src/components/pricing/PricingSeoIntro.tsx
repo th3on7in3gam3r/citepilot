@@ -41,12 +41,12 @@ export function PricingSeoIntro() {
           Pilot — for founders shipping weekly fixes
         </h3>
         <p className="mt-2">
-          Pilot ($79/mo) adds three workspaces, 25 monitored prompts, weekly
-          prioritized action plans, citation delta tracking, email alerts when
-          competitors gain ground, CitePilot Insights for gap explanations, and
-          direct CMS publish to Webflow, WordPress, Ghost, Shopify, and Framer.
-          It is the default upgrade when a free audit surfaces recurring gaps you
-          need to close on a schedule.
+          Pilot ($79/mo) is one plan with everything you need to grow in AI search:
+          Growth Loop (paste your URL once for daily SEO articles), auto-publish to
+          WordPress and Webflow, automatic backlink placements, weekly citation rescans
+          across ChatGPT and Perplexity, Autopilot insights, three workspaces, 25
+          monitored prompts, and competitor alerts. No add-ons — the full loop ships
+          on day one.
         </p>
 
         <h3 className="font-display mt-6 text-base font-bold text-ink">
