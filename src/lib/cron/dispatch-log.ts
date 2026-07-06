@@ -17,6 +17,11 @@ export function cronPeriodKey(jobName: string, date = new Date()): string {
   return `${jobName}:${weekPeriodKey(date)}`;
 }
 
+/** Daily dedupe key — one run per workspace per UTC day. */
+export function cronDailyPeriodKey(jobName: string, date = new Date()): string {
+  return `${jobName}:${date.toISOString().slice(0, 10)}`;
+}
+
 export async function wasCronDispatched(
   jobName: string,
   workspaceId: string | null,

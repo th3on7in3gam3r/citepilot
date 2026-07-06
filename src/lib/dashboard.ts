@@ -32,6 +32,7 @@ export type DashboardNavItem = {
     | "discussions"
     | "alerts"
     | "uptime"
+    | "growth-loop"
     | "settings"
     | "help"
     | "feedback";
@@ -128,6 +129,14 @@ export const dashboardNav: DashboardNavItem[] = [
     section: "main",
   },
   {
+    id: "growth-loop",
+    label: "Growth Loop",
+    href: "/dashboard/growth-loop",
+    description: "Paste your URL once — daily SEO articles, backlinks, and AI visibility",
+    icon: "growth-loop",
+    section: "main",
+  },
+  {
     id: "feedback",
     label: "Suggest a feature",
     href: "/feedback",
@@ -169,7 +178,7 @@ export const dashboardNavGroups: { label: string; itemIds: string[] }[] = [
   },
   {
     label: "Operations",
-    itemIds: ["alerts", "uptime"],
+    itemIds: ["growth-loop", "alerts", "uptime"],
   },
   {
     label: "Account",

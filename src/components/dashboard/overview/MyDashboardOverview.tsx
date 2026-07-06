@@ -22,6 +22,7 @@ import { DashboardFilterBar, DashboardFilterSelect, DashboardFilterTabs } from "
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { DashboardWorkspaceEmpty } from "@/components/dashboard/overview/DashboardWorkspaceEmpty";
 import { DashboardOverviewLead } from "@/components/dashboard/overview/DashboardOverviewLead";
+import { GrowthLoopOverviewBanner } from "@/components/dashboard/growth-loop/GrowthLoopOverviewBanner";
 import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
 import { CiteStatusMilestones } from "@/components/dashboard/CiteStatusMilestones";
 import { useCiteStatusCelebration } from "@/hooks/useCiteStatusCelebration";
@@ -366,6 +367,7 @@ function MyDashboardOverviewContent({
         </Link>
       )}
       <DashboardOverviewLead workspace={workspace} />
+      <GrowthLoopOverviewBanner workspace={workspace} />
 
       {!workspace.hasRealAudit ? (
         <>

@@ -31,6 +31,34 @@ export const defaultAutopilotPreferences: AutopilotPreferences = {
   autoInsights: true,
 };
 
+export type GrowthLoopPreferences = {
+  /** Master switch — daily article + optional publish/backlinks/rescan */
+  enabled: boolean;
+  /** Site URL pasted at activation (https://example.com) */
+  siteUrl: string;
+  /** Generate one SEO article per day via cron */
+  dailyArticles: boolean;
+  /** Push generated posts to the first connected CMS */
+  autoPublish: boolean;
+  /** Request a backlink placement after each publish */
+  autoBacklinks: boolean;
+  /** Enable weekly AI visibility rescans + Autopilot insights */
+  autoRescan: boolean;
+  lastRunAt: string | null;
+  lastRunSummary: string | null;
+};
+
+export const defaultGrowthLoopPreferences: GrowthLoopPreferences = {
+  enabled: false,
+  siteUrl: "",
+  dailyArticles: true,
+  autoPublish: true,
+  autoBacklinks: true,
+  autoRescan: true,
+  lastRunAt: null,
+  lastRunSummary: null,
+};
+
 export type ScanScheduleFrequency = "weekly" | "biweekly" | "monthly";
 export type ScanScheduleHour = 6 | 8 | 10 | 12;
 
@@ -79,6 +107,8 @@ export type WorkspacePreferences = {
   geoSnippetFixes: string[];
   /** Automatic scan schedule (Pilot+) */
   scanSchedule: ScanSchedulePreferences;
+  /** Paste URL once — daily SEO articles, CMS publish, backlinks, AI visibility */
+  growthLoop: GrowthLoopPreferences;
 };
 
 export const defaultWorkspacePreferences: WorkspacePreferences = {
@@ -109,6 +139,7 @@ export const defaultWorkspacePreferences: WorkspacePreferences = {
   appliedFixes: [],
   geoSnippetFixes: [],
   scanSchedule: { ...defaultScanSchedulePreferences },
+  growthLoop: { ...defaultGrowthLoopPreferences },
 };
 
 function normalizeScanSchedule(
@@ -192,6 +223,18 @@ export function parsePreferences(raw: string | null | undefined): WorkspacePrefe
           ? parsed.appliedFixes.filter((f): f is string => typeof f === "string")
           : defaultWorkspacePreferences.geoSnippetFixes,
       scanSchedule: normalizeScanSchedule(parsed.scanSchedule),
+      growthLoop: {
+        ...defaultGrowthLoopPreferences,
+        ...(parsed.growthLoop ?? {}),
+        lastRunAt:
+          typeof parsed.growthLoop?.lastRunAt === "string"
+            ? parsed.growthLoop.lastRunAt
+            : defaultGrowthLoopPreferences.lastRunAt,
+        lastRunSummary:
+          typeof parsed.growthLoop?.lastRunSummary === "string"
+            ? parsed.growthLoop.lastRunSummary
+            : defaultGrowthLoopPreferences.lastRunSummary,
+      },
     };
   } catch {
     return { ...defaultWorkspacePreferences };
@@ -233,8 +276,9 @@ function normalizeWhiteLabelPreferences(
 
 export function mergePreferences(
   current: WorkspacePreferences,
-  patch: Partial<Omit<WorkspacePreferences, "whiteLabel">> & {
+  patch: Partial<Omit<WorkspacePreferences, "whiteLabel" | "growthLoop">> & {
     whiteLabel?: Partial<WhiteLabelPreferences>;
+    growthLoop?: Partial<GrowthLoopPreferences>;
   },
 ): WorkspacePreferences {
   return {
@@ -252,5 +296,8 @@ export function mergePreferences(
     scanSchedule: patch.scanSchedule
       ? normalizeScanSchedule({ ...current.scanSchedule, ...patch.scanSchedule })
       : current.scanSchedule,
+    growthLoop: patch.growthLoop
+      ? { ...current.growthLoop, ...patch.growthLoop }
+      : current.growthLoop,
   };
 }
