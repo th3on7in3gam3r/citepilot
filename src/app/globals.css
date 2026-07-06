@@ -23,12 +23,12 @@
   --color-glow: #22d3ee;
   --color-mint: #10b981;
   --hero-bg: #04060c;
-  --dashboard-bg: #f4f6f9;
+  --dashboard-bg: #eef2f7;
   --dashboard-panel: #ffffff;
-  --dashboard-sidebar: #fafbfc;
-  --dashboard-sidebar-border: #e2e8f0;
-  --dashboard-nav-active: #0ea5e9;
-  --dashboard-topbar: rgba(255, 255, 255, 0.88);
+  --dashboard-sidebar: #ffffff;
+  --dashboard-sidebar-border: #d8dee9;
+  --dashboard-nav-active: #0284c7;
+  --dashboard-topbar: rgba(255, 255, 255, 0.94);
 }
 
 .dark {
@@ -44,12 +44,12 @@
   --color-surface: #141414;
   --color-cream: #0a0a0a;
   --color-border: #222222;
-  --dashboard-bg: #080808;
-  --dashboard-panel: #111111;
-  --dashboard-sidebar: #0c0c0c;
-  --dashboard-sidebar-border: #1f1f1f;
+  --dashboard-bg: #050505;
+  --dashboard-panel: #141414;
+  --dashboard-sidebar: #101010;
+  --dashboard-sidebar-border: #262626;
   --dashboard-nav-active: #38bdf8;
-  --dashboard-topbar: rgba(12, 12, 12, 0.92);
+  --dashboard-topbar: rgba(16, 16, 16, 0.96);
 }
 
 @theme inline {
@@ -543,29 +543,36 @@ html.dark .dash-metric-card {
 .dash-sidebar-link[data-active="true"],
 .dash-sidebar-link--active {
   color: var(--dashboard-nav-active);
-  background: color-mix(in srgb, var(--dashboard-nav-active) 10%, transparent);
+  background: color-mix(in srgb, var(--dashboard-nav-active) 14%, transparent);
   font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--dashboard-nav-active);
+  border-left: 3px solid var(--dashboard-nav-active);
+  padding-left: calc(0.625rem - 3px);
 }
 
 .dash-sidebar-link[data-active="true"] .dash-sidebar-link__icon,
 .dash-sidebar-link--active .dash-sidebar-link__icon {
   color: var(--dashboard-nav-active);
+  background: color-mix(in srgb, var(--dashboard-nav-active) 18%, transparent);
 }
 
 html.dark .dash-sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 html.dark .dash-sidebar-link[data-active="true"],
 html.dark .dash-sidebar-link--active {
-  background: rgba(56, 189, 248, 0.1);
-  box-shadow: inset 3px 0 0 var(--dashboard-nav-active);
+  background: rgba(56, 189, 248, 0.14);
+  border-left-color: var(--dashboard-nav-active);
 }
 
 .dash-rail {
   border-right: 1px solid var(--dashboard-sidebar-border);
   background: var(--dashboard-sidebar);
+  box-shadow: 1px 0 0 rgba(15, 23, 42, 0.04);
+}
+
+html.dark .dash-rail {
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.35);
 }
 
 .dash-rail__brand {
@@ -654,8 +661,13 @@ html.dark .dash-nav-group__label {
 .dash-topbar {
   border-bottom: 1px solid var(--dashboard-sidebar-border);
   background: var(--dashboard-topbar);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+html.dark .dash-topbar {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .dash-main {

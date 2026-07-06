@@ -80,7 +80,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
           />
           <aside
             id={DASHBOARD_MOBILE_MENU_ID}
-            className="dash-rail absolute top-0 left-0 z-10 flex h-full w-[min(100%,272px)] flex-col shadow-2xl"
+            className="dash-rail absolute top-0 left-0 z-10 flex h-full w-[min(100%,280px)] flex-col shadow-2xl"
           >
             <div className="dash-rail__brand flex items-center justify-between gap-2 pr-2">
               <DashboardBrand onNavigate={() => setOpen(false)} />

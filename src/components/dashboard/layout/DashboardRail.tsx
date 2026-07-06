@@ -46,7 +46,7 @@ export function DashboardRail() {
 
   return (
     <aside
-      className="dash-rail flex h-[100dvh] w-[272px] shrink-0 flex-col"
+      className="dash-rail flex h-[100dvh] w-[280px] shrink-0 flex-col"
       aria-label="Dashboard sidebar"
     >
       <div className="dash-rail__brand">
