@@ -3,6 +3,7 @@ import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { localizedHref } from "@/lib/i18n/localized-href";
+import { GROWTH_STACK, aiCmoAppHref, BIBLEFUNLAND_STUDIOS_URL } from "@/lib/growth-stack";
 import { site } from "@/lib/site";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -92,6 +93,13 @@ export async function Footer() {
     { label: t("agencies"), href: lh("/agency") },
   ];
 
+  const stackLinks = [
+    { label: GROWTH_STACK.kerygma.name, href: GROWTH_STACK.kerygma.href },
+    { label: GROWTH_STACK.aiCmo.name, href: aiCmoAppHref() },
+    { label: GROWTH_STACK.aegis.name, href: GROWTH_STACK.aegis.href },
+    { label: "Bible Funland Studios", href: BIBLEFUNLAND_STUDIOS_URL },
+  ];
+
   return (
     <footer className="mt-auto border-t border-border bg-surface text-ink dark:border-[#222] dark:bg-ink dark:text-white">
       <Container className="py-12 md:py-14">
@@ -114,6 +122,25 @@ export async function Footer() {
               >
                 {site.supportEmail}
               </a>
+            </div>
+            <div className="mt-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/55">
+                Growth stack
+              </p>
+              <ul className="mt-3 space-y-2">
+                {stackLinks.map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted transition hover:text-ink dark:text-white/70 dark:hover:text-white"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 

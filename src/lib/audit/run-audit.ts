@@ -240,6 +240,19 @@ export async function getLatestAuditByDomain(
   return rowToAudit(row);
 }
 
+export async function getRecentAuditsForDomain(
+  domain: string,
+  limit = 2,
+): Promise<AuditPayload[]> {
+  const normalized = normalizeDomain(domain);
+  if (!normalized) return [];
+  const rows = await dbAll<Record<string, string | number | null>>(
+    `SELECT * FROM audit_runs WHERE domain = ? ORDER BY created_at DESC LIMIT ?`,
+    [normalized, limit],
+  );
+  return rows.map(rowToAudit);
+}
+
 export async function getRecentAuditsForWorkspace(
   workspaceId: string,
   limit = 2,

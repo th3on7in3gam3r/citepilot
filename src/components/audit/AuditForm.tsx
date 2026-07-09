@@ -12,6 +12,7 @@ import { HERO_CTA_VARIANT_STORAGE_KEY } from "@/lib/analytics/feature-flags";
 import { getStoredWorkspaceId, joinWaitlist, runAudit } from "@/lib/client/api";
 import { ONBOARDING_STORAGE_KEY, type OnboardingAnswers } from "@/lib/onboarding";
 import { auditDiagnosticPhases } from "@/lib/marketing/audit-landing";
+import { kerygmaSignUpUrl } from "@/lib/growth-stack";
 import { effectInit } from "@/lib/react/effect-init";
 
 export function AuditForm() {
@@ -376,6 +377,22 @@ export function AuditForm() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="rounded-2xl border border-accent/30 bg-gradient-to-br from-white to-accent/5 p-6 shadow-sm">
+              <p className="text-sm font-semibold text-ink">Turn visibility into published posts</p>
+              <p className="mt-1 text-xs text-muted">
+                Kerygma Social generates a month of on-brand social content from your URL — approve and
+                publish on autopilot.
+              </p>
+              <a
+                href={kerygmaSignUpUrl(result.domain)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent/90"
+              >
+                Generate posts with Kerygma Social →
+              </a>
             </div>
 
             <AuditFeedbackSurvey

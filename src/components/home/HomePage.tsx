@@ -13,6 +13,7 @@ import { BottomCTA } from "@/components/home/BottomCTA";
 import { FAQ } from "@/components/home/FAQ";
 import { FreeToolsSection } from "@/components/marketing/FreeToolsSection";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
+import { GrowthStackPromo } from "@/components/marketing/GrowthStackPromo";
 
 const Differentiators = dynamic(
   () =>
@@ -62,6 +63,7 @@ export function HomePage() {
       <AnswerCapsuleSection />
       <Testimonials />
       <ProductTransparencySection />
+      <GrowthStackPromo />
       <BottomCTA />
       <FAQ />
     </>

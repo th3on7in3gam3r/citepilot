@@ -30,6 +30,7 @@ import {
   parsePreferences,
 } from "@/lib/settings";
 import { createDefaultNotificationPreferences } from "@/lib/notifications/preferences-store";
+import { emitStudioOpsEvent } from "@/lib/studio-ops";
 
 type WorkspaceRow = {
   id: string;
@@ -308,6 +309,13 @@ export async function createWorkspace(
   if (userId) {
     await createDefaultNotificationPreferences({ workspaceId: id, userId });
   }
+
+  emitStudioOpsEvent("workspace.created", {
+    workspaceId: id,
+    userId,
+    domain,
+    businessType: answers.businessType,
+  });
 
   const row = await dbGet<WorkspaceRow>(
     `SELECT * FROM workspaces WHERE id = ?`,

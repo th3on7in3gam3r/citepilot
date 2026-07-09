@@ -3,6 +3,7 @@ import { ProductHuntPromoBar } from "@/components/launch/ProductHuntPromoBar";
 import { PricingFaqAccordion } from "@/components/pricing/PricingFaqAccordion";
 import { PricingPlanCards } from "@/components/pricing/PricingPlanCards";
 import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
+import { StudioBundleCta } from "@/components/pricing/StudioBundleCta";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
@@ -99,6 +100,8 @@ export default async function PricingPage({ params }: Props) {
               {t("allPlansInclude")}
             </p>
           </section>
+
+          <StudioBundleCta />
 
           <section
             className="mx-auto mt-14 max-w-3xl md:mt-16"

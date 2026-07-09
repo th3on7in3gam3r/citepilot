@@ -1,6 +1,7 @@
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { generateReferralCode, normalizeReferralCode } from "./code";
 import { MAX_REFERRAL_CREDITS } from "./constants";
+import { emitStudioOpsEvent } from "@/lib/studio-ops";
 
 export type UserReferralRow = {
   user_id: string;
@@ -77,6 +78,11 @@ export async function ensureUserReferral(
     ) VALUES (?, ?, NULL, 0, 0, 0, 0, ?, ?)`,
     [userId, code, email?.trim() || null, createdAt],
   );
+
+  emitStudioOpsEvent("user.signup", {
+    userId,
+    email: email?.trim() || null,
+  });
 
   return {
     user_id: userId,
