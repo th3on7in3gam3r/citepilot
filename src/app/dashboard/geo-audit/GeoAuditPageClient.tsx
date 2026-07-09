@@ -171,18 +171,7 @@ export function GeoAuditPageClient() {
         }
       />
 
-      <DashboardFilterBar
-        actions={
-          <button
-            type="button"
-            onClick={() => void handleRunAudit()}
-            disabled={auditing}
-            className="rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep disabled:opacity-60"
-          >
-            {auditing ? "Running…" : workspace.hasRealAudit ? "Re-run audit" : "Run audit"}
-          </button>
-        }
-      >
+      <DashboardFilterBar>
         <DashboardFilterSelect
           label="Site"
           value={workspace.domain}

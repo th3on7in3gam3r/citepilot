@@ -1,4 +1,4 @@
-import { Panel } from "@/components/dashboard/DashboardUI";
+import { DismissibleSeoIntro } from "@/components/dashboard/DismissibleSeoIntro";
 import Link from "next/link";
 
 type DiscussionsSeoIntroProps = {
@@ -12,7 +12,7 @@ export function DiscussionsSeoIntro({
 }: DiscussionsSeoIntroProps) {
   if (section === "footer") {
     return (
-      <Panel className="mt-10">
+      <DismissibleSeoIntro id="discussions-footer" className="mt-10">
         <div className="space-y-8 text-sm leading-relaxed text-muted">
           <section>
             <h2 className="font-display text-lg font-bold text-ink">
@@ -124,12 +124,12 @@ export function DiscussionsSeoIntro({
             </dl>
           </section>
         </div>
-      </Panel>
+      </DismissibleSeoIntro>
     );
   }
 
   return (
-    <Panel className="mb-10">
+    <DismissibleSeoIntro id="discussions-header" className="mb-10">
       <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
         Buyer discussion radar for GEO research
       </h1>
@@ -191,6 +191,6 @@ export function DiscussionsSeoIntro({
           </p>
         </section>
       </div>
-    </Panel>
+    </DismissibleSeoIntro>
   );
 }

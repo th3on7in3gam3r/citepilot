@@ -1,4 +1,4 @@
-import { Panel } from "@/components/dashboard/DashboardUI";
+import { DismissibleSeoIntro } from "@/components/dashboard/DismissibleSeoIntro";
 import Link from "next/link";
 
 type CompetitorsSeoIntroProps = {
@@ -8,7 +8,7 @@ type CompetitorsSeoIntroProps = {
 export function CompetitorsSeoIntro({ section = "header" }: CompetitorsSeoIntroProps) {
   if (section === "footer") {
     return (
-      <Panel className="mt-10">
+      <DismissibleSeoIntro id="competitors-footer" className="mt-10">
         <div className="space-y-6 text-sm leading-relaxed text-muted">
           <section>
             <h2 className="font-display text-lg font-bold text-ink">
@@ -35,7 +35,7 @@ export function CompetitorsSeoIntro({ section = "header" }: CompetitorsSeoIntroP
             </p>
           </section>
         </div>
-      </Panel>
+      </DismissibleSeoIntro>
     );
   }
 

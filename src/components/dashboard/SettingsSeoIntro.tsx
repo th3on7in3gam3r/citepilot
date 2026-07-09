@@ -1,4 +1,4 @@
-import { Panel } from "@/components/dashboard/DashboardUI";
+import { DismissibleSeoIntro } from "@/components/dashboard/DismissibleSeoIntro";
 import Link from "next/link";
 
 type SettingsSeoIntroProps = {
@@ -10,7 +10,7 @@ type SettingsSeoIntroProps = {
 export function SettingsSeoIntro({ section = "header" }: SettingsSeoIntroProps) {
   if (section === "footer") {
     return (
-      <Panel className="mt-10">
+      <DismissibleSeoIntro id="settings-footer" className="mt-10">
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 select-none">
             <span className="font-display text-sm font-semibold text-ink">
@@ -137,12 +137,12 @@ export function SettingsSeoIntro({ section = "header" }: SettingsSeoIntroProps) 
           </section>
         </div>
         </details>
-      </Panel>
+      </DismissibleSeoIntro>
     );
   }
 
   return (
-    <Panel className="mb-8">
+    <DismissibleSeoIntro id="settings-header" className="mb-8">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
           Workspace settings
@@ -215,6 +215,6 @@ export function SettingsSeoIntro({ section = "header" }: SettingsSeoIntroProps) 
           </p>
         </div>
       </details>
-    </Panel>
+    </DismissibleSeoIntro>
   );
 }
