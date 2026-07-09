@@ -33,7 +33,12 @@ export function GrowthStackPromo() {
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
           {cards.map(({ key, border }) => {
             const product = GROWTH_STACK[key];
-            const href = key === "aiCmo" ? aiCmoAppHref() : product.href;
+            const href =
+              key === "kerygma"
+                ? GROWTH_STACK.kerygma.href
+                : key === "aiCmo"
+                  ? aiCmoAppHref()
+                  : GROWTH_STACK.aegis.href;
             return (
               <Link
                 key={key}
