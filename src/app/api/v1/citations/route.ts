@@ -19,7 +19,7 @@ export async function OPTIONS(): Promise<Response> {
 }
 
 /**
- * Partner read API for growth-stack integrations (e.g. AI-CMO SEO Agent).
+ * Partner read API for growth-stack integrations (e.g. Cadence SEO Agent).
  * Returns the latest stored citation audit for a domain when one exists.
  */
 export async function GET(request: Request): Promise<Response> {

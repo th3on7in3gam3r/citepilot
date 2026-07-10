@@ -10,12 +10,12 @@ export function StudioBundleCta() {
         Studio bundles
       </p>
       <h2 className="mt-3 text-center font-display text-xl font-bold text-foreground dark:text-white md:text-2xl">
-        Pair CitePilot with AI CMO strategy — one checkout
+        Pair CitePilot with Cadence strategy — one checkout
       </h2>
       <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-muted dark:text-white/55">
         The <strong className="text-foreground dark:text-white">Growth Stack</strong> bundles CitePilot
-        Pilot with AI CMO Pro. Agency teams: the <strong className="text-foreground dark:text-white">Studio Bundle</strong>{" "}
-        adds Fleet + Team seats across the stack. Checkout on AI CMO; entitlements sync when you use the
+        Pilot with Cadence Pro. Agency teams: the <strong className="text-foreground dark:text-white">Studio Bundle</strong>{" "}
+        adds Fleet + Team seats across the stack. Checkout on Cadence; entitlements sync when you use the
         same email.
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -23,7 +23,7 @@ export function StudioBundleCta() {
           href={aiCmoStudioBillingUrl("growth")}
           className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm transition hover:opacity-90"
         >
-          Growth Stack — CitePilot + AI CMO
+          Growth Stack — CitePilot + Cadence
           <ExternalLink className="h-4 w-4" aria-hidden />
         </Link>
         <Link

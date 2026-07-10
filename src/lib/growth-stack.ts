@@ -11,7 +11,7 @@ export const GROWTH_STACK = {
     href: "https://kerygmasocial.com",
   },
   aiCmo: {
-    name: "AI CMO",
+    name: "Cadence",
     tagline: "Marketing war room, SEO audits, and campaigns",
   },
   aegis: {
@@ -38,7 +38,7 @@ export function aiCmoPublicOrigin(): string {
   return href.replace(/\/app\/?$/, "").replace(/\/+$/, "") || "http://localhost:3000";
 }
 
-/** Deep link to AI CMO bundle checkout (Settings → Billing). */
+/** Deep link to Cadence bundle checkout (Settings → Billing). */
 export function aiCmoStudioBillingUrl(bundle?: StudioBundleId): string {
   const params = new URLSearchParams({ tab: "billing" });
   if (bundle) params.set("bundle", bundle);
