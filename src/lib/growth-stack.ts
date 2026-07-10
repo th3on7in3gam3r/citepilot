@@ -17,7 +17,7 @@ export const GROWTH_STACK = {
   aegis: {
     name: "Aegis Loop",
     tagline: "Security scanning in your pull requests",
-    href: "https://aegis-loop.onrender.com",
+    href: "https://aegis-loop.com",
   },
 } as const;
 
