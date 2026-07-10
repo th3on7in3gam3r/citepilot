@@ -103,10 +103,10 @@ export async function Footer() {
   return (
     <footer className="mt-auto border-t border-border bg-surface text-ink dark:border-[#222] dark:bg-ink dark:text-white">
       <Container className="py-12 md:py-14">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6 lg:gap-8">
-          <div className="sm:col-span-2 lg:col-span-2">
+        <div className="flex flex-col gap-10 lg:flex-row lg:gap-12 xl:gap-16">
+          <div className="lg:max-w-[280px] lg:shrink-0">
             <Logo />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted dark:text-white/55">
+            <p className="mt-4 text-sm leading-relaxed text-muted dark:text-white/55">
               {t("tagline")}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -123,49 +123,58 @@ export async function Footer() {
                 {site.supportEmail}
               </a>
             </div>
-            <div className="mt-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/55">
-                Growth stack
-              </p>
-              <ul className="mt-3 space-y-2">
-                {stackLinks.map((link) => (
-                  <li key={link.href}>
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted transition hover:text-ink dark:text-white/70 dark:hover:text-white"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
 
-          <FooterColumn title={t("columns.product")}>
-            <FooterLinks links={productLinks} />
-          </FooterColumn>
+          <div className="grid flex-1 grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5 lg:gap-6 xl:gap-8">
+            <FooterColumn title={t("columns.product")}>
+              <FooterLinks links={productLinks} />
+            </FooterColumn>
 
-          <FooterColumn title={t("columns.tools")}>
-            <FooterLinks links={toolsLinks} />
-          </FooterColumn>
+            <FooterColumn title={t("columns.tools")}>
+              <FooterLinks links={toolsLinks} />
+            </FooterColumn>
 
-          <FooterColumn title={t("columns.compare")}>
-            <FooterLinks links={compareLinks} />
-          </FooterColumn>
+            <FooterColumn title={t("columns.compare")}>
+              <FooterLinks links={compareLinks} />
+            </FooterColumn>
 
-          <FooterColumn title={t("columns.learn")}>
-            <FooterLinks links={learnLinks} />
-          </FooterColumn>
+            <FooterColumn title={t("columns.learn")}>
+              <FooterLinks links={learnLinks} />
+            </FooterColumn>
 
-          <FooterColumn title={t("columns.company")}>
-            <FooterLinks links={companyLinks} />
-          </FooterColumn>
+            <FooterColumn title={t("columns.company")}>
+              <FooterLinks links={companyLinks} />
+            </FooterColumn>
+          </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-7 text-sm text-muted dark:border-white/10 dark:text-white/55 md:flex-row md:items-center md:justify-between">
+        <div
+          className="mt-10 border-t border-border pt-8 dark:border-white/10"
+          aria-labelledby="footer-growth-stack"
+        >
+          <h3
+            id="footer-growth-stack"
+            className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/55"
+          >
+            {t("columns.growthStack")}
+          </h3>
+          <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+            {stackLinks.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:text-white/70 dark:hover:text-white"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-4 border-t border-border pt-7 text-sm text-muted dark:border-white/10 dark:text-white/55 md:flex-row md:items-center md:justify-between">
           <p>{t("copyright", { year, siteName: site.name })}</p>
           <nav
             className="flex flex-wrap items-center gap-x-5 gap-y-2"
