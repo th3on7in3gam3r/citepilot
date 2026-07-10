@@ -38,6 +38,7 @@ import {
   isDigestDayDue,
 } from "@/lib/notifications/preferences-store";
 import { buildWeeklyDigestEmail } from "@/lib/email/templates/weekly-digest";
+import { buildAuditCompleteEmail } from "@/lib/email/templates/audit-complete";
 import { resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
 import { resolveUserEmail } from "@/lib/email/recipient";
 import { whiteLabelFromName } from "@/lib/white-label/email-layout";
@@ -235,8 +236,6 @@ export async function sendAuditCompleteEmail(input: {
     input.workspaceId,
     input.audit.id,
   );
-  const deltaScore =
-    previousScore != null ? input.audit.score - previousScore : null;
   const dropped =
     previousScore != null &&
     prefs.scoreDropAlerts &&
@@ -248,16 +247,20 @@ export async function sendAuditCompleteEmail(input: {
 
   if (to) {
     if (dropped) {
+      const rendered = buildAuditCompleteEmail({
+        domain: input.audit.domain,
+        score: input.audit.score,
+        cited: input.audit.cited,
+        total: input.audit.total,
+        gaps: input.audit.gaps,
+        previousScore,
+        variant: "score_drop",
+      });
       await sendEmail({
         to,
-        subject: `Citation score dropped for ${input.audit.domain} (${input.audit.score}/100)`,
-        html: layout(
-          `Score alert — ${input.audit.domain}`,
-          `<p>Your citation score changed from <strong>${previousScore}</strong> to <strong>${input.audit.score}</strong> (${deltaScore} points).</p>
-<ul>${input.audit.gaps.slice(0, 4).map((g) => `<li>${g}</li>`).join("")}</ul>
-<p>Competitors tracked: ${ws.competitors.length ? ws.competitors.join(", ") : "none yet"}</p>`,
-        ),
-        text: `Score dropped to ${input.audit.score} for ${input.audit.domain}`,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
       });
       if (userId) {
         await recordEmailAlertEvent({
@@ -269,16 +272,20 @@ export async function sendAuditCompleteEmail(input: {
         });
       }
     } else if (prefs.auditCompleteEmail) {
+      const rendered = buildAuditCompleteEmail({
+        domain: input.audit.domain,
+        score: input.audit.score,
+        cited: input.audit.cited,
+        total: input.audit.total,
+        gaps: input.audit.gaps,
+        previousScore,
+        variant: "complete",
+      });
       await sendEmail({
         to,
-        subject: `GEO audit complete — ${input.audit.domain} scored ${input.audit.score}/100`,
-        html: layout(
-          `Audit complete — ${input.audit.domain}`,
-          `<p>Score: <strong>${input.audit.score}/100</strong> · ${input.audit.cited}/${input.audit.total} prompts cited</p>
-${deltaScore != null ? `<p>Change since last audit: ${deltaScore >= 0 ? "+" : ""}${deltaScore}</p>` : ""}
-<p>Top gaps:</p><ul>${input.audit.gaps.slice(0, 5).map((g) => `<li>${g}</li>`).join("")}</ul>`,
-        ),
-        text: `Audit complete: ${input.audit.score}/100 for ${input.audit.domain}`,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
       });
       if (userId) {
         await recordEmailAlertEvent({
