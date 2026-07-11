@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { buildGenerateArticleHref } from "@/lib/content-studio";
 import type { OptimizerFix } from "@/lib/optimizer/types";
 
 const CATEGORY_LABELS: Record<OptimizerFix["category"], string> = {
@@ -86,6 +88,17 @@ export function OptimizerFixCard({ fix }: { fix: OptimizerFix }) {
                 {copied ? "Copied!" : fix.deliverableType === "code" ? "Copy code" : "Copy prompt"}
               </button>
             </div>
+          )}
+          {fix.deliverableType === "prompt" && (
+            <Link
+              href={buildGenerateArticleHref({
+                topic: fix.title,
+                brief: fix.prompt ?? fix.problem,
+              })}
+              className="inline-flex text-sm font-semibold text-accent hover:underline"
+            >
+              Generate article in Content Studio →
+            </Link>
           )}
         </div>
       )}

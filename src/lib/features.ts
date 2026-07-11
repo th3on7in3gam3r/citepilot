@@ -9,9 +9,9 @@ export type ProductFeature = {
 export const productFeatures: ProductFeature[] = [
   {
     id: "content",
-    title: "Branded SEO Content",
+    title: "Content Studio",
     description:
-      "Generates brand-aligned articles optimized for search and AI visibility. Structured to rank, attract traffic, and build authority.",
+      "Generate branded GEO articles, manage your queue, and publish to CMS — or start from Site Optimizer briefs.",
     dashboardHref: "/dashboard/content",
   },
   {

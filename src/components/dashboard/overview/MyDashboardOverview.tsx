@@ -303,7 +303,7 @@ function MyDashboardOverviewContent({
       },
       {
         label: "Tracked",
-        href: "/dashboard/content?section=keywords",
+        href: "/dashboard/content?section=targeting",
         value: trackedCount,
         delta: "Keywords",
         spark: [1, 2, 3, trackedCount, trackedCount],
@@ -481,7 +481,7 @@ function MyDashboardOverviewContent({
               onChange={setPromptFilter}
             />
             <Link
-              href="/dashboard/content?section=keywords"
+              href="/dashboard/content?section=targeting"
               className="text-xs font-semibold text-accent hover:text-accent-deep"
             >
               Manage prompts →

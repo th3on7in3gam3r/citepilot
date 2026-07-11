@@ -34,7 +34,7 @@ export function DashboardWorkspaceEmpty({
       </p>
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Link
-          href="/dashboard/content?section=keywords"
+          href="/dashboard/content?section=targeting"
           data-tour="prompts"
           className="inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep"
         >

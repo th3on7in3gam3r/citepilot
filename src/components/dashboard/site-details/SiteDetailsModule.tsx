@@ -7,10 +7,9 @@ import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
 import { BlogManagerPanel } from "@/components/dashboard/BlogManagerPanel";
 import { CmsConnectionsPanel } from "@/components/dashboard/CmsConnectionsPanel";
 import { GenerateArticlePanel } from "@/components/dashboard/GenerateArticlePanel";
-import { CompetitorAnalysisGrid } from "@/components/dashboard/competitors/CompetitorAnalysisGrid";
+import { ContentStudioWorkflowBanner } from "@/components/dashboard/content/ContentStudioWorkflowBanner";
 import { DomainInfoSection } from "@/components/dashboard/site-details/DomainInfoSection";
 import { GoogleDataSection } from "@/components/dashboard/site-details/GoogleDataSection";
-import { KeywordsSection } from "@/components/dashboard/site-details/KeywordsSection";
 import { SiteDetailsFooter } from "@/components/dashboard/site-details/SiteDetailsShared";
 import { SiteDetailsSubnav } from "@/components/dashboard/site-details/SiteDetailsSubnav";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -27,6 +26,7 @@ import type { SiteDetailsSectionId } from "@/lib/site-details-sections";
 import { SITE_DETAILS_SECTIONS } from "@/lib/site-details-sections";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
+import { contentStudioLegacyRedirect } from "@/lib/content-studio";
 import { effectInit } from "@/lib/react/effect-init";
 
 const VALID_SECTIONS = new Set<SiteDetailsSectionId>(
@@ -37,19 +37,24 @@ export function SiteDetailsModule() {
   const router = useRouter();
   const { workspace, ready, applyWorkspace, refresh } = useWorkspaceContext();
   const searchParams = useSearchParams();
-  const [active, setActive] = useState<SiteDetailsSectionId>("domain-info");
+  const [active, setActive] = useState<SiteDetailsSectionId>("generate");
   const [queueRefreshKey, setQueueRefreshKey] = useState(0);
   const [completionCtx, setCompletionCtx] = useState<SiteDetailsCompletionContext>({});
 
   useEffect(() => {
     const section = searchParams.get("section");
+    const legacy = contentStudioLegacyRedirect(section);
+    if (legacy) {
+      router.replace(legacy);
+      return;
+    }
     if (section && VALID_SECTIONS.has(section as SiteDetailsSectionId)) {
       const t = setTimeout(() => {
         setActive(section as SiteDetailsSectionId);
       }, 0);
       return () => clearTimeout(t);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const section = SITE_DETAILS_SECTIONS.find((s) => s.id === active)!;
   const workspaceId = workspace?.workspaceId ?? workspace?.id ?? "";
@@ -169,6 +174,9 @@ export function SiteDetailsModule() {
 
   return (
     <div className="-mx-4 flex min-h-[calc(100dvh-8rem)] flex-col md:-mx-6 lg:-mx-8">
+      <div className="px-4 md:px-6 lg:px-8">
+        <ContentStudioWorkflowBanner />
+      </div>
       <div className="flex flex-1 flex-col gap-5 px-4 md:px-6 lg:flex-row lg:px-8">
         <SiteDetailsSubnav
           active={active}
@@ -268,24 +276,6 @@ function SectionBody({
           mode="targeting"
         />
       );
-    case "competitors":
-      return (
-        <div className="space-y-8">
-          <CompetitorAnalysisGrid workspace={workspace} />
-          <div className="border-t border-[#eef2f6] pt-8">
-            <p className="mb-4 text-sm font-semibold text-ink">Tracked competitors</p>
-            <DomainInfoSection
-              workspace={workspace}
-              workspaceId={workspaceId}
-              onSaved={onSaved}
-              onContinue={onContinue}
-              mode="competitors"
-            />
-          </div>
-        </div>
-      );
-    case "keywords":
-      return <KeywordsSection workspace={workspace} onContinue={onContinue} />;
     case "working-files":
       return (
         <div className="space-y-6">

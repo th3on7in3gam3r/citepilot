@@ -3,8 +3,6 @@ export type SiteDetailsSectionId =
   | "pages"
   | "google-data"
   | "targeting"
-  | "competitors"
-  | "keywords"
   | "working-files"
   | "cms"
   | "generate";
@@ -12,66 +10,81 @@ export type SiteDetailsSectionId =
 export type SiteDetailsSection = {
   id: SiteDetailsSectionId;
   label: string;
-  icon: "domain" | "pages" | "google" | "target" | "competitors" | "keywords" | "files" | "cms" | "generate";
+  icon: "domain" | "pages" | "google" | "target" | "keywords" | "files" | "cms" | "generate";
   description: string;
 };
 
-export const SITE_DETAILS_SECTIONS: SiteDetailsSection[] = [
+export type ContentStudioNavGroup = {
+  label: string;
+  sectionIds: SiteDetailsSectionId[];
+};
+
+/** Grouped subnav for Content Studio v2 — create, publish, setup. */
+export const CONTENT_STUDIO_NAV_GROUPS: ContentStudioNavGroup[] = [
   {
-    id: "domain-info",
-    label: "Domain Info",
-    icon: "domain",
-    description: "Configure your site domain, description, and business profile",
+    label: "Create",
+    sectionIds: ["generate", "working-files", "pages"],
   },
   {
-    id: "pages",
-    label: "Pages",
-    icon: "pages",
-    description: "30-day editorial calendar and content plan",
+    label: "Publish",
+    sectionIds: ["cms"],
   },
   {
-    id: "google-data",
-    label: "Google Data",
-    icon: "google",
-    description: "Connect Google Analytics and Search Console to enrich citation audits",
+    label: "Setup",
+    sectionIds: ["domain-info", "targeting", "google-data"],
   },
-  {
-    id: "targeting",
-    label: "Targeting",
-    icon: "target",
-    description: "Audiences and buyer-intent prompts",
-  },
-  {
-    id: "competitors",
-    label: "Competitors",
-    icon: "competitors",
-    description: "Brands you lose citations to on AI prompts",
-  },
-  {
-    id: "keywords",
-    label: "Keywords",
-    icon: "keywords",
-    description: "Track organic keyword rankings and visibility trends",
-  },
-  {
-    id: "working-files",
-    label: "Working Files",
-    icon: "files",
-    description: "Generated articles and draft queue",
-  },
-  {
+];
+
+const SECTION_BY_ID: Record<SiteDetailsSectionId, SiteDetailsSection> = {
+  generate: {
     id: "generate",
     label: "Generate",
     icon: "generate",
-    description: "Create branded GEO articles from gaps",
+    description: "Create branded GEO articles from audit gaps and Optimizer briefs",
   },
-  {
+  "working-files": {
+    id: "working-files",
+    label: "Article queue",
+    icon: "files",
+    description: "Review drafts, publish to CMS, and manage your blog queue",
+  },
+  pages: {
+    id: "pages",
+    label: "Content calendar",
+    icon: "pages",
+    description: "30-day editorial plan ranked by citation gap impact",
+  },
+  cms: {
     id: "cms",
-    label: "CMS Settings",
+    label: "CMS & publish",
     icon: "cms",
-    description: "Publishing connections and field mapping",
+    description: "Connect Webflow, WordPress, Ghost, Shopify, or Framer",
   },
-];
+  "domain-info": {
+    id: "domain-info",
+    label: "Site profile",
+    icon: "domain",
+    description: "Domain, description, and business profile for generation",
+  },
+  targeting: {
+    id: "targeting",
+    label: "Audiences & prompts",
+    icon: "target",
+    description: "Buyer-intent audiences and money prompts to target",
+  },
+  "google-data": {
+    id: "google-data",
+    label: "Google integrations",
+    icon: "google",
+    description: "Google Analytics and Search Console for richer briefs",
+  },
+};
+
+/** Flat section list — order follows Content Studio nav groups. */
+export const SITE_DETAILS_SECTIONS: SiteDetailsSection[] =
+  CONTENT_STUDIO_NAV_GROUPS.flatMap((group) =>
+    group.sectionIds.map((id) => SECTION_BY_ID[id]),
+  );
 
 export const SITE_MODEL_OPTIONS = [
   { id: "single-location", label: "Single location business", businessType: "local" },

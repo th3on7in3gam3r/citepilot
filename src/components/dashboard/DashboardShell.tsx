@@ -48,7 +48,7 @@ function pageHeader(pathname: string): {
   }
   if (pathname.startsWith("/dashboard/content")) {
     return {
-      title: "Content",
+      title: "Content Studio",
       backHref: "/dashboard",
       backLabel: "Overview",
     };

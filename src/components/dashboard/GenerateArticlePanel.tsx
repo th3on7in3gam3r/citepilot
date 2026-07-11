@@ -57,14 +57,19 @@ export function GenerateArticlePanel({
   useEffect(() => {
     const pTopic = searchParams.get("topic");
     const pAngle = searchParams.get("angle");
+    const pBrief = searchParams.get("brief");
     const pFormat = searchParams.get("format");
     const pPillar = searchParams.get("pillar");
 
-    if (!pTopic && !pAngle && !pFormat && !pPillar) return;
+    if (!pTopic && !pAngle && !pBrief && !pFormat && !pPillar) return;
 
     const t = setTimeout(() => {
       if (pTopic) setTopic(pTopic);
-      if (pAngle) setAngle(pAngle);
+      if (pBrief) {
+        setAngle(pBrief);
+      } else if (pAngle) {
+        setAngle(pAngle);
+      }
       if (pFormat && pFormat in CONTENT_TYPE_LABELS) {
         setContentType(pFormat as ContentType);
       }

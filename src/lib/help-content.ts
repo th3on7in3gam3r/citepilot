@@ -169,6 +169,6 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
   },
   {
     q: "Does Autopilot ever publish to my CMS?",
-    a: "No. Autopilot never auto-publishes content. It only re-scans prompts, generates a plan, and (optionally) emails you. You remain in control of publishing from the Content tab or your CMS.",
+    a: "No. Autopilot never auto-publishes content. It only re-scans prompts, generates a plan, and (optionally) emails you. You remain in control of publishing from Content Studio or your CMS.",
   },
 ];

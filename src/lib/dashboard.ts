@@ -58,9 +58,9 @@ export const dashboardNav: DashboardNavItem[] = [
   },
   {
     id: "content",
-    label: "Content",
+    label: "Content Studio",
     href: "/dashboard/content",
-    description: "Branded SEO articles, 30-day strategy, and publishing",
+    description: "Generate articles, manage queue, and publish to CMS",
     icon: "content",
     section: "main",
   },

@@ -263,7 +263,7 @@ export function GrowthLoopPageClient() {
               {running ? "Running…" : "Run now"}
             </button>
             <Link
-              href="/dashboard/content"
+              href="/dashboard/content?section=working-files"
               className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
             >
               View articles
