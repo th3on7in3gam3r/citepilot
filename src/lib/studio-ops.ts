@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import { randomUUID } from "crypto";
 
 export const STUDIO_OPS_PRODUCT = "citepilot" as const;
 
@@ -12,22 +11,16 @@ export type StudioOpsEventType =
   | "bundle.updated"
   | "bundle.canceled";
 
-export type StudioOpsEvent = {
-  id: string;
-  type: StudioOpsEventType;
-  product: typeof STUDIO_OPS_PRODUCT;
-  occurredAt: string;
-  payload: Record<string, unknown>;
-};
-
 function studioOpsUrl(): string | null {
-  return process.env.STUDIO_OPS_URL?.trim() || null;
+  const raw = process.env.STUDIO_OPS_URL?.trim();
+  if (!raw) return null;
+  return raw.replace(/\/+$/, "");
 }
 
 function studioOpsSecret(): string | null {
   return (
-    process.env.STUDIO_OPS_SECRET?.trim() ||
     process.env.STUDIO_OPS_WEBHOOK_SECRET?.trim() ||
+    process.env.STUDIO_OPS_SECRET?.trim() ||
     null
   );
 }
@@ -40,10 +33,30 @@ function signBody(body: string, secret: string): string {
   return crypto.createHmac("sha256", secret).update(body).digest("hex");
 }
 
-/** Fire-and-forget Studio Ops fan-out (no-op when STUDIO_OPS_URL is unset). */
+function splitPayload(payload: Record<string, unknown>): {
+  email: string | null;
+  externalUserId: string | null;
+  metadata: Record<string, unknown>;
+} {
+  const { email, userId, externalUserId, ...rest } = payload;
+  return {
+    email: typeof email === "string" ? email : email == null ? null : String(email),
+    externalUserId:
+      typeof externalUserId === "string"
+        ? externalUserId
+        : typeof userId === "string"
+          ? userId
+          : userId == null
+            ? null
+            : String(userId),
+    metadata: rest,
+  };
+}
+
+/** Fire-and-forget Studio Ops fan-out (no-op when env unset). */
 export function emitStudioOpsEvent(
   type: StudioOpsEventType,
-  payload: Record<string, unknown>,
+  payload: Record<string, unknown> = {},
 ): void {
   void emitStudioOpsEventAsync(type, payload).catch((err) => {
     console.warn("[studio-ops] emit failed", type, err);
@@ -52,29 +65,29 @@ export function emitStudioOpsEvent(
 
 export async function emitStudioOpsEventAsync(
   type: StudioOpsEventType,
-  payload: Record<string, unknown>,
+  payload: Record<string, unknown> = {},
 ): Promise<void> {
-  const url = studioOpsUrl();
+  const baseUrl = studioOpsUrl();
   const secret = studioOpsSecret();
-  if (!url || !secret) return;
+  if (!baseUrl || !secret) return;
 
-  const event: StudioOpsEvent = {
-    id: randomUUID(),
-    type,
+  const { email, externalUserId, metadata } = splitPayload(payload);
+
+  const body = JSON.stringify({
     product: STUDIO_OPS_PRODUCT,
-    occurredAt: new Date().toISOString(),
-    payload,
-  };
+    event: type,
+    email,
+    externalUserId,
+    metadata,
+  });
 
-  const body = JSON.stringify(event);
   const signature = signBody(body, secret);
 
-  const res = await fetch(url, {
+  const res = await fetch(`${baseUrl}/api/events`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-studio-ops-signature": signature,
-      "x-studio-ops-product": STUDIO_OPS_PRODUCT,
+      "X-Studio-Ops-Signature": signature,
     },
     body,
     signal: AbortSignal.timeout(10_000),
