@@ -13,6 +13,7 @@ export const GROWTH_STACK = {
   aiCmo: {
     name: "Cadence",
     tagline: "Marketing war room, SEO audits, and campaigns",
+    href: "https://cadence.biblefunland.com/app",
   },
   aegis: {
     name: "Aegis Loop",
@@ -22,7 +23,7 @@ export const GROWTH_STACK = {
 } as const;
 
 export function aiCmoAppHref(): string {
-  return process.env.NEXT_PUBLIC_AI_CMO_APP_URL ?? "http://localhost:3000/app";
+  return process.env.NEXT_PUBLIC_AI_CMO_APP_URL ?? GROWTH_STACK.aiCmo.href;
 }
 
 export function kerygmaSignUpUrl(websiteUrl: string): string {
@@ -34,8 +35,11 @@ export function kerygmaSignUpUrl(websiteUrl: string): string {
 export type StudioBundleId = "growth" | "social" | "devsec" | "studio";
 
 export function aiCmoPublicOrigin(): string {
-  const href = process.env.NEXT_PUBLIC_AI_CMO_APP_URL ?? "http://localhost:3000/app";
-  return href.replace(/\/app\/?$/, "").replace(/\/+$/, "") || "http://localhost:3000";
+  const href = process.env.NEXT_PUBLIC_AI_CMO_APP_URL ?? GROWTH_STACK.aiCmo.href;
+  return (
+    href.replace(/\/app\/?$/, "").replace(/\/+$/, "") ||
+    "https://cadence.biblefunland.com"
+  );
 }
 
 /** Deep link to Cadence bundle checkout (Settings → Billing). */
