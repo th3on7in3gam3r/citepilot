@@ -3,7 +3,12 @@ import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { localizedHref } from "@/lib/i18n/localized-href";
-import { GROWTH_STACK, aiCmoAppHref, BIBLEFUNLAND_STUDIOS_URL } from "@/lib/growth-stack";
+import {
+  GROWTH_STACK,
+  aiCmoAppHref,
+  kerygmaAppHref,
+  BIBLEFUNLAND_STUDIOS_URL,
+} from "@/lib/growth-stack";
 import { site } from "@/lib/site";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -94,7 +99,10 @@ export async function Footer() {
   ];
 
   const stackLinks = [
-    { label: GROWTH_STACK.kerygma.name, href: GROWTH_STACK.kerygma.href },
+    {
+      label: GROWTH_STACK.kerygma.name,
+      href: kerygmaAppHref("footer", "growth-stack"),
+    },
     { label: GROWTH_STACK.aiCmo.name, href: aiCmoAppHref() },
     { label: GROWTH_STACK.aegis.name, href: GROWTH_STACK.aegis.href },
     { label: "Bible Funland Studios", href: BIBLEFUNLAND_STUDIOS_URL },

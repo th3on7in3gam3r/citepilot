@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { BIBLEFUNLAND_STUDIOS_URL, GROWTH_STACK, aiCmoAppHref } from "@/lib/growth-stack";
+import {
+  BIBLEFUNLAND_STUDIOS_URL,
+  GROWTH_STACK,
+  aiCmoAppHref,
+  kerygmaAppHref,
+} from "@/lib/growth-stack";
 
 const cards = [
   { key: "kerygma" as const, border: "border-accent/25 hover:border-accent/50" },
@@ -35,7 +40,7 @@ export function GrowthStackPromo() {
             const product = GROWTH_STACK[key];
             const href =
               key === "kerygma"
-                ? GROWTH_STACK.kerygma.href
+                ? kerygmaAppHref("growth-stack-promo", "sister-card")
                 : key === "aiCmo"
                   ? aiCmoAppHref()
                   : GROWTH_STACK.aegis.href;
