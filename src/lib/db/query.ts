@@ -64,13 +64,66 @@ export function isPostgres(): boolean {
   return Boolean(postgresConnectionString());
 }
 
+/** Neon Free/Launch compute hours exhausted — surfaces as XX000 / HTTP 412 upstream. */
+export function isNeonComputeQuotaError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  if (/compute time quota|COMPUTE_QUOTA_EXCEEDED/i.test(message)) {
+    return true;
+  }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    String((error as { code: unknown }).code) === "XX000" &&
+    /quota/i.test(message)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function neonDbErrorDetail(error: unknown): string {
+  if (isNeonComputeQuotaError(error)) {
+    return "Neon COMPUTE_QUOTA_EXCEEDED — upgrade plan or wait for monthly quota reset";
+  }
+  return error instanceof Error ? error.message : "Database unavailable";
+}
+
+function dropPool(pool: Pool): void {
+  if (globalForPg.citepilotPool === pool) {
+    globalForPg.citepilotPool = undefined;
+    globalForPg.citepilotPgReady = undefined;
+  }
+  void pool.end().catch(() => {});
+}
+
 function getPool(): Pool {
   const connectionString = postgresConnectionString();
   if (!connectionString) {
     throw new Error("DATABASE_URL or NEON_URL is required for Postgres");
   }
   if (!globalForPg.citepilotPool) {
-    globalForPg.citepilotPool = new Pool({ connectionString });
+    const pool = new Pool({ connectionString });
+    // Idle WebSocket / client errors must be handled or Node exits (status 129).
+    pool.on("error", (err) => {
+      if (isNeonComputeQuotaError(err)) {
+        console.error(
+          "[db] Neon compute quota exceeded — upgrade plan or wait for reset",
+        );
+      } else {
+        console.error(
+          "[db] Unexpected pool error",
+          err instanceof Error ? err.message : err,
+        );
+      }
+      dropPool(pool);
+    });
+    globalForPg.citepilotPool = pool;
   }
   return globalForPg.citepilotPool;
 }
@@ -325,7 +378,11 @@ async function ensurePostgres(): Promise<void> {
       await pool.query(
         `CREATE INDEX IF NOT EXISTS idx_browser_scan_usage_workspace_day ON browser_scan_usage(workspace_id, scanned_at)`,
       );
-    })();
+    })().catch((error) => {
+      // Allow the next request to retry instead of sticking on a rejected promise.
+      globalForPg.citepilotPgReady = undefined;
+      throw error;
+    });
   }
   await globalForPg.citepilotPgReady;
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ensureDb, isPostgres, postgresEnvVar } from "@/lib/db";
+import { ensureDb, isPostgres, neonDbErrorDetail, postgresEnvVar } from "@/lib/db";
 import { webflowEnvStatus } from "@/lib/webflow/config";
 import { stripeEnvStatus } from "@/lib/stripe/config";
 import { isEmailConfigured } from "@/lib/email/config";
@@ -128,7 +128,7 @@ export const GET = withApiLogging(async function GET(request: Request) {
   } catch (error) {
     checks.database = {
       ok: false,
-      detail: error instanceof Error ? error.message : "Database unavailable",
+      detail: neonDbErrorDetail(error),
     };
   }
 

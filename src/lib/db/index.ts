@@ -4,7 +4,9 @@ export {
   dbGet,
   dbRun,
   ensureDb,
+  isNeonComputeQuotaError,
   isPostgres,
+  neonDbErrorDetail,
   postgresConnectionString,
   postgresEnvVar,
 } from "@/lib/db/query";
