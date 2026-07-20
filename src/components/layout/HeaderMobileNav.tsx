@@ -223,7 +223,7 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
                   onClick={() => setOpen(false)}
                   className="block rounded-xl border border-border px-4 py-2.5 text-center text-sm font-semibold text-ink transition hover:bg-surface"
                 >
-                  Dashboard
+                  {t("dashboard")}
                 </Link>
               ) : (
                 <Link
@@ -231,7 +231,7 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
                   onClick={() => setOpen(false)}
                   className="block rounded-xl border border-border px-4 py-2.5 text-center text-sm font-semibold text-ink transition hover:bg-surface"
                 >
-                  Sign in
+                  {t("signIn")}
                 </Link>
               )}
               <Link

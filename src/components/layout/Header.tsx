@@ -112,9 +112,7 @@ export function Header({
           <div className="hidden lg:block">
             <ThemeToggle onDark={onDark} />
           </div>
-          <div className="hidden sm:contents">
-            <HeaderAuthLinks onDark={onDark} />
-          </div>
+          <HeaderAuthLinks onDark={onDark} />
           <HeaderStartButton onDark={onDark} />
           <HeaderMobileNav onDark={onDark} />
         </div>
