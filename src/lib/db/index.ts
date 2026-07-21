@@ -10,5 +10,6 @@ export {
   neonDbErrorDetail,
   postgresConnectionString,
   postgresEnvVar,
+  postgresHealthDetail,
   shouldUseTcpPostgres,
 } from "@/lib/db/query";

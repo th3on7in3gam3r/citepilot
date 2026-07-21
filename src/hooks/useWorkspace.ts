@@ -50,6 +50,7 @@ export function useWorkspace() {
   const [workspaces, setWorkspaces] = useState<WorkspaceListItem[]>([]);
   const [limits, setLimits] = useState<WorkspaceLimitsInfo | null>(null);
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadList = useCallback(async () => {
     const list = await fetchWorkspacesList();
@@ -62,6 +63,7 @@ export function useWorkspace() {
 
   const loadActiveWorkspace = useCallback(async () => {
     try {
+      setLoadError(null);
       const storedId = getStoredWorkspaceId();
       if (storedId) {
         const fromApi = await fetchWorkspace(storedId);
@@ -116,6 +118,9 @@ export function useWorkspace() {
       setWorkspace(null);
     } catch {
       setWorkspace(null);
+      setLoadError(
+        "We couldn’t load your workspaces. Check your connection and try again.",
+      );
     }
   }, [loadList]);
 
@@ -177,6 +182,7 @@ export function useWorkspace() {
     workspaces,
     limits,
     ready,
+    loadError,
     refresh,
     applyWorkspace,
     switchWorkspace,

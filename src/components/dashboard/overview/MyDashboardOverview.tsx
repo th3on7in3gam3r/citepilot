@@ -9,6 +9,7 @@ import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { getFixActionLabel } from "@/lib/geo/fixes";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
+import { DashboardEmptyState } from "@/components/dashboard/layout/DashboardEmptyState";
 import { DashboardMetricTile } from "@/components/dashboard/layout/DashboardMetricTile";
 import {
   DashboardTable,
@@ -77,30 +78,19 @@ function formatCompact(n: number): string {
 
 function DashboardNoWorkspace() {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-      <p className="font-display text-lg font-bold text-ink">No workspace yet</p>
-      <p className="mt-2 text-sm text-muted">
-        Add a site or complete setup to see citation data here — nothing below is
-        real until you connect a domain.
-      </p>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <Link
-          href="/start"
-          className="inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep"
-        >
-          Start setup →
-        </Link>
-        <Link
-          href="/dashboard/settings"
-          className="inline-flex rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent/40"
-        >
-          Add site in settings
-        </Link>
-      </div>
-      <div className="mt-8 border-t border-border pt-6">
-        <SignOutButton className="text-sm font-semibold text-muted hover:text-ink disabled:opacity-60" />
-      </div>
-    </div>
+    <DashboardEmptyState
+      title="No workspace yet"
+      description="Add a site or complete setup to see citation data here — nothing below is real until you connect a domain."
+      primaryHref="/start"
+      primaryLabel="Start setup →"
+      secondaryHref="/dashboard/settings"
+      secondaryLabel="Add site in settings"
+      footer={
+        <div className="border-t border-border pt-6">
+          <SignOutButton className="text-sm font-semibold text-muted hover:text-ink disabled:opacity-60" />
+        </div>
+      }
+    />
   );
 }
 
@@ -109,10 +99,32 @@ export function MyDashboardOverview({
 }: {
   showAgencyBackLink?: boolean;
 }) {
-  const { workspace, ready } = useWorkspaceContext();
+  const { workspace, ready, loadError, refresh } = useWorkspaceContext();
 
   if (!ready) {
     return <DashboardPageSkeleton />;
+  }
+
+  if (loadError) {
+    return (
+      <DashboardEmptyState
+        title="Couldn’t load workspaces"
+        description={loadError}
+        primaryHref="/dashboard"
+        primaryLabel="Reload dashboard →"
+        secondaryHref="/start"
+        secondaryLabel="Start setup"
+        footer={
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="text-sm font-semibold text-accent hover:text-accent-deep"
+          >
+            Retry now
+          </button>
+        }
+      />
+    );
   }
 
   if (!workspace) {

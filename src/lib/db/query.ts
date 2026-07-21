@@ -109,6 +109,45 @@ export function postgresEnvVar(): "DATABASE_URL" | "NEON_URL" | null {
   return null;
 }
 
+/** Safe diagnostics for authorized `/api/health` — no secrets. */
+export function postgresHealthDetail(): {
+  configured: boolean;
+  driver: "tcp-pg" | "neon-websocket" | "sqlite";
+  hostKind: "neon" | "supabase" | "other" | "none";
+  hasPooled: boolean;
+  hasDirect: boolean;
+} {
+  const runtime = postgresConnectionString();
+  if (!runtime) {
+    return {
+      configured: false,
+      driver: "sqlite",
+      hostKind: "none",
+      hasPooled: false,
+      hasDirect: false,
+    };
+  }
+
+  let hostKind: "neon" | "supabase" | "other" = "other";
+  try {
+    const host = new URL(runtime).hostname;
+    if (host.includes("neon.tech")) hostKind = "neon";
+    else if (host.includes("supabase.co") || host.includes("supabase.com")) {
+      hostKind = "supabase";
+    }
+  } catch {
+    hostKind = "other";
+  }
+
+  return {
+    configured: true,
+    driver: shouldUseTcpPostgres(runtime) ? "tcp-pg" : "neon-websocket",
+    hostKind,
+    hasPooled: Boolean(process.env.DATABASE_URL_POOLED?.trim()),
+    hasDirect: Boolean(process.env.DATABASE_URL_DIRECT?.trim()),
+  };
+}
+
 export function isPostgres(): boolean {
   return Boolean(postgresConnectionString());
 }

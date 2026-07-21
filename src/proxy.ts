@@ -63,6 +63,7 @@ function isPrimaryHost(host: string): boolean {
   if (!host) return true;
   if (PRIMARY_HOSTS.has(host)) return true;
   if (host.endsWith(".vercel.app")) return true;
+  if (host.endsWith(".onrender.com")) return true;
   return false;
 }
 

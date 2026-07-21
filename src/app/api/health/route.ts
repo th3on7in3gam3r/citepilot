@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { ensureDb, isPostgres, neonDbErrorDetail, postgresEnvVar } from "@/lib/db";
+import {
+  ensureDb,
+  isPostgres,
+  neonDbErrorDetail,
+  postgresEnvVar,
+  postgresHealthDetail,
+} from "@/lib/db";
 import { webflowEnvStatus } from "@/lib/webflow/config";
 import { stripeEnvStatus } from "@/lib/stripe/config";
 import { isEmailConfigured } from "@/lib/email/config";
@@ -116,19 +122,20 @@ export const GET = withApiLogging(async function GET(request: Request) {
   }
 
   const checks = buildDetailedChecks();
+  const pgMeta = postgresHealthDetail();
 
   try {
     await ensureDb();
     checks.database = {
       ok: true,
       detail: isPostgres()
-        ? `postgres (${postgresEnvVar() ?? "DATABASE_URL"})`
+        ? `postgres (${postgresEnvVar() ?? "DATABASE_URL"}; ${pgMeta.driver}; ${pgMeta.hostKind}; pooled=${pgMeta.hasPooled}; direct=${pgMeta.hasDirect})`
         : "sqlite (.data/citepilot.db)",
     };
   } catch (error) {
     checks.database = {
       ok: false,
-      detail: neonDbErrorDetail(error),
+      detail: `${neonDbErrorDetail(error)} [${pgMeta.driver}; ${pgMeta.hostKind}; pooled=${pgMeta.hasPooled}; direct=${pgMeta.hasDirect}]`,
     };
   }
 

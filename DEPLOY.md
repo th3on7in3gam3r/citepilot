@@ -31,7 +31,7 @@
    | `OPENAI_API_KEY` + `NEXT_PUBLIC_AUDIT_MODE=live` | Live audits |
    | Stripe / Resend / Studio Ops / CMS keys | Same as `.env.example` |
 
-5. Neon Console → Auth → **Trusted domains**: include `https://www.getcitepilot.com`, apex if used, and your `*.onrender.com` URL (no trailing slash).
+5. Neon Console → Auth → **Trusted domains**: include `https://www.getcitepilot.com`, apex if used, and your `*.onrender.com` URL (no trailing slash). Without the Render host listed, sign-in cookies / OAuth redirects fail on the staging URL.
 6. Stripe webhook: `https://<public-host>/api/billing/webhook`
 7. GSC OAuth redirect: `https://<public-host>/api/gsc/callback`
 8. **Crons:** `vercel.json` crons do **not** run on Render. Use the cron services in `render.yaml`, or Dashboard cron jobs that `curl` with `Authorization: Bearer $CRON_SECRET`. Schedules are UTC (same as former Vercel crons).

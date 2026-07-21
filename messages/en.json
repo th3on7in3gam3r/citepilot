@@ -33,6 +33,7 @@
     }
   },
   "hero": {
+    "brand": "CitePilot",
     "headline": "Track when ChatGPT, Perplexity, and Google AI cite you",
     "headlineAccent": "then close the gap weekly",
     "subheadline": "Free citation audit in ~60 seconds. Weekly monitoring on Pilot.",

@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { CustomerLogosBar } from "@/components/home/CustomerLogosBar";
 import { SocialProofStats } from "@/components/home/SocialProofStats";
 import { FeatureSuite } from "@/components/home/FeatureSuite";
@@ -51,7 +52,9 @@ export function HomePage() {
     <>
       <Hero />
       <CustomerLogosBar />
-      <SocialProofStats />
+      <Suspense fallback={<HomeSectionSkeleton variant="marquee" />}>
+        <SocialProofStats />
+      </Suspense>
       <HomeActionBar />
       <FreeToolsSection />
       <FeatureSuite />

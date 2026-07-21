@@ -33,6 +33,7 @@
     }
   },
   "hero": {
+    "brand": "CitePilot",
     "headline": "Suivez quand ChatGPT, Perplexity et Google AI vous citent",
     "headlineAccent": "puis comblez l'écart chaque semaine",
     "subheadline": "Audit de citations gratuit en ~60 secondes. Surveillance hebdomadaire avec Pilot.",
