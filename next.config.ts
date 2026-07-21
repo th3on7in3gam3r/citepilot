@@ -186,12 +186,6 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: "/:path*",
-        has: [{ type: "host", value: "getcitepilot.com" }],
-        destination: "https://www.getcitepilot.com/:path*",
-        permanent: true,
-      },
-      {
         source: "/vs/:slug",
         destination: "/compare/:slug",
         permanent: true,
