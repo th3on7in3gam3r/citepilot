@@ -25,47 +25,67 @@
    |----------|---------|
    | `DATABASE_URL` / `DATABASE_URL_POOLED` | Supabase (or Neon) Postgres — Render uses TCP `pg` |
    | `NEON_AUTH_BASE_URL` / `NEON_AUTH_COOKIE_SECRET` | Neon Auth (still separate from the app DB) |
-   | `NEXT_PUBLIC_APP_URL` | Public URL (`https://www.getcitepilot.com` or `https://….onrender.com`) |
+   | `NEXT_PUBLIC_APP_URL` | Public URL — use **`https://getcitepilot.com`** (apex; www redirects here on Render) |
    | `CRON_SECRET` | Bearer for cron routes (**required** — Render sets `RENDER=true`, so production cron auth is enforced) |
    | `HEALTH_SECRET` | Full detail on `GET /api/health` |
    | `OPENAI_API_KEY` + `NEXT_PUBLIC_AUDIT_MODE=live` | Live audits |
    | Stripe / Resend / Studio Ops / CMS keys | Same as `.env.example` |
 
-5. Neon Console → Auth → **Trusted domains**: include `https://www.getcitepilot.com`, apex if used, and your `*.onrender.com` URL (no trailing slash). Without the Render host listed, sign-in cookies / OAuth redirects fail on the staging URL.
-6. Stripe webhook: `https://<public-host>/api/billing/webhook`
-7. GSC OAuth redirect: `https://<public-host>/api/gsc/callback`
-8. **Crons:** `vercel.json` crons do **not** run on Render. Use the cron services in `render.yaml`, or Dashboard cron jobs that `curl` with `Authorization: Bearer $CRON_SECRET`. Schedules are UTC (same as former Vercel crons).
-9. Hit `GET /api/health` — public body is `{"ok":true}`; with `X-Health-Secret` you get DB + key presence checks (look for `checks.database.ok` and `pooled`/`direct` flags).
+5. Neon Console → Auth → **Trusted domains / trusted origins** (no trailing slash):
+   - `https://getcitepilot.com`
+   - `https://www.getcitepilot.com`
+   - `https://citepilot-flu8.onrender.com`
+   Google OAuth redirect URI must be Neon’s `{NEON_AUTH_BASE_URL}/callback/google` (from Auth Configuration), not a hand-rolled CitePilot path.
+6. Stripe webhook: `https://getcitepilot.com/api/billing/webhook`
+7. GSC OAuth redirect: `https://getcitepilot.com/api/gsc/callback`
+8. **Crons:** `vercel.json` crons do **not** run on Render. Use the cron services in `render.yaml`, or Dashboard cron jobs that `curl` with `Authorization: Bearer $CRON_SECRET`. Schedules are UTC (same as former Vercel crons). Set cron `APP_URL=https://getcitepilot.com`.
+9. Hit `GET /api/health` — public body is `{"ok":true}`; with `X-Health-Secret` you get DB + Neon Auth upstream + key presence checks (look for `checks.database.ok`, `checks.neonAuth`, and `pooled`/`direct` flags).
 
 Render sets `RENDER=true` and `RENDER_EXTERNAL_URL`. CitePilot treats `RENDER=true` + `NODE_ENV=production` as production (billing gates, cron secret required).
 
+## Neon Auth on getcitepilot.com (sign-in / Google)
+
+App DB can be Supabase; **sign-in still uses Neon Auth**. Console noise:
+
+- `runtime.lastError` — browser extension; ignore
+- `/api/auth/get-session` **404** `endpoint not found` — wrong or stale `NEON_AUTH_BASE_URL` (must end in `/auth` from Console → Auth → Configuration)
+- `/api/auth/sign-in/social` **429** — Neon rate limit or **COMPUTE_QUOTA_EXCEEDED** on the Auth project (upgrade Neon or wait for reset)
+
+Checklist:
+
+1. Render env: `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` (32+), `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` → redeploy
+2. Neon Auth trusted origins: apex + www + onrender (above)
+3. Confirm Google provider is enabled on that Auth branch; Google Cloud redirect URI = `{NEON_AUTH_BASE_URL}/callback/google`
+4. Verify:
+   ```bash
+   curl -s https://getcitepilot.com/api/auth/get-session
+   # not 404/429
+   curl -H "X-Health-Secret: $HEALTH_SECRET" https://getcitepilot.com/api/health
+   # checks.neonAuth.ok true
+   ```
+5. Incognito → `https://getcitepilot.com/auth/sign-in` → Google
+
 ## Custom domain: getcitepilot.com → Render
 
-Production brand URL is **`https://www.getcitepilot.com`** (apex redirects to www).
+Production brand URL is **`https://getcitepilot.com`** (apex). On Render, **www redirects to apex**.
 
-Today DNS often still sits on **Vercel** (`ns1/ns2.vercel-dns.com`). The Render service (`*.onrender.com`) is separate until you attach the domain.
+DNS (GoDaddy after nameservers are GoDaddy’s):
 
-1. **Render** → citepilot web service → **Settings → Custom Domains** → add `www.getcitepilot.com` (Render usually adds apex + redirect).
-2. **DNS** (at the registrar / Vercel Domains — wherever the zone is managed):
-   - `www` → **CNAME** to `citepilot-flu8.onrender.com` (or the hostname Render shows)
-   - Apex `getcitepilot.com` → Render’s **A / ALIAS** instructions (or Cloudflare CNAME flatten to the same onrender host)
-   - Remove stale **AAAA** records for the apex/www if present
-3. Click **Verify** in Render; wait for TLS.
-4. **Render env** (then redeploy):
-   - `NEXT_PUBLIC_APP_URL=https://www.getcitepilot.com`
-   - Cron services: `APP_URL=https://www.getcitepilot.com`
-5. **Neon Auth** trusted domains (no trailing slash):
-   - `https://www.getcitepilot.com`
-   - `https://getcitepilot.com`
-   - `https://citepilot-flu8.onrender.com` (keep until cutover is done)
-6. **Stripe** webhook + **GSC** OAuth redirect → `https://www.getcitepilot.com/...`
-7. Confirm: `/` shows the hero (not “Something went wrong”), `/auth/sign-in` works on **www**, and:
+| Type | Name | Data |
+|------|------|------|
+| A | @ | `216.24.57.1` (Render) |
+| CNAME | www | `citepilot-flu8.onrender.com` |
+
+1. **Render** → Custom Domains → `getcitepilot.com` (+ www as redirect to apex).
+2. **Render env:** `NEXT_PUBLIC_APP_URL=https://getcitepilot.com`
+3. Cron `APP_URL=https://getcitepilot.com`
+4. Neon Auth trusted domains as in the Neon Auth section above
+5. Stripe / GSC callbacks on `https://getcitepilot.com/...`
+6. Confirm hero loads and:
    ```bash
-   curl -H "X-Health-Secret: $HEALTH_SECRET" https://www.getcitepilot.com/api/health
+   curl -H "X-Health-Secret: $HEALTH_SECRET" https://getcitepilot.com/api/health
    ```
    → `checks.database.ok: true` (Supabase via `DATABASE_URL_POOLED` + `DATABASE_URL_DIRECT`).
-
-Until DNS points at Render, `www.getcitepilot.com` may still be the **old Vercel** deploy while `*.onrender.com` is the new stack — treat them as two apps.
 
 ## Vercel + Neon (legacy)
 

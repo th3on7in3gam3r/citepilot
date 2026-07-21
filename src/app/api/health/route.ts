@@ -6,6 +6,10 @@ import {
   postgresEnvVar,
   postgresHealthDetail,
 } from "@/lib/db";
+import {
+  neonAuthEnvCheck,
+  probeNeonAuthUpstream,
+} from "@/lib/auth/neon-auth-health";
 import { webflowEnvStatus } from "@/lib/webflow/config";
 import { stripeEnvStatus } from "@/lib/stripe/config";
 import { isEmailConfigured } from "@/lib/email/config";
@@ -50,35 +54,7 @@ function buildDetailedChecks(): Record<string, Check> {
         ? "Admin routes require ADMIN_EMAILS session"
         : "Set ADMIN_EMAILS (comma-separated admin emails)",
     },
-    neonAuth: (() => {
-      const baseUrl = process.env.NEON_AUTH_BASE_URL?.trim();
-      const secret = process.env.NEON_AUTH_COOKIE_SECRET?.trim();
-      if (baseUrl && secret && secret.length >= 32) {
-        return {
-          ok: true,
-          detail: "Dashboard + workspace APIs require sign-in",
-        };
-      }
-      if (!baseUrl && !secret) {
-        return {
-          ok: false,
-          detail: "Missing NEON_AUTH_BASE_URL and NEON_AUTH_COOKIE_SECRET",
-        };
-      }
-      if (!baseUrl) {
-        return { ok: false, detail: "Missing NEON_AUTH_BASE_URL" };
-      }
-      if (!secret) {
-        return {
-          ok: false,
-          detail: "Missing NEON_AUTH_COOKIE_SECRET (generate: openssl rand -base64 32)",
-        };
-      }
-      return {
-        ok: false,
-        detail: `NEON_AUTH_COOKIE_SECRET too short (${secret.length} chars, need 32+)`,
-      };
-    })(),
+    neonAuth: neonAuthEnvCheck(),
     webflow: (() => {
       const env = webflowEnvStatus();
       return { ok: env.ok, detail: env.detail };
@@ -136,6 +112,14 @@ export const GET = withApiLogging(async function GET(request: Request) {
     checks.database = {
       ok: false,
       detail: `${neonDbErrorDetail(error)} [${pgMeta.driver}; ${pgMeta.hostKind}; pooled=${pgMeta.hasPooled}; direct=${pgMeta.hasDirect}]`,
+    };
+  }
+
+  if (checks.neonAuth.ok) {
+    const upstream = await probeNeonAuthUpstream();
+    checks.neonAuth = {
+      ok: upstream.ok,
+      detail: upstream.detail,
     };
   }
 

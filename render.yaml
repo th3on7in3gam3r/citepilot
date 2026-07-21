@@ -3,11 +3,12 @@
 #
 # After first deploy:
 # 1. Set all sync:false env vars in the Dashboard (or Blueprint sync).
-# 2. Attach custom domain www.getcitepilot.com (see DEPLOY.md) and set:
-#      NEXT_PUBLIC_APP_URL=https://www.getcitepilot.com
-# 3. Neon Auth trusted domains: www + apex getcitepilot.com + *.onrender.com.
-# 4. Point Stripe / Resend / GSC callbacks at https://www.getcitepilot.com.
-# 5. Cron jobs: APP_URL=https://www.getcitepilot.com with Authorization: Bearer $CRON_SECRET.
+# 2. Attach custom domain getcitepilot.com (www redirects to apex) — see DEPLOY.md
+# 3. NEXT_PUBLIC_APP_URL=https://getcitepilot.com
+# 4. Neon Auth: NEON_AUTH_BASE_URL must be Console Auth URL (…/auth);
+#    trusted origins: https://getcitepilot.com, https://www.getcitepilot.com, onrender URL
+# 5. Stripe / Resend / GSC callbacks at https://getcitepilot.com
+# 6. Cron jobs: APP_URL=https://getcitepilot.com with Authorization: Bearer $CRON_SECRET.
 
 services:
   - type: web
