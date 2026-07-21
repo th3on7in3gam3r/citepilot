@@ -5,8 +5,10 @@ export {
   dbRun,
   ensureDb,
   isNeonComputeQuotaError,
+  isNeonHostname,
   isPostgres,
   neonDbErrorDetail,
   postgresConnectionString,
   postgresEnvVar,
+  shouldUseTcpPostgres,
 } from "@/lib/db/query";

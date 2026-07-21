@@ -5,11 +5,14 @@
 1. Copy `.env.example` → `.env.local` (local) and your host’s **Environment Variables** (production).
 2. Never commit `.env.local`. Keys belong only in Render / Vercel / local.
 3. Set `ADMIN_EMAILS` (and Neon Auth) in production so `/admin` is protected for listed emails via `src/proxy.ts`.
-4. Set `DATABASE_URL` or `NEON_URL` (Neon Postgres) — without either, SQLite under `.data/` will not persist across deploys.
+4. Set `DATABASE_URL` / `DATABASE_URL_POOLED` (Postgres) — without either, SQLite under `.data/` will not persist across deploys.
 
-## Render + Neon (current production path)
+## Render + Supabase (current production path)
 
-1. Create / use a [Neon](https://neon.tech) project → copy pooled `DATABASE_URL` (or `DATABASE_URL_POOLED`).
+1. Create a [Supabase](https://supabase.com) project → **Settings → Database → Connection string**.
+   - `DATABASE_URL_POOLED` = **Transaction** pooler (port **6543**, `?pgbouncer=true`)
+   - `DATABASE_URL_DIRECT` = Session / direct (port **5432**) for DDL if needed
+   - `DATABASE_URL` can be either; prefer pooled for the app
 2. Push this repo to GitHub → create a **Web Service** on [Render](https://render.com) (or apply `render.yaml`).
 3. Service settings:
    - **Build:** `npm ci && npm run build` (or Blueprint default)
@@ -20,8 +23,8 @@
 
    | Variable | Purpose |
    |----------|---------|
-   | `DATABASE_URL` or `DATABASE_URL_POOLED` | Neon Postgres |
-   | `NEON_AUTH_BASE_URL` / `NEON_AUTH_COOKIE_SECRET` | Neon Auth |
+   | `DATABASE_URL` / `DATABASE_URL_POOLED` | Supabase (or Neon) Postgres — Render uses TCP `pg` |
+   | `NEON_AUTH_BASE_URL` / `NEON_AUTH_COOKIE_SECRET` | Neon Auth (still separate from the app DB) |
    | `NEXT_PUBLIC_APP_URL` | Public URL (`https://www.getcitepilot.com` or `https://….onrender.com`) |
    | `CRON_SECRET` | Bearer for cron routes (**required** — Render sets `RENDER=true`, so production cron auth is enforced) |
    | `HEALTH_SECRET` | Full detail on `GET /api/health` |
