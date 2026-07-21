@@ -77,10 +77,12 @@ function tcpPoolConfig(connectionString: string): PoolConfig {
   const config: PoolConfig = { connectionString };
   try {
     const host = new URL(connectionString).hostname;
-    // Supabase (and most managed PG) require TLS; URL may omit sslmode.
+    // Managed Postgres (Supabase, Neon TCP on Render, etc.) requires TLS;
+    // many dashboard URIs omit sslmode, so force SSL for known hosts.
     if (
       host.includes("supabase.co") ||
       host.includes("supabase.com") ||
+      host.includes("neon.tech") ||
       /sslmode=require/i.test(connectionString)
     ) {
       config.ssl = { rejectUnauthorized: false };

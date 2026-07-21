@@ -59,15 +59,23 @@ export async function getSessionUserId(request?: Request): Promise<string | null
 
   if (!auth) return null;
 
-  const cookie = await cookieHeaderFromRequest(request);
-  const { data: session } = await auth.getSession({
-    query: { disableCookieCache: true },
-    ...(cookie
-      ? { fetchOptions: { headers: { cookie } } }
-      : {}),
-  });
+  try {
+    const cookie = await cookieHeaderFromRequest(request);
+    const { data: session } = await auth.getSession({
+      query: { disableCookieCache: true },
+      ...(cookie
+        ? { fetchOptions: { headers: { cookie } } }
+        : {}),
+    });
 
-  return gateSessionUserId(session?.user?.id ?? null, request);
+    return gateSessionUserId(session?.user?.id ?? null, request);
+  } catch (error) {
+    console.error(
+      "[auth] getSessionUserId failed",
+      error instanceof Error ? error.message : "unknown",
+    );
+    return null;
+  }
 }
 
 export async function getSessionUser(request?: Request): Promise<{
@@ -92,23 +100,31 @@ export async function getSessionUser(request?: Request): Promise<{
 
   if (!auth) return null;
 
-  const cookie = await cookieHeaderFromRequest(request);
-  const { data: session } = await auth.getSession({
-    query: { disableCookieCache: true },
-    ...(cookie
-      ? { fetchOptions: { headers: { cookie } } }
-      : {}),
-  });
+  try {
+    const cookie = await cookieHeaderFromRequest(request);
+    const { data: session } = await auth.getSession({
+      query: { disableCookieCache: true },
+      ...(cookie
+        ? { fetchOptions: { headers: { cookie } } }
+        : {}),
+    });
 
-  const user = session?.user;
-  if (!user?.id) return null;
-  const userId = await gateSessionUserId(user.id, request);
-  if (!userId) return null;
-  return {
-    id: userId,
-    name: user.name ?? "",
-    email: user.email ?? "",
-  };
+    const user = session?.user;
+    if (!user?.id) return null;
+    const userId = await gateSessionUserId(user.id, request);
+    if (!userId) return null;
+    return {
+      id: userId,
+      name: user.name ?? "",
+      email: user.email ?? "",
+    };
+  } catch (error) {
+    console.error(
+      "[auth] getSessionUser failed",
+      error instanceof Error ? error.message : "unknown",
+    );
+    return null;
+  }
 }
 
 /** Real signed-in user — ignores impersonation (for admin checks). */
@@ -119,19 +135,28 @@ export async function getRealSessionUser(request?: Request): Promise<{
 } | null> {
   if (!auth) return null;
 
-  const cookie = await cookieHeaderFromRequest(request);
-  const { data: session } = await auth.getSession({
-    query: { disableCookieCache: true },
-    ...(cookie
-      ? { fetchOptions: { headers: { cookie } } }
-      : {}),
-  });
+  try {
+    const cookie = await cookieHeaderFromRequest(request);
+    const { data: session } = await auth.getSession({
+      query: { disableCookieCache: true },
+      ...(cookie
+        ? { fetchOptions: { headers: { cookie } } }
+        : {}),
+    });
 
-  const user = session?.user;
-  if (!user?.id) return null;
-  return {
-    id: user.id,
-    name: user.name ?? "",
-    email: user.email ?? "",
-  };
+    const user = session?.user;
+    if (!user?.id) return null;
+    return {
+      id: user.id,
+      name: user.name ?? "",
+      email: user.email ?? "",
+    };
+  } catch (error) {
+    // Neon Auth outages must not 500 marketing pages (proxy calls this every request).
+    console.error(
+      "[auth] getRealSessionUser failed",
+      error instanceof Error ? error.message : "unknown",
+    );
+    return null;
+  }
 }
