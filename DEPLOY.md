@@ -35,9 +35,37 @@
 6. Stripe webhook: `https://<public-host>/api/billing/webhook`
 7. GSC OAuth redirect: `https://<public-host>/api/gsc/callback`
 8. **Crons:** `vercel.json` crons do **not** run on Render. Use the cron services in `render.yaml`, or Dashboard cron jobs that `curl` with `Authorization: Bearer $CRON_SECRET`. Schedules are UTC (same as former Vercel crons).
-9. Hit `GET /api/health` — public body is `{"ok":true}`; with `X-Health-Secret` you get DB + key presence checks.
+9. Hit `GET /api/health` — public body is `{"ok":true}`; with `X-Health-Secret` you get DB + key presence checks (look for `checks.database.ok` and `pooled`/`direct` flags).
 
 Render sets `RENDER=true` and `RENDER_EXTERNAL_URL`. CitePilot treats `RENDER=true` + `NODE_ENV=production` as production (billing gates, cron secret required).
+
+## Custom domain: getcitepilot.com → Render
+
+Production brand URL is **`https://www.getcitepilot.com`** (apex redirects to www).
+
+Today DNS often still sits on **Vercel** (`ns1/ns2.vercel-dns.com`). The Render service (`*.onrender.com`) is separate until you attach the domain.
+
+1. **Render** → citepilot web service → **Settings → Custom Domains** → add `www.getcitepilot.com` (Render usually adds apex + redirect).
+2. **DNS** (at the registrar / Vercel Domains — wherever the zone is managed):
+   - `www` → **CNAME** to `citepilot-flu8.onrender.com` (or the hostname Render shows)
+   - Apex `getcitepilot.com` → Render’s **A / ALIAS** instructions (or Cloudflare CNAME flatten to the same onrender host)
+   - Remove stale **AAAA** records for the apex/www if present
+3. Click **Verify** in Render; wait for TLS.
+4. **Render env** (then redeploy):
+   - `NEXT_PUBLIC_APP_URL=https://www.getcitepilot.com`
+   - Cron services: `APP_URL=https://www.getcitepilot.com`
+5. **Neon Auth** trusted domains (no trailing slash):
+   - `https://www.getcitepilot.com`
+   - `https://getcitepilot.com`
+   - `https://citepilot-flu8.onrender.com` (keep until cutover is done)
+6. **Stripe** webhook + **GSC** OAuth redirect → `https://www.getcitepilot.com/...`
+7. Confirm: `/` shows the hero (not “Something went wrong”), `/auth/sign-in` works on **www**, and:
+   ```bash
+   curl -H "X-Health-Secret: $HEALTH_SECRET" https://www.getcitepilot.com/api/health
+   ```
+   → `checks.database.ok: true` (Supabase via `DATABASE_URL_POOLED` + `DATABASE_URL_DIRECT`).
+
+Until DNS points at Render, `www.getcitepilot.com` may still be the **old Vercel** deploy while `*.onrender.com` is the new stack — treat them as two apps.
 
 ## Vercel + Neon (legacy)
 

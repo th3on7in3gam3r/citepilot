@@ -3,10 +3,11 @@
 #
 # After first deploy:
 # 1. Set all sync:false env vars in the Dashboard (or Blueprint sync).
-# 2. Point Neon Auth trusted domains at RENDER_EXTERNAL_URL + getcitepilot.com.
-# 3. Set NEXT_PUBLIC_APP_URL to your public URL (custom domain preferred).
-# 4. Point Stripe / Resend / GSC callbacks at the same public URL.
-# 5. Cron jobs hit the web service with Authorization: Bearer $CRON_SECRET.
+# 2. Attach custom domain www.getcitepilot.com (see DEPLOY.md) and set:
+#      NEXT_PUBLIC_APP_URL=https://www.getcitepilot.com
+# 3. Neon Auth trusted domains: www + apex getcitepilot.com + *.onrender.com.
+# 4. Point Stripe / Resend / GSC callbacks at https://www.getcitepilot.com.
+# 5. Cron jobs: APP_URL=https://www.getcitepilot.com with Authorization: Bearer $CRON_SECRET.
 
 services:
   - type: web
