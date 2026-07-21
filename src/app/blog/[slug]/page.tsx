@@ -21,9 +21,20 @@ type Props = { params: Promise<{ slug: string }> };
 
 export const revalidate = 86400;
 
+/** Allow runtime slugs when DB was empty/unavailable at build time. */
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
-  const slugs = await getAllSlugs();
-  return slugs.map((slug) => ({ slug }));
+  try {
+    const slugs = await getAllSlugs();
+    return slugs.map((slug) => ({ slug }));
+  } catch (error) {
+    console.warn(
+      "[blog] generateStaticParams fallback:",
+      error instanceof Error ? error.message : error,
+    );
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
