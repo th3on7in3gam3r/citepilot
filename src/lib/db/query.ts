@@ -110,16 +110,13 @@ function getPool(): Pool {
   if (!globalForPg.citepilotPool) {
     const pool = new Pool({ connectionString });
     // Idle WebSocket / client errors must be handled or Node exits (status 129).
-    pool.on("error", (err) => {
+    pool.on("error", (err: Error) => {
       if (isNeonComputeQuotaError(err)) {
         console.error(
           "[db] Neon compute quota exceeded — upgrade plan or wait for reset",
         );
       } else {
-        console.error(
-          "[db] Unexpected pool error",
-          err instanceof Error ? err.message : err,
-        );
+        console.error("[db] Unexpected pool error", err.message);
       }
       dropPool(pool);
     });
