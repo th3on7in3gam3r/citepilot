@@ -5,6 +5,7 @@ describe("cors", () => {
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_APP_URL;
     delete process.env.VERCEL_URL;
+    delete process.env.RENDER_EXTERNAL_URL;
   });
 
   it("allows production and local dev origins", () => {

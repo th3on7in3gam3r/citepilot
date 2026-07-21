@@ -1,4 +1,5 @@
 import { site } from "@/lib/site";
+import { platformHost } from "@/lib/env/runtime";
 
 const LOCAL_DEV_ORIGINS = [
   "http://localhost:3000",
@@ -28,9 +29,9 @@ export function allowedCorsOrigins(): Set<string> {
     if (normalized) origins.add(normalized);
   }
 
-  const vercelUrl = process.env.VERCEL_URL?.trim();
-  if (vercelUrl) {
-    origins.add(`https://${vercelUrl.replace(/^https?:\/\//, "")}`);
+  const host = platformHost();
+  if (host) {
+    origins.add(`https://${host}`);
   }
 
   return origins;

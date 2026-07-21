@@ -24,4 +24,12 @@ describe("requireCronAuth", () => {
     );
     expect(res).toBeNull();
   });
+
+  it("requires CRON_SECRET on Render production", () => {
+    vi.stubEnv("RENDER", "true");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CRON_SECRET", "");
+    const res = requireCronAuth(new Request("https://example.com/api/cron/test"));
+    expect(res?.status).toBe(503);
+  });
 });

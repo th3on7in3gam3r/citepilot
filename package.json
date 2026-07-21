@@ -5,12 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke:production": "node scripts/smoke-production.mjs",
     "analyze": "ANALYZE=true next build"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",

@@ -85,6 +85,7 @@ export async function fetchInternalHealth(): Promise<{
 
   const base =
     process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.RENDER_EXTERNAL_URL?.trim() ||
     process.env.VERCEL_URL?.trim() ||
     "http://localhost:3000";
   const origin = base.startsWith("http") ? base : `https://${base}`;
