@@ -3,11 +3,30 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useToast } from "@/components/notifications/ToastProvider";
+import type { BadgeStyle, BadgeTheme } from "@/lib/widget/geo-badge";
 import { site } from "@/lib/site";
 
 type Props = {
   domain: string;
 };
+
+const STYLES: { id: BadgeStyle; label: string; hint: string }[] = [
+  { id: "flat", label: "Flat", hint: "Inline pill for footers" },
+  { id: "shield", label: "Shield", hint: "Hero mark for sidebars" },
+  { id: "badge", label: "Badge", hint: "Compact card chip" },
+];
+
+function buildScoreUrl(
+  base: string,
+  domain: string,
+  style: BadgeStyle,
+  theme: BadgeTheme,
+): string {
+  const url = new URL(`${base}/api/widget/score/${encodeURIComponent(domain)}`);
+  if (style !== "flat") url.searchParams.set("style", style);
+  if (theme !== "dark") url.searchParams.set("theme", theme);
+  return url.toString();
+}
 
 function CopyBlock({
   label,
@@ -54,58 +73,140 @@ function CopyBlock({
 
 export function BadgeEmbedClient({ domain }: Props) {
   const base = site.url.replace(/\/$/, "");
-  const encodedDomain = encodeURIComponent(domain);
-  const badgeUrl = `${base}/api/widget/score/${encodedDomain}`;
-  const auditUrl = `${base}/audit?ref=badge&domain=${encodedDomain}`;
+  const [style, setStyle] = useState<BadgeStyle>("flat");
+  const [theme, setTheme] = useState<BadgeTheme>("dark");
+
+  const badgeUrl = useMemo(
+    () => buildScoreUrl(base, domain, style, theme),
+    [base, domain, style, theme],
+  );
+  const auditUrl = `${base}/audit?ref=badge&domain=${encodeURIComponent(domain)}`;
+
+  const previewUrls = useMemo(
+    () =>
+      STYLES.map((s) => ({
+        ...s,
+        src: buildScoreUrl(base, domain, s.id, theme),
+      })),
+    [base, domain, theme],
+  );
+
+  const imgSize =
+    style === "shield"
+      ? { width: 112, height: 132 }
+      : style === "badge"
+        ? { width: 176, height: 36 }
+        : { width: 170, height: 28 };
 
   const snippets = useMemo(
     () => ({
       html: `<a href="${auditUrl}" target="_blank" rel="noopener noreferrer">
-  <img src="${badgeUrl}" alt="GEO Score by CitePilot" width="200" height="32" />
+  <img src="${badgeUrl}" alt="GEO Score by CitePilot" width="${imgSize.width}" height="${imgSize.height}" />
 </a>`,
       markdown: `[![GEO Score](${badgeUrl})](${auditUrl})`,
       script: `<script src="${base}/widget.js" data-domain="${domain}"></script>`,
     }),
-    [auditUrl, badgeUrl, base, domain],
+    [auditUrl, badgeUrl, base, domain, imgSize.height, imgSize.width],
   );
 
   return (
     <div className="space-y-8">
       <div className="rounded-2xl border border-border bg-card p-6">
-        <p className="text-sm text-muted">Live preview</p>
-        <div className="mt-4 flex flex-wrap items-center gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-ink">Live preview</p>
+          <div
+            className="inline-flex rounded-full border border-border bg-surface p-0.5"
+            role="group"
+            aria-label="Badge theme"
+          >
+            {(["dark", "light"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTheme(t)}
+                aria-pressed={theme === t}
+                className={`rounded-full px-3 py-1 text-xs font-semibold capitalize transition ${
+                  theme === t
+                    ? "bg-ink text-white"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div
+          className={`mt-5 flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-border p-8 ${
+            theme === "light" ? "bg-slate-900" : "bg-surface"
+          }`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- live SVG from widget API */}
           <img
+            key={badgeUrl}
             src={badgeUrl}
-            alt={`GEO Score for ${domain}`}
-            width={200}
-            height={32}
+            alt={`GEO Score ${style} preview for ${domain}`}
+            width={imgSize.width}
+            height={imgSize.height}
             className="h-auto max-w-full"
           />
-          <img
-            src={`${badgeUrl}?style=shield`}
-            alt={`GEO Score shield for ${domain}`}
-            width={120}
-            height={140}
-            className="h-auto"
-          />
-          <img
-            src={`${badgeUrl}?style=badge`}
-            alt={`GEO Score badge for ${domain}`}
-            width={168}
-            height={36}
-            className="h-auto"
-          />
         </div>
-        <p className="mt-4 text-xs text-muted">
-          Styles: add <code className="rounded bg-surface px-1">?style=flat</code>,{" "}
-          <code className="rounded bg-surface px-1">?style=shield</code>, or{" "}
-          <code className="rounded bg-surface px-1">?style=badge</code> to the image URL.
+
+        <p className="mt-5 text-xs font-medium uppercase tracking-wide text-muted">
+          Choose a style
         </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          {previewUrls.map((s) => {
+            const selected = style === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setStyle(s.id)}
+                aria-pressed={selected}
+                aria-label={`Select ${s.label} style`}
+                className={`flex flex-col items-center gap-3 rounded-xl border p-4 text-left transition ${
+                  selected
+                    ? "border-accent bg-accent/5 ring-2 ring-accent/30"
+                    : "border-border bg-surface hover:border-accent/40"
+                }`}
+              >
+                <div
+                  className={`flex h-24 w-full items-center justify-center rounded-lg ${
+                    theme === "light" ? "bg-slate-900" : "bg-card"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={s.src}
+                    alt=""
+                    width={s.id === "shield" ? 72 : 140}
+                    height={s.id === "shield" ? 84 : 28}
+                    className="h-auto max-h-20 max-w-full"
+                  />
+                </div>
+                <div className="w-full">
+                  <p className="text-sm font-semibold text-ink">{s.label}</p>
+                  <p className="mt-0.5 text-[11px] text-muted">{s.hint}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-1">
-        <CopyBlock label="HTML img tag" code={snippets.html} language="Paste in your site footer or sidebar" />
-        <CopyBlock label="Markdown" code={snippets.markdown} language="GitHub README, Notion, docs" />
+      <div className="grid gap-4">
+        <CopyBlock
+          label="HTML img tag"
+          code={snippets.html}
+          language="Paste in your site footer or sidebar — updates with your style & theme"
+        />
+        <CopyBlock
+          label="Markdown"
+          code={snippets.markdown}
+          language="GitHub README, Notion, docs"
+        />
         <CopyBlock
           label="Framer / Webflow snippet"
           code={snippets.script}

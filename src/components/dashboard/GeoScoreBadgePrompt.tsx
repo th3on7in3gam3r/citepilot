@@ -51,7 +51,7 @@ export function GeoScoreBadgePrompt() {
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         <Link
-          href="/badge"
+          href={`/badge?domain=${encodeURIComponent(workspace.domain)}`}
           className="inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
         >
           Get embed code
