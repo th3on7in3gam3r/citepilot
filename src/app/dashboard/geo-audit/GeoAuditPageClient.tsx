@@ -163,12 +163,14 @@ export function GeoAuditPageClient() {
         title="GEO audit workspace"
         description={feature.description}
         action={
-          <Link
-            href="/audit"
-            className="text-sm font-semibold text-accent hover:text-accent-deep"
+          <button
+            type="button"
+            onClick={() => void handleRunAudit()}
+            disabled={auditing}
+            className="inline-flex rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-50"
           >
-            Open full audit tool →
-          </Link>
+            {auditing ? "Running…" : "Run GEO audit →"}
+          </button>
         }
       />
 
@@ -349,11 +351,25 @@ export function GeoAuditPageClient() {
         <ul className="space-y-3 text-sm text-muted">
           {!workspace.hasRealAudit ? (
             <li className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted">
-              No audit yet — run a scan to see prioritized gaps.
+              <p>No audit yet — run a scan to see prioritized gaps.</p>
+              <button
+                type="button"
+                onClick={() => void handleRunAudit()}
+                disabled={auditing}
+                className="mt-3 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-deep disabled:opacity-50"
+              >
+                {auditing ? "Running…" : "Run GEO audit →"}
+              </button>
             </li>
           ) : gaps.length === 0 ? (
             <li className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted">
-              No priority gaps from your latest audit.
+              <p>No priority gaps from your latest audit.</p>
+              <Link
+                href="/dashboard/optimizer"
+                className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+              >
+                Open Site Optimizer →
+              </Link>
             </li>
           ) : (
             gaps.map((g) => (

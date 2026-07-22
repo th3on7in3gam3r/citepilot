@@ -126,6 +126,14 @@ export function CompetitorsPageClient() {
         headingLevel="h2"
         title="Competitor intelligence"
         description={feature.description}
+        action={
+          <a
+            href="#add-competitor"
+            className="inline-flex rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
+          >
+            Add competitor →
+          </a>
+        }
       />
 
       {!workspace.hasRealAudit && (
@@ -159,7 +167,7 @@ export function CompetitorsPageClient() {
             )}
           </div>
 
-          <div className="flex w-full max-w-md flex-col gap-2">
+          <div id="add-competitor" className="flex w-full max-w-md flex-col gap-2">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -209,7 +217,7 @@ export function CompetitorsPageClient() {
           <p className="text-sm text-muted">
             Alerts fire when a competitor gains a citation you lost, citation rate surges
             &gt;10% week-over-week, or new domains appear on your money prompts. Manage in{" "}
-            <Link href="/dashboard/settings" className="font-semibold text-accent hover:underline">
+            <Link href="/dashboard/settings#notifications" className="font-semibold text-accent hover:underline">
               Settings → Notifications
             </Link>
             .

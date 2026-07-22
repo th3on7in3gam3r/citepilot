@@ -18,6 +18,7 @@ import { ReferralPanel } from "@/components/dashboard/ReferralPanel";
 import { WhiteLabelSettingsPanel } from "@/components/dashboard/WhiteLabelSettingsPanel";
 import { ThemeSettingsPanel } from "@/components/theme/ThemeSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import {
   getStoredWorkspaceId,
   runAudit,
@@ -307,11 +308,27 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         title="Edit workspace settings"
         description="Update your domain, money prompts, CMS integrations, monitoring email, Slack alerts, Autopilot, and white-label options."
         action={
-          lastUpdated ? (
+          !workspace.hasRealAudit ? (
+            <Link
+              href="/dashboard/geo-audit"
+              className="inline-flex rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
+            >
+              Run GEO audit →
+            </Link>
+          ) : lastUpdated ? (
             <p className="text-xs text-muted">Last updated {lastUpdated}</p>
           ) : undefined
         }
       />
+
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Save prompts, then run your first audit"
+          description="Settings control what GEO Audit scans. Add money prompts below, save, then run a live citation check."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+        />
+      )}
 
       <Panel title="Integrations" className="border-l-4 border-l-sky-400">
         <p className="text-sm text-muted">
@@ -620,10 +637,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               {auditing ? "Running audit…" : "Save & re-run audit"}
             </button>
             <Link
-              href="/audit"
+              href="/dashboard/geo-audit"
               className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-ink transition hover:bg-surface"
             >
-              Open audit tool
+              Open GEO audit
             </Link>
             <Link
               href="/start?full=1"

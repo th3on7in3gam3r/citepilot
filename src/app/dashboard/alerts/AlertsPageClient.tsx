@@ -122,11 +122,12 @@ export function AlertsPageClient() {
           description="Citation drops, competitor gains, and webhook deliveries show up here once you run scans and connect notification channels."
           primaryHref="/dashboard/geo-audit"
           primaryLabel="Run GEO audit →"
-          secondaryHref="/dashboard/settings"
+          secondaryHref="/dashboard/settings#notifications"
           secondaryLabel="Notification settings"
         />
       )}
 
+      {(loading || events.length > 0) && (
       <Panel title="Filter">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="block text-xs font-semibold text-ink">
@@ -179,6 +180,7 @@ export function AlertsPageClient() {
           </label>
         </div>
       </Panel>
+      )}
 
       <Panel title="Alert history" className="mt-6">
         {loading && <p className="text-sm text-muted">Loading alerts…</p>}
@@ -186,16 +188,22 @@ export function AlertsPageClient() {
           <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
             <p className="font-semibold text-ink">No alerts yet</p>
             <p className="mt-2 text-sm text-muted">
-              Alerts fire after citation audits and monitoring rules run. Start with a{" "}
-              <Link href="/dashboard/geo-audit" className="font-semibold text-accent hover:underline">
-                GEO audit
-              </Link>
-              , then connect Slack or webhooks in{" "}
-              <Link href="/dashboard/settings#notifications" className="font-semibold text-accent hover:underline">
-                Settings → Alerts
-              </Link>
-              .
+              Alerts fire after citation audits and monitoring rules run.
             </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/dashboard/geo-audit"
+                className="inline-flex rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
+              >
+                Run GEO audit →
+              </Link>
+              <Link
+                href="/dashboard/settings#notifications"
+                className="inline-flex rounded-full border border-border bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:border-accent/40"
+              >
+                Connect notifications
+              </Link>
+            </div>
           </div>
         )}
         <ul className="space-y-3">

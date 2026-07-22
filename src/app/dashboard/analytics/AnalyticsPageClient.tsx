@@ -72,24 +72,35 @@ export function AnalyticsPageClient() {
         description={feature.description}
         action={
           <div className="flex flex-wrap gap-2">
-            {workspace.id && (
+            {!workspace.hasRealAudit ? (
               <Link
-                href={`/api/workspaces/${workspace.id}/export?download=1`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+                href="/dashboard/geo-audit"
+                className="inline-flex items-center justify-center rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep"
               >
-                Export JSON
+                Run GEO audit →
               </Link>
+            ) : (
+              <>
+                {workspace.id && (
+                  <Link
+                    href={`/api/workspaces/${workspace.id}/export?download=1`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+                  >
+                    Export JSON
+                  </Link>
+                )}
+                <Link
+                  href="/report/proof"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
+                >
+                  Open proof report
+                </Link>
+              </>
             )}
-            <Link
-              href="/report/proof"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface"
-            >
-              Open proof report
-            </Link>
           </div>
         }
       />

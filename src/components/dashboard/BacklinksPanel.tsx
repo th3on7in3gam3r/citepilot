@@ -329,9 +329,18 @@ export function BacklinksPanel() {
         {loading ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : (profile?.sources.length ?? 0) === 0 ? (
-          <p className="text-sm text-muted">
-            No sources yet — run a refresh or add competitors in Settings.
-          </p>
+          <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+            <p className="text-sm text-muted">
+              No sources yet — refresh the scan or add competitors in Settings.
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              className="mt-3 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-deep"
+            >
+              Refresh backlink scan →
+            </button>
+          </div>
         ) : (
           <ul className="divide-y divide-border">
             {profile!.sources.map((s) => (
@@ -473,7 +482,11 @@ export function BacklinksPanel() {
 
       <Panel title="Placements" className="mt-6">
         {(data?.placements.length ?? 0) === 0 ? (
-          <p className="text-sm text-muted">No placements yet.</p>
+          <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+            <p className="text-sm text-muted">
+              No placements yet — join the network and request a placement above.
+            </p>
+          </div>
         ) : (
           <ul className="divide-y divide-border">
             {data!.placements.map((p) => (

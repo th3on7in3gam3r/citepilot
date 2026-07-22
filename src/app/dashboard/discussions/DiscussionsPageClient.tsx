@@ -57,6 +57,27 @@ export function DiscussionsPageClient() {
         headingLevel="h2"
         title="Buyer discussion radar"
         description={feature.description}
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              if (!workspace) return;
+              const query = workspace.buyerQuestion || workspace.domain;
+              setLoading(true);
+              void fetch(`/api/discussions?q=${encodeURIComponent(query)}`)
+                .then((r) => r.json())
+                .then((data: { threads: DiscussionThread[] }) =>
+                  setThreads(data.threads ?? []),
+                )
+                .catch(() => setThreads([]))
+                .finally(() => setLoading(false));
+            }}
+            disabled={loading}
+            className="rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep disabled:opacity-50"
+          >
+            {loading ? "Scanning…" : "Scan again →"}
+          </button>
+        }
       />
       {!workspace.hasRealAudit && (
         <DashboardActivationStrip
@@ -84,15 +105,23 @@ export function DiscussionsPageClient() {
         {!loading && threads.length === 0 && (
           <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
             <p className="text-sm text-muted">
-              No threads found yet — refine your buyer question in Settings, or
-              ensure a search API key is configured for broader coverage.
+              No threads found yet — refine your buyer question, or ensure a search
+              API key is configured for broader coverage.
             </p>
-            <a
-              href="/dashboard/settings"
-              className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
-            >
-              Open Settings →
-            </a>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="/dashboard/settings"
+                className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-deep"
+              >
+                Edit buyer question →
+              </a>
+              <a
+                href="/dashboard/geo-audit"
+                className="inline-flex text-sm font-semibold text-accent hover:underline"
+              >
+                Run GEO audit
+              </a>
+            </div>
           </div>
         )}
         <ul className="space-y-3">

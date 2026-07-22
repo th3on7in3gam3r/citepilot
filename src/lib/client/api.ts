@@ -129,6 +129,9 @@ export async function createClientWorkspace(input: {
     limits?: WorkspaceLimits;
     error?: string;
   };
+  if (res.status === 401) {
+    return { error: "Sign in required" };
+  }
   if (!res.ok) {
     return { error: data.error ?? "Could not create workspace" };
   }

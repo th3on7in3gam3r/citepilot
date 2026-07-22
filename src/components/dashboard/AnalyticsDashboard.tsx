@@ -155,6 +155,16 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
   return (
     <>
       <GooeyFilter />
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Run your first GEO audit"
+          description="LLM citation charts, prompt tables, and visibility KPIs stay blank until a live scan lands — no projected demo numbers."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/content?section=targeting"
+          secondaryLabel="Edit money prompts"
+        />
+      )}
       <DashboardFilterBar>
         <DashboardFilterSelect
           label="Site"
@@ -213,21 +223,6 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
           workspace={workspace}
           preferOrganicLead={gscConnected}
         />
-      )}
-      {!workspace.hasRealAudit && (
-        <DashboardActivationStrip
-          title="Run your first GEO audit"
-          description="LLM citation charts, prompt tables, and visibility KPIs stay blank until a live scan lands — no projected demo numbers."
-          primaryHref="/dashboard/geo-audit"
-          primaryLabel="Run GEO audit →"
-          secondaryHref="/dashboard/settings"
-          secondaryLabel="Edit money prompts"
-        />
-      )}
-      {!workspace.hasRealAudit && (
-        <p className="mt-4 text-center text-xs text-muted">
-          Run a citation audit from GEO Audit or Overview to unlock live prompt results.
-        </p>
       )}
     </>
   );
@@ -970,17 +965,33 @@ function PromptTable({
 }) {
   if (hasRealAudit && rows.length === 0) {
     return (
-      <p className="mt-6 text-sm text-muted">
-        No prompt results in the latest audit. Re-run a citation audit to refresh this table.
-      </p>
+      <div className="mt-6 rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+        <p className="text-sm text-muted">
+          No prompt results in the latest audit. Re-run a citation audit to refresh this table.
+        </p>
+        <Link
+          href="/dashboard/geo-audit"
+          className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+        >
+          Run GEO audit →
+        </Link>
+      </div>
     );
   }
 
   if (!hasRealAudit) {
     return (
-      <p className="mt-6 text-sm text-muted">
-        Run a citation audit to populate prompt-level visibility from live or technical checks.
-      </p>
+      <div className="mt-6 rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+        <p className="text-sm text-muted">
+          Run a citation audit to populate prompt-level visibility from live checks.
+        </p>
+        <Link
+          href="/dashboard/geo-audit"
+          className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+        >
+          Run GEO audit →
+        </Link>
+      </div>
     );
   }
 

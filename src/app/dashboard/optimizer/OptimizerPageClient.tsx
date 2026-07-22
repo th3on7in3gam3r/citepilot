@@ -124,6 +124,25 @@ export function OptimizerPageClient() {
       <DashboardPageHeader
         title="Site Optimizer"
         description="Analyzes your audit and generates fixes — copy-paste code with file locations, or prompts for content gaps on money prompts."
+        action={
+          workspace.hasRealAudit ? (
+            <button
+              type="button"
+              onClick={() => void handleGenerate()}
+              disabled={loading}
+              className="rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep disabled:opacity-50"
+            >
+              {loading ? "Generating…" : "Generate fixes →"}
+            </button>
+          ) : (
+            <Link
+              href="/dashboard/geo-audit"
+              className="rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
+            >
+              Run GEO audit first →
+            </Link>
+          )
+        }
       />
 
       {!workspace.hasRealAudit && (
@@ -173,8 +192,8 @@ export function OptimizerPageClient() {
 
         <button
           type="button"
-          onClick={handleGenerate}
-          disabled={loading}
+          onClick={() => void handleGenerate()}
+          disabled={loading || !workspace.hasRealAudit}
           className="rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Analyzing your site…" : "Generate fixes"}

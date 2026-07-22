@@ -347,18 +347,6 @@ function MyDashboardOverviewContent({
       {!workspace.hasRealAudit ? (
         <>
           <DashboardWorkspaceEmpty workspace={workspace} />
-          <div
-            data-tour="results"
-            className="rounded-2xl border border-dashed border-border bg-surface/80 px-6 py-8 text-center"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Citation results
-            </p>
-            <p className="mt-2 text-sm text-muted">
-              Your citation score, platform heatmap, and weekly action plan will
-              appear here after your first scan.
-            </p>
-          </div>
           <GettingStartedChecklist workspace={workspace} />
         </>
       ) : (
@@ -768,9 +756,25 @@ function MyDashboardOverviewContent({
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted">
-              No priority gaps from your latest audit. Re-run GEO audit after content changes.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted">
+                No priority gaps from your latest audit. Re-run GEO audit after content changes.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/dashboard/geo-audit"
+                  className="inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-deep"
+                >
+                  Run new scan →
+                </Link>
+                <Link
+                  href="/dashboard/optimizer"
+                  className="inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink hover:border-accent/40"
+                >
+                  Open Site Optimizer
+                </Link>
+              </div>
+            </div>
           )}
           <Link
             href="/dashboard/optimizer"

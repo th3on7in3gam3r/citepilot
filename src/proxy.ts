@@ -4,6 +4,7 @@ import { auth, getRealSessionUser, isNeonAuthEnabled } from "@/lib/auth/server";
 import { checkAdminEmailAccess, isAdminApiPublic } from "@/lib/admin-auth";
 import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
+import { isCrawlerUserAgent } from "@/lib/crawler-ua";
 import { intlMiddleware, shouldRunIntl } from "@/lib/i18n/intl-proxy";
 import { isNonLocalizedRootPath } from "@/lib/i18n/intl-paths";
 import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
@@ -154,10 +155,13 @@ export async function proxy(request: NextRequest) {
       }
       return NextResponse.redirect(dashboard);
     }
+    // SEO hubs stay crawlable for bots only — human browsers always run
+    // Neon Auth middleware so session cookies match API requireApiUser.
     if (
       request.method === "GET" &&
       !hasOAuthVerifier &&
-      isDashboardSeoHubPath(pathname)
+      isDashboardSeoHubPath(pathname) &&
+      isCrawlerUserAgent(request.headers.get("user-agent"))
     ) {
       return NextResponse.next();
     }

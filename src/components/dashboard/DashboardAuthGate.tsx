@@ -5,10 +5,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 
+function redirectToSignIn(router: ReturnType<typeof useRouter>, pathname: string) {
+  const signIn = new URL("/auth/sign-in", window.location.origin);
+  signIn.searchParams.set("from", pathname || "/dashboard");
+  router.replace(`${signIn.pathname}${signIn.search}`);
+}
+
 /**
- * SEO hub routes (`/dashboard`, analytics, …) skip Neon middleware so crawlers
- * can read server HTML. Browsers still mount the client shell — gate API-heavy
- * providers until a real session exists, otherwise `/api/workspaces` 401s spam.
+ * SEO hub routes stay crawlable for bots via proxy UA check, but browsers
+ * must have a server-recognized session before mounting API-heavy providers.
+ * Aligns with requireApiUser (user.id), not a loose client session object.
  */
 export function DashboardAuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -18,24 +24,32 @@ export function DashboardAuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
-    void authClient
-      .getSession()
-      .then(({ data }) => {
+    void (async () => {
+      try {
+        const { data } = await authClient.getSession();
+        const userId = data?.user?.id;
+        if (!userId) {
+          if (!cancelled) redirectToSignIn(router, pathname);
+          return;
+        }
+
+        // Prove the same cookies work for API routes (closes gate/API mismatch).
+        const probe = await fetch("/api/workspaces", { credentials: "include" });
         if (cancelled) return;
-        if (data?.session) {
+        if (probe.status === 401) {
+          redirectToSignIn(router, pathname);
+          return;
+        }
+        if (!probe.ok) {
+          // Transient server error — still allow shell; pages show their own errors.
           setAllowed(true);
           return;
         }
-        const signIn = new URL("/auth/sign-in", window.location.origin);
-        signIn.searchParams.set("from", pathname || "/dashboard");
-        router.replace(`${signIn.pathname}${signIn.search}`);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        const signIn = new URL("/auth/sign-in", window.location.origin);
-        signIn.searchParams.set("from", pathname || "/dashboard");
-        router.replace(`${signIn.pathname}${signIn.search}`);
-      });
+        setAllowed(true);
+      } catch {
+        if (!cancelled) redirectToSignIn(router, pathname);
+      }
+    })();
 
     return () => {
       cancelled = true;
