@@ -22,6 +22,11 @@ import {
   normalizeDomain,
   promptOverlap,
 } from "@/lib/audit/site-analyzer";
+import {
+  deepCrawlSite,
+  maxPagesForPlan,
+  mergeHomepageAndDeepCrawl,
+} from "@/lib/audit/deep-crawl";
 import { parsePreferences } from "@/lib/settings";
 import { regenerateContentStrategyForAudit } from "@/lib/content-strategy/regenerate";
 import {
@@ -98,11 +103,20 @@ export async function runCitationAudit(input: {
       ? await loadGeoSnippetFixes(input.workspaceId)
       : [];
 
-  const [signals, checks] = await Promise.all([
-    analyzeSite(domain, {
+  const sitePromise = (async (): Promise<SiteSignals> => {
+    const homepage = await analyzeSite(domain, {
       workspaceId: input.workspaceId ?? undefined,
       geoSnippetFixes,
-    }),
+    });
+    const maxPages = maxPagesForPlan(plan);
+    if (maxPages == null) return homepage;
+    const crawl = await deepCrawlSite(domain, { maxPages });
+    if (!crawl || crawl.pages.length === 0) return homepage;
+    return mergeHomepageAndDeepCrawl(homepage, crawl);
+  })();
+
+  const [signals, checks] = await Promise.all([
+    sitePromise,
     runLivePlatformProbes({
       domain,
       prompts,

@@ -53,7 +53,20 @@ function firstMatch(html: string, pattern: RegExp): string | null {
   return match?.[1]?.trim() ?? null;
 }
 
-function analyzeHtml(html: string): Omit<SiteSignals, "robotsAllows" | "sitemapFound" | "fetchOk" | "geoScore"> {
+/** Per-page HTML signals (no robots/sitemap/geoScore). */
+export type PageHtmlSignals = {
+  title: string | null;
+  metaDescription: string | null;
+  h1: string | null;
+  bodyExcerpt?: string | null;
+  wordCount: number;
+  hasJsonLd: boolean;
+  hasFaqSchema: boolean;
+  hasOrganizationSchema: boolean;
+  hasOgTags: boolean;
+};
+
+export function analyzeHtml(html: string): PageHtmlSignals {
   const title = firstMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i);
   const metaDescription = firstMatch(
     html,
@@ -212,6 +225,13 @@ export function buildGapsFromSignals(
   promptResults: { prompt: string; cited: boolean }[],
   domain: string,
 ): string[] {
+  const deep = signals.deepCrawl;
+  const pagesN = deep?.pagesCrawled ?? 0;
+  const scope =
+    deep && pagesN > 1
+      ? `across ${pagesN} crawled pages`
+      : "on the homepage";
+
   const gaps: string[] = [];
   if (!signals.fetchOk) {
     gaps.push(`Homepage at ${domain} could not be fetched — check SSL and uptime`);
@@ -220,7 +240,7 @@ export function buildGapsFromSignals(
     gaps.push("Missing meta description — AI systems use this for entity summaries");
   }
   if (!signals.hasJsonLd) {
-    gaps.push("No JSON-LD structured data detected on the homepage");
+    gaps.push(`No JSON-LD structured data detected ${scope}`);
   }
   if (!signals.hasFaqSchema) {
     gaps.push("Missing FAQPage schema — high-impact for AI answer extraction");
@@ -229,10 +249,14 @@ export function buildGapsFromSignals(
     gaps.push("No Organization schema — weakens brand entity recognition");
   }
   if (!signals.h1) {
-    gaps.push("No H1 heading found — unclear primary topic for crawlers");
+    gaps.push(`No H1 heading found ${scope} — unclear primary topic for crawlers`);
   }
   if (signals.wordCount < 300) {
-    gaps.push("Thin homepage content (<300 words) — add an answer capsule above the fold");
+    gaps.push(
+      deep && pagesN > 1
+        ? `Thin on-site content (<300 words across crawled pages) — add an answer capsule above the fold`
+        : "Thin homepage content (<300 words) — add an answer capsule above the fold",
+    );
   }
   if (!signals.sitemapFound) {
     gaps.push("No sitemap.xml found — harder for AI crawlers to discover pages");

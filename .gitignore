@@ -38,6 +38,10 @@ yarn-error.log*
 # local database
 .data/
 
+# crawlee default disk storage (we use MemoryStorage in production)
+/storage
+/result.csv
+
 # vercel
 .vercel
 

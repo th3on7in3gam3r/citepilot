@@ -15,10 +15,11 @@
    - `DATABASE_URL` can be either; prefer pooled for the app
 2. Push this repo to GitHub → create a **Web Service** on [Render](https://render.com) (or apply `render.yaml`).
 3. Service settings:
-   - **Build:** `npm ci && npm run build` (or Blueprint default)
+   - **Build:** `npm ci && npx playwright install chromium && npm run build` (Blueprint already runs Chromium install — needed for Pilot/Fleet GEO deep crawl)
    - **Start:** `npm start` → binds `0.0.0.0:$PORT` (required on Render)
    - **Health check path:** `/api/health`
    - **Node:** 20 (`NODE_VERSION=20` or `engines.node` in `package.json`)
+   - **Deep crawl:** Paid audits use Crawlee + Playwright (same-domain, Pilot 20 / Fleet 50 pages). Chromium must be present on the web service; free audits stay homepage-only `fetch`.
 4. Env vars (minimum):
 
    | Variable | Purpose |

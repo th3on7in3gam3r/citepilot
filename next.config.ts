@@ -57,6 +57,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["crawlee", "playwright", "puppeteer"],
   images: {
     remotePatterns: [
       {
