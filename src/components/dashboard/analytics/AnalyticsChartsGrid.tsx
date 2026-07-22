@@ -122,29 +122,37 @@ export function AnalyticsChartsGrid({
   const bubbles = useMemo(() => buildPromptBubblePoints(rows), [rows]);
   const polar = useMemo(() => buildPolarPlatformSegments(workspace), [workspace]);
 
-  const auditBadge = kpis.hasRealAudit ? "Live audit" : "Projected";
+  const auditBadge = kpis.hasRealAudit ? "Live audit" : "Awaiting audit";
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiTile
           label="Citation score"
-          value={`${kpis.citationScore}`}
+          value={kpis.hasRealAudit ? `${kpis.citationScore}` : "—"}
           hint={auditBadge}
         />
         <KpiTile
           label="Visibility"
-          value={`${kpis.visibilityScore}%`}
+          value={kpis.hasRealAudit ? `${kpis.visibilityScore}%` : "—"}
           hint="Across tracked prompts"
         />
         <KpiTile
           label="Platforms citing you"
-          value={`${kpis.citedPlatforms}/${kpis.totalPlatforms}`}
+          value={
+            kpis.hasRealAudit
+              ? `${kpis.citedPlatforms}/${kpis.totalPlatforms}`
+              : "—"
+          }
           hint="AI answer surfaces"
         />
         <KpiTile
           label="Prompts cited"
-          value={`${kpis.citedPrompts}/${kpis.totalPrompts || "—"}`}
+          value={
+            kpis.hasRealAudit
+              ? `${kpis.citedPrompts}/${kpis.totalPrompts || "—"}`
+              : "—"
+          }
           hint="Money prompts with coverage"
         />
       </div>

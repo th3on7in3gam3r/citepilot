@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
@@ -115,6 +116,17 @@ export function AlertsPageClient() {
         description="Timeline of Slack, webhook, and email alerts sent for your monitored prompts."
       />
 
+      {workspace && !workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Alerts appear after audits"
+          description="Citation drops, competitor gains, and webhook deliveries show up here once you run scans and connect notification channels."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/settings"
+          secondaryLabel="Notification settings"
+        />
+      )}
+
       <Panel title="Filter">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="block text-xs font-semibold text-ink">
@@ -174,7 +186,11 @@ export function AlertsPageClient() {
           <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
             <p className="font-semibold text-ink">No alerts yet</p>
             <p className="mt-2 text-sm text-muted">
-              Add more prompts to start monitoring, then connect Slack or webhooks in{" "}
+              Alerts fire after citation audits and monitoring rules run. Start with a{" "}
+              <Link href="/dashboard/geo-audit" className="font-semibold text-accent hover:underline">
+                GEO audit
+              </Link>
+              , then connect Slack or webhooks in{" "}
               <Link href="/dashboard/settings#notifications" className="font-semibold text-accent hover:underline">
                 Settings → Alerts
               </Link>

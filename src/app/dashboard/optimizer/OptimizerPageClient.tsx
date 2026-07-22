@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
 import { OptimizerFixCard } from "@/components/dashboard/optimizer/OptimizerFixCard";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -106,15 +107,17 @@ export function OptimizerPageClient() {
             "AI-generated fixes from your latest GEO audit",
             "Code + exact file placement for technical changes",
             "Writer/dev prompts for uncited money prompts",
+            "Preview: free users see the gate — Pilot unlocks one-click generate",
           ]}
         />
       </>
     );
   }
 
-  const gaps = workspace.gaps.length;
-  const uncited =
-    workspace.promptResults?.filter((p) => !p.cited).length ?? 0;
+  const gaps = workspace.hasRealAudit ? workspace.gaps.length : 0;
+  const uncited = workspace.hasRealAudit
+    ? (workspace.promptResults?.filter((p) => !p.cited).length ?? 0)
+    : 0;
 
   return (
     <>
@@ -123,35 +126,41 @@ export function OptimizerPageClient() {
         description="Analyzes your audit and generates fixes — copy-paste code with file locations, or prompts for content gaps on money prompts."
       />
 
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Run an audit before generating fixes"
+          description="Optimizer plans are built from live GEO gaps and uncited money prompts — not placeholders."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+        />
+      )}
+
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-border bg-white/5 px-4 py-3">
           <p className="text-xs uppercase tracking-wide text-muted">Audit gaps</p>
-          <p className="mt-1 text-2xl font-bold text-ink">{gaps}</p>
+          <p className="mt-1 text-2xl font-bold text-ink">
+            {workspace.hasRealAudit ? gaps : "—"}
+          </p>
         </div>
         <div className="rounded-xl border border-border bg-white/5 px-4 py-3">
           <p className="text-xs uppercase tracking-wide text-muted">Uncited money prompts</p>
-          <p className="mt-1 text-2xl font-bold text-ink">{uncited}</p>
+          <p className="mt-1 text-2xl font-bold text-ink">
+            {workspace.hasRealAudit ? uncited : "—"}
+          </p>
         </div>
         <div className="rounded-xl border border-border bg-white/5 px-4 py-3">
           <p className="text-xs uppercase tracking-wide text-muted">GEO score</p>
           <p className="mt-1 text-2xl font-bold text-ink">
-            {workspace.siteSignals?.geoScore ?? "—"}
+            {workspace.hasRealAudit
+              ? (workspace.siteSignals?.geoScore ?? "—")
+              : "—"}
           </p>
         </div>
       </div>
 
-      {!workspace.hasRealAudit && (
-        <Panel title="Run an audit first" className="mt-6">
-          <p className="text-sm text-muted">
-            Site Optimizer works best after a GEO audit.{" "}
-            <Link href="/dashboard/geo-audit" className="font-semibold text-accent hover:underline">
-              Run audit →
-            </Link>
-          </p>
-        </Panel>
+      {workspace.hasRealAudit && workspace.siteSignals && (
+        <GeoAuditSiteSignals signals={workspace.siteSignals} />
       )}
-
-      {workspace.siteSignals && <GeoAuditSiteSignals signals={workspace.siteSignals} />}
 
       <Panel title="Generate optimization plan" className="mt-6">
         <p className="mb-4 text-sm text-muted">

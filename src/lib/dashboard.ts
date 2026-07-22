@@ -37,6 +37,8 @@ export type DashboardNavItem = {
     | "help"
     | "feedback";
   section?: "main" | "footer";
+  /** Shown on free-tier rail so Pilot/Fleet clicks are not a surprise dead end. */
+  badge?: "Pilot" | "Fleet";
 };
 
 export const dashboardNav: DashboardNavItem[] = [
@@ -103,6 +105,7 @@ export const dashboardNav: DashboardNavItem[] = [
     description: "AI fixes for SEO, AEO, LLM citations, and robots.txt",
     icon: "optimizer",
     section: "main",
+    badge: "Pilot",
   },
   {
     id: "discussions",
@@ -135,6 +138,7 @@ export const dashboardNav: DashboardNavItem[] = [
     description: "Paste your URL once — daily SEO articles, backlinks, and AI visibility",
     icon: "growth-loop",
     section: "main",
+    badge: "Pilot",
   },
   {
     id: "feedback",
@@ -232,9 +236,7 @@ export function buildWorkspaceSnapshot(
   const domain =
     answers.domain?.replace(/^https?:\/\//, "").replace(/\/$/, "") ||
     "yourbrand.com";
-  const hash = domainSeed(domain);
   const promptsTracked = 1 + (answers.buyerQuestion ? 4 : 0);
-  const citedPlatforms = Math.min(PLATFORMS.length, 2 + (hash % 3));
 
   return {
     domain,
@@ -244,16 +246,17 @@ export function buildWorkspaceSnapshot(
     competitors: answers.competitors ?? [],
     buyerQuestion:
       answers.buyerQuestion || "best tool for [your category]",
-    citationScore: Math.min(92, 48 + (hash % 40)),
-    citedPlatforms,
+    // No fabricated KPIs — real scores only after hasRealAudit via toSnapshot.
+    citationScore: 0,
+    citedPlatforms: 0,
     totalPlatforms: PLATFORMS.length,
     promptsTracked,
-    contentDrafts: 3,
-    sourceCount: 12 + (hash % 8),
-    communityMentions: 4 + (hash % 6),
-    weeklyLift: "+12.4%",
-    domainRating: 12 + (hash % 58),
-    visibilityScore: 35 + (hash % 45),
+    contentDrafts: 0,
+    sourceCount: 0,
+    communityMentions: 0,
+    weeklyLift: "—",
+    domainRating: 0,
+    visibilityScore: 0,
     gaps: [],
     auditId: null,
     auditMode: null,

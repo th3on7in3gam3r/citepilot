@@ -7,6 +7,7 @@ import { AnalyticsChartsGrid } from "@/components/dashboard/analytics/AnalyticsC
 import { CitationVisualizations } from "@/components/dashboard/visualizations/CitationVisualizations";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import {
   DashboardFilterBar,
   DashboardFilterSelect,
@@ -214,9 +215,18 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
         />
       )}
       {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Run your first GEO audit"
+          description="LLM citation charts, prompt tables, and visibility KPIs stay blank until a live scan lands — no projected demo numbers."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/settings"
+          secondaryLabel="Edit money prompts"
+        />
+      )}
+      {!workspace.hasRealAudit && (
         <p className="mt-4 text-center text-xs text-muted">
-          Run a citation audit from Settings or Overview to replace estimates with
-          live prompt results.
+          Run a citation audit from GEO Audit or Overview to unlock live prompt results.
         </p>
       )}
     </>
@@ -353,15 +363,16 @@ function LLMPanel({
               </p>
               <div className="mt-2 flex items-end justify-between gap-4">
                 <p className="font-display text-4xl font-bold text-ink">
-                  {workspace.visibilityScore}%
+                  {workspace.hasRealAudit ? `${workspace.visibilityScore}%` : "—"}
                 </p>
                 <span className="rounded-full bg-ink px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
-                  {workspace.hasRealAudit ? "Live signal" : "Projected"}
+                  {workspace.hasRealAudit ? "Live signal" : "Awaiting audit"}
                 </span>
               </div>
               <p className="mt-2 text-sm text-muted">
-                Combined view across prompt coverage, citation evidence, and current AI
-                visibility strength.
+                {workspace.hasRealAudit
+                  ? "Combined view across prompt coverage, citation evidence, and current AI visibility strength."
+                  : "Visibility score fills in after your first GEO audit — no projected placeholders."}
               </p>
             </div>
             <PromptsCard workspace={workspace} />

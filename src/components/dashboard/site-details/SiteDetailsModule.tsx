@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
@@ -13,6 +12,7 @@ import { GoogleDataSection } from "@/components/dashboard/site-details/GoogleDat
 import { SiteDetailsFooter } from "@/components/dashboard/site-details/SiteDetailsShared";
 import { SiteDetailsSubnav } from "@/components/dashboard/site-details/SiteDetailsSubnav";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { buildContentCalendar } from "@/lib/dashboard-data";
 import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import { buildWeeklyEditorialMix } from "@/lib/content-strategy";
@@ -151,18 +151,7 @@ export function SiteDetailsModule() {
 
   if (!workspaceId) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#e2e8f0] bg-card p-12 text-center">
-        <p className="font-display text-xl font-bold text-ink">No site yet</p>
-        <p className="mt-2 text-sm text-muted">
-          Complete onboarding to configure your site details and content workspace.
-        </p>
-        <Link
-          href="/start"
-          className="mt-6 inline-flex rounded-full bg-[#0ea5e9] px-6 py-3 text-sm font-semibold text-white"
-        >
-          Start setup →
-        </Link>
-      </div>
+      <DashboardNoWorkspaceEmpty description="Complete setup to configure site details, content targeting, and your editorial workspace." />
     );
   }
 

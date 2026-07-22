@@ -220,6 +220,7 @@ export function GrowthLoopPageClient() {
             "Daily SEO articles tailored to your brand",
             "Auto-publish to WordPress, Webflow, and more",
             "Backlink network placements + AI visibility tracking",
+            "Free preview: Pilot badge on the left rail — upgrade unlocks activate",
           ]}
         />
       ) : status?.enabled ? (

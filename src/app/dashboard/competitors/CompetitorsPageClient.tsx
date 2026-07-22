@@ -10,6 +10,7 @@ import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { useBilling } from "@/contexts/BillingContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { cleanDomainInput, domainFormatStatus } from "@/lib/onboarding/domain-validation";
 import type { CompetitorIntelligence } from "@/lib/competitors/intelligence";
@@ -126,6 +127,15 @@ export function CompetitorsPageClient() {
         title="Competitor intelligence"
         description={feature.description}
       />
+
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Add rivals, then run an audit"
+          description="Track competitor domains now. Prompt-by-prompt citation gaps and steal-their-citations actions unlock after your first GEO audit."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+        />
+      )}
 
       <Panel title="Tracked competitors">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

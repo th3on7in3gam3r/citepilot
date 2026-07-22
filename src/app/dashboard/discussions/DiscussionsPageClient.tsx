@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
@@ -57,6 +58,16 @@ export function DiscussionsPageClient() {
         title="Buyer discussion radar"
         description={feature.description}
       />
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Scan works better after an audit"
+          description="We search HN, Stack Overflow, and the web using your money prompt. Run a GEO audit first so buyer-question targeting matches live citation gaps."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/settings"
+          secondaryLabel="Edit buyer question"
+        />
+      )}
       <Panel title="Buyer-intent threads">
         <p className="mb-4 text-sm text-muted">
           Threads from <strong className="text-ink">Hacker News</strong>,{" "}
@@ -71,9 +82,18 @@ export function DiscussionsPageClient() {
           <p className="text-sm text-muted">Searching discussions…</p>
         )}
         {!loading && threads.length === 0 && (
-          <p className="text-sm text-muted">
-            No threads found — refine your buyer question in Settings.
-          </p>
+          <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+            <p className="text-sm text-muted">
+              No threads found yet — refine your buyer question in Settings, or
+              ensure a search API key is configured for broader coverage.
+            </p>
+            <a
+              href="/dashboard/settings"
+              className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+            >
+              Open Settings →
+            </a>
+          </div>
         )}
         <ul className="space-y-3">
           {threads.map((t) => (

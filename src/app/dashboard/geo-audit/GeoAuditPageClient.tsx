@@ -269,20 +269,30 @@ export function GeoAuditPageClient() {
       )}
 
       <div id="platform-coverage" className="scroll-mt-24 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Citation score" value={String(workspace.citationScore)} sub="/100" />
+        <StatCard
+          label="Citation score"
+          value={workspace.hasRealAudit ? String(workspace.citationScore) : "—"}
+          sub="/100"
+        />
         <StatCard
           label="Prompts cited"
-          value={`${promptsCited}/${promptTotal}`}
+          value={
+            workspace.hasRealAudit ? `${promptsCited}/${promptTotal}` : "—"
+          }
           sub="AI mentions"
         />
         <StatCard
           label="Platform coverage"
-          value={`${platformCitedCount}/${platformTotal}`}
+          value={
+            workspace.hasRealAudit
+              ? `${platformCitedCount}/${platformTotal}`
+              : "—"
+          }
           sub={periodDisplayLabel(periodFilter)}
         />
       </div>
 
-      {filteredPlatformRows.length > 0 && (
+      {workspace.hasRealAudit && filteredPlatformRows.length > 0 && (
         <Panel title="Platform coverage" className="mt-6">
           <ul className="grid gap-2 sm:grid-cols-2">
             {filteredPlatformRows.map((platform) => (
@@ -314,22 +324,34 @@ export function GeoAuditPageClient() {
         </>
       )}
 
-      {workspace.siteSignals && <GeoAuditSiteSignals signals={workspace.siteSignals} />}
+      {workspace.hasRealAudit && workspace.siteSignals && (
+        <GeoAuditSiteSignals signals={workspace.siteSignals} />
+      )}
       <Panel title="Priority fixes" className="mt-6" id="priority-fixes">
         <p className="mb-4 text-sm text-muted">
-          From your latest live crawl. Schema and meta tags use{" "}
-          <strong className="font-semibold text-ink">Quick Fix</strong> (GEO Snippet or copy-paste).
-          Prompt and content gaps open a <strong className="font-semibold text-ink">Content guide</strong>{" "}
-          — those require publishing new copy on {workspace.domain}. Re-run the audit after deploying.{" "}
-          <Link
-            href="/dashboard/optimizer"
-            className="font-semibold text-accent hover:underline"
-          >
-            Generate all fixes →
-          </Link>
+          {workspace.hasRealAudit
+            ? (
+              <>
+                From your latest live crawl. Schema and meta tags use{" "}
+                <strong className="font-semibold text-ink">Quick Fix</strong> (GEO Snippet or copy-paste).
+                Prompt and content gaps open a <strong className="font-semibold text-ink">Content guide</strong>{" "}
+                — those require publishing new copy on {workspace.domain}. Re-run the audit after deploying.{" "}
+                <Link
+                  href="/dashboard/optimizer"
+                  className="font-semibold text-accent hover:underline"
+                >
+                  Generate all fixes →
+                </Link>
+              </>
+            )
+            : "Priority fixes appear after your first GEO audit — run the scan above to populate this list."}
         </p>
         <ul className="space-y-3 text-sm text-muted">
-          {gaps.length === 0 ? (
+          {!workspace.hasRealAudit ? (
+            <li className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted">
+              No audit yet — run a scan to see prioritized gaps.
+            </li>
+          ) : gaps.length === 0 ? (
             <li className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted">
               No priority gaps from your latest audit.
             </li>

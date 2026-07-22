@@ -34,6 +34,11 @@ export function DashboardNavLink({
           <DashboardIcon icon={item.icon} className="h-[17px] w-[17px]" />
         </span>
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        {item.badge ? (
+          <span className="shrink-0 rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent">
+            {item.badge}
+          </span>
+        ) : null}
       </Link>
     );
   }
@@ -50,6 +55,11 @@ export function DashboardNavLink({
         <DashboardIcon icon={item.icon} className="h-[17px] w-[17px]" />
       </span>
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      {item.badge ? (
+        <span className="shrink-0 rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent">
+          {item.badge}
+        </span>
+      ) : null}
     </Link>
   );
 }
