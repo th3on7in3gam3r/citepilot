@@ -79,23 +79,80 @@ function KpiTile({
   );
 }
 
+/** Decorative empty chart silhouette — no fabricated data series. */
+function ChartSilhouette({ height = 160 }: { height?: number }) {
+  return (
+    <svg
+      viewBox="0 0 320 120"
+      className="mx-auto w-full max-w-md text-border"
+      style={{ height }}
+      aria-hidden
+    >
+      <line x1="24" y1="100" x2="296" y2="100" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="24" y1="20" x2="24" y2="100" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M40 88 C70 88, 80 55, 110 52 S160 70, 190 48 S240 30, 280 36"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.55"
+      />
+      <path
+        d="M40 88 C70 88, 80 55, 110 52 S160 70, 190 48 S240 30, 280 36 L280 100 L40 100 Z"
+        fill="currentColor"
+        opacity="0.08"
+      />
+      <circle cx="110" cy="52" r="3" fill="currentColor" opacity="0.45" />
+      <circle cx="190" cy="48" r="3" fill="currentColor" opacity="0.45" />
+      <circle cx="280" cy="36" r="3" fill="currentColor" opacity="0.45" />
+    </svg>
+  );
+}
+
 function EmptyChart({
   message,
-  actionHref = "/audit",
-  actionLabel = "Run citation audit",
+  actionHref = "/dashboard/geo-audit",
+  actionLabel = "Run GEO audit →",
 }: {
   message: string;
   actionHref?: string;
   actionLabel?: string;
 }) {
   return (
-    <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface/40 px-4 py-8 text-center">
-      <p className="max-w-sm text-sm text-muted">{message}</p>
+    <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface/40 px-4 py-6 text-center">
+      <ChartSilhouette height={100} />
+      <p className="mt-3 max-w-sm text-sm text-muted">{message}</p>
       <Link
         href={actionHref}
-        className="mt-4 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white"
+        className="mt-4 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
       >
         {actionLabel}
+      </Link>
+    </div>
+  );
+}
+
+function PreAuditChartsBanner() {
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/[0.07] via-card to-card p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-base font-bold text-ink">
+          Charts unlock after your first GEO audit
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-muted">
+          Citation trend, platform bars, and prompt coverage use live scan data —
+          not projected placeholders. Run an audit to fill this Chart.js grid.
+        </p>
+        <div className="mt-3 hidden sm:block">
+          <ChartSilhouette height={72} />
+        </div>
+      </div>
+      <Link
+        href="/dashboard/geo-audit"
+        className="inline-flex shrink-0 items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep"
+      >
+        Run GEO audit →
       </Link>
     </div>
   );
@@ -123,9 +180,13 @@ export function AnalyticsChartsGrid({
   const polar = useMemo(() => buildPolarPlatformSegments(workspace), [workspace]);
 
   const auditBadge = kpis.hasRealAudit ? "Live audit" : "Awaiting audit";
+  const showLiveRadar = kpis.hasRealAudit;
+  const showLivePolar = kpis.hasRealAudit && polar.length > 0;
 
   return (
     <div className="space-y-4">
+      {!kpis.hasRealAudit && <PreAuditChartsBanner />}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiTile
           label="Citation score"
@@ -237,11 +298,15 @@ export function AnalyticsChartsGrid({
           badge="Radar"
           className="lg:col-span-6"
         >
-          <DashboardRadarChart
-            labels={radar.labels}
-            values={radar.values}
-            height={280}
-          />
+          {showLiveRadar ? (
+            <DashboardRadarChart
+              labels={radar.labels}
+              values={radar.values}
+              height={280}
+            />
+          ) : (
+            <EmptyChart message="Radar profile fills in after your first citation audit." />
+          )}
         </ChartCard>
 
         <ChartCard
@@ -281,9 +346,13 @@ export function AnalyticsChartsGrid({
           badge="Polar"
           className="lg:col-span-12"
         >
-          <div className="mx-auto max-w-xl">
-            <DashboardPolarAreaChart segments={polar} height={300} />
-          </div>
+          {showLivePolar ? (
+            <div className="mx-auto max-w-xl">
+              <DashboardPolarAreaChart segments={polar} height={300} />
+            </div>
+          ) : (
+            <EmptyChart message="Polar share chart appears after platforms are scored in an audit." />
+          )}
         </ChartCard>
       </div>
     </div>
