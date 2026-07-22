@@ -98,7 +98,7 @@ export async function probeNeonAuthUpstream(): Promise<NeonAuthUpstreamCheck> {
         ok: false,
         status: 404,
         detail:
-          "Neon Auth upstream 404 endpoint not found — re-copy NEON_AUTH_BASE_URL from Console → Auth → Configuration",
+          "Neon Auth upstream 404 endpoint not found — stale/wrong NEON_AUTH_BASE_URL, or Auth not provisioned (re-copy from Console → Auth → Configuration; if Auth host 404s on every path, re-enable Auth)",
       };
     }
     if (res.ok || res.status === 401 || res.status === 403) {

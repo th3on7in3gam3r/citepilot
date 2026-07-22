@@ -48,26 +48,57 @@ Render sets `RENDER=true` and `RENDER_EXTERNAL_URL`. CitePilot treats `RENDER=tr
 App DB can be Supabase; **sign-in still uses Neon Auth**. Console noise:
 
 - `runtime.lastError` — browser extension; ignore
-- `/api/auth/get-session` **404** `endpoint not found` — wrong or stale `NEON_AUTH_BASE_URL` (must end in `/auth` from Console → Auth → Configuration)
-- `/api/auth/sign-in/social` **429** — Neon rate limit or **COMPUTE_QUOTA_EXCEEDED** on the Auth project (upgrade Neon or wait for reset)
+- `/api/auth/get-session` **404** `endpoint not found` — wrong/stale `NEON_AUTH_BASE_URL`, **or Auth not provisioned** on that branch (Auth host answers but every path 404s)
+- `/api/auth/sign-in/social` **429** — Neon rate limit or **COMPUTE_QUOTA_EXCEEDED** on the Auth project (upgrade Neon or wait for reset). App DB on Supabase does **not** fix Neon Auth quota.
 
-Checklist:
+### If Auth URL returns 404 for `/` and `/get-session`
 
-1. Render env: `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` (32+), `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` → redeploy
-2. Neon Auth trusted origins: apex + www + onrender (above)
+The Auth instance is dead or never finished provisioning. Trusted domains alone will not fix this.
+
+1. Neon Console → project that owns Auth (often still a Neon Free project even if app DB moved) → **Auth**
+2. If Auth is missing/disabled: **Enable / provision Auth** on the production branch
+3. If the project shows **COMPUTE_QUOTA_EXCEEDED**: upgrade compute or wait for quota reset, then re-check Auth
+4. Copy the fresh **Auth URL** from Auth → Configuration into Render `NEON_AUTH_BASE_URL` (must end in `/auth`)
+5. Keep `NEON_AUTH_COOKIE_SECRET` unless you intentionally want to invalidate all sessions
+6. Add trusted domains (below), enable Google, set Google redirect to `{NEON_AUTH_BASE_URL}/callback/google`
+7. Redeploy Render, then run the verify curls
+
+### Checklist (healthy Auth)
+
+**Production Render service (apex):** `https://citepilot-flu8.onrender.com` — `srv-d9fr5pn41pts73epechg` (Jerless’s workspace; owns `getcitepilot.com`). Set env here, then Manual Deploy.
+
+**Secondary / probe service:** `https://citepilot.onrender.com` — `srv-d9fmicj7uimc73f0anog` (My Workspace). Useful for Auth smoke tests; Blueprint/`render.yaml` may target this service and does **not** update flu8 Dashboard env by itself.
+
+1. On **flu8** Environment: `NEON_AUTH_BASE_URL` = Auth URL from Neon Console (Aegis Loop / Auth branch, must end in `/auth`), `NEON_AUTH_COOKIE_SECRET` (32+), `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` → redeploy
+   - Dashboard: https://dashboard.render.com/web/srv-d9fr5pn41pts73epechg
+   - `render.yaml` also pins `NEON_AUTH_BASE_URL` + `NEXT_PUBLIC_APP_URL` for Blueprint-managed services (cookie secret stays Dashboard-only)
+2. Neon Auth trusted domains / origins (no trailing slash):
+   - `https://getcitepilot.com`
+   - `https://www.getcitepilot.com`
+   - `https://citepilot-flu8.onrender.com`
+   - `https://citepilot.onrender.com` (secondary probe)
 3. Confirm Google provider is enabled on that Auth branch; Google Cloud redirect URI = `{NEON_AUTH_BASE_URL}/callback/google`
 4. Verify:
    ```bash
+   # Upstream (uses NEON_AUTH_BASE_URL from .env.local):
+   npm run check:neon-auth
+   # Apex (after flu8 env is correct):
    curl -s https://getcitepilot.com/api/auth/get-session
-   # not 404/429
+   # expect null / session JSON — not 404/429
+   # Known-good probe (secondary service):
+   curl -s https://citepilot.onrender.com/api/auth/get-session
    curl -H "X-Health-Secret: $HEALTH_SECRET" https://getcitepilot.com/api/health
    # checks.neonAuth.ok true
    ```
-5. Incognito → `https://getcitepilot.com/auth/sign-in` → Google
+5. Incognito → `https://getcitepilot.com/auth/sign-in` → Google → `/dashboard`
 
 ## Custom domain: getcitepilot.com → Render
 
 Production brand URL is **`https://getcitepilot.com`** (apex). On Render, **www redirects to apex**.
+
+**Production service:** `https://citepilot-flu8.onrender.com` (`srv-d9fr5pn41pts73epechg`) — this is the post-Vercel host that serves the custom domain. Keep `NEON_AUTH_*` and `NEXT_PUBLIC_APP_URL` correct on this service.
+
+**Secondary service:** `https://citepilot.onrender.com` (`srv-d9fmicj7uimc73f0anog`) — Auth may already be healthy here; do not confuse it with apex production.
 
 DNS (GoDaddy after nameservers are GoDaddy’s):
 
@@ -76,8 +107,8 @@ DNS (GoDaddy after nameservers are GoDaddy’s):
 | A | @ | `216.24.57.1` (Render) |
 | CNAME | www | `citepilot-flu8.onrender.com` |
 
-1. **Render** → Custom Domains → `getcitepilot.com` (+ www as redirect to apex).
-2. **Render env:** `NEXT_PUBLIC_APP_URL=https://getcitepilot.com`
+1. **Render (flu8)** → Custom Domains → `getcitepilot.com` (+ www as redirect to apex).
+2. **Render env (flu8):** `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` + Neon Auth vars above
 3. Cron `APP_URL=https://getcitepilot.com`
 4. Neon Auth trusted domains as in the Neon Auth section above
 5. Stripe / GSC callbacks on `https://getcitepilot.com/...`

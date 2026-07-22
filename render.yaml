@@ -4,9 +4,10 @@
 # After first deploy:
 # 1. Set all sync:false env vars in the Dashboard (or Blueprint sync).
 # 2. Attach custom domain getcitepilot.com (www redirects to apex) — see DEPLOY.md
-# 3. NEXT_PUBLIC_APP_URL=https://getcitepilot.com
-# 4. Neon Auth: NEON_AUTH_BASE_URL must be Console Auth URL (…/auth);
+# 3. NEXT_PUBLIC_APP_URL=https://getcitepilot.com (Blueprint sets this)
+# 4. Neon Auth: NEON_AUTH_BASE_URL is set in Blueprint from Console Auth URL (…/auth);
 #    trusted origins: https://getcitepilot.com, https://www.getcitepilot.com, onrender URL
+#    Keep NEON_AUTH_COOKIE_SECRET in Dashboard only (do not rotate casually).
 # 5. Stripe / Resend / GSC callbacks at https://getcitepilot.com
 # 6. Cron jobs: APP_URL=https://getcitepilot.com with Authorization: Bearer $CRON_SECRET.
 
@@ -17,7 +18,7 @@ services:
     plan: starter
     region: oregon
     branch: main
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install --production=false && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -26,15 +27,16 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_APP_URL
-        sync: false
+        value: https://getcitepilot.com
       - key: DATABASE_URL
         sync: false
       - key: DATABASE_URL_POOLED
         sync: false
       - key: DATABASE_URL_DIRECT
         sync: false
+      # Public Auth API URL (not a secret). Keep in sync with Neon Console → Auth → Configuration.
       - key: NEON_AUTH_BASE_URL
-        sync: false
+        value: https://ep-delicate-lab-atd81pa3.neonauth.c-9.us-east-1.aws.neon.tech/neondb/auth
       - key: NEON_AUTH_COOKIE_SECRET
         sync: false
       - key: CMS_ENCRYPTION_KEY

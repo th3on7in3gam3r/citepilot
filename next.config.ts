@@ -1,13 +1,25 @@
 import { withSentryConfig } from "@sentry/nextjs";
-import bundleAnalyzer from "@next/bundle-analyzer";
 import createNextIntlPlugin from "next-intl/plugin";
+import { createRequire } from "node:module";
 import type { NextConfig } from "next";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+const require = createRequire(import.meta.url);
 
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
+function withOptionalBundleAnalyzer(config: NextConfig): NextConfig {
+  if (process.env.ANALYZE !== "true") return config;
+  try {
+    const bundleAnalyzer = require("@next/bundle-analyzer") as (
+      opts: { enabled: boolean },
+    ) => (c: NextConfig) => NextConfig;
+    return bundleAnalyzer({ enabled: true })(config);
+  } catch {
+    console.warn(
+      "[next.config] @next/bundle-analyzer not installed — skipping ANALYZE",
+    );
+    return config;
+  }
+}
 
 const marketingCacheControl =
   "public, s-maxage=3600, stale-while-revalidate=86400";
@@ -207,9 +219,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(withBundleAnalyzer(withNextIntl(nextConfig)), {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  silent: !process.env.CI,
-  widenClientFileUpload: true,
-});
+export default withSentryConfig(
+  withOptionalBundleAnalyzer(withNextIntl(nextConfig)),
+  {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: !process.env.CI,
+    widenClientFileUpload: true,
+  },
+);
