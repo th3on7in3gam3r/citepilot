@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  buildWorkspaceSnapshot,
   type WorkspaceSnapshot,
 } from "@/lib/dashboard";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
@@ -76,14 +75,22 @@ export function useWorkspace() {
 
       const list = await loadList();
       const first = list?.workspaces[0];
-      if (first) {
-        storeWorkspaceId(first.id);
-        setWorkspace(normalizeSnapshot(first.workspace, first.id));
-        return;
+      if (first?.id) {
+        if (first.workspace) {
+          storeWorkspaceId(first.id);
+          setWorkspace(normalizeSnapshot(first.workspace, first.id));
+          return;
+        }
+        const fromList = await fetchWorkspace(first.id);
+        if (fromList) {
+          storeWorkspaceId(first.id);
+          setWorkspace(normalizeSnapshot(fromList, first.id));
+          return;
+        }
       }
 
       const fallback = await fetchDefaultWorkspace();
-      if (fallback) {
+      if (fallback?.workspace) {
         storeWorkspaceId(fallback.id);
         setWorkspace(normalizeSnapshot(fallback.workspace, fallback.id));
         return;
@@ -94,7 +101,7 @@ export function useWorkspace() {
         if (raw) {
           const answers = JSON.parse(raw) as OnboardingAnswers;
           const created = await createWorkspaceFromOnboarding(answers);
-          if (created) {
+          if (created?.workspace) {
             setWorkspace(normalizeSnapshot(created.workspace, created.id));
             sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
             const prompts = [answers.buyerQuestion].filter(Boolean);
@@ -108,7 +115,10 @@ export function useWorkspace() {
             await loadList();
             return;
           }
-          setWorkspace(buildWorkspaceSnapshot(answers));
+          setLoadError(
+            "We couldn’t create your workspace from saved setup answers. Continue setup to try again.",
+          );
+          setWorkspace(null);
           return;
         }
       } catch {

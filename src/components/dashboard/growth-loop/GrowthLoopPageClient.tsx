@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useBilling } from "@/contexts/BillingContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useToast } from "@/components/notifications/ToastProvider";
@@ -196,18 +197,7 @@ export function GrowthLoopPageClient() {
 
   if (!workspace || !workspaceId) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-        <p className="font-display text-lg font-bold text-ink">Select a workspace</p>
-        <p className="mt-2 text-sm text-muted">
-          Create or pick a workspace to activate Growth Loop.
-        </p>
-        <Link
-          href="/dashboard/workspaces"
-          className="mt-4 inline-block rounded-full bg-ink px-5 py-2 text-sm font-semibold text-white"
-        >
-          Workspaces
-        </Link>
-      </div>
+      <DashboardNoWorkspaceEmpty description="Create or pick a workspace to activate Growth Loop." />
     );
   }
 

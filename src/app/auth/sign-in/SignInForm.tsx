@@ -12,7 +12,7 @@ import { signInWithEmail } from "./actions";
 
 export function SignInForm() {
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") ?? searchParams.get("redirect") ?? "/dashboard";
+  const from = searchParams.get("from") ?? searchParams.get("redirect") ?? "/start";
   const oauthError = searchParams.get("error") === "google";
   const [state, formAction, pending] = useActionState(signInWithEmail, null);
 
@@ -27,7 +27,7 @@ export function SignInForm() {
       </p>
 
       <div className="mt-6">
-        <GoogleSignInButton variant="light" />
+        <GoogleSignInButton variant="light" callbackPath="/start" />
       </div>
 
       <AuthDivider />

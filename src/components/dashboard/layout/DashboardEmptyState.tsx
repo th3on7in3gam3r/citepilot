@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+const secondaryClass =
+  "inline-flex rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent/40";
+
 type Props = {
   title: string;
   description: string;
@@ -8,6 +11,8 @@ type Props = {
   primaryLabel: string;
   secondaryHref?: string;
   secondaryLabel?: string;
+  /** When set, secondary is a button (e.g. open workspace wizard) instead of a link. */
+  onSecondaryClick?: () => void;
   footer?: ReactNode;
   icon?: ReactNode;
 };
@@ -20,9 +25,14 @@ export function DashboardEmptyState({
   primaryLabel,
   secondaryHref,
   secondaryLabel,
+  onSecondaryClick,
   footer,
   icon,
 }: Props) {
+  const showSecondary =
+    Boolean(secondaryLabel) &&
+    (Boolean(onSecondaryClick) || Boolean(secondaryHref));
+
   return (
     <div className="rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/[0.06] via-white to-white p-8 text-center shadow-sm md:p-12">
       <div
@@ -44,13 +54,20 @@ export function DashboardEmptyState({
         >
           {primaryLabel}
         </Link>
-        {secondaryHref && secondaryLabel ? (
-          <Link
-            href={secondaryHref}
-            className="inline-flex rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent/40"
-          >
-            {secondaryLabel}
-          </Link>
+        {showSecondary && secondaryLabel ? (
+          onSecondaryClick ? (
+            <button
+              type="button"
+              onClick={onSecondaryClick}
+              className={secondaryClass}
+            >
+              {secondaryLabel}
+            </button>
+          ) : secondaryHref ? (
+            <Link href={secondaryHref} className={secondaryClass}>
+              {secondaryLabel}
+            </Link>
+          ) : null
         ) : null}
       </div>
       {footer ? <div className="mt-6">{footer}</div> : null}

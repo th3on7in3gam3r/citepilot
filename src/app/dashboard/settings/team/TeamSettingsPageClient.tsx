@@ -1,13 +1,14 @@
 "use client";
 
 import { WorkspaceTeamPanel } from "@/components/dashboard/workspaces/WorkspaceTeamPanel";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { authClient } from "@/lib/auth/client";
 import { getStoredWorkspaceId } from "@/lib/client/api";
 import { useEffect, useState } from "react";
 
 export function TeamSettingsPageClient() {
-  const { workspace, workspaces } = useWorkspaceContext();
+  const { workspace, workspaces, ready } = useWorkspaceContext();
   const workspaceId = workspace?.workspaceId ?? workspace?.id ?? getStoredWorkspaceId();
   const active = workspaces.find((w) => w.id === workspaceId);
   const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
@@ -18,11 +19,13 @@ export function TeamSettingsPageClient() {
     });
   }, []);
 
+  if (!ready) {
+    return <div className="h-40 animate-pulse rounded-2xl bg-surface" />;
+  }
+
   if (!workspaceId || !active) {
     return (
-      <p className="text-sm text-muted">
-        Select a workspace from the switcher to manage its team.
-      </p>
+      <DashboardNoWorkspaceEmpty description="Create or select a workspace to manage its team." />
     );
   }
 

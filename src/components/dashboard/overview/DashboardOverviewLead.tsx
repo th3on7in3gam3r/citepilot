@@ -44,8 +44,11 @@ export function DashboardOverviewLead({ workspace }: { workspace: WorkspaceSnaps
           {!workspace.hasRealAudit && (
             <p className="mt-1 text-xs text-muted">
               Run a GEO audit for measured platform data.{" "}
-              <Link href="/audit" className="font-semibold text-accent hover:underline">
-                Free 60-second audit →
+              <Link
+                href="/dashboard/geo-audit"
+                className="font-semibold text-accent hover:underline"
+              >
+                Open GEO audit →
               </Link>
             </p>
           )}

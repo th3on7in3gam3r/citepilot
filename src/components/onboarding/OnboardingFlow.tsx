@@ -372,16 +372,10 @@ export function OnboardingFlow({
               {step === 2 && (
                 <div className="space-y-8">
                   <div>
-                    <label htmlFor="onboarding-description" className="mb-2 flex items-center justify-between">
+                    <label htmlFor="onboarding-description" className="mb-2 block">
                       <span className="text-sm font-bold text-ink">
                         Business description
                       </span>
-                      <button
-                        type="button"
-                        className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-ink transition hover:border-accent/40 hover:bg-surface"
-                      >
-                        <span className="text-accent" aria-hidden>✦</span> Generate with AI
-                      </button>
                     </label>
                     <textarea
                       id="onboarding-description"

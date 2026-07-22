@@ -7,6 +7,7 @@ import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
 import { OptimizerFixCard } from "@/components/dashboard/optimizer/OptimizerFixCard";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useBilling } from "@/contexts/BillingContext";
 import { getStoredWorkspaceId } from "@/lib/client/api";
 import type { OptimizerFix, OptimizerPlan } from "@/lib/optimizer/types";
@@ -75,7 +76,17 @@ export function OptimizerPageClient() {
     }
   }
 
-  if (!ready || !workspace || !billingReady) {
+  if (!ready) {
+    return <div className="h-96 animate-pulse rounded-2xl bg-white/5" />;
+  }
+
+  if (!workspace) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace and run an audit before generating Site Optimizer fixes." />
+    );
+  }
+
+  if (!billingReady) {
     return <div className="h-96 animate-pulse rounded-2xl bg-white/5" />;
   }
 

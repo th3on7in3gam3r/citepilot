@@ -10,6 +10,7 @@ import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { useBilling } from "@/contexts/BillingContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { cleanDomainInput, domainFormatStatus } from "@/lib/onboarding/domain-validation";
 import type { CompetitorIntelligence } from "@/lib/competitors/intelligence";
 import type { CompetitorLimits } from "@/lib/competitors/limits";
@@ -106,7 +107,14 @@ export function CompetitorsPageClient() {
     setFixOpen(true);
   }
 
-  if (!ready || !workspace) return null;
+  if (!ready) {
+    return <div className="h-96 animate-pulse rounded-2xl bg-surface" />;
+  }
+  if (!workspace) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to track competitors and citation gaps." />
+    );
+  }
 
   const tracked = workspace.competitors;
   const canAdd = limits?.canAdd ?? false;

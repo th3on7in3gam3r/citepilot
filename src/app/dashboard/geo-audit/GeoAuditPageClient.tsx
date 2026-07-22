@@ -12,6 +12,7 @@ import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
 import { ShareAuditResultsCard } from "@/components/dashboard/ShareAuditResultsCard";
 import { AuditFeedbackSurvey } from "@/components/feedback/AuditFeedbackSurvey";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { getStoredWorkspaceId, runAudit } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { productFeatures } from "@/lib/features";
@@ -42,13 +43,6 @@ import { platformRowsFromWorkspace } from "@/lib/dashboard-data";
 
 const feature = productFeatures.find((f) => f.id === "geo-audit")!;
 
-const fallbackGaps = [
-  "Missing FAQPage schema on key landing pages",
-  "No concise answer capsule (40–60 words) above the fold",
-  "Weak entity signals on review and community sites",
-  "Competitor cited on more platforms for your top prompt",
-];
-
 export function GeoAuditPageClient() {
   const { workspace, ready, refresh } = useWorkspaceContext();
   const toast = useToast();
@@ -77,9 +71,16 @@ export function GeoAuditPageClient() {
 
   useCiteStatusCelebration(workspace);
 
-  if (!ready || !workspace) return null;
+  if (!ready) {
+    return <div className="h-96 animate-pulse rounded-2xl bg-surface" />;
+  }
+  if (!workspace) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to run GEO audits and see platform citation coverage." />
+    );
+  }
 
-  const gaps = workspace.gaps.length > 0 ? workspace.gaps : fallbackGaps;
+  const gaps = workspace.gaps;
   const scanDelta = workspace.scanDelta ?? emptyScanDeltaSummary;
   const promptsCited =
     workspace.promptResults?.filter((p) => p.cited).length ?? 0;
@@ -328,7 +329,12 @@ export function GeoAuditPageClient() {
           </Link>
         </p>
         <ul className="space-y-3 text-sm text-muted">
-          {gaps.map((g) => (
+          {gaps.length === 0 ? (
+            <li className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted">
+              No priority gaps from your latest audit.
+            </li>
+          ) : (
+            gaps.map((g) => (
             <li key={g} className="rounded-xl bg-surface px-4 py-3">
               <div className="flex items-start justify-between gap-3 group/item mb-1">
                 <div className="flex gap-3">
@@ -355,7 +361,8 @@ export function GeoAuditPageClient() {
                 />
               )}
             </li>
-          ))}
+            ))
+          )}
         </ul>
       </Panel>
       {workspace.competitors.length > 0 && (

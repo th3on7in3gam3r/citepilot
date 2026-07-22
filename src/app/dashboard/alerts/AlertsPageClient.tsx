@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 type AlertEvent = {
@@ -96,7 +97,15 @@ export function AlertsPageClient() {
     }));
   }, [workspaces, workspace]);
 
-  if (!ready) return null;
+  if (!ready) {
+    return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
+  }
+
+  if (!workspace && workspaces.length === 0) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to view Slack, webhook, and email alert history." />
+    );
+  }
 
   return (
     <>

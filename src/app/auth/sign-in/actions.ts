@@ -26,7 +26,7 @@ export async function signInWithEmail(
   }
 
   const from = formData.get("from") as string | null;
-  const destination = from && from.startsWith("/") ? from : "/dashboard";
+  const destination = from && from.startsWith("/") ? from : "/start";
 
   const session = await getRealSessionUser();
   if (

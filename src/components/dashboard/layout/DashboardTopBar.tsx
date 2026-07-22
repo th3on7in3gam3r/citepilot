@@ -9,6 +9,7 @@ import { WorkspaceSwitcher } from "@/components/dashboard/WorkspaceSwitcher";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useUpgradeModalOptional } from "@/contexts/UpgradeModalContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { dashboardBreadcrumbs } from "@/lib/dashboard-breadcrumbs";
 import { authClient } from "@/lib/auth/client";
 
@@ -34,10 +35,12 @@ export function DashboardTopBar({
   title?: string;
 }) {
   const pathname = usePathname();
-  const { ready } = useWorkspaceContext();
+  const { ready, workspace } = useWorkspaceContext();
   const { openCopilot } = useCopilot();
   const upgradeModal = useUpgradeModalOptional();
   const [showAddSiteForm, setShowAddSiteForm] = useState(false);
+  const { openWizard } = useWorkspaceSwitcher();
+  const hasWorkspace = Boolean(workspace?.workspaceId ?? workspace?.id);
   const [initial, setInitial] = useState<string | null>(null);
   const [userLabel, setUserLabel] = useState<string | null>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -139,17 +142,32 @@ export function DashboardTopBar({
             </div>
 
             <div className="hidden items-center gap-1 rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] p-1 lg:flex">
-              <Link
-                href="/dashboard/geo-audit"
-                data-tour="run-scan"
-                className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-ink"
-              >
-                Run audit
-              </Link>
+              {hasWorkspace ? (
+                <Link
+                  href="/dashboard/geo-audit"
+                  data-tour="run-scan"
+                  className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-ink"
+                >
+                  Run audit
+                </Link>
+              ) : (
+                <span
+                  className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted/50"
+                  title="Create a workspace first"
+                >
+                  Run audit
+                </span>
+              )}
               <span className="h-4 w-px bg-[var(--dashboard-sidebar-border)]" aria-hidden />
               <button
                 type="button"
-                onClick={() => setShowAddSiteForm(true)}
+                onClick={() => {
+                  if (hasWorkspace) {
+                    setShowAddSiteForm(true);
+                  } else {
+                    openWizard();
+                  }
+                }}
                 className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-ink"
               >
                 Add site

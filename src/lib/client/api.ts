@@ -71,7 +71,7 @@ export type WorkspaceListResponse = {
     status?: "active" | "paused";
     archivedAt?: string | null;
     scoreDeltaWeek?: number | null;
-    workspace: WorkspaceSnapshotResponse;
+    workspace?: WorkspaceSnapshotResponse;
   }[];
   limits: WorkspaceLimits;
 };
@@ -89,8 +89,13 @@ export async function fetchDefaultWorkspace(): Promise<{
 } | null> {
   const list = await fetchWorkspacesList();
   const first = list?.workspaces[0];
-  if (!first) return null;
-  return { id: first.id, workspace: first.workspace };
+  if (!first?.id) return null;
+  if (first.workspace) {
+    return { id: first.id, workspace: first.workspace };
+  }
+  const full = await fetchWorkspace(first.id);
+  if (!full) return null;
+  return { id: first.id, workspace: full };
 }
 
 export async function createClientWorkspace(input: {

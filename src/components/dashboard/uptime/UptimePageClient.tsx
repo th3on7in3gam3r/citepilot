@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type {
   AuthType,
@@ -228,6 +229,16 @@ export function UptimePageClient() {
       credentials: "include",
     });
     if (res.ok) await load();
+  }
+
+  if (!ready) {
+    return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
+  }
+
+  if (!workspaceId) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to monitor endpoints, SSL, and cron health." />
+    );
   }
 
   return (

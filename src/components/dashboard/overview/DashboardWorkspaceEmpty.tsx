@@ -22,23 +22,26 @@ export function DashboardWorkspaceEmpty({
   return (
     <DashboardEmptyState
       title="Your citation workspace is ready"
-      description="Add your first money prompts to start tracking where AI cites you."
-      primaryHref="/dashboard/content?section=targeting"
-      primaryLabel="Add your first prompt →"
-      secondaryHref={isFleet ? "/dashboard/settings#fleet-import" : undefined}
-      secondaryLabel={isFleet ? "Import prompts from CSV" : undefined}
+      description="Run your first GEO audit to measure where AI cites you. Then add money prompts to track ongoing coverage."
+      primaryHref="/dashboard/geo-audit"
+      primaryLabel="Run first GEO audit →"
+      secondaryHref="/dashboard/content?section=targeting"
+      secondaryLabel="Add prompts"
       footer={
         <p className="text-xs text-muted">
           Domain:{" "}
           <span className="font-medium text-ink">{workspace.domain}</span>
-          {" · "}
-          <Link
-            href="/dashboard/content?section=targeting"
-            data-tour="prompts"
-            className="font-medium text-accent hover:text-accent-deep"
-          >
-            Open targeting
-          </Link>
+          {isFleet ? (
+            <>
+              {" · "}
+              <Link
+                href="/dashboard/settings#fleet-import"
+                className="font-medium text-accent hover:text-accent-deep"
+              >
+                Import prompts from CSV
+              </Link>
+            </>
+          ) : null}
         </p>
       }
     />

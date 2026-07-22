@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { AnalyticsDashboard } from "@/components/dashboard/AnalyticsDashboard";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { productFeatures } from "@/lib/features";
 
@@ -57,21 +58,7 @@ export function AnalyticsPageClient() {
 
   if (!workspace) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-        <p className="font-display text-lg font-bold text-ink">
-          Sign in to open your analytics workspace
-        </p>
-        <p className="mt-2 text-sm text-muted">
-          Connect a workspace to view LLM citation benchmarks, competitor share of
-          model, and Google Search Console trends for your domain.
-        </p>
-        <Link
-          href="/auth/sign-in?from=/dashboard/analytics"
-          className="mt-6 inline-block rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white"
-        >
-          Sign in →
-        </Link>
-      </div>
+      <DashboardNoWorkspaceEmpty description="Connect a workspace to view LLM citation benchmarks, competitor share of model, and Google Search Console trends." />
     );
   }
 

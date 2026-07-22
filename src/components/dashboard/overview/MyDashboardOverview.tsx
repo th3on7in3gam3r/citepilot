@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PlatformScanBadge } from "@/components/dashboard/PlatformScanBadge";
 import { effectInit } from "@/lib/react/effect-init";
-import { SignOutButton } from "@/components/auth/SignOutButton";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { getFixActionLabel } from "@/lib/geo/fixes";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
 import { DashboardEmptyState } from "@/components/dashboard/layout/DashboardEmptyState";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { DashboardMetricTile } from "@/components/dashboard/layout/DashboardMetricTile";
 import {
   DashboardTable,
@@ -63,6 +63,7 @@ import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import {
   auditStatus,
   citationTrendStatus,
+  platformCoverageStatus,
 } from "@/lib/dashboard-data-status";
 import type { PromptRow } from "@/lib/features";
 import {
@@ -74,24 +75,6 @@ function formatCompact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
-}
-
-function DashboardNoWorkspace() {
-  return (
-    <DashboardEmptyState
-      title="No workspace yet"
-      description="Add a site or complete setup to see citation data here — nothing below is real until you connect a domain."
-      primaryHref="/start"
-      primaryLabel="Start setup →"
-      secondaryHref="/dashboard/settings"
-      secondaryLabel="Add site in settings"
-      footer={
-        <div className="border-t border-border pt-6">
-          <SignOutButton className="text-sm font-semibold text-muted hover:text-ink disabled:opacity-60" />
-        </div>
-      }
-    />
-  );
 }
 
 export function MyDashboardOverview({
@@ -128,7 +111,7 @@ export function MyDashboardOverview({
   }
 
   if (!workspace) {
-    return <DashboardNoWorkspace />;
+    return <DashboardNoWorkspaceEmpty />;
   }
 
   return <MyDashboardOverviewContent workspace={workspace} showAgencyBackLink={showAgencyBackLink} />;
@@ -196,31 +179,22 @@ function MyDashboardOverviewContent({
     () => filterHistoryByPeriod(history, periodFilter),
     [history, periodFilter],
   );
-  const historyValues = useMemo(
-    () =>
-      filteredHistory.length > 0
-        ? filteredHistory.map((h) => Math.round(h.visibilityIndex))
-        : [
-            workspace.citationScore - 8,
-            workspace.citationScore - 4,
-            workspace.citationScore,
-          ],
-    [filteredHistory, workspace.citationScore],
-  );
+  const historyValues = useMemo(() => {
+    if (filteredHistory.length === 0) return [];
+    return filteredHistory.map((h) => Math.round(h.visibilityIndex));
+  }, [filteredHistory]);
 
   const historyLabels = useMemo(() => {
-    if (filteredHistory.length > 0) {
-      return filteredHistory.map((point, index, all) => {
-        const parsed = new Date(point.recordedAt);
-        if (Number.isNaN(parsed.getTime())) return `Audit ${index + 1}`;
-        return parsed.toLocaleDateString("en-US", {
-          month: "short",
-          day: all.length <= 6 ? "numeric" : undefined,
-        });
+    if (filteredHistory.length === 0) return [];
+    return filteredHistory.map((point, index, all) => {
+      const parsed = new Date(point.recordedAt);
+      if (Number.isNaN(parsed.getTime())) return `Audit ${index + 1}`;
+      return parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: all.length <= 6 ? "numeric" : undefined,
       });
-    }
-    return historyValues.map((_, i) => `W${i + 1}`);
-  }, [filteredHistory, historyValues]);
+    });
+  }, [filteredHistory]);
 
   const gscDaily = useMemo(
     () => filterDailyByPeriod(gsc?.daily ?? [], periodFilter),
@@ -238,10 +212,11 @@ function MyDashboardOverviewContent({
 
   const auditDataStatus = auditStatus(workspace);
   const trendDataStatus = citationTrendStatus(workspace);
+  const platformDataStatus = platformCoverageStatus(workspace);
 
   const citedPromptsCount = filteredPromptRowsAll.filter((r) => r.cited).length;
   const trackedCount = workspace.promptsTracked;
-  const gapsCount = workspace.gaps.length || 3;
+  const gapsCount = workspace.gaps.length;
 
   const citedPlatformNames = useMemo(
     () => filteredPlatformRows.filter((p) => p.cited).map((p) => p.name),
@@ -255,17 +230,7 @@ function MyDashboardOverviewContent({
 
   const firstTrackedQuery = workspace.buyerQuestion || "best tool for saas";
 
-  const gapsList = useMemo(
-    () =>
-      workspace.gaps.length > 0
-        ? workspace.gaps
-        : [
-            "Missing FAQPage schema — high-impact for AI answer extraction",
-            "No Organization schema — weakens brand entity recognition",
-            "Thin homepage content (<300 words) — add an answer capsule above the fold",
-          ],
-    [workspace.gaps]
-  );
+  const gapsList = workspace.gaps;
 
   const keywordBuckets = useMemo(() => {
     return [
@@ -274,9 +239,8 @@ function MyDashboardOverviewContent({
         href: "/dashboard/analytics#money-prompts",
         value: citedPromptsCount,
         delta: `${Math.round((citedPromptsCount / Math.max(1, trackedCount)) * 100)}% rate`,
-        spark: [2, 3, 4, 5, citedPromptsCount],
         color: "#0ea5e9",
-        theme: "sky",
+        theme: "sky" as const,
         info: citedPromptsCount > 0 ? (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
             Cited on: <strong className="text-sky-600 font-semibold">&quot;{citedPromptsList[0]}&quot;</strong>
@@ -290,9 +254,8 @@ function MyDashboardOverviewContent({
         href: "/dashboard/geo-audit#platform-coverage",
         value: citedCount,
         delta: `${citedCount}/${PLATFORMS.length} LLMs`,
-        spark: [1, 2, citedCount, citedCount, citedCount],
         color: "#8b5cf6",
-        theme: "violet",
+        theme: "violet" as const,
         info: citedCount > 0 ? (
           <div className="flex flex-wrap gap-1">
             {citedPlatformNames.slice(0, 3).map((name) => (
@@ -318,9 +281,8 @@ function MyDashboardOverviewContent({
         href: "/dashboard/content?section=targeting",
         value: trackedCount,
         delta: "Keywords",
-        spark: [1, 2, 3, trackedCount, trackedCount],
         color: "#10b981",
-        theme: "emerald",
+        theme: "emerald" as const,
         info: (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
             Target: <strong className="text-emerald-600 font-semibold">&quot;{firstTrackedQuery}&quot;</strong>
@@ -331,14 +293,15 @@ function MyDashboardOverviewContent({
         label: "Gaps",
         href: "/dashboard/geo-audit#priority-fixes",
         value: gapsCount,
-        delta: "Needs fix",
-        spark: [5, 4, 3, 2, gapsCount],
+        delta: gapsCount > 0 ? "Needs fix" : "None found",
         color: "#f43f5e",
-        theme: "rose",
-        info: (
+        theme: "rose" as const,
+        info: gapsCount > 0 ? (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
             Fix: <strong className="text-rose-600 font-semibold">{gapsList[0]}</strong>
           </span>
+        ) : (
+          <span className="text-slate-400 italic font-normal">No GEO gaps from your latest audit</span>
         ),
       },
     ];
@@ -471,9 +434,7 @@ function MyDashboardOverviewContent({
                 value={formatCompact(b.value)}
                 delta={b.delta}
                 href={b.href}
-                theme={b.theme as "sky" | "violet" | "emerald" | "rose"}
-                spark={b.spark}
-                sparkColor={b.color}
+                theme={b.theme}
                 footer={b.info}
               />
             ))}
@@ -562,14 +523,18 @@ function MyDashboardOverviewContent({
 
       {/* Row 2 */}
       <div className="grid gap-5 lg:grid-cols-2">
-        <DashboardCard title="Platform overview" dataStatus={auditDataStatus}>
+        <DashboardCard title="Platform overview" dataStatus={platformDataStatus}>
           <div className="flex flex-wrap items-center justify-around gap-4 border-b border-border pb-5">
             <DashboardRingChart
               value={workspace.domainRating || workspace.citationScore}
               label="DR"
             />
             <DashboardRingChart
-              value={workspace.visibilityScore || citedCount * 12}
+              value={
+                workspace.visibilityScore > 0
+                  ? workspace.visibilityScore
+                  : Math.round((citedCount / platformDenominator) * 100)
+              }
               label="Visibility"
             />
             <DashboardRingChart
@@ -584,14 +549,18 @@ function MyDashboardOverviewContent({
             <RosenHorizontalBarChart
               data={filteredPlatformRows.map((p) => ({
                 label: p.name,
-                // Use real share if available; otherwise derive a stable value from citation status
-                value: p.share != null ? p.share : p.cited ? 65 : 12,
+                value: typeof p.share === "number" ? p.share : p.cited ? 100 : 0,
                 color: p.cited ? "#6366f1" : "#cbd5e1",
               }))}
               maxValue={100}
               formatValue={(v) => `${v}%`}
               height={Math.max(1, filteredPlatformRows.length) * 30}
             />
+            {filteredPlatformRows.every((p) => p.share == null) ? (
+              <p className="mt-2 text-[11px] text-muted">
+                Share % appears after audits that return platform share data. Bars show cited vs missing for now.
+              </p>
+            ) : null}
           </div>
         </DashboardCard>
 
@@ -599,7 +568,7 @@ function MyDashboardOverviewContent({
           title="Sessions & engagement"
           action="View full report"
           actionHref="/dashboard/analytics"
-          dataStatus={auditDataStatus}
+          dataStatus={trendDataStatus}
         >
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
             {[
@@ -617,11 +586,17 @@ function MyDashboardOverviewContent({
             ))}
           </div>
           <div className="mt-4">
-            <DashboardLineChart
-              labels={historyLabels}
-              series={[{ label: "Citations", values: historyValues, color: CHART_COLORS.primary }]}
-              height={96}
-            />
+            {historyValues.length >= 2 ? (
+              <DashboardLineChart
+                labels={historyLabels}
+                series={[{ label: "Citations", values: historyValues, color: CHART_COLORS.primary }]}
+                height={96}
+              />
+            ) : (
+              <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
+                Not enough history yet — run another audit to see citation trends.
+              </p>
+            )}
           </div>
         </DashboardCard>
       </div>
@@ -673,27 +648,39 @@ function MyDashboardOverviewContent({
           <GscConnectCard workspaceId={workspaceId} />
         )}
 
-        <DashboardCard title="Visibility" dataStatus={auditDataStatus}>
+        <DashboardCard
+          title="Visibility"
+          dataStatus={
+            workspace.visibilityScore > 0 || historyValues.length >= 2
+              ? trendDataStatus
+              : "estimated"
+          }
+        >
           <div className="flex items-start justify-between">
             <div>
               <p className="text-3xl font-bold text-ink">
-                {(workspace.visibilityScore || workspace.citationScore * 0.4).toFixed(1)}%
+                {workspace.visibilityScore > 0
+                  ? `${workspace.visibilityScore.toFixed(1)}%`
+                  : "—"}
                 <span className="ml-1 text-sm font-medium text-accent">
-                  {workspace.weeklyLiftAvailable ? workspace.weeklyLift : "—"}
+                  {workspace.weeklyLiftAvailable ? workspace.weeklyLift : ""}
                 </span>
               </p>
               <p className="mt-1 text-xs text-muted">AI answer share</p>
             </div>
-            <span className="rounded-full bg-accent/10 px-2 py-1 text-[11px] font-semibold text-accent-deep">
-              Rank ↑ {Math.max(1, 30 - workspace.citationScore / 3)}
-            </span>
           </div>
           <div className="mt-4 rounded-xl bg-gradient-to-t from-accent/10 to-transparent p-2">
-            <DashboardLineChart
-              labels={historyLabels}
-              series={[{ label: "Visibility", values: historyValues, color: CHART_COLORS.secondary }]}
-              height={88}
-            />
+            {historyValues.length >= 2 ? (
+              <DashboardLineChart
+                labels={historyLabels}
+                series={[{ label: "Visibility", values: historyValues, color: CHART_COLORS.secondary }]}
+                height={88}
+              />
+            ) : (
+              <p className="px-2 py-6 text-center text-sm text-muted">
+                Not enough history yet
+              </p>
+            )}
           </div>
         </DashboardCard>
       </div>
@@ -705,7 +692,7 @@ function MyDashboardOverviewContent({
           title="Platform presence"
           action="View full report"
           actionHref="/dashboard/geo-audit"
-          dataStatus={auditDataStatus}
+          dataStatus={platformDataStatus}
         >
           <div className="mb-3 flex gap-3 text-[11px] text-muted">
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accent" /> Cited</span>
@@ -717,7 +704,11 @@ function MyDashboardOverviewContent({
               <div className="flex h-2 flex-1 overflow-hidden rounded-full bg-border">
                 <div
                   className={`h-full ${p.cited ? "bg-accent" : "bg-[#cbd5e1]"}`}
-                  style={{ width: p.cited ? `${p.share ?? 70}%` : "100%" }}
+                  style={{
+                    width: p.cited
+                      ? `${typeof p.share === "number" ? p.share : 100}%`
+                      : "100%",
+                  }}
                 />
               </div>
             </div>
@@ -754,27 +745,33 @@ function MyDashboardOverviewContent({
           title="Priority GEO gaps"
           action="GEO Audit"
           actionHref="/dashboard/geo-audit"
-          dataStatus={workspace.gaps.length > 0 ? auditDataStatus : "demo"}
+          dataStatus={workspace.gaps.length > 0 ? auditDataStatus : "live"}
         >
-          <ul className="space-y-3 text-xs text-slate-600">
-            {gapsList.slice(0, 4).map((gap, idx) => (
-              <li key={idx} className="flex items-start justify-between gap-3 group/item">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100">
-                    {idx + 1}
-                  </span>
-                  <span className="leading-relaxed text-slate-700">{gap}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenFix(gap)}
-                  className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100/50 rounded-lg hover:bg-rose-100/70 hover:border-rose-200 transition duration-150 cursor-pointer opacity-70 group-hover/item:opacity-100"
-                >
-                  {getFixActionLabel(gap, workspace.domain)} ✦
-                </button>
-              </li>
-            ))}
-          </ul>
+          {gapsList.length > 0 ? (
+            <ul className="space-y-3 text-xs text-slate-600">
+              {gapsList.slice(0, 4).map((gap, idx) => (
+                <li key={idx} className="flex items-start justify-between gap-3 group/item">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100">
+                      {idx + 1}
+                    </span>
+                    <span className="leading-relaxed text-slate-700">{gap}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenFix(gap)}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100/50 rounded-lg hover:bg-rose-100/70 hover:border-rose-200 transition duration-150 cursor-pointer opacity-70 group-hover/item:opacity-100"
+                  >
+                    {getFixActionLabel(gap, workspace.domain)} ✦
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">
+              No priority gaps from your latest audit. Re-run GEO audit after content changes.
+            </p>
+          )}
           <Link
             href="/dashboard/optimizer"
             className="mt-4 inline-flex text-xs font-semibold text-accent hover:underline"

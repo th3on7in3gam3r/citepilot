@@ -31,8 +31,17 @@ export function citationTrendStatus(workspace: WorkspaceSnapshot): DataStatus {
   return "demo";
 }
 
+/** Measured audit fields only — derived/fillers stay estimated. */
 export function auditStatus(workspace: WorkspaceSnapshot): DataStatus {
-  return workspace.hasRealAudit ? "live" : "demo";
+  if (!workspace.hasRealAudit) return "demo";
+  return "live";
+}
+
+export function platformCoverageStatus(workspace: WorkspaceSnapshot): DataStatus {
+  if (!workspace.hasRealAudit) return "demo";
+  const rows = workspace.platformPresence ?? [];
+  const hasShare = rows.some((p) => typeof p.share === "number");
+  return hasShare ? "live" : "estimated";
 }
 
 export function widgetSourceStatus(

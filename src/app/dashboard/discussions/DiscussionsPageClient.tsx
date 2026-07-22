@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import type { DiscussionThread } from "@/lib/api-types";
 import { productFeatures } from "@/lib/features";
@@ -40,7 +41,14 @@ export function DiscussionsPageClient() {
       .finally(() => setLoading(false));
   }, [workspace]);
 
-  if (!ready || !workspace) return null;
+  if (!ready) {
+    return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
+  }
+  if (!workspace) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to scan buyer-intent discussions for your domain." />
+    );
+  }
 
   return (
     <>
