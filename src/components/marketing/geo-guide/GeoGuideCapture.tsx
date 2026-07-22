@@ -87,7 +87,7 @@ export function GeoGuideCapture() {
       );
       const params = new URLSearchParams({ domain: cleanDomain });
       if (cleanCompetitor) params.set("competitor", cleanCompetitor);
-      router.push(`/audit?${params.toString()}`);
+      router.push(`/start?${params.toString()}`);
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -126,10 +126,10 @@ export function GeoGuideCapture() {
             </li>
           </ul>
           <Link
-            href="/audit"
+            href="/start"
             className="mt-6 inline-flex text-sm font-semibold text-accent hover:underline"
           >
-            Or skip to free audit →
+            Or start workspace setup →
           </Link>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5 p-6 sm:p-10">

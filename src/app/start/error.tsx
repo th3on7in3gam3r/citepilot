@@ -16,7 +16,7 @@ export default function StartError({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-cream px-6 text-center">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-cream px-6 text-center dark:bg-background">
       <h1 className="font-display text-2xl font-bold text-ink">
         Something went wrong
       </h1>
@@ -28,13 +28,13 @@ export default function StartError({
         <button
           type="button"
           onClick={() => reset()}
-          className="rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white"
+          className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_20px_rgba(14,165,233,0.35)] hover:bg-accent-deep"
         >
           Try again
         </button>
         <Link
           href="/dashboard"
-          className="rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold text-ink"
+          className="rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-ink hover:bg-surface"
         >
           Go to dashboard
         </Link>

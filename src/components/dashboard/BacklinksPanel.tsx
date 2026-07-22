@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type {
@@ -216,6 +217,22 @@ export function BacklinksPanel() {
         headingLevel="h2"
         title="Backlink workspace"
         description={feature.description}
+        action={
+          workspace.hasRealAudit ? (
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              disabled={refreshing}
+              className={dashPrimaryCta}
+            >
+              {refreshing ? "Scanning…" : "Refresh backlink scan →"}
+            </button>
+          ) : (
+            <Link href="/dashboard/geo-audit" className={dashPrimaryCta}>
+              Run GEO audit →
+            </Link>
+          )
+        }
       />
 
       {!workspace.hasRealAudit && (

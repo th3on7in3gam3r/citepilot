@@ -1,10 +1,7 @@
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { CitationGapCalculator } from "@/components/tools/CitationGapCalculator";
 import { RelatedTools } from "@/components/tools/RelatedTools";
+import { ToolPageShell } from "@/components/tools/ToolPageShell";
 import { ToolSoftwareApplicationJsonLd } from "@/components/tools/ToolSoftwareApplicationJsonLd";
-import { Container } from "@/components/ui/Container";
 import { citationGapCalculatorTool } from "@/lib/marketing/tools-pages";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
@@ -25,22 +22,13 @@ export const metadata: Metadata = {
 
 export default function CitationGapCalculatorPage() {
   return (
-    <>
-      <ToolSoftwareApplicationJsonLd tool={citationGapCalculatorTool} />
-      <Header light overlay />
-      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
-        <MarketingDarkHero
-          eyebrow="Free tool"
-          title={citationGapCalculatorTool.h1}
-          description={citationGapCalculatorTool.description}
-        />
-
-        <Container className="py-14 md:py-20">
-          <CitationGapCalculator />
-          <RelatedTools currentId="citation-gap-calculator" />
-        </Container>
-      </main>
-      <Footer />
-    </>
+    <ToolPageShell
+      title={citationGapCalculatorTool.h1}
+      description={citationGapCalculatorTool.description}
+      jsonLd={<ToolSoftwareApplicationJsonLd tool={citationGapCalculatorTool} />}
+    >
+      <CitationGapCalculator />
+      <RelatedTools currentId="citation-gap-calculator" />
+    </ToolPageShell>
   );
 }

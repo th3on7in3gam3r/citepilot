@@ -1,8 +1,10 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
-
-const secondaryClass =
-  "inline-flex rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent/40";
+import {
+  DashboardPrimaryCta,
+  DashboardPrimaryCtaButton,
+  DashboardSecondaryCta,
+  DashboardSecondaryCtaButton,
+} from "@/components/dashboard/layout/DashboardCta";
 
 type Props = {
   title: string;
@@ -34,11 +36,8 @@ export function DashboardEmptyState({
     (Boolean(onSecondaryClick) || Boolean(secondaryHref));
 
   return (
-    <div className="rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/[0.06] via-white to-white p-8 text-center shadow-sm md:p-12">
-      <div
-        className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-glow/10 text-3xl text-accent"
-        aria-hidden
-      >
+    <div className="dash-empty-state shadow-sm">
+      <div className="dash-empty-state__icon" aria-hidden>
         {icon ?? "◎"}
       </div>
       <h2 className="font-display mt-6 text-2xl font-bold text-ink md:text-3xl">
@@ -48,25 +47,18 @@ export function DashboardEmptyState({
         {description}
       </p>
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <Link
-          href={primaryHref}
-          className="inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep"
-        >
+        <DashboardPrimaryCta href={primaryHref} size="lg">
           {primaryLabel}
-        </Link>
+        </DashboardPrimaryCta>
         {showSecondary && secondaryLabel ? (
           onSecondaryClick ? (
-            <button
-              type="button"
-              onClick={onSecondaryClick}
-              className={secondaryClass}
-            >
+            <DashboardSecondaryCtaButton onClick={onSecondaryClick} size="lg">
               {secondaryLabel}
-            </button>
+            </DashboardSecondaryCtaButton>
           ) : secondaryHref ? (
-            <Link href={secondaryHref} className={secondaryClass}>
+            <DashboardSecondaryCta href={secondaryHref} size="lg">
               {secondaryLabel}
-            </Link>
+            </DashboardSecondaryCta>
           ) : null
         ) : null}
       </div>

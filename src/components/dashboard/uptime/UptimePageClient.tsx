@@ -1,9 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FeatureGate } from "@/components/billing/FeatureGate";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
+import {
+  DashboardPrimaryCtaButton,
+  DashboardSecondaryCta,
+} from "@/components/dashboard/layout/DashboardCta";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
+import { useBilling } from "@/contexts/BillingContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type {
   AuthType,
@@ -93,6 +98,7 @@ function formatWhen(iso: string | null): string {
 
 export function UptimePageClient() {
   const { workspace, ready } = useWorkspaceContext();
+  const { isPaid, ready: billingReady } = useBilling();
   const workspaceId = workspace?.workspaceId ?? workspace?.id ?? "";
 
   const [monitors, setMonitors] = useState<UptimeMonitor[]>([]);
@@ -241,19 +247,46 @@ export function UptimePageClient() {
     );
   }
 
+  if (!billingReady) {
+    return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
+  }
+
+  if (!isPaid) {
+    return (
+      <div className="dash-page">
+        <DashboardPageHeader
+          title="Uptime monitors"
+          description="Monitor HTTP endpoints, SSL certificates, TCP ports, keywords in API responses, and cron job health — with alerts via Slack and webhooks."
+        />
+        <FeatureGate
+          feature="uptime_monitors"
+          title="Uptime monitoring"
+          description="Know when your site, API, or SSL cert goes down before customers do. Checks run every few minutes with instant alerts."
+          cta="Upgrade to Pilot →"
+          highlights={[
+            "HTTP, SSL, port, keyword, and cron monitors",
+            "Basic, digest, and JWT auth for protected endpoints",
+            "Alerts flow to Slack, webhooks, and email",
+            "Pilot: 15 monitors · Fleet: 100 monitors",
+          ]}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="dash-page">
       <DashboardPageHeader
         title="Uptime monitors"
         description="Monitor HTTP endpoints, SSL certificates, TCP ports, keywords in API responses, and cron job health. Checks run every few minutes with alerts via Slack and webhooks."
         action={
-          <button
+          <DashboardPrimaryCtaButton
             type="button"
             onClick={() => setShowForm((v) => !v)}
-            className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep"
+            size="sm"
           >
-            {showForm ? "Cancel" : "Add monitor"}
-          </button>
+            {showForm ? "Cancel" : "Add monitor →"}
+          </DashboardPrimaryCtaButton>
         }
       />
 
@@ -500,13 +533,9 @@ export function UptimePageClient() {
               />
             </label>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-60"
-            >
+            <DashboardPrimaryCtaButton type="submit" disabled={saving} size="sm">
               {saving ? "Creating…" : "Create monitor"}
-            </button>
+            </DashboardPrimaryCtaButton>
           </form>
         </Panel>
       )}
@@ -515,16 +544,29 @@ export function UptimePageClient() {
         {loading ? (
           <p className="text-sm text-muted">Loading monitors…</p>
         ) : monitors.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center dark:border-[#333]">
-            <p className="font-medium text-ink">No monitors yet</p>
-            <p className="mt-2 text-sm text-muted">
-              Add an HTTP, keyword, SSL, port, or cron monitor for your API
-              endpoints. Alerts flow to{" "}
-              <Link href="/dashboard/alerts" className="text-accent hover:underline">
-                Alerts
-              </Link>
-              , Slack, and webhooks.
+          <div className="dash-empty-state shadow-sm">
+            <div className="dash-empty-state__icon" aria-hidden>
+              ◎
+            </div>
+            <h2 className="font-display mt-6 text-2xl font-bold text-ink md:text-3xl">
+              No monitors yet
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted md:text-base">
+              Add an HTTP, keyword, SSL, port, or cron monitor for your API endpoints.
+              Alerts flow to Alerts, Slack, and webhooks.
             </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <DashboardPrimaryCtaButton
+                type="button"
+                onClick={() => setShowForm(true)}
+                size="lg"
+              >
+                Add monitor →
+              </DashboardPrimaryCtaButton>
+              <DashboardSecondaryCta href="/dashboard/alerts" size="lg">
+                Alert settings
+              </DashboardSecondaryCta>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

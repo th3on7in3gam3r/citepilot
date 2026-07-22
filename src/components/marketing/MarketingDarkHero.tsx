@@ -21,17 +21,12 @@ export function MarketingDarkHero({
       />
       <div className="hero-premium-grid" aria-hidden />
 
-      <Container className="relative z-10 py-16 text-center md:py-20 lg:py-24">
-        {eyebrow && (
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-semibold text-accent">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
-            {eyebrow}
-          </div>
-        )}
-        <h1 className="font-display mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight text-foreground dark:text-white md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+      <Container className="relative z-10 px-4 py-14 text-center sm:py-16 md:py-20">
+        {eyebrow && <p className="marketing-eyebrow">{eyebrow}</p>}
+        <h1 className="font-display mx-auto mt-4 max-w-3xl text-[2rem] font-bold leading-[1.1] tracking-[-0.02em] text-foreground dark:text-white sm:text-[2.375rem] md:text-[2.75rem] lg:text-[3rem]">
           {title}
         </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted dark:text-white/60 md:text-lg">
+        <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted dark:text-white/60 md:mt-5 md:text-lg">
           {description}
         </p>
         {children}

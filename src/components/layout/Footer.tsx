@@ -26,7 +26,7 @@ function FooterColumn({
     <div aria-labelledby={id}>
       <h3
         id={id}
-        className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/55"
+        className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted dark:text-white/55"
       >
         {title}
       </h3>
@@ -162,7 +162,7 @@ export async function Footer() {
         >
           <h3
             id="footer-growth-stack"
-            className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/55"
+            className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted dark:text-white/55"
           >
             {t("columns.growthStack")}
           </h3>

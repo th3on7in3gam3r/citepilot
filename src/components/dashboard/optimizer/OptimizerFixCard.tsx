@@ -14,11 +14,11 @@ const CATEGORY_LABELS: Record<OptimizerFix["category"], string> = {
 };
 
 const CATEGORY_COLORS: Record<OptimizerFix["category"], string> = {
-  seo: "bg-blue-500/15 text-blue-300 border-blue-500/30",
-  aeo: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  llm: "bg-violet-500/15 text-violet-300 border-violet-500/30",
-  robots: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  prompt: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
+  seo: "bg-sky-50 text-sky-700 border-sky-200",
+  aeo: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  llm: "bg-violet-50 text-violet-700 border-violet-200",
+  robots: "bg-amber-50 text-amber-800 border-amber-200",
+  prompt: "bg-cyan-50 text-cyan-800 border-cyan-200",
 };
 
 export function OptimizerFixCard({ fix }: { fix: OptimizerFix }) {
@@ -35,11 +35,11 @@ export function OptimizerFixCard({ fix }: { fix: OptimizerFix }) {
   }
 
   return (
-    <article className="rounded-xl border border-border bg-white/5 overflow-hidden">
+    <article className="overflow-hidden rounded-xl border border-border bg-card">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-white/5"
+        className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-surface/60"
       >
         <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-accent">
           {fix.priority}

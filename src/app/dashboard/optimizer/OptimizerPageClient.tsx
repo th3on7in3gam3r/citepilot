@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
+import { dashMetricCard, dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
 import { OptimizerFixCard } from "@/components/dashboard/optimizer/OptimizerFixCard";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -155,19 +156,19 @@ export function OptimizerPageClient() {
       )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-white/5 px-4 py-3">
+        <div className={dashMetricCard}>
           <p className="text-xs uppercase tracking-wide text-muted">Audit gaps</p>
           <p className="mt-1 text-2xl font-bold text-ink">
             {workspace.hasRealAudit ? gaps : "—"}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-white/5 px-4 py-3">
+        <div className={dashMetricCard}>
           <p className="text-xs uppercase tracking-wide text-muted">Uncited money prompts</p>
           <p className="mt-1 text-2xl font-bold text-ink">
             {workspace.hasRealAudit ? uncited : "—"}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-white/5 px-4 py-3">
+        <div className={dashMetricCard}>
           <p className="text-xs uppercase tracking-wide text-muted">GEO score</p>
           <p className="mt-1 text-2xl font-bold text-ink">
             {workspace.hasRealAudit
@@ -194,15 +195,24 @@ export function OptimizerPageClient() {
           type="button"
           onClick={() => void handleGenerate()}
           disabled={loading || !workspace.hasRealAudit}
-          className="rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`${dashPrimaryCta} disabled:cursor-not-allowed`}
         >
-          {loading ? "Analyzing your site…" : "Generate fixes"}
+          {loading ? "Analyzing your site…" : "Generate fixes →"}
         </button>
 
         {warning && (
           <p className="mt-3 text-sm text-amber-400/90">{warning}</p>
         )}
       </Panel>
+
+      {workspace.hasRealAudit && !plan && !loading && (
+        <Panel title="No optimization plan yet" className="mt-6">
+          <p className="text-sm text-muted">
+            Your latest GEO audit is loaded. Generate fixes to get prioritized code snippets and
+            content prompts — nothing is fabricated until you run generate.
+          </p>
+        </Panel>
+      )}
 
       {plan && (
         <Panel title="Your optimization plan" className="mt-6">

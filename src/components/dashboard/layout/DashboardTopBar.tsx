@@ -13,22 +13,6 @@ import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { dashboardBreadcrumbs } from "@/lib/dashboard-breadcrumbs";
 import { authClient } from "@/lib/auth/client";
 
-function TopBarButton({
-  children,
-  className = "",
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      type="button"
-      className={`inline-flex h-9 items-center justify-center rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] px-3 text-xs font-semibold text-ink transition hover:bg-surface ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-
 export function DashboardTopBar({
   title = "Overview",
 }: {
@@ -97,7 +81,7 @@ export function DashboardTopBar({
 
   return (
     <header className="dash-topbar sticky top-0 z-20 shrink-0">
-      <div className="flex min-h-[60px] flex-wrap items-center gap-3 px-5 py-2.5 lg:px-8">
+      <div className="flex min-h-[3.75rem] flex-wrap items-center gap-3 px-5 py-2.5 lg:px-8">
         <div className="min-w-0 flex-1 basis-[220px]">
           <nav
             aria-label="Breadcrumb"
@@ -141,24 +125,25 @@ export function DashboardTopBar({
               />
             </div>
 
-            <div className="hidden items-center gap-1 rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] p-1 lg:flex">
+            <div className="dash-chrome-group">
               {hasWorkspace ? (
                 <Link
                   href="/dashboard/geo-audit"
                   data-tour="run-scan"
-                  className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-ink"
+                  className="dash-chrome-group__item"
                 >
                   Run audit
                 </Link>
               ) : (
                 <span
-                  className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted/50"
+                  className="dash-chrome-group__item dash-chrome-group__item--disabled"
                   title="Create a workspace first"
+                  aria-disabled="true"
                 >
                   Run audit
                 </span>
               )}
-              <span className="h-4 w-px bg-[var(--dashboard-sidebar-border)]" aria-hidden />
+              <span className="dash-chrome-group__divider" aria-hidden />
               <button
                 type="button"
                 onClick={() => {
@@ -168,7 +153,7 @@ export function DashboardTopBar({
                     openWizard();
                   }
                 }}
-                className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-ink"
+                className="dash-chrome-group__item"
               >
                 Add site
               </button>
@@ -186,7 +171,7 @@ export function DashboardTopBar({
                     plan: "pilot",
                   })
                 }
-                className="hidden rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-accent-deep sm:inline-flex"
+                className="btn-dash-primary btn-dash-primary--sm hidden sm:inline-flex"
               >
                 Upgrade to Pilot
               </button>
@@ -194,17 +179,18 @@ export function DashboardTopBar({
 
             <ThemeToggle />
 
-            <TopBarButton
+            <button
+              type="button"
               onClick={openCopilot}
-              className="gap-1.5 border-accent/20 bg-accent/5 text-accent-deep dark:text-accent"
+              className="dash-chrome-btn dash-chrome-btn--accent"
             >
               <span aria-hidden>✦</span>
               <span className="hidden sm:inline">Copilot</span>
-            </TopBarButton>
+            </button>
 
             <Link
               href="/dashboard/settings#notifications"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] text-muted transition hover:bg-surface hover:text-ink"
+              className="dash-icon-btn"
               aria-label="Notification settings"
               title="Citation alerts & notification settings"
             >
@@ -261,7 +247,10 @@ export function DashboardTopBar({
             </div>
           </div>
         ) : (
-          <div className="ml-auto h-9 w-40 animate-pulse rounded-lg bg-surface" />
+          <div className="ml-auto flex items-center gap-2">
+            <div className="dash-shell-skeleton-block h-9 w-36 rounded-lg" />
+            <div className="dash-shell-skeleton-block h-9 w-9 rounded-full" />
+          </div>
         )}
       </div>
     </header>

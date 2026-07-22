@@ -1,11 +1,12 @@
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { Container } from "@/components/ui/Container";
+import { HelpPageLayout } from "@/components/help/HelpPageLayout";
+import {
+  contentSectionCard,
+  contentSectionTitle,
+} from "@/lib/marketing/surface-classes";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "CMS Publishing Guide",
@@ -79,110 +80,73 @@ const quickAnswers = [
 
 export default function CmsPublishingHelpPage() {
   return (
-    <>
-      <Header />
-      <main id="main-content" tabIndex={-1} className="min-h-screen bg-cream pt-24">
-        <Container className="pb-16">
-          <section className="rounded-[2rem] border border-border bg-white p-8 shadow-sm md:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">
-              Help
-            </p>
-            <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-ink md:text-5xl">
-              CMS publishing guide
-            </h1>
-            <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted md:text-lg">
-              Connect a CMS only if you already have a real website where your
-              CitePilot articles should go live. If you do not have one yet, skip
-              this step and keep generating content inside the dashboard.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/dashboard/content"
-                className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
-              >
-                Open Content dashboard
-              </Link>
-              <Link
-                href="/dashboard/help"
-                className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-ink transition hover:bg-surface"
-              >
-                Dashboard help
-              </Link>
-              <Link
-                href="/pricing"
-                className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-ink transition hover:bg-surface"
-              >
-                View plans
-              </Link>
-            </div>
-          </section>
+    <HelpPageLayout
+      eyebrow="Help"
+      title="CMS publishing guide"
+      description={
+        <>
+          Connect a CMS only if you already have a real website where your
+          CitePilot articles should go live. If you do not have one yet, skip
+          this step and keep generating content inside the dashboard.
+        </>
+      }
+      actions={[
+        { href: "/dashboard/content", label: "Open Content dashboard", primary: true },
+        { href: "/dashboard/help", label: "Dashboard help" },
+        { href: "/pricing", label: "View plans" },
+      ]}
+    >
+      <section className="content-section-gap grid gap-4 lg:grid-cols-3">
+        {quickAnswers.map((item) => (
+          <div key={item.q} className={contentSectionCard}>
+            <h2 className={`${contentSectionTitle} text-lg`}>{item.q}</h2>
+            <p className="content-prose mt-3">{item.a}</p>
+          </div>
+        ))}
+      </section>
 
-          <section className="mt-6 grid gap-4 lg:grid-cols-3">
-            {quickAnswers.map((item) => (
-              <div
-                key={item.q}
-                className="rounded-2xl border border-border bg-white p-6 shadow-sm"
-              >
-                <h2 className="font-display text-lg font-bold text-ink">{item.q}</h2>
-                <p className="mt-3 text-sm leading-relaxed text-muted">{item.a}</p>
-              </div>
-            ))}
-          </section>
-
-          <section className="mt-6 rounded-2xl border border-border bg-white p-6 shadow-sm md:p-8">
-            <h2 className="font-display text-2xl font-bold text-ink">
-              How publishing works
-            </h2>
-            <ol className="mt-5 grid gap-4 md:grid-cols-2">
-              {howItWorks.map((step, index) => (
-                <li
-                  key={step}
-                  className="rounded-2xl border border-border bg-surface/70 p-5"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-                    Step {index + 1}
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-ink">{step}</p>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          <section className="mt-6">
-            <div className="flex flex-col gap-2">
-              <h2 className="font-display text-2xl font-bold text-ink">
-                Which provider should I use?
-              </h2>
-              <p className="max-w-3xl text-sm leading-relaxed text-muted">
-                Use the CMS your real site already runs on. If you do not have any of
-                these platforms yet, there is nothing to connect today.
+      <section className={`content-section-gap ${contentSectionCard}`}>
+        <h2 className={contentSectionTitle}>How publishing works</h2>
+        <ol className="content-prose mt-5 grid gap-4 md:grid-cols-2">
+          {howItWorks.map((step, index) => (
+            <li
+              key={step}
+              className="rounded-2xl border border-border bg-surface/70 p-5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                Step {index + 1}
               </p>
-            </div>
-            <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              {providerCards.map((provider) => (
-                <article
-                  key={provider.name}
-                  className="rounded-2xl border border-border bg-white p-6 shadow-sm"
-                >
-                  <h3 className="font-display text-xl font-bold text-ink">
-                    {provider.name}
-                  </h3>
-                  <p className="mt-3 text-sm text-muted">
-                    <span className="font-semibold text-ink">What you need:</span>{" "}
-                    {provider.needs}
-                  </p>
-                  <p className="mt-2 text-sm text-muted">
-                    <span className="font-semibold text-ink">Best for:</span>{" "}
-                    {provider.bestFor}
-                  </p>
-                  <p className="mt-2 text-sm text-muted">{provider.note}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-        </Container>
-      </main>
-      <Footer />
-    </>
+              <p className="mt-2 text-ink">{step}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="content-section-gap">
+        <div className="flex flex-col gap-2">
+          <h2 className={contentSectionTitle}>Which provider should I use?</h2>
+          <p className="content-prose max-w-3xl">
+            Use the CMS your real site already runs on. If you do not have any of
+            these platforms yet, there is nothing to connect today.
+          </p>
+        </div>
+        <div className="content-prose mt-5 grid gap-4 lg:grid-cols-2">
+          {providerCards.map((provider) => (
+            <article key={provider.name} className={contentSectionCard}>
+              <h3 className="text-xl">{provider.name}</h3>
+              <p className="mt-3">
+                <span className="font-semibold text-ink">What you need:</span>{" "}
+                {provider.needs}
+              </p>
+              <p className="mt-2">
+                <span className="font-semibold text-ink">Best for:</span>{" "}
+                {provider.bestFor}
+              </p>
+              <p className="mt-2">{provider.note}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </HelpPageLayout>
   );
 }

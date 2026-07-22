@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { FeatureRequest, FeatureRequestStatus } from "@/lib/feedback/store";
 import { trackEvent } from "@/lib/analytics/track";
+import {
+  DashboardPrimaryCtaButton,
+} from "@/components/dashboard/layout/DashboardCta";
 
 const STATUS_LABELS: Record<FeatureRequestStatus, string> = {
   under_review: "Under Review",
@@ -19,7 +22,13 @@ const STATUS_STYLES: Record<FeatureRequestStatus, string> = {
   shipped: "bg-mint/15 text-mint",
 };
 
-export function FeatureRequestBoard() {
+export function FeatureRequestBoard({
+  variant = "default",
+  signInFrom = "/feedback",
+}: {
+  variant?: "default" | "dashboard";
+  signInFrom?: string;
+}) {
   const [requests, setRequests] = useState<FeatureRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
@@ -68,7 +77,7 @@ export function FeatureRequestBoard() {
       const data = (await res.json()) as { error?: string; request?: FeatureRequest };
       if (!res.ok) {
         if (res.status === 401) {
-          window.location.href = "/auth/sign-in?from=/feedback";
+          window.location.href = `/auth/sign-in?from=${encodeURIComponent(signInFrom)}`;
           return;
         }
         setError(data.error ?? "Could not submit request");
@@ -90,7 +99,7 @@ export function FeatureRequestBoard() {
       credentials: "include",
     });
     if (res.status === 401) {
-      window.location.href = "/auth/sign-in?from=/feedback";
+      window.location.href = `/auth/sign-in?from=${encodeURIComponent(signInFrom)}`;
       return;
     }
     if (!res.ok) return;
@@ -102,12 +111,18 @@ export function FeatureRequestBoard() {
     );
   }
 
+  const formShell =
+    variant === "dashboard"
+      ? "dash-content-card p-6"
+      : "rounded-2xl border border-border bg-white p-6 shadow-sm";
+  const listItemShell =
+    variant === "dashboard"
+      ? "dash-content-card flex gap-4 p-4"
+      : "flex gap-4 rounded-2xl border border-border bg-white p-4 shadow-sm";
+
   return (
     <div className="space-y-8">
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-2xl border border-border bg-white p-6 shadow-sm"
-      >
+      <form onSubmit={handleSubmit} className={formShell}>
         <h2 className="font-display text-lg font-bold text-ink">Suggest a feature</h2>
         <p className="mt-1 text-sm text-muted">
           Share what you need — upvote ideas you want us to prioritize.
@@ -142,13 +157,21 @@ export function FeatureRequestBoard() {
             className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
           />
         </div>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="mt-4 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep disabled:opacity-60"
-        >
-          {submitting ? "Submitting…" : signedIn ? "Submit request" : "Sign in to submit"}
-        </button>
+        {variant === "dashboard" ? (
+          <div className="mt-4">
+            <DashboardPrimaryCtaButton type="submit" disabled={submitting} size="sm">
+              {submitting ? "Submitting…" : signedIn ? "Submit request" : "Sign in to submit"}
+            </DashboardPrimaryCtaButton>
+          </div>
+        ) : (
+          <button
+            type="submit"
+            disabled={submitting}
+            className="mt-4 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep disabled:opacity-60"
+          >
+            {submitting ? "Submitting…" : signedIn ? "Submit request" : "Sign in to submit"}
+          </button>
+        )}
       </form>
 
       <div>
@@ -161,10 +184,7 @@ export function FeatureRequestBoard() {
         ) : (
           <ul className="mt-4 space-y-3">
             {requests.map((request) => (
-              <li
-                key={request.id}
-                className="flex gap-4 rounded-2xl border border-border bg-white p-4 shadow-sm"
-              >
+              <li key={request.id} className={listItemShell}>
                 <button
                   type="button"
                   onClick={() => void toggleVote(request.id)}
@@ -199,7 +219,10 @@ export function FeatureRequestBoard() {
 
       <p className="text-sm text-muted">
         Have a bug or account issue?{" "}
-        <Link href="/dashboard/help" className="font-semibold text-accent hover:text-accent-deep">
+        <Link
+          href="/dashboard/help"
+          className="font-semibold text-accent hover:text-accent-deep"
+        >
           Visit Help →
         </Link>
       </p>

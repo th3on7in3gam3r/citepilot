@@ -8,7 +8,9 @@ import { ScorePageCta } from "@/components/score/ScorePageCta";
 import { ScorePlatformGrid } from "@/components/score/ScorePlatformGrid";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { MainContent } from "@/components/layout/MainContent";
 import { Container } from "@/components/ui/Container";
+import { PillButton } from "@/components/ui/PillButton";
 import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import {
@@ -67,66 +69,73 @@ export default async function PublicScorePage({ params }: Props) {
   const { domain, audit, profile, platforms, relatedDomains } = data;
   const band = scoreBandLabel(audit.score);
   const verified = Boolean(profile?.verifiedAt);
+  const citedCount = platforms.filter((p) => p.present).length;
 
   return (
     <>
-      <Header />
-      <main id="main-content" tabIndex={-1} className="bg-cream pt-16 md:pt-[4.5rem]">
+      <Header light overlay />
+      <MainContent className="bg-cream pt-16 md:pt-[4.5rem]">
         <Container className="py-10 md:py-14">
           <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
             <div className="min-w-0 space-y-10">
-              {/* Header */}
-              <header className="rounded-3xl border border-border bg-white p-8 shadow-sm md:p-10">
-                <div className="flex flex-wrap items-start gap-4">
-                  <Image
-                    src={faviconUrl(domain)}
-                    alt=""
-                    width={48}
-                    height={48}
-                    className="rounded-xl border border-border bg-cream"
-                    unoptimized
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h1 className="font-display truncate text-3xl font-bold text-ink md:text-4xl">
-                        {domain}
-                      </h1>
-                      {verified && (
-                        <span className="rounded-full bg-mint/15 px-2.5 py-0.5 text-xs font-semibold text-mint">
-                          Verified owner
-                        </span>
-                      )}
+              <header className="overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-ink via-ink to-accent/30 text-white shadow-lg">
+                <div className="p-8 md:p-10">
+                  <div className="flex flex-wrap items-start gap-4">
+                    <Image
+                      src={faviconUrl(domain)}
+                      alt=""
+                      width={48}
+                      height={48}
+                      className="rounded-xl border border-white/20 bg-white/10"
+                      unoptimized
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
+                        Public GEO score
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <h1 className="font-display truncate text-3xl font-bold md:text-4xl">
+                          {domain}
+                        </h1>
+                        {verified && (
+                          <span className="rounded-full bg-mint/20 px-2.5 py-0.5 text-xs font-semibold text-mint">
+                            Verified owner
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-white/65">
+                        Last updated: {formatScoreDate(audit.createdAt)}
+                      </p>
                     </div>
-                    <p className="mt-1 text-sm text-muted">
-                      Last updated: {formatScoreDate(audit.createdAt)}
-                    </p>
                   </div>
-                </div>
 
-                <div className="mt-8 flex flex-wrap items-end gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-muted">
-                      GEO Score
-                    </p>
-                    <p
-                      className="font-display text-6xl font-bold tabular-nums md:text-7xl"
-                      style={{ color: band.color }}
-                    >
-                      {audit.score}
-                      <span className="text-3xl text-muted md:text-4xl">/100</span>
-                    </p>
-                  </div>
-                  <div className="pb-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <CiteStatusBadge score={audit.score} />
-                      <p className="font-display text-lg font-bold text-ink">{band.label}</p>
+                  <div className="mt-8 flex flex-wrap items-end gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
+                        GEO Score
+                      </p>
+                      <p
+                        className="font-display text-6xl font-bold tabular-nums md:text-7xl"
+                        style={{ color: band.color }}
+                      >
+                        {audit.score}
+                        <span className="text-3xl text-white/50 md:text-4xl">/100</span>
+                      </p>
                     </div>
-                    <p className="mt-1 max-w-md text-sm text-muted">{band.description}</p>
+                    <div className="pb-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CiteStatusBadge score={audit.score} />
+                        <p className="font-display text-lg font-bold">{band.label}</p>
+                      </div>
+                      <p className="mt-1 max-w-md text-sm text-white/70">{band.description}</p>
+                      <p className="mt-2 text-xs text-white/55">
+                        Cited on {citedCount} of {platforms.length} tracked platforms
+                      </p>
+                    </div>
                   </div>
                 </div>
               </header>
 
-              {/* Platform grid */}
               <section aria-labelledby="platform-grid-heading">
                 <h2
                   id="platform-grid-heading"
@@ -135,7 +144,7 @@ export default async function PublicScorePage({ params }: Props) {
                   AI platform presence
                 </h2>
                 <p className="mt-2 text-sm text-muted">
-                  High-level citation status across six major AI answer engines.
+                  High-level citation status across major AI answer engines.
                   Specific prompts and fix lists are available in the full report.
                 </p>
                 <div className="mt-5">
@@ -143,11 +152,8 @@ export default async function PublicScorePage({ params }: Props) {
                 </div>
               </section>
 
-              {/* Educational */}
               <section className="rounded-2xl border border-border bg-white p-6 shadow-sm md:p-8">
-                <h2 className="font-display text-xl font-bold text-ink">
-                  What this means
-                </h2>
+                <h2 className="font-display text-xl font-bold text-ink">What this means</h2>
                 <div className="mt-4 space-y-3 text-sm leading-relaxed text-muted">
                   <p>
                     Your GEO score reflects how often AI engines like ChatGPT and
@@ -179,21 +185,34 @@ export default async function PublicScorePage({ params }: Props) {
               <RelatedDomainsList domains={relatedDomains} />
 
               <div className="rounded-2xl border border-border bg-white p-6 text-sm shadow-sm">
-                <p className="font-semibold text-ink">Run your own audit</p>
-                <p className="mt-2 text-muted">
-                  Free 60-second scan across ChatGPT, Perplexity, and Google AI.
+                <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                  Your domain
                 </p>
-                <Link
-                  href={`/audit?domain=${encodeURIComponent(domain)}`}
-                  className="mt-4 inline-flex text-sm font-semibold text-accent hover:underline"
-                >
-                  Audit any domain →
-                </Link>
+                <p className="font-display mt-1 font-bold text-ink">Run your own audit</p>
+                <p className="mt-2 text-muted">
+                  Free workspace setup scans ChatGPT, Perplexity, and Google AI across
+                  your money prompts.
+                </p>
+                <div className="mt-4 flex flex-col gap-2">
+                  <PillButton
+                    href={`/start?domain=${encodeURIComponent(domain)}`}
+                    size="md"
+                    className="w-full"
+                  >
+                    Start setup →
+                  </PillButton>
+                  <Link
+                    href="/dashboard"
+                    className="text-center text-sm font-semibold text-accent hover:text-accent-deep"
+                  >
+                    Open dashboard
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </Container>
-      </main>
+      </MainContent>
       <Footer />
     </>
   );

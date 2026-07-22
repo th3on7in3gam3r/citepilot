@@ -3,11 +3,21 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { AuthErrorAlert } from "@/components/auth/AuthErrorAlert";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import { authFormCardClass, authSubmitClass } from "@/components/auth/auth-styles";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { authClient } from "@/lib/auth/client";
 import { passwordMeetsRequirements } from "@/lib/auth/password-requirements";
+
+function AuthPrimaryLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className={`inline-flex ${authSubmitClass} px-6 no-underline`}>
+      {children}
+    </Link>
+  );
+}
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -51,67 +61,63 @@ export function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="glass rounded-2xl p-8 text-center">
-        <h1 className="font-display text-xl font-bold text-white">
+      <div className={`${authFormCardClass} text-center`}>
+        <h1 className="font-display text-xl font-bold text-ink">
           Invalid reset link
         </h1>
-        <p className="mt-2 text-sm text-white/60">
+        <p className="mt-2 text-sm text-muted">
           Request a new password reset email to continue.
         </p>
-        <Link
-          href="/auth/forgot-password"
-          className="mt-6 inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white"
-        >
-          Request reset link
-        </Link>
+        <div className="mt-6">
+          <AuthPrimaryLink href="/auth/forgot-password">
+            Request reset link
+          </AuthPrimaryLink>
+        </div>
       </div>
     );
   }
 
   if (status === "done") {
     return (
-      <div className="glass rounded-2xl p-8 text-center">
-        <h1 className="font-display text-xl font-bold text-white">
+      <div className={`${authFormCardClass} text-center`}>
+        <h1 className="font-display text-xl font-bold text-ink">
           Password updated
         </h1>
-        <p className="mt-2 text-sm text-white/60">
+        <p className="mt-2 text-sm text-muted">
           You can sign in with your new password.
         </p>
-        <Link
-          href="/auth/sign-in"
-          className="mt-6 inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white"
-        >
-          Sign in
-        </Link>
+        <div className="mt-6">
+          <AuthPrimaryLink href="/auth/sign-in">Sign in</AuthPrimaryLink>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="glass rounded-2xl p-8">
+    <div className={authFormCardClass}>
       <p className="text-xs font-semibold uppercase tracking-wider text-accent">
         Account recovery
       </p>
-      <h1 className="font-display mt-2 text-2xl font-bold text-white">
+      <h1 className="font-display mt-2 text-2xl font-bold text-ink">
         Choose a new password
       </h1>
 
-      <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
+      <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4" noValidate>
         <div>
           <PasswordField
             label="New password"
             autoComplete="new-password"
             minLength={8}
             onChange={setPassword}
+            invalid={Boolean(error)}
+            describedBy={error ? "reset-password-error" : undefined}
           />
           <div className="mt-3">
             <PasswordRequirements password={password} />
           </div>
         </div>
         {error && (
-          <p id="reset-password-error" role="alert" className="text-sm text-red-300">
-            {error}
-          </p>
+          <AuthErrorAlert id="reset-password-error">{error}</AuthErrorAlert>
         )}
         <AuthSubmitButton
           pending={status === "loading"}

@@ -334,7 +334,7 @@ function LLMPanel({
 
       <CitationVisualizations workspace={workspace} />
       <Panel title="Brand presence" className="mt-6" id="money-prompts">
-        <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
+        <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-border p-5 dark:border-accent/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -403,7 +403,7 @@ function CorrelationInsightsPanel({
 }) {
   return (
     <Panel title="Correlation insights" className="mt-6">
-      <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
+      <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-border p-5 dark:border-accent/15">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
           Directional analysis
         </p>
@@ -584,7 +584,7 @@ function CompetitorBenchmarkPanel({
 
   return (
     <Panel title="Competitor benchmark" className="mt-6">
-      <div className="relative overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.12),rgba(255,255,255,0.98),rgba(34,211,238,0.1))] p-5">
+      <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-card to-card p-5">
         <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-accent/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 left-12 h-28 w-28 translate-y-8 rounded-full bg-glow/15 blur-3xl" />
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">

@@ -134,15 +134,12 @@ export async function AgencyLanding() {
         </div>
       </MarketingDarkHero>
 
-      <Container className="py-16 md:py-24">
+      <Container className="py-12 md:py-16 lg:py-20">
         <section className="mx-auto max-w-3xl text-center" aria-labelledby="agency-problem">
-          <h2
-            id="agency-problem"
-            className="font-display text-2xl font-bold text-white md:text-3xl lg:text-4xl"
-          >
+          <h2 id="agency-problem" className="marketing-section-title marketing-section-title-on-dark md:text-[1.875rem]">
             {t("problemTitle")}
           </h2>
-          <ul className="mt-10 space-y-4 text-left">
+          <ul className="mt-7 space-y-3 text-left md:mt-8">
             {painPoints.map((item) => (
               <li
                 key={item}
@@ -159,19 +156,16 @@ export async function AgencyLanding() {
 
         {/* Fleet features */}
         <section
-          className="mx-auto mt-20 max-w-5xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-5xl"
           aria-labelledby="agency-features"
         >
-          <h2
-            id="agency-features"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
+          <h2 id="agency-features" className="marketing-section-title marketing-section-title-on-dark text-center">
             {t("featuresTitle")}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-white/55 md:text-base">
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-white/55 md:mt-4 md:text-base">
             {t("featuresSub")}
           </p>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:gap-5">
             {fleetFeatures.map((feature) => (
               <article
                 key={feature.title}
@@ -191,16 +185,13 @@ export async function AgencyLanding() {
 
         {/* Workflow */}
         <section
-          className="mx-auto mt-20 max-w-4xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-4xl"
           aria-labelledby="agency-workflow"
         >
-          <h2
-            id="agency-workflow"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
+          <h2 id="agency-workflow" className="marketing-section-title marketing-section-title-on-dark text-center">
             {t("workflowTitle")}
           </h2>
-          <ol className="mt-12 space-y-6">
+          <ol className="mt-8 space-y-4 md:mt-10">
             {workflow.map((step) => (
               <li
                 key={step.step}
@@ -224,16 +215,13 @@ export async function AgencyLanding() {
 
         {/* Testimonials */}
         <section
-          className="mx-auto mt-20 max-w-4xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-4xl"
           aria-labelledby="agency-testimonials"
         >
-          <h2
-            id="agency-testimonials"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
+          <h2 id="agency-testimonials" className="marketing-section-title marketing-section-title-on-dark text-center">
             {t("testimonialsTitle")}
           </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-4 md:mt-10 md:grid-cols-2 md:gap-5">
             {featuredTestimonials.map((review) => (
               <AgencyTestimonialCard key={review.author} review={review} />
             ))}
@@ -242,7 +230,7 @@ export async function AgencyLanding() {
 
         {/* Pricing */}
         <section
-          className="mx-auto mt-20 max-w-lg md:mt-28"
+          className="marketing-section-gap mx-auto max-w-lg"
           aria-labelledby="agency-pricing"
         >
           <div className="rounded-2xl border border-accent/35 bg-gradient-to-b from-accent/20 to-white/[0.04] p-8 text-center shadow-[0_0_48px_rgba(14,165,233,0.12)] md:p-10">
@@ -279,16 +267,13 @@ export async function AgencyLanding() {
 
         {/* FAQ */}
         <section
-          className="mx-auto mt-20 max-w-3xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-3xl"
           aria-labelledby="agency-faq"
         >
-          <h2
-            id="agency-faq"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
+          <h2 id="agency-faq" className="marketing-section-title marketing-section-title-on-dark text-center">
             {t("faqTitle")}
           </h2>
-          <dl className="mt-10 space-y-4">
+          <dl className="mt-7 space-y-3 md:mt-8">
             {faqs.map((faq) => (
               <div
                 key={faq.q}
@@ -303,16 +288,13 @@ export async function AgencyLanding() {
 
         {/* Footer CTA */}
         <section
-          className="mx-auto mt-20 max-w-3xl text-center md:mt-28"
+          className="marketing-section-gap mx-auto max-w-3xl text-center"
           aria-labelledby="agency-cta"
         >
-          <h2
-            id="agency-cta"
-            className="font-display text-2xl font-bold text-white md:text-3xl"
-          >
+          <h2 id="agency-cta" className="marketing-section-title marketing-section-title-on-dark">
             {t("footerCtaTitle")}
           </h2>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row md:mt-7">
             <Link
               href={agencyFooterCta.primary.href}
               className="inline-flex w-full rounded-full bg-accent px-8 py-3.5 text-sm font-bold text-white sm:w-auto"

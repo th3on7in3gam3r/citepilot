@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
-import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
+import { DashboardShellSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 
 function redirectToSignIn(router: ReturnType<typeof useRouter>, pathname: string) {
   const signIn = new URL("/auth/sign-in", window.location.origin);
@@ -59,7 +59,7 @@ export function DashboardAuthGate({ children }: { children: ReactNode }) {
   }, [pathname, router]);
 
   if (!allowed) {
-    return <DashboardPageSkeleton />;
+    return <DashboardShellSkeleton />;
   }
 
   return <>{children}</>;

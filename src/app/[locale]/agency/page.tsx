@@ -30,7 +30,7 @@ export default async function AgencyPage({ params }: Props) {
   return (
     <>
       <Header light overlay />
-      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[var(--hero-bg)]">
         <AgencyLanding />
       </main>
       <Footer />

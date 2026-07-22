@@ -66,9 +66,9 @@ The Auth instance is dead or never finished provisioning. Trusted domains alone 
 
 ### Checklist (healthy Auth)
 
-**Production Render service (apex):** `https://citepilot-flu8.onrender.com` — `srv-d9fr5pn41pts73epechg` (Jerless’s workspace; owns `getcitepilot.com`). Set env here, then Manual Deploy.
+**Apex production (DNS):** `https://getcitepilot.com` and `https://citepilot-flu8.onrender.com` currently serve the same live app (Stripe configured). Historical service id `srv-d9fr5pn41pts73epechg` may be **missing from the Render API** for some CLI logins — if Dashboard search for `flu8` fails, see [`docs/ops-production-db.md`](docs/ops-production-db.md).
 
-**Secondary / probe service:** `https://citepilot.onrender.com` — `srv-d9fmicj7uimc73f0anog` (My Workspace). Useful for Auth smoke tests; Blueprint/`render.yaml` may target this service and does **not** update flu8 Dashboard env by itself.
+**Blueprint / manageable service:** `https://citepilot.onrender.com` — `srv-d9fmicj7uimc73f0anog` (My Workspace). `render.yaml` targets this service. It does **not** automatically sync env to the apex host. Prefer fixing `DATABASE_URL*` + `HEALTH_SECRET` on **whichever service owns the custom domain**, or move the domain onto Blueprint `citepilot` after copying secrets.
 
 1. On **flu8** Environment: `NEON_AUTH_BASE_URL` = Auth URL from Neon Console (Aegis Loop / Auth branch, must end in `/auth`), `NEON_AUTH_COOKIE_SECRET` (32+), `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` → redeploy
    - Dashboard: https://dashboard.render.com/web/srv-d9fr5pn41pts73epechg

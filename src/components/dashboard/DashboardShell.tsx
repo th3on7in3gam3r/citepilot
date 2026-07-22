@@ -64,6 +64,31 @@ function pageHeader(pathname: string): {
   };
 }
 
+function SettingsIcon() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 15a3 3 0 100-6 3 3 0 000 6z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+      />
+    </svg>
+  );
+}
+
 function DashboardShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { ready } = useWorkspaceContext();
@@ -76,45 +101,27 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         <DashboardRail />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="dash-topbar flex h-14 shrink-0 items-center gap-3 px-4 lg:hidden">
+        <div className="dash-topbar flex min-h-[3.75rem] shrink-0 items-center gap-2.5 px-4 lg:hidden">
           <DashboardMobileNav ready={ready} />
-          <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-ink">
+          <h1 className="min-w-0 flex-1 truncate text-base font-semibold tracking-tight text-ink">
             {title}
           </h1>
           <Link
             href="/dashboard/settings"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--dashboard-sidebar-border)] bg-[var(--dashboard-panel)] text-muted hover:bg-surface hover:text-ink"
+            className="dash-icon-btn"
             aria-label="Settings"
             title="Settings"
           >
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 15a3 3 0 100-6 3 3 0 000 6z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
-              />
-            </svg>
+            <SettingsIcon />
           </Link>
           <ThemeToggle />
           <button
             type="button"
             onClick={openCopilot}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-accent/20 bg-accent/5 px-2.5 py-1.5 text-[10px] font-semibold text-accent-deep dark:text-accent"
+            className="dash-chrome-btn dash-chrome-btn--accent px-2.5 text-[10px]"
           >
-            ✦ Copilot
+            <span aria-hidden>✦</span>
+            Copilot
           </button>
         </div>
         <div className="hidden lg:block">

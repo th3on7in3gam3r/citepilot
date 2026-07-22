@@ -71,7 +71,7 @@ export default async function BlogCategoryPage({ params }: Props) {
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <h2
               id="topic-articles-heading"
-              className="font-display text-2xl font-bold text-white md:text-3xl"
+              className="blog-section-title"
             >
               Articles in this topic
             </h2>

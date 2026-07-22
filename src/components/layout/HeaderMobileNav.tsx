@@ -237,7 +237,7 @@ export function HeaderMobileNav({ onDark }: { onDark: boolean }) {
               <Link
                 href="/start"
                 onClick={() => setOpen(false)}
-                className="block rounded-full bg-gradient-to-r from-[#6b8cff] via-accent to-accent-deep px-4 py-3 text-center text-sm font-semibold text-white shadow-[0_4px_16px_rgba(14,165,233,0.35)]"
+                className="btn-marketing-primary block px-4 py-3 text-center text-sm font-semibold"
               >
                 {t("startAnalysis")}
               </Link>

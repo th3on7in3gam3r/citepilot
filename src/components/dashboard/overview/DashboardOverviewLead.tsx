@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
+import { dashPrimaryCta, dashSecondaryCta } from "@/lib/dashboard/surface-classes";
 
 export function DashboardOverviewLead({ workspace }: { workspace: WorkspaceSnapshot }) {
   const updated = workspace.updatedAt
@@ -60,17 +61,11 @@ export function DashboardOverviewLead({ workspace }: { workspace: WorkspaceSnaps
             Updated {updated}
           </span>
         )}
-        <Link
-          href="/dashboard/geo-audit"
-          className="rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
-        >
-          Run audit
+        <Link href="/dashboard/geo-audit" className={`${dashPrimaryCta} px-3.5 py-2 text-xs`}>
+          {workspace.hasRealAudit ? "Run new scan →" : "Run first audit →"}
         </Link>
-        <Link
-          href="/dashboard/help"
-          className="rounded-lg border border-border px-3.5 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
-        >
-          Guide
+        <Link href="/dashboard/help" className={`${dashSecondaryCta} px-3.5 py-2 text-xs`}>
+          Help guide
         </Link>
       </div>
     </div>

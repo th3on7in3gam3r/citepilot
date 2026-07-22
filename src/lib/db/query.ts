@@ -103,7 +103,12 @@ export function postgresDirectConnectionString(): string | undefined {
   );
 }
 
-export function postgresEnvVar(): "DATABASE_URL" | "NEON_URL" | null {
+export function postgresEnvVar():
+  | "DATABASE_URL_POOLED"
+  | "DATABASE_URL"
+  | "NEON_URL"
+  | null {
+  if (process.env.DATABASE_URL_POOLED?.trim()) return "DATABASE_URL_POOLED";
   if (process.env.DATABASE_URL?.trim()) return "DATABASE_URL";
   if (process.env.NEON_URL?.trim()) return "NEON_URL";
   return null;
@@ -179,7 +184,23 @@ export function neonDbErrorDetail(error: unknown): string {
   if (isNeonComputeQuotaError(error)) {
     return "Neon COMPUTE_QUOTA_EXCEEDED — upgrade plan or wait for monthly quota reset";
   }
-  return error instanceof Error ? error.message : "Database unavailable";
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "Database unavailable";
+  if (/password authentication failed/i.test(message)) {
+    return "Postgres password authentication failed — rotate DATABASE_URL / DATABASE_URL_POOLED on the Render service";
+  }
+  if (/ECONNREFUSED|ENOTFOUND|getaddrinfo|timeout|Timed out/i.test(message)) {
+    return "Postgres unreachable — check DATABASE_URL host/port and network allowlists";
+  }
+  // Never echo connection strings if a driver embeds them in the message.
+  return message.replace(
+    /postgres(?:ql)?:\/\/[^\s"']+/gi,
+    "postgresql://REDACTED",
+  );
 }
 
 function dropPool(pool: CitePilotPool): void {
@@ -225,61 +246,20 @@ function toPgPlaceholders(sql: string): string {
   return sql.replace(/\?/g, () => `$${++i}`);
 }
 
-async function ensurePostgres(): Promise<void> {
-  if (!globalForPg.citepilotPgReady) {
-    globalForPg.citepilotPgReady = (async () => {
-      // DDL against the direct / session endpoint when set (Supabase transaction
-      // pooler :6543 can reject or stall some migration statements).
-      const direct = postgresDirectConnectionString();
-      const runtime = postgresConnectionString();
-      if (!runtime) {
-        throw new Error("DATABASE_URL or NEON_URL is required for Postgres");
-      }
-      const ddlUrl =
-        direct && direct !== runtime ? direct : runtime;
-      const ownsDdlPool = ddlUrl !== runtime;
-      const ddlPool = ownsDdlPool ? createPool(ddlUrl) : getPool();
-      const statements = POSTGRES_INIT_SQL.split(";")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      try {
-        for (const statement of statements) {
-          await ddlPool.query(statement);
-        }
-        await ddlPool.query(
-          `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS user_id TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS webflow_item_id TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS webflow_published_at TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS webflow_live_url TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image_url TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image_alt TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE fleet_api_keys ADD COLUMN IF NOT EXISTS workspace_id TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE audit_shares ADD COLUMN IF NOT EXISTS password_hash TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS display_name TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS archived_at TEXT`,
-        );
-        await ddlPool.query(`
+/** Idempotent migrations after POSTGRES_INIT_SQL — safe to retry. */
+const POSTGRES_FOLLOWUP_DDL: string[] = [
+  `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS user_id TEXT`,
+  `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS webflow_item_id TEXT`,
+  `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS webflow_published_at TEXT`,
+  `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS webflow_live_url TEXT`,
+  `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image_url TEXT`,
+  `ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image_alt TEXT`,
+  `ALTER TABLE fleet_api_keys ADD COLUMN IF NOT EXISTS workspace_id TEXT`,
+  `ALTER TABLE audit_shares ADD COLUMN IF NOT EXISTS password_hash TEXT`,
+  `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS display_name TEXT`,
+  `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`,
+  `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS archived_at TEXT`,
+  `
         CREATE TABLE IF NOT EXISTS workspace_members (
           id TEXT PRIMARY KEY,
           workspace_id TEXT NOT NULL REFERENCES workspaces(id),
@@ -291,38 +271,18 @@ async function ensurePostgres(): Promise<void> {
           accepted_at TEXT,
           UNIQUE(workspace_id, email)
         )
-      `);
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id)`,
-        );
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id)`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE workspace_members ADD COLUMN IF NOT EXISTS token TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE workspace_members ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`,
-        );
-        await ddlPool.query(
-          `CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL`,
-        );
-        await ddlPool.query(
-          `UPDATE workspace_members SET status = 'accepted' WHERE accepted_at IS NOT NULL AND status = 'pending'`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS onboarding_completed_at TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_source TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_campaign TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_medium TEXT`,
-        );
-        await ddlPool.query(`
+      `,
+  `CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON workspace_members(workspace_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id)`,
+  `ALTER TABLE workspace_members ADD COLUMN IF NOT EXISTS token TEXT`,
+  `ALTER TABLE workspace_members ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_token ON workspace_members(token) WHERE token IS NOT NULL`,
+  `UPDATE workspace_members SET status = 'accepted' WHERE accepted_at IS NOT NULL AND status = 'pending'`,
+  `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS onboarding_completed_at TEXT`,
+  `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_source TEXT`,
+  `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_campaign TEXT`,
+  `ALTER TABLE user_onboarding ADD COLUMN IF NOT EXISTS signup_medium TEXT`,
+  `
         CREATE TABLE IF NOT EXISTS admin_audit_log (
           id TEXT PRIMARY KEY,
           admin_id TEXT NOT NULL,
@@ -332,11 +292,9 @@ async function ensurePostgres(): Promise<void> {
           metadata TEXT NOT NULL DEFAULT '{}',
           created_at TEXT NOT NULL
         )
-      `);
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log(created_at DESC)`,
-        );
-        await ddlPool.query(`
+      `,
+  `CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log(created_at DESC)`,
+  `
         CREATE TABLE IF NOT EXISTS domain_score_profiles (
           domain TEXT PRIMARY KEY,
           is_public INTEGER NOT NULL DEFAULT 1,
@@ -346,14 +304,10 @@ async function ensurePostgres(): Promise<void> {
           verification_token TEXT,
           updated_at TEXT NOT NULL
         )
-      `);
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_domain_score_profiles_public ON domain_score_profiles(is_public)`,
-        );
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_audit_domain ON audit_runs(domain)`,
-        );
-        await ddlPool.query(`
+      `,
+  `CREATE INDEX IF NOT EXISTS idx_domain_score_profiles_public ON domain_score_profiles(is_public)`,
+  `CREATE INDEX IF NOT EXISTS idx_audit_domain ON audit_runs(domain)`,
+  `
         CREATE TABLE IF NOT EXISTS user_totp (
           user_id TEXT PRIMARY KEY,
           totp_secret TEXT,
@@ -366,8 +320,8 @@ async function ensurePostgres(): Promise<void> {
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )
-      `);
-        await ddlPool.query(`
+      `,
+  `
         CREATE TABLE IF NOT EXISTS user_accounts (
           user_id TEXT PRIMARY KEY,
           email TEXT,
@@ -383,11 +337,9 @@ async function ensurePostgres(): Promise<void> {
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )
-      `);
-        await ddlPool.query(
-          `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_accounts_cancellation_token ON user_accounts(cancellation_token) WHERE cancellation_token IS NOT NULL`,
-        );
-        await ddlPool.query(`
+      `,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_accounts_cancellation_token ON user_accounts(cancellation_token) WHERE cancellation_token IS NOT NULL`,
+  `
         CREATE TABLE IF NOT EXISTS account_export_jobs (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
@@ -398,11 +350,9 @@ async function ensurePostgres(): Promise<void> {
           created_at TEXT NOT NULL,
           completed_at TEXT
         )
-      `);
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_account_export_jobs_user ON account_export_jobs(user_id, created_at DESC)`,
-        );
-        await ddlPool.query(`
+      `,
+  `CREATE INDEX IF NOT EXISTS idx_account_export_jobs_user ON account_export_jobs(user_id, created_at DESC)`,
+  `
         CREATE TABLE IF NOT EXISTS compliance_log (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
@@ -410,11 +360,9 @@ async function ensurePostgres(): Promise<void> {
           metadata TEXT NOT NULL DEFAULT '{}',
           created_at TEXT NOT NULL
         )
-      `);
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_compliance_log_user ON compliance_log(user_id, created_at DESC)`,
-        );
-        await ddlPool.query(`
+      `,
+  `CREATE INDEX IF NOT EXISTS idx_compliance_log_user ON compliance_log(user_id, created_at DESC)`,
+  `
         CREATE TABLE IF NOT EXISTS scan_jobs (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
@@ -427,8 +375,8 @@ async function ensurePostgres(): Promise<void> {
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )
-      `);
-        await ddlPool.query(`
+      `,
+  `
         CREATE TABLE IF NOT EXISTS scan_job_items (
           id TEXT PRIMARY KEY,
           job_id TEXT NOT NULL REFERENCES scan_jobs(id),
@@ -441,32 +389,16 @@ async function ensurePostgres(): Promise<void> {
           completed_at TEXT,
           created_at TEXT NOT NULL
         )
-      `);
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_scan_jobs_user ON scan_jobs(user_id, created_at DESC)`,
-        );
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_scan_jobs_status ON scan_jobs(status)`,
-        );
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_scan_job_items_job ON scan_job_items(job_id)`,
-        );
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(workspace_id, status)`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS duration_ms INTEGER`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS next_scan_at TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS probe_notes TEXT`,
-        );
-        await ddlPool.query(
-          `ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS scan_unavailable INTEGER NOT NULL DEFAULT 0`,
-        );
-        await ddlPool.query(`
+      `,
+  `CREATE INDEX IF NOT EXISTS idx_scan_jobs_user ON scan_jobs(user_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_scan_jobs_status ON scan_jobs(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_scan_job_items_job ON scan_job_items(job_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(workspace_id, status)`,
+  `ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS duration_ms INTEGER`,
+  `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS next_scan_at TEXT`,
+  `ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS probe_notes TEXT`,
+  `ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS scan_unavailable INTEGER NOT NULL DEFAULT 0`,
+  `
         CREATE TABLE IF NOT EXISTS browser_scan_usage (
           id TEXT PRIMARY KEY,
           workspace_id TEXT NOT NULL REFERENCES workspaces(id),
@@ -477,10 +409,80 @@ async function ensurePostgres(): Promise<void> {
           scanned_at TEXT NOT NULL,
           notes TEXT
         )
-      `);
-        await ddlPool.query(
-          `CREATE INDEX IF NOT EXISTS idx_browser_scan_usage_workspace_day ON browser_scan_usage(workspace_id, scanned_at)`,
+      `,
+  `CREATE INDEX IF NOT EXISTS idx_browser_scan_usage_workspace_day ON browser_scan_usage(workspace_id, scanned_at)`,
+];
+
+/**
+ * Run idempotent DDL one statement at a time.
+ * PgBouncer transaction mode can reject a subset of statements — continue so
+ * a single bad migration does not block every signed-in API forever.
+ */
+async function runDdlBestEffort(
+  pool: CitePilotPool,
+  statements: string[],
+): Promise<number> {
+  let failures = 0;
+  for (const statement of statements) {
+    try {
+      await pool.query(statement);
+    } catch (error) {
+      failures += 1;
+      console.error(
+        "[db] DDL statement skipped",
+        neonDbErrorDetail(error),
+        statement.slice(0, 80).replace(/\s+/g, " "),
+      );
+    }
+  }
+  return failures;
+}
+
+async function ensurePostgres(): Promise<void> {
+  if (!globalForPg.citepilotPgReady) {
+    globalForPg.citepilotPgReady = (async () => {
+      // DDL against the direct / session endpoint when set (Supabase transaction
+      // pooler :6543 can reject or stall some migration statements).
+      const direct = postgresDirectConnectionString();
+      const runtime = postgresConnectionString();
+      if (!runtime) {
+        throw new Error("DATABASE_URL or NEON_URL is required for Postgres");
+      }
+
+      // Prove runtime credentials first — fail fast with a clear auth error
+      // instead of drowning logs in dozens of DDL failures.
+      const runtimePool = getPool();
+      await runtimePool.query("SELECT 1");
+
+      const ddlUrl =
+        direct && direct !== runtime ? direct : runtime;
+      const ownsDdlPool = ddlUrl !== runtime;
+      const ddlPool = ownsDdlPool ? createPool(ddlUrl) : runtimePool;
+      const statements = [
+        ...POSTGRES_INIT_SQL.split(";")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        ...POSTGRES_FOLLOWUP_DDL,
+      ];
+      try {
+        if (ownsDdlPool) {
+          await ddlPool.query("SELECT 1");
+        }
+        const failures = await runDdlBestEffort(ddlPool, statements);
+        if (failures > 0) {
+          console.error(
+            `[db] ensurePostgres completed with ${failures} DDL warning(s); runtime queries will proceed if tables exist`,
+          );
+        }
+        // Critical table must exist for workspace APIs.
+        const check = await runtimePool.query(
+          `SELECT to_regclass('public.workspaces') AS workspaces`,
         );
+        if (!check.rows[0]?.workspaces) {
+          throw new Error(
+            "workspaces table missing after schema ensure — set DATABASE_URL_DIRECT and redeploy",
+          );
+        }
       } finally {
         if (ownsDdlPool) {
           void ddlPool.end().catch(() => {});

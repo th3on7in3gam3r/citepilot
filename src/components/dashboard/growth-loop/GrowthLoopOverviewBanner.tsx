@@ -1,4 +1,6 @@
-import Link from "next/link";
+import {
+  DashboardPrimaryCta,
+} from "@/components/dashboard/layout/DashboardCta";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 
 export function GrowthLoopOverviewBanner({
@@ -13,6 +15,9 @@ export function GrowthLoopOverviewBanner({
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-accent">
           Growth Loop
+          <span className="ml-2 rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+            Pilot
+          </span>
         </p>
         <p className="mt-1 font-display text-base font-bold text-ink">
           Paste your URL once — daily SEO articles & AI visibility on autopilot
@@ -21,12 +26,9 @@ export function GrowthLoopOverviewBanner({
           Auto-publish to your site, request backlinks, and track ChatGPT & Perplexity citations.
         </p>
       </div>
-      <Link
-        href="/dashboard/growth-loop"
-        className="shrink-0 rounded-full bg-ink px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-ink/90"
-      >
-        Set up Growth Loop
-      </Link>
+      <DashboardPrimaryCta href="/dashboard/growth-loop" size="sm" className="shrink-0">
+        Set up Growth Loop →
+      </DashboardPrimaryCta>
     </div>
   );
 }

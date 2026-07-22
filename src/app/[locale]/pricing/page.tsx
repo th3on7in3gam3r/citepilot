@@ -48,18 +48,15 @@ export default async function PricingPage({ params }: Props) {
           description={t("description")}
         />
 
-        <Container className="py-14 md:py-20 lg:py-24">
+        <Container className="py-12 md:py-16 lg:py-20">
           <section
             className="mx-auto max-w-5xl"
             aria-labelledby="pricing-overview"
           >
-            <h2
-              id="pricing-overview"
-              className="font-display text-center text-xl font-bold text-foreground dark:text-white md:text-2xl"
-            >
+            <h2 id="pricing-overview" className="marketing-section-title text-center">
               {t("overviewTitle")}
             </h2>
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="mt-6 grid gap-3 md:mt-7 md:grid-cols-3 md:gap-4">
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:backdrop-blur-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent dark:text-glow">
                   {t("freeLabel")}
@@ -96,7 +93,7 @@ export default async function PricingPage({ params }: Props) {
                 </p>
               </div>
             </div>
-            <p className="mx-auto mt-6 max-w-3xl text-center text-sm leading-relaxed text-muted dark:text-white/45">
+            <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-relaxed text-muted dark:text-white/45">
               {t("allPlansInclude")}
             </p>
           </section>
@@ -104,25 +101,19 @@ export default async function PricingPage({ params }: Props) {
           <StudioBundleCta />
 
           <section
-            className="mx-auto mt-14 max-w-3xl md:mt-16"
+            className="marketing-section-gap mx-auto max-w-3xl"
             aria-labelledby="pricing-faq"
           >
-            <h2
-              id="pricing-faq"
-              className="font-display text-center text-xl font-bold text-foreground dark:text-white md:text-2xl"
-            >
+            <h2 id="pricing-faq" className="marketing-section-title text-center">
               {t("faqTitle")}
             </h2>
-            <div className="mt-8">
+            <div className="mt-6 md:mt-7">
               <PricingFaqAccordion items={pricingPageFaqItems()} />
             </div>
           </section>
 
-          <section className="mt-14 md:mt-16" aria-labelledby="pricing-tiers">
-            <h2
-              id="pricing-tiers"
-              className="font-display text-center text-xl font-bold text-foreground dark:text-white md:text-2xl"
-            >
+          <section className="marketing-section-gap" aria-labelledby="pricing-tiers">
+            <h2 id="pricing-tiers" className="marketing-section-title text-center">
               {t("tiersTitle")}
             </h2>
             <ProductHuntPromoBar />
@@ -132,19 +123,16 @@ export default async function PricingPage({ params }: Props) {
           <ProductTransparencySection />
 
           <section
-            className="mx-auto mt-14 max-w-3xl text-center"
+            className="marketing-section-gap mx-auto max-w-3xl text-center"
             aria-labelledby="pricing-tools"
           >
-            <h2
-              id="pricing-tools"
-              className="font-display text-xl font-bold text-foreground dark:text-white md:text-2xl"
-            >
+            <h2 id="pricing-tools" className="marketing-section-title">
               {t("toolsTitle")}
             </h2>
             <p className="mt-3 text-sm text-muted dark:text-white/55">
               {t("toolsBody")}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <div className="mt-5 flex flex-wrap justify-center gap-2.5">
               <Link
                 href="/compare/semrush"
                 className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground/80 transition hover:border-accent/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:border-white/15 dark:text-white/80"
@@ -172,7 +160,7 @@ export default async function PricingPage({ params }: Props) {
             </div>
           </section>
 
-          <div className="mt-14 text-foreground dark:text-white [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-muted dark:[&_h2]:text-white dark:[&_h3]:text-white dark:[&_p]:text-white/60 [&_a]:text-accent dark:[&_a]:text-glow">
+          <div className="marketing-section-gap text-foreground dark:text-white [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-muted dark:[&_h2]:text-white dark:[&_h3]:text-white dark:[&_p]:text-white/60 [&_a]:text-accent dark:[&_a]:text-glow">
             <PricingSeoIntro />
           </div>
         </Container>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
@@ -7,6 +8,8 @@ import { BlogManagerPanel } from "@/components/dashboard/BlogManagerPanel";
 import { CmsConnectionsPanel } from "@/components/dashboard/CmsConnectionsPanel";
 import { GenerateArticlePanel } from "@/components/dashboard/GenerateArticlePanel";
 import { ContentStudioWorkflowBanner } from "@/components/dashboard/content/ContentStudioWorkflowBanner";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 import { DomainInfoSection } from "@/components/dashboard/site-details/DomainInfoSection";
 import { GoogleDataSection } from "@/components/dashboard/site-details/GoogleDataSection";
 import { SiteDetailsFooter } from "@/components/dashboard/site-details/SiteDetailsShared";
@@ -28,6 +31,9 @@ import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
 import { contentStudioLegacyRedirect } from "@/lib/content-studio";
 import { effectInit } from "@/lib/react/effect-init";
+import { productFeatures } from "@/lib/features";
+
+const contentFeature = productFeatures.find((f) => f.id === "content")!;
 
 const VALID_SECTIONS = new Set<SiteDetailsSectionId>(
   SITE_DETAILS_SECTIONS.map((s) => s.id),
@@ -164,6 +170,16 @@ export function SiteDetailsModule() {
   return (
     <div className="-mx-4 flex min-h-[calc(100dvh-8rem)] flex-col md:-mx-6 lg:-mx-8">
       <div className="px-4 md:px-6 lg:px-8">
+        <DashboardPageHeader
+          headingLevel="h2"
+          title="Content Studio"
+          description={contentFeature.description}
+          action={
+            <Link href="/dashboard/content?section=generate" className={dashPrimaryCta}>
+              Generate article →
+            </Link>
+          }
+        />
         <ContentStudioWorkflowBanner />
       </div>
       <div className="flex flex-1 flex-col gap-5 px-4 md:px-6 lg:flex-row lg:px-8">

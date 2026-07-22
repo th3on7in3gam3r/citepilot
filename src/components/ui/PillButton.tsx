@@ -5,7 +5,7 @@ type Variant = "gradient" | "light" | "outline";
 
 const styles: Record<Variant, string> = {
   gradient:
-    "bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent text-white shadow-[0_8px_28px_rgba(107,140,255,0.4)] hover:shadow-[0_12px_36px_rgba(107,140,255,0.5)] hover:brightness-[1.03]",
+    "btn-marketing-primary shadow-[0_8px_28px_color-mix(in_srgb,var(--color-accent)_40%,transparent)] hover:shadow-[0_12px_36px_color-mix(in_srgb,var(--color-accent)_48%,transparent)]",
   light:
     "bg-white text-ink shadow-lg hover:bg-cream",
   outline:

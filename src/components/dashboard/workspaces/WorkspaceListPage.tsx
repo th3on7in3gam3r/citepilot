@@ -7,6 +7,8 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type { WorkspaceListItem } from "@/hooks/useWorkspace";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 
 type SortKey = "domain" | "citationScore" | "promptCount" | "lastScanAt" | "status";
 type SortDir = "asc" | "desc";
@@ -155,27 +157,27 @@ export function WorkspaceListPage() {
     </button>
   );
 
+  const limitsHint =
+    limits &&
+    (limits.max == null
+      ? `${limits.count} workspaces — Unlimited`
+      : `${limits.count} of ${limits.max} workspaces used`);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="font-display text-xl font-bold text-ink">Workspaces</h2>
-          {limits && (
-            <p className="mt-1 text-sm text-muted">
-              {limits.max == null
-                ? `${limits.count} workspaces — Unlimited`
-                : `${limits.count} of ${limits.max} workspaces used`}
-            </p>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={openWizard}
-          className="rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink/90"
-        >
-          + Add workspace
-        </button>
-      </div>
+      <DashboardPageHeader
+        headingLevel="h2"
+        title="Workspaces"
+        description={
+          limitsHint ??
+          "Manage client domains, bulk scans, and citation exports across your portfolio."
+        }
+        action={
+          <button type="button" onClick={openWizard} className={dashPrimaryCta}>
+            Add workspace →
+          </button>
+        }
+      />
 
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
@@ -235,12 +237,8 @@ export function WorkspaceListPage() {
                   <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
                     Add a client domain to start tracking AI citations.
                   </p>
-                  <button
-                    type="button"
-                    onClick={openWizard}
-                    className="mt-4 inline-flex rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
-                  >
-                    + Add workspace
+                  <button type="button" onClick={openWizard} className={`${dashPrimaryCta} mt-4`}>
+                    Add workspace →
                   </button>
                 </td>
               </tr>

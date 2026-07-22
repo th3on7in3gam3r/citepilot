@@ -130,6 +130,7 @@ export const dashboardNav: DashboardNavItem[] = [
     description: "HTTP, SSL, port, keyword, and cron monitors with instant alerts",
     icon: "uptime",
     section: "main",
+    badge: "Pilot",
   },
   {
     id: "growth-loop",
@@ -143,7 +144,7 @@ export const dashboardNav: DashboardNavItem[] = [
   {
     id: "feedback",
     label: "Suggest a feature",
-    href: "/feedback",
+    href: "/dashboard/feedback",
     description: "Upvote ideas and share what to build next",
     icon: "feedback",
     section: "footer",

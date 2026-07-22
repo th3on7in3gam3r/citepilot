@@ -1,6 +1,7 @@
 "use server";
 
 import { auth, getRealSessionUser } from "@/lib/auth/server";
+import { resolveAuthRedirect } from "@/lib/auth/redirect";
 import { redirect } from "next/navigation";
 import { isTotpEnabledForUser } from "@/lib/security/totp-store";
 import { isTwoFactorVerified } from "@/lib/security/totp-session";
@@ -25,8 +26,7 @@ export async function signInWithEmail(
     return { error: error.message ?? "Sign in failed" };
   }
 
-  const from = formData.get("from") as string | null;
-  const destination = from && from.startsWith("/") ? from : "/start";
+  const destination = resolveAuthRedirect(formData.get("from") as string | null);
 
   const session = await getRealSessionUser();
   if (

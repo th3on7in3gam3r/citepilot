@@ -13,7 +13,13 @@ export function AuthSubmitButton({
 }) {
   const isDisabled = pending || disabled;
   return (
-    <button type="submit" disabled={isDisabled} className={authSubmitClass}>
+    <button
+      type="submit"
+      disabled={isDisabled}
+      aria-busy={pending}
+      aria-disabled={isDisabled}
+      className={authSubmitClass}
+    >
       {pending ? pendingLabel : label}
     </button>
   );

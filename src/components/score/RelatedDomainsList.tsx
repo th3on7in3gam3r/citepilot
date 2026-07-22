@@ -13,15 +13,18 @@ export function RelatedDomainsList({
 
   return (
     <aside className="rounded-2xl border border-border bg-white p-6 shadow-sm">
-      <h2 className="font-display text-sm font-bold uppercase tracking-widest text-muted">
+      <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+        Benchmark
+      </p>
+      <h2 className="font-display mt-1 text-sm font-bold text-ink">
         Other domains {categoryLabel}
       </h2>
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-4 space-y-1">
         {domains.map((item) => (
           <li key={item.domain}>
             <Link
               href={`/score/${encodeURIComponent(item.domain)}`}
-              className="group flex items-center justify-between rounded-xl px-3 py-2 transition hover:bg-cream"
+              className="group flex items-center justify-between rounded-xl px-3 py-2 transition hover:bg-surface"
             >
               <span className="truncate text-sm font-medium text-ink group-hover:text-accent">
                 {item.domain}

@@ -220,7 +220,7 @@ export function CitationVolumeChart({
         )}
 
         {!compact && (
-          <aside className="rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
+          <aside className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-card to-card p-4">
             <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)_180px] lg:items-start">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">

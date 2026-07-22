@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
-export const revalidate = 3600;
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { MainContent } from "@/components/layout/MainContent";
 import { GeoPlaybookJsonLd } from "@/components/marketing/GeoPlaybookJsonLd";
 import { GeoGuideArticle } from "@/components/marketing/GeoGuideArticle";
 import { GeoPlaybookEmailGate } from "@/components/tools/GeoPlaybookEmailGate";
@@ -13,6 +12,8 @@ import { geoPlaybook } from "@/lib/marketing/geo-playbook";
 import { geoPlaybookTool as toolMeta } from "@/lib/marketing/tools-pages";
 import { site } from "@/lib/site";
 import { clampMetaDescription } from "@/lib/seo/meta";
+
+export const revalidate = 3600;
 
 const pageUrl = `${site.url.replace(/\/$/, "")}${geoPlaybook.path}`;
 
@@ -35,11 +36,14 @@ export default function GeoPlaybookToolPage() {
     <>
       <GeoPlaybookJsonLd />
       <ToolSoftwareApplicationJsonLd tool={toolMeta} />
-      <Header />
-      <main id="main-content" tabIndex={-1} className="bg-cream pt-16 md:pt-[4.5rem]">
-        <Container className="border-b border-border py-6">
-          <p className="text-xs text-muted">
-            Last updated:{" "}
+      <Header light overlay />
+      <MainContent className="bg-cream pt-16 md:pt-[4.5rem]">
+        <Container className="border-b border-border py-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+            Free interactive guide
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Last updated{" "}
             <time dateTime={geoPlaybook.dateModified}>
               {new Date(geoPlaybook.dateModified).toLocaleDateString("en-US", {
                 month: "long",
@@ -53,7 +57,7 @@ export default function GeoPlaybookToolPage() {
         <Container className="pb-16">
           <RelatedTools currentId="geo-playbook" />
         </Container>
-      </main>
+      </MainContent>
       <Footer />
     </>
   );

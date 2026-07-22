@@ -43,7 +43,7 @@ export function DashboardMobileNav({ ready }: { ready: boolean }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-ink hover:bg-surface"
+        className="dash-icon-btn rounded-xl"
         aria-label="Open menu"
         aria-expanded={open}
         aria-controls={DASHBOARD_MOBILE_MENU_ID}

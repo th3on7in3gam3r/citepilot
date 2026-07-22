@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
 import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
@@ -114,6 +115,11 @@ export function AlertsPageClient() {
         headingLevel="h2"
         title="Alerts"
         description="Timeline of Slack, webhook, and email alerts sent for your monitored prompts."
+        action={
+          <Link href="/dashboard/settings#notifications" className={dashPrimaryCta}>
+            Notification settings →
+          </Link>
+        }
       />
 
       {workspace && !workspace.hasRealAudit && (

@@ -12,8 +12,8 @@ function PlanBadge({ plan }: { plan: "free" | "pilot" | "fleet" | string }) {
     plan === "fleet"
       ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300"
       : plan === "pilot"
-        ? "border-accent/30 bg-accent/10 text-accent"
-        : "border-border bg-surface text-muted";
+        ? "border-accent/30 bg-accent/10 text-accent-deep dark:text-accent"
+        : "border-[var(--dashboard-sidebar-border)] bg-[var(--color-surface)] text-muted";
 
   const label = plan === "fleet" ? "Fleet" : plan === "pilot" ? "Pilot" : "Free";
 
@@ -58,7 +58,7 @@ export function DashboardRail() {
       <div className="dash-rail__footer shrink-0 p-3">
         {ready && workspace ? (
           <Link href="/dashboard/settings" className="dash-rail__workspace group">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-sm font-bold text-accent transition group-hover:bg-accent/15">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-sm font-bold text-accent-deep transition group-hover:bg-accent/15 dark:text-accent">
               {initial ?? "?"}
             </span>
             <span className="min-w-0 flex-1">
@@ -85,7 +85,7 @@ export function DashboardRail() {
           </Link>
         ) : (
           <Link href="/dashboard/settings" className="dash-rail__workspace group">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface text-sm font-bold text-muted">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-surface)] text-sm font-bold text-muted">
               {initial ?? "?"}
             </span>
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-muted group-hover:text-ink">

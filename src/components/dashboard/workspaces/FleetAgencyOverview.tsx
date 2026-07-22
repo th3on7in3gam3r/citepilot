@@ -7,7 +7,9 @@ import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
+import { dashPrimaryCta, dashSecondaryCta } from "@/lib/dashboard/surface-classes";
 import { fleetWorkspaceDashboardHref } from "@/lib/workspace/fleet-dashboard";
 import type { WorkspaceListItem } from "@/hooks/useWorkspace";
 
@@ -379,44 +381,36 @@ export function FleetAgencyOverview() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Agency overview</p>
-          <h2 className="font-display mt-1 text-2xl font-bold text-ink">
-            {data.workspaceCount} client workspace{data.workspaceCount === 1 ? "" : "s"}
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Fleet dashboard — monitor citation health across all client sites.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={bulkBusy || bulkStatus?.status === "running" || bulkStatus?.status === "queued"}
-            onClick={() => void runAllScans()}
-            className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50"
-          >
-            {bulkBusy || bulkStatus?.status === "running" || bulkStatus?.status === "queued"
-              ? "Scanning…"
-              : "Run all scans"}
-          </button>
-          <button
-            type="button"
-            disabled={bulkBusy}
-            onClick={() => void runBulkExport()}
-            className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50"
-          >
-            Export all reports
-          </button>
-          <button
-            type="button"
-            onClick={openWizard}
-            className="rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink/90"
-          >
-            + Add workspace
-          </button>
-        </div>
-      </div>
+      <DashboardPageHeader
+        headingLevel="h2"
+        title={`${data.workspaceCount} client workspace${data.workspaceCount === 1 ? "" : "s"}`}
+        description="Fleet dashboard — monitor citation health across all client sites."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={bulkBusy || bulkStatus?.status === "running" || bulkStatus?.status === "queued"}
+              onClick={() => void runAllScans()}
+              className={dashSecondaryCta}
+            >
+              {bulkBusy || bulkStatus?.status === "running" || bulkStatus?.status === "queued"
+                ? "Scanning…"
+                : "Run all scans"}
+            </button>
+            <button
+              type="button"
+              disabled={bulkBusy}
+              onClick={() => void runBulkExport()}
+              className={dashSecondaryCta}
+            >
+              Export all reports
+            </button>
+            <button type="button" onClick={openWizard} className={dashPrimaryCta}>
+              Add workspace →
+            </button>
+          </div>
+        }
+      />
 
       {showProgress && (
         <BulkScanProgressBar
@@ -478,12 +472,8 @@ export function FleetAgencyOverview() {
             <p className="mt-2 text-sm text-muted">
               Add your first client site to start tracking citations at scale.
             </p>
-            <button
-              type="button"
-              onClick={openWizard}
-              className="mt-5 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-white"
-            >
-              + Add workspace
+            <button type="button" onClick={openWizard} className={`${dashPrimaryCta} mt-5`}>
+              Add workspace →
             </button>
           </div>
         ) : (

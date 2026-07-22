@@ -18,6 +18,7 @@ import {
   parseAttributionCookie,
   PH_ATTRIBUTION_COOKIE,
 } from "@/lib/launch/utm";
+import { buildStartRedirect, resolveAuthRedirect } from "@/lib/auth/redirect";
 import { redirect } from "next/navigation";
 
 function cleanDomain(raw: string): string {
@@ -91,8 +92,13 @@ export async function signUpWithEmail(
     }
 
     const phQuery = fromProductHunt ? "&ph_signup=1" : "";
-    redirect(`/start?domain=${encodeURIComponent(domain)}${phQuery}`);
+    const from = resolveAuthRedirect(formData.get("from") as string | null);
+    const startPath =
+      from === "/start"
+        ? `${buildStartRedirect(domain)}${phQuery}`
+        : from;
+    redirect(startPath);
   }
 
-  redirect(`/start?domain=${encodeURIComponent(domain)}`);
+  redirect(buildStartRedirect(domain));
 }

@@ -140,7 +140,7 @@ export function GoogleAnalyticsPanel({
       )}
 
       {configured && !connected && !loading && (
-        <div className="mt-4 rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.06))] px-5 py-5">
+        <div className="mt-4 rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-card to-card px-5 py-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
             Search Console connection
           </p>
@@ -189,7 +189,7 @@ export function GoogleAnalyticsPanel({
         title={preferOrganicLead ? "Organic insights" : "Organic performance"}
         className="mt-6"
       >
-        <div className="mb-6 dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
+        <div className="mb-6 dash-gradient-panel overflow-hidden rounded-2xl border border-border p-5 dark:border-accent/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">

@@ -1,4 +1,8 @@
-import Link from "next/link";
+import {
+  DashboardPrimaryCta,
+  DashboardPrimaryCtaButton,
+  DashboardSecondaryCta,
+} from "@/components/dashboard/layout/DashboardCta";
 
 type Props = {
   title: string;
@@ -25,11 +29,8 @@ export function DashboardActivationStrip({
   onPrimaryClick,
   primaryDisabled,
 }: Props) {
-  const primaryClass =
-    "inline-flex shrink-0 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-60";
-
   return (
-    <div className="mb-6 rounded-2xl border border-l-4 border-border border-l-accent bg-card p-5 shadow-sm md:p-6">
+    <div className="dash-activation-strip">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="font-display text-lg font-bold text-ink">{title}</p>
@@ -37,26 +38,22 @@ export function DashboardActivationStrip({
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {onPrimaryClick ? (
-            <button
-              type="button"
+            <DashboardPrimaryCtaButton
               onClick={onPrimaryClick}
               disabled={primaryDisabled}
-              className={primaryClass}
+              size="sm"
             >
               {primaryLabel}
-            </button>
+            </DashboardPrimaryCtaButton>
           ) : primaryHref ? (
-            <Link href={primaryHref} className={primaryClass}>
+            <DashboardPrimaryCta href={primaryHref} size="sm">
               {primaryLabel}
-            </Link>
+            </DashboardPrimaryCta>
           ) : null}
           {secondaryHref && secondaryLabel ? (
-            <Link
-              href={secondaryHref}
-              className="inline-flex rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-accent/40"
-            >
+            <DashboardSecondaryCta href={secondaryHref} size="sm">
               {secondaryLabel}
-            </Link>
+            </DashboardSecondaryCta>
           ) : null}
         </div>
       </div>

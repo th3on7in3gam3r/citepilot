@@ -1,14 +1,8 @@
-import Link from "next/link";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
-import {
-  CitationCheckerSeoArticle,
-} from "@/components/tools/CitationCheckerSeoArticle";
+import { CitationCheckerSeoArticle } from "@/components/tools/CitationCheckerSeoArticle";
 import { CitationCheckerTool } from "@/components/tools/CitationCheckerTool";
 import { RelatedTools } from "@/components/tools/RelatedTools";
+import { ToolPageShell } from "@/components/tools/ToolPageShell";
 import { ToolSoftwareApplicationJsonLd } from "@/components/tools/ToolSoftwareApplicationJsonLd";
-import { Container } from "@/components/ui/Container";
 import { citationCheckerTool } from "@/lib/marketing/tools-pages";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
@@ -29,23 +23,14 @@ export const metadata: Metadata = {
 
 export default function CitationCheckerToolPage() {
   return (
-    <>
-      <ToolSoftwareApplicationJsonLd tool={citationCheckerTool} />
-      <Header light overlay />
-      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
-        <MarketingDarkHero
-          eyebrow="Free tool"
-          title={citationCheckerTool.h1}
-          description={citationCheckerTool.description}
-        />
-
-        <Container className="py-14 md:py-20">
-          <CitationCheckerTool />
-          <CitationCheckerSeoArticle />
-          <RelatedTools currentId="citation-checker" />
-        </Container>
-      </main>
-      <Footer />
-    </>
+    <ToolPageShell
+      title={citationCheckerTool.h1}
+      description={citationCheckerTool.description}
+      jsonLd={<ToolSoftwareApplicationJsonLd tool={citationCheckerTool} />}
+    >
+      <CitationCheckerTool />
+      <CitationCheckerSeoArticle />
+      <RelatedTools currentId="citation-checker" />
+    </ToolPageShell>
   );
 }

@@ -15,7 +15,7 @@ export function BlogHero({
   children?: ReactNode;
 }) {
   return (
-    <div className="blog-hero relative overflow-hidden border-b border-white/[0.06] bg-[#04060c] text-white">
+    <div className="blog-hero relative overflow-hidden border-b border-white/[0.06] blog-surface text-white">
       <div className="hero-premium-orb hero-premium-orb--cyan opacity-80" aria-hidden />
       <div
         className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[rgba(16,185,129,0.08)] blur-[80px]"
@@ -25,15 +25,12 @@ export function BlogHero({
 
       <Container className="relative z-10 py-20 text-center md:py-24 lg:py-28">
         {eyebrow && (
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-semibold text-glow">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
-            {eyebrow}
-          </div>
+          <p className="marketing-eyebrow text-glow">{eyebrow}</p>
         )}
-        <h1 className="font-display mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+        <h1 className="font-display mx-auto mt-4 max-w-3xl text-[2rem] font-bold leading-[1.1] tracking-[-0.02em] text-white sm:text-[2.375rem] md:text-[2.75rem] lg:text-[3rem]">
           {title}
         </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/60 md:text-lg">
+        <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/60 md:mt-5 md:text-lg">
           {description}
         </p>
 
@@ -55,7 +52,7 @@ export function BlogHero({
       </Container>
 
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[#04060c]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[var(--hero-bg)]"
         aria-hidden
       />
     </div>

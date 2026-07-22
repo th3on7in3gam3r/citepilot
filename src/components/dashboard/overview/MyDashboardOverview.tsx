@@ -359,9 +359,9 @@ function MyDashboardOverviewContent({
         actions={
           <Link
             href="/dashboard/geo-audit"
-            className="rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
+            className="rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
           >
-            Run new scan
+            Run new scan →
           </Link>
         }
       >

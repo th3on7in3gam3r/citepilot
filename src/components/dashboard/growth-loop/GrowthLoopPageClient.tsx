@@ -4,6 +4,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
+import {
+  DashboardPrimaryCta,
+  DashboardPrimaryCtaButton,
+  DashboardSecondaryCta,
+} from "@/components/dashboard/layout/DashboardCta";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useBilling } from "@/contexts/BillingContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -206,7 +212,33 @@ export function GrowthLoopPageClient() {
       <DashboardPageHeader
         title="Growth Loop"
         description="Paste your URL once — we publish daily SEO articles to your site, build backlinks automatically, and track your brand in AI search results."
+        action={
+          isPaid && status?.enabled ? (
+            <DashboardPrimaryCtaButton
+              onClick={() => void handleRunNow()}
+              disabled={running}
+              size="sm"
+            >
+              {running ? "Running…" : "Run now →"}
+            </DashboardPrimaryCtaButton>
+          ) : isPaid ? (
+            <DashboardPrimaryCta href="#gl-url" size="sm">
+              Activate Growth Loop →
+            </DashboardPrimaryCta>
+          ) : undefined
+        }
       />
+
+      {workspace && !workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Run a GEO audit before Growth Loop"
+          description="Daily articles and rescans work best when citation gaps are measured first — no fabricated lift metrics."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/settings/integrations"
+          secondaryLabel="Connect CMS"
+        />
+      )}
 
       {!billingReady ? (
         <div className="h-40 animate-pulse rounded-xl bg-surface" />
@@ -245,26 +277,22 @@ export function GrowthLoopPageClient() {
           )}
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
+            <DashboardPrimaryCtaButton
               onClick={() => void handleRunNow()}
               disabled={running}
-              className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              size="sm"
             >
               {running ? "Running…" : "Run now"}
-            </button>
-            <Link
+            </DashboardPrimaryCtaButton>
+            <DashboardSecondaryCta
               href="/dashboard/content?section=working-files"
-              className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
+              size="sm"
             >
               View articles
-            </Link>
-            <Link
-              href="/dashboard/settings/integrations"
-              className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
-            >
+            </DashboardSecondaryCta>
+            <DashboardSecondaryCta href="/dashboard/settings/integrations" size="sm">
               CMS settings
-            </Link>
+            </DashboardSecondaryCta>
             <button
               type="button"
               onClick={() => void handleDeactivate()}
@@ -376,13 +404,9 @@ export function GrowthLoopPageClient() {
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={activating}
-                className="rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-              >
+              <DashboardPrimaryCtaButton type="submit" disabled={activating} size="sm">
                 {activating ? "Activating & generating first article…" : "Activate Growth Loop"}
-              </button>
+              </DashboardPrimaryCtaButton>
             </form>
           </Panel>
         </>

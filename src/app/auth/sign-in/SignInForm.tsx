@@ -4,17 +4,26 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import { AuthDivider } from "@/components/auth/AuthDivider";
+import { AuthErrorAlert } from "@/components/auth/AuthErrorAlert";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
 import { authFormCardClass, authInputClass, authLabelClass } from "@/components/auth/auth-styles";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { PasswordField } from "@/components/auth/PasswordField";
+import { DEFAULT_POST_AUTH_PATH, resolveAuthRedirect } from "@/lib/auth/redirect";
 import { signInWithEmail } from "./actions";
 
 export function SignInForm() {
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") ?? searchParams.get("redirect") ?? "/start";
+  const from = resolveAuthRedirect(
+    searchParams.get("from") ?? searchParams.get("redirect"),
+  );
   const oauthError = searchParams.get("error") === "google";
   const [state, formAction, pending] = useActionState(signInWithEmail, null);
+
+  const signUpHref =
+    from !== DEFAULT_POST_AUTH_PATH
+      ? `/auth/sign-up?from=${encodeURIComponent(from)}`
+      : "/auth/sign-up";
 
   return (
     <div className={authFormCardClass}>
@@ -27,22 +36,20 @@ export function SignInForm() {
       </p>
 
       <div className="mt-6">
-        <GoogleSignInButton variant="light" callbackPath="/start" />
+        <GoogleSignInButton variant="light" callbackPath={DEFAULT_POST_AUTH_PATH} />
       </div>
 
       <AuthDivider />
 
       {oauthError && (
-        <p
-          id="sign-in-oauth-error"
-          role="alert"
-          className="mb-4 rounded-xl border border-red-500/40 bg-red-900/30 px-4 py-3 text-sm text-red-300"
-        >
-          Google sign-in was canceled or failed. Try again or use email below.
-        </p>
+        <div className="mb-4">
+          <AuthErrorAlert id="sign-in-oauth-error">
+            Google sign-in was canceled or failed. Try again or use email below.
+          </AuthErrorAlert>
+        </div>
       )}
 
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-4" noValidate>
         <input type="hidden" name="from" value={from} />
         <label htmlFor="sign-in-email" className={authLabelClass}>
           Email
@@ -54,15 +61,23 @@ export function SignInForm() {
             aria-required="true"
             autoComplete="email"
             suppressHydrationWarning
+            aria-invalid={Boolean(state?.error)}
+            aria-describedby={state?.error ? "sign-in-error" : undefined}
             className={authInputClass}
           />
         </label>
 
         <div>
-          <PasswordField label="Password" autoComplete="current-password" />
+          <PasswordField
+            label="Password"
+            autoComplete="current-password"
+            invalid={Boolean(state?.error)}
+            describedBy={state?.error ? "sign-in-error" : undefined}
+          />
           <div className="mt-2 flex items-center justify-between gap-3">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+            <label htmlFor="sign-in-remember" className="flex cursor-pointer items-center gap-2 text-sm text-muted">
               <input
+                id="sign-in-remember"
                 type="checkbox"
                 name="rememberMe"
                 defaultChecked
@@ -80,9 +95,7 @@ export function SignInForm() {
         </div>
 
         {state?.error && (
-          <p id="sign-in-error" role="alert" className="text-sm text-red-300">
-            {state.error}
-          </p>
+          <AuthErrorAlert id="sign-in-error">{state.error}</AuthErrorAlert>
         )}
 
         <AuthSubmitButton
@@ -94,7 +107,7 @@ export function SignInForm() {
 
       <p className="mt-6 text-center text-sm text-muted">
         No account?{" "}
-        <Link href="/auth/sign-up" className="font-semibold text-accent">
+        <Link href={signUpHref} className="font-semibold text-accent">
           Create one
         </Link>
       </p>

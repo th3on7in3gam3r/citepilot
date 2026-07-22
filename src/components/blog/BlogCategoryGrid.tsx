@@ -18,12 +18,10 @@ export function BlogCategoryGrid({
     <section className="mt-16" aria-labelledby="blog-topics-heading">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-glow">
-            Topics
-          </p>
+          <p className="blog-section-eyebrow">Topics</p>
           <h2
             id="blog-topics-heading"
-            className="font-display mt-1 text-2xl font-bold text-white md:text-3xl"
+            className="blog-section-title mt-1"
           >
             Explore by category
           </h2>

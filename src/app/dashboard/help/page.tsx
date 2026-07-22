@@ -1,5 +1,9 @@
-import Link from "next/link";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import {
+  DashboardPrimaryCta,
+  DashboardSecondaryCta,
+} from "@/components/dashboard/layout/DashboardCta";
+import Link from "next/link";
 import {
   helpGuides,
   helpQuickAnswers,
@@ -14,15 +18,20 @@ export const metadata: Metadata = {
 
 export default function DashboardHelpPage() {
   return (
-    <>
+    <div className="dash-page">
       <DashboardPageHeader
         title="Help"
         description="Guides, workflows, and answers for audits, monitoring, alerts, CMS, and Fleet."
+        action={
+          <DashboardPrimaryCta href="/dashboard/geo-audit" size="sm">
+            Run GEO audit →
+          </DashboardPrimaryCta>
+        }
       />
 
       <div className="space-y-6">
         <Panel>
-          <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.06))] p-5">
+          <div className="overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-card to-card p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
               Help center
             </p>
@@ -37,21 +46,22 @@ export default function DashboardHelpPage() {
             {helpGuides.map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] p-5 shadow-sm"
+                className="dash-content-card flex flex-col p-5"
               >
                 <p className="font-semibold text-ink">{item.title}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">
                   {item.description}
                 </p>
-                <Link
+                <DashboardSecondaryCta
                   href={item.href}
-                  className="mt-4 inline-flex rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent/40 hover:bg-accent/5"
+                  size="sm"
+                  className="mt-4 w-fit"
                   {...(item.external
                     ? { target: "_blank", rel: "noopener noreferrer" }
                     : {})}
                 >
                   {item.cta}
-                </Link>
+                </DashboardSecondaryCta>
               </div>
             ))}
           </div>
@@ -72,14 +82,14 @@ export default function DashboardHelpPage() {
                   <p className="mt-1 text-sm leading-relaxed text-muted">
                     {step.description}
                   </p>
-                  {step.href && (
+                  {step.href ? (
                     <Link
                       href={step.href}
                       className="mt-2 inline-block text-sm font-semibold text-accent hover:underline"
                     >
                       Go there →
                     </Link>
-                  )}
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -100,6 +110,6 @@ export default function DashboardHelpPage() {
           </div>
         </Panel>
       </div>
-    </>
+    </div>
   );
 }

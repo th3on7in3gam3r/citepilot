@@ -69,10 +69,8 @@ export function BlogSearch({
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-glow">
-            Library
-          </p>
-          <h2 className="font-display mt-1 text-2xl font-bold text-white md:text-3xl">
+          <p className="blog-section-eyebrow">Library</p>
+          <h2 className="blog-section-title mt-1">
             {query.trim() ? "Search results" : "Latest articles"}
           </h2>
         </div>

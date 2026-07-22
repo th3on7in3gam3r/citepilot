@@ -30,7 +30,7 @@ export function HeroCta({ initialVariant }: { initialVariant?: string }) {
     <Link
       href="/audit"
       onClick={handleClick}
-      className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-8 py-3.5 text-base font-bold text-white shadow-[0_4px_20px_rgba(14,165,233,0.3)] transition hover:scale-[1.02] hover:shadow-[0_6px_24px_rgba(14,165,233,0.35)] dark:shadow-[0_4px_24px_rgba(14,165,233,0.25)] dark:hover:shadow-[0_6px_28px_rgba(14,165,233,0.3)] sm:w-auto sm:min-w-[15rem]"
+      className="btn-marketing-primary w-full max-w-sm px-8 py-3.5 text-base sm:w-auto sm:min-w-[15rem]"
     >
       {label}
     </Link>

@@ -104,6 +104,18 @@ export const helpWorkflow: HelpWorkflowStep[] = [
 
 export const helpQuickAnswers: HelpQuickAnswer[] = [
   {
+    q: "What is Growth Loop?",
+    a: "Growth Loop is a Pilot+ automation: paste your site URL once, connect a CMS, and CitePilot generates daily SEO articles, optional auto-publish, backlink placements, and weekly AI visibility rescans. Open Operations → Growth Loop in the dashboard.",
+  },
+  {
+    q: "What is Uptime monitoring?",
+    a: "Pilot and Fleet can add HTTP, SSL, port, keyword, and cron health monitors that check every few minutes. Down or degraded states trigger alerts via Slack, webhooks, and your Alerts history. Free accounts see a preview — upgrade to Pilot to create monitors.",
+  },
+  {
+    q: "Where do I suggest product features?",
+    a: "Signed-in users can open Account → Suggest a feature in the dashboard sidebar to upvote the roadmap and submit ideas. Pilot and Fleet customers help prioritize what we ship next.",
+  },
+  {
     q: "What is the public score page vs the proof report?",
     a: "After an audit, CitePilot publishes a free SEO page at /score/yourdomain.com with your headline GEO score. Your proof report link (from email or Share) is the detailed private report — optional password. Both are linked from GEO Audit and post-audit emails. See /help/public-score-pages.",
   },

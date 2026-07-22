@@ -73,6 +73,7 @@ export function OnboardingFlow({
   const [domainStatus, setDomainStatus] = useState<DomainInputStatus>("idle");
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const meta = stepMeta[step];
   const isLast = step === TOTAL_STEPS - 1;
@@ -163,6 +164,7 @@ export function OnboardingFlow({
   async function finish() {
     setSubmitting(true);
     setCompleted(true);
+    setSubmitError(null);
     sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
     sessionStorage.setItem(ONBOARDING_WELCOME_TOAST_KEY, "1");
 
@@ -218,11 +220,17 @@ export function OnboardingFlow({
         router.push(`${signUp.pathname}${signUp.search}`);
         return;
       }
-    } catch {
-      /* proceed to dashboard with sessionStorage fallback */
-    }
 
-    router.push("/dashboard?welcome=1");
+      setSubmitting(false);
+      setCompleted(false);
+      setSubmitError("Could not create your workspace — try again.");
+      return;
+    } catch {
+      setSubmitting(false);
+      setCompleted(false);
+      setSubmitError("Something went wrong — try again.");
+      return;
+    }
   }
 
   function continueDisabledHint(): string | undefined {
@@ -577,6 +585,7 @@ export function OnboardingFlow({
             <OnboardingContinue
               onClick={next}
               disabled={!canContinue() || submitting}
+              loading={submitting}
               disabledHint={continueDisabledHint()}
               label={
                 submitting
@@ -588,6 +597,12 @@ export function OnboardingFlow({
                       : "Continue"
               }
             />
+
+            {submitError && (
+              <p role="alert" className="mt-4 text-center text-sm text-red-600">
+                {submitError}
+              </p>
+            )}
 
             {step > 0 && !submitting && (
               <button
