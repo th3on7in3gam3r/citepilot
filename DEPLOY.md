@@ -66,13 +66,13 @@ The Auth instance is dead or never finished provisioning. Trusted domains alone 
 
 ### Checklist (healthy Auth)
 
-**Apex production (DNS):** `https://getcitepilot.com` and `https://citepilot-flu8.onrender.com` currently serve the same live app (Stripe configured). Historical service id `srv-d9fr5pn41pts73epechg` may be **missing from the Render API** for some CLI logins — if Dashboard search for `flu8` fails, see [`docs/ops-production-db.md`](docs/ops-production-db.md).
+**Production target (Blueprint):** `https://citepilot.onrender.com` — `srv-d9fmicj7uimc73f0anog` (My Workspace). Healthy Aegis Loop Postgres + Neon Auth. `render.yaml` manages this service.
 
-**Blueprint / manageable service:** `https://citepilot.onrender.com` — `srv-d9fmicj7uimc73f0anog` (My Workspace). `render.yaml` targets this service. It does **not** automatically sync env to the apex host. Prefer fixing `DATABASE_URL*` + `HEALTH_SECRET` on **whichever service owns the custom domain**, or move the domain onto Blueprint `citepilot` after copying secrets.
+**Apex DNS** still may hit orphaned **flu8** (`citepilot-flu8.onrender.com` / `srv-d9fr5pn41pts73epechg`) until custom domains are moved — see [`docs/ops-production-db.md`](docs/ops-production-db.md) and `scripts/retry-attach-apex.sh`.
 
-1. On **flu8** Environment: `NEON_AUTH_BASE_URL` = Auth URL from Neon Console (Aegis Loop / Auth branch, must end in `/auth`), `NEON_AUTH_COOKIE_SECRET` (32+), `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` → redeploy
-   - Dashboard: https://dashboard.render.com/web/srv-d9fr5pn41pts73epechg
-   - `render.yaml` also pins `NEON_AUTH_BASE_URL` + `NEXT_PUBLIC_APP_URL` for Blueprint-managed services (cookie secret stays Dashboard-only)
+1. On **citepilot** Environment: `NEON_AUTH_BASE_URL` (Aegis Loop Auth URL ending in `/auth`), `NEON_AUTH_COOKIE_SECRET` (32+), `NEXT_PUBLIC_APP_URL=https://getcitepilot.com`, `DATABASE_URL_POOLED` + `DATABASE_URL_DIRECT` → redeploy
+   - Dashboard: https://dashboard.render.com/web/srv-d9fmicj7uimc73f0anog
+   - To finish apex cutover: delete `getcitepilot.com` from flu8 Custom Domains, then run `./scripts/retry-attach-apex.sh`
 2. Neon Auth trusted domains / origins (no trailing slash):
    - `https://getcitepilot.com`
    - `https://www.getcitepilot.com`
@@ -95,29 +95,29 @@ The Auth instance is dead or never finished provisioning. Trusted domains alone 
 
 ## Custom domain: getcitepilot.com → Render
 
-Production brand URL is **`https://getcitepilot.com`** (apex). On Render, **www redirects to apex**.
+Production brand URL is **`https://getcitepilot.com`** (apex). Prefer **www → apex** via DNS redirect (Hobby tier: only one free custom-domain slot after keeping `aegis-loop.com`).
 
-**Production service:** `https://citepilot-flu8.onrender.com` (`srv-d9fr5pn41pts73epechg`) — this is the post-Vercel host that serves the custom domain. Keep `NEON_AUTH_*` and `NEXT_PUBLIC_APP_URL` correct on this service.
+**Production service:** `https://citepilot.onrender.com` (`srv-d9fmicj7uimc73f0anog`).
 
-**Secondary service:** `https://citepilot.onrender.com` (`srv-d9fmicj7uimc73f0anog`) — Auth may already be healthy here; do not confuse it with apex production.
+**Legacy:** `citepilot-flu8.onrender.com` (`srv-d9fr5pn41pts73epechg`) — remove custom domains here before attaching apex to Blueprint `citepilot`.
 
 DNS (GoDaddy after nameservers are GoDaddy’s):
 
 | Type | Name | Data |
 |------|------|------|
 | A | @ | `216.24.57.1` (Render) |
-| CNAME | www | `citepilot-flu8.onrender.com` |
+| CNAME | www | `citepilot.onrender.com` (or redirect to apex) |
 
-1. **Render (flu8)** → Custom Domains → `getcitepilot.com` (+ www as redirect to apex).
-2. **Render env (flu8):** `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` + Neon Auth vars above
+1. **Render (citepilot)** → Custom Domains → `getcitepilot.com` (after flu8 release; `./scripts/retry-attach-apex.sh`).
+2. **Render env (citepilot):** `NEXT_PUBLIC_APP_URL=https://getcitepilot.com` + Neon Auth + `DATABASE_URL_POOLED` / `DATABASE_URL_DIRECT`
 3. Cron `APP_URL=https://getcitepilot.com`
 4. Neon Auth trusted domains as in the Neon Auth section above
 5. Stripe / GSC callbacks on `https://getcitepilot.com/...`
-6. Confirm hero loads and:
+6. Confirm:
    ```bash
    curl -H "X-Health-Secret: $HEALTH_SECRET" https://getcitepilot.com/api/health
    ```
-   → `checks.database.ok: true` (Supabase via `DATABASE_URL_POOLED` + `DATABASE_URL_DIRECT`).
+   → `checks.database.ok: true` (Aegis Loop Neon via pooled + direct).
 
 ## Vercel + Neon (legacy)
 

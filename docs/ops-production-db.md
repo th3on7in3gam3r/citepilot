@@ -1,64 +1,52 @@
-# Ops note — production Postgres (Phase 1)
+# Ops note — production Postgres / apex cutover
 
-Diagnosed **2026-07-22**.
+Updated **2026-07-22** (apex → Blueprint cutover in progress).
 
-## What is live
+## Current production topology
 
 | Host | Role | Notes |
 |------|------|--------|
-| `https://getcitepilot.com` | **Apex production** | Stripe `configured: true`; `x-render-origin-server: Render` |
-| `https://citepilot-flu8.onrender.com` | Same app as apex | Matches apex billing config |
-| `https://citepilot.onrender.com` | Blueprint / My Workspace | Stripe **not** configured; separate env |
+| `https://citepilot.onrender.com` | **Blueprint production target** (`srv-d9fmicj7uimc73f0anog`) | Healthy Aegis Loop Neon (`DATABASE_URL_POOLED` + `DATABASE_URL_DIRECT`), Neon Auth OK, Stripe keys restored |
+| `https://getcitepilot.com` / `https://citepilot-flu8.onrender.com` | **Still routed via orphaned flu8** (`srv-d9fr5pn41pts73epechg`) | Holds custom domains; CLI account can see `403` on env-vars but **cannot** list/delete the service or domains |
 
-## Access gap
+## Cutover progress
 
-- Documented flu8 service id `srv-d9fr5pn41pts73epechg` returns **404** on the Render API for the logged-in CLI account (`jerlessm@gmail.com` → **My Workspace** + **Cadence**).
-- Manageable web service: `srv-d9fmicj7uimc73f0anog` (`citepilot`).
-- That service has `DATABASE_URL` (Neon, pooler-shaped) but **no** `DATABASE_URL_POOLED` / `DATABASE_URL_DIRECT` / `HEALTH_SECRET`.
-- Recent logs on `citepilot`: `password authentication failed for user 'neondb_owner'`.
+1. Freed Hobby custom-domain slot: removed **`www.aegis-loop.com`** from Aegis Loop (`srv-d94nm8svikkc73cod8ag`). Apex `aegis-loop.com` kept. Point `www` → `https://aegis-loop.com` at the DNS registrar if needed.
+2. Removed leftover **`getcitepilot.com`** from Vercel Domains (DNS was already on GoDaddy → Render).
+3. Attach to `citepilot` still returns **409** — domain exists on flu8.
 
-Until flu8 is visible in Dashboard/API again **or** apex is moved onto the Blueprint service with working Postgres + Stripe, signed-in workspace routes will keep returning 503/500 when the app DB rejects credentials.
+## Unblock (one Dashboard action)
 
-## Required env on the service that serves getcitepilot.com
+Sign into the Render account that still owns **flu8** (not always the same CLI login as My Workspace):
 
-Set on **whichever** Render web service owns the custom domain (flu8 historically):
+1. Open [flu8 service](https://dashboard.render.com/web/srv-d9fr5pn41pts73epechg) → **Settings → Custom Domains**
+2. Delete **`getcitepilot.com`** and **`www.getcitepilot.com`**
+3. Run:
 
-1. `DATABASE_URL_POOLED` — Supabase transaction pooler `:6543` + `?pgbouncer=true`, **or** Neon `-pooler` URL with a **current** password
-2. `DATABASE_URL_DIRECT` — session / direct `:5432` for DDL
-3. `DATABASE_URL` — may match pooled; app prefers `DATABASE_URL_POOLED` when set
-4. `HEALTH_SECRET` — random 32+ chars so detailed health works
+```bash
+chmod +x scripts/retry-attach-apex.sh
+./scripts/retry-attach-apex.sh
+```
 
-Verify:
+4. GoDaddy DNS: keep `A @ → 216.24.57.1`; change **www** CNAME from `citepilot-flu8.onrender.com` → `citepilot.onrender.com` (or HTTP redirect to apex). Do **not** add `www` on Render until another Hobby slot is free.
+5. Smoke:
 
 ```bash
 curl -sS -H "X-Health-Secret: $HEALTH_SECRET" https://getcitepilot.com/api/health
-# expect checks.database.ok === true, pooled/direct flags sensible
+# expect checks.database.ok === true, pooled=true, direct=true
+
+# Signed-in Network tab:
+# POST /api/workspaces/check-domain → 200
+# POST /api/workspaces → 200
 ```
 
-Signed-in smoke (browser Network tab):
+## Env rules
 
-- `POST /api/workspaces/check-domain` → **200**
-- `POST /api/workspaces` → **200**
-- `GET /api/billing/status` → **200** with `signedIn: true`
+- Prefer **per-key** `PUT /env-vars/{KEY}`. A batch `PUT /env-vars` with a **partial** list **wipes** all other keys.
+- App DB: Aegis Loop Neon (same project as Neon Auth host `ep-delicate-lab-atd81pa3`).
+- Auth vs app DB stay split only by purpose (Auth URL vs `DATABASE_URL*`), same Neon project is OK.
 
-## Neon Auth vs app DB
+## Code hardening (already on main)
 
-- Auth: `NEON_AUTH_BASE_URL` (separate Auth host) — can work while app DB fails.
-- App data: `DATABASE_URL*` — workspace create / check-domain / audits.
-
-Do **not** put Neon Auth secrets into `DATABASE_URL`. Prefer Supabase for app Postgres if Neon Free compute is exhausted (see `DEPLOY.md`).
-
-## Code hardening (shipped with this note)
-
-- `ensurePostgres` proves `SELECT 1` first, then runs DDL best-effort so one migration failure does not block all queries when tables already exist.
-- `check-domain` logs sanitized `neonDbErrorDetail` (password / quota / unreachable) without connection strings.
-
-## Render API caution
-
-`PUT /v1/services/{id}/env-vars` with a **partial** list **replaces the entire env set**. Always update one key at a time (`PUT .../env-vars/{KEY}`) or send the full desired map.
-
-## Unblock path (2026-07-22)
-
-1. Blueprint service `citepilot` (`srv-d9fmicj7uimc73f0anog`) was pointed at **Aegis Loop** Neon (`ep-delicate-lab-atd81pa3`, same project as Neon Auth). Schema ensured (`workspaces` present).
-2. Apex `getcitepilot.com` / `citepilot-flu8` is **not** API-manageable from this CLI login — still needs Dashboard access **or** move the custom domain onto `citepilot` (Hobby tier is already at 2 domains on Aegis Loop: `aegis-loop.com` + `www`).
-3. After flu8 is reachable: set `DATABASE_URL_POOLED` + `DATABASE_URL_DIRECT` to the Aegis Loop URIs (or Supabase), set `HEALTH_SECRET`, Manual Deploy, then run the health + wizard smoke above.
+- `ensurePostgres`: `SELECT 1` first, best-effort DDL, require `workspaces` table.
+- `check-domain` logs sanitized `neonDbErrorDetail`.
