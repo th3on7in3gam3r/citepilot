@@ -41,7 +41,21 @@ async function loadAuthSession(): Promise<AuthSessionPayload> {
 
   try {
     const cached = await auth.getSession();
-    if (cached.data?.user?.id) return cached.data as AuthSessionPayload;
+    const userId =
+      cached.data?.user?.id ??
+      (cached.data as { session?: { userId?: string } } | null)?.session?.userId;
+    if (userId) {
+      const data = cached.data as AuthSessionPayload;
+      if (data?.user?.id) return data;
+      // Normalize session-only payloads to the shape callers expect.
+      return {
+        user: {
+          id: userId,
+          name: cached.data?.user?.name ?? null,
+          email: cached.data?.user?.email ?? null,
+        },
+      };
+    }
   } catch {
     /* try upstream without cache */
   }
@@ -50,7 +64,21 @@ async function loadAuthSession(): Promise<AuthSessionPayload> {
     const fresh = await auth.getSession({
       query: { disableCookieCache: "true" },
     });
-    return (fresh.data as AuthSessionPayload) ?? null;
+    const data = fresh.data as AuthSessionPayload;
+    if (data?.user?.id) return data;
+    const sessionUserId = (
+      fresh.data as { session?: { userId?: string } } | null
+    )?.session?.userId;
+    if (sessionUserId) {
+      return {
+        user: {
+          id: sessionUserId,
+          name: data?.user?.name ?? null,
+          email: data?.user?.email ?? null,
+        },
+      };
+    }
+    return data ?? null;
   } catch {
     return null;
   }
@@ -61,9 +89,18 @@ async function gateSessionUserId(
   request?: Request,
 ): Promise<string | null> {
   if (!userId) return null;
-  if (!(await isTotpEnabledForUser(userId))) return userId;
-  if (await isTwoFactorVerified(userId, request)) return userId;
-  return null;
+  try {
+    if (!(await isTotpEnabledForUser(userId))) return userId;
+    if (await isTwoFactorVerified(userId, request)) return userId;
+    return null;
+  } catch (error) {
+    // DB blips must not look like "signed out" (401) on every API call.
+    console.error(
+      "[auth] TOTP gate failed open",
+      error instanceof Error ? error.message : "unknown",
+    );
+    return userId;
+  }
 }
 
 export async function getSessionUserId(request?: Request): Promise<string | null> {

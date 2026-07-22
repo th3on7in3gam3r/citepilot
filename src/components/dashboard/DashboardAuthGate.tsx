@@ -11,10 +11,18 @@ function redirectToSignIn(router: ReturnType<typeof useRouter>, pathname: string
   router.replace(`${signIn.pathname}${signIn.search}`);
 }
 
+function hasClientSession(data: {
+  user?: { id?: string | null } | null;
+  session?: unknown;
+} | null | undefined): boolean {
+  return Boolean(data?.user?.id || data?.session);
+}
+
 /**
- * SEO hub routes stay crawlable for bots via proxy UA check, but browsers
- * must have a server-recognized session before mounting API-heavy providers.
- * Aligns with requireApiUser (user.id), not a loose client session object.
+ * Soft client gate. Neon middleware already protects human browsers on
+ * /dashboard*. Do NOT bounce to sign-in when /api/workspaces returns 401 —
+ * that race (cookies not yet readable to API while client session exists)
+ * is what locked users in a login loop.
  */
 export function DashboardAuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -27,24 +35,18 @@ export function DashboardAuthGate({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const { data } = await authClient.getSession();
-        const userId = data?.user?.id;
-        if (!userId) {
-          if (!cancelled) redirectToSignIn(router, pathname);
-          return;
+        if (cancelled) return;
+
+        if (!hasClientSession(data)) {
+          // One refresh in case session cookies just landed after OAuth.
+          const retry = await authClient.getSession();
+          if (cancelled) return;
+          if (!hasClientSession(retry.data)) {
+            redirectToSignIn(router, pathname);
+            return;
+          }
         }
 
-        // Prove the same cookies work for API routes (closes gate/API mismatch).
-        const probe = await fetch("/api/workspaces", { credentials: "include" });
-        if (cancelled) return;
-        if (probe.status === 401) {
-          redirectToSignIn(router, pathname);
-          return;
-        }
-        if (!probe.ok) {
-          // Transient server error — still allow shell; pages show their own errors.
-          setAllowed(true);
-          return;
-        }
         setAllowed(true);
       } catch {
         if (!cancelled) redirectToSignIn(router, pathname);
