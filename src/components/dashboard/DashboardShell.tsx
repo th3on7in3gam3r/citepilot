@@ -10,6 +10,7 @@ import { CopilotProvider, useCopilot } from "@/components/dashboard/copilot/Copi
 import { GridFilterProvider } from "@/components/dashboard/copilot/GridFilterProvider";
 import { GlobalFilterModal } from "@/components/dashboard/filters/GlobalFilterModal";
 import { DashboardCommandPalette } from "@/components/dashboard/DashboardCommandPalette";
+import { DashboardAuthGate } from "@/components/dashboard/DashboardAuthGate";
 import { DashboardRail } from "@/components/dashboard/layout/DashboardRail";
 import { DashboardTopBar } from "@/components/dashboard/layout/DashboardTopBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -152,26 +153,28 @@ function WorkspaceModals() {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
-    <BillingProvider>
-      <UpgradeModalProvider>
-        <WorkspaceProvider>
-          <WorkspaceSwitcherProvider>
-            <GridFilterProvider>
-              <CopilotProvider>
-                <PostHogIdentify />
-                <DashboardShellInner>{children}</DashboardShellInner>
-                <Suspense fallback={null}>
-                  <DashboardUpgradeCelebration />
-                </Suspense>
-                <CopilotPanel />
-                <GlobalFilterModal />
-                <DashboardCommandPalette />
-                <WorkspaceModals />
-              </CopilotProvider>
-            </GridFilterProvider>
-          </WorkspaceSwitcherProvider>
-        </WorkspaceProvider>
-      </UpgradeModalProvider>
-    </BillingProvider>
+    <DashboardAuthGate>
+      <BillingProvider>
+        <UpgradeModalProvider>
+          <WorkspaceProvider>
+            <WorkspaceSwitcherProvider>
+              <GridFilterProvider>
+                <CopilotProvider>
+                  <PostHogIdentify />
+                  <DashboardShellInner>{children}</DashboardShellInner>
+                  <Suspense fallback={null}>
+                    <DashboardUpgradeCelebration />
+                  </Suspense>
+                  <CopilotPanel />
+                  <GlobalFilterModal />
+                  <DashboardCommandPalette />
+                  <WorkspaceModals />
+                </CopilotProvider>
+              </GridFilterProvider>
+            </WorkspaceSwitcherProvider>
+          </WorkspaceProvider>
+        </UpgradeModalProvider>
+      </BillingProvider>
+    </DashboardAuthGate>
   );
 }

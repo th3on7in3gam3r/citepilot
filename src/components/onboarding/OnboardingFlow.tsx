@@ -169,6 +169,7 @@ export function OnboardingFlow({
     try {
       const res = await fetch("/api/workspaces", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(answers),
       });

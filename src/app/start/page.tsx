@@ -9,6 +9,9 @@ import { redirect } from "next/navigation";
 
 import { site } from "@/lib/site";
 
+/** Session + DB lookups — must not be statically optimized. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Start GEO & AI Citation Analysis",
   description:
@@ -33,13 +36,16 @@ export default async function StartPage({
   }
 
   if (userId && params.full !== "1") {
+    // Keep redirect() outside try/catch — Next throws NEXT_REDIRECT and a bare
+    // catch swallows it (and can surface as a production Server Components digest).
+    let count = 0;
     try {
-      const count = await countWorkspacesForUser(userId);
-      if (count > 0) {
-        redirect("/dashboard");
-      }
+      count = await countWorkspacesForUser(userId);
     } catch {
       /* DB blip — still show onboarding rather than crash the post-login page */
+    }
+    if (count > 0) {
+      redirect("/dashboard");
     }
   }
 

@@ -9,6 +9,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+/** Session + DB lookups — must not be statically optimized. */
+export const dynamic = "force-dynamic";
+
 const overviewPath = "/dashboard";
 const overviewTitle = "GEO Citation Dashboard Overview";
 const overviewDescription =
@@ -41,13 +44,15 @@ export default async function DashboardPage({
   if (params.from === "/start") {
     const userId = await getSessionUserId();
     if (userId) {
+      // Keep redirect() outside try/catch — Next throws NEXT_REDIRECT.
+      let count = -1;
       try {
-        const count = await countWorkspacesForUser(userId);
-        if (count === 0) {
-          redirect("/start");
-        }
+        count = await countWorkspacesForUser(userId);
       } catch {
-        /* stay on dashboard */
+        /* stay on dashboard on DB blip */
+      }
+      if (count === 0) {
+        redirect("/start");
       }
     }
   }

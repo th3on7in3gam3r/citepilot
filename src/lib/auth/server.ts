@@ -1,5 +1,4 @@
 import { createNeonAuth } from "@neondatabase/auth/next/server";
-import { headers } from "next/headers";
 import { readImpersonationCookie } from "@/lib/admin/impersonation";
 import { isAdminEmail } from "@/lib/admin/emails";
 import { isTotpEnabledForUser } from "@/lib/security/totp-store";
@@ -29,42 +28,27 @@ type AuthSessionPayload = {
   user?: { id?: string; name?: string | null; email?: string | null } | null;
 } | null;
 
-async function cookieHeaderFromRequest(
-  request?: Request,
-): Promise<string | undefined> {
-  if (request) {
-    return request.headers.get("cookie") ?? undefined;
-  }
-  const store = await headers();
-  return store.get("cookie") ?? undefined;
-}
-
 /**
  * Resolve session preferring the signed session_data cookie cache.
- * Forcing disableCookieCache:true breaks API routes when Neon Auth upstream
- * is down/misconfigured while the browser still has a valid session cookie
- * (UI looks signed-in, /api/* returns 401).
+ * Neon Auth's getSession() reads cookies via next/headers — do not pass a
+ * stripped Cookie-only fetchOptions (the SDK ignores it for upstream anyway).
+ * Forcing disableCookieCache as boolean true does not bypass the SDK cache
+ * wrapper (it checks the string "true"); prefer the default cache path so
+ * APIs keep working when Neon Auth upstream is briefly unreachable.
  */
-async function loadAuthSession(request?: Request): Promise<AuthSessionPayload> {
+async function loadAuthSession(): Promise<AuthSessionPayload> {
   if (!auth) return null;
 
-  const cookie = await cookieHeaderFromRequest(request);
-  const withCookie = cookie
-    ? { fetchOptions: { headers: { cookie } } }
-    : {};
-
   try {
-    // Cookie cache via next/headers (same path as /api/auth/get-session).
-    const cached = await auth.getSession(withCookie);
+    const cached = await auth.getSession();
     if (cached.data?.user?.id) return cached.data as AuthSessionPayload;
   } catch {
-    /* try upstream */
+    /* try upstream without cache */
   }
 
   try {
     const fresh = await auth.getSession({
-      query: { disableCookieCache: true },
-      ...withCookie,
+      query: { disableCookieCache: "true" },
     });
     return (fresh.data as AuthSessionPayload) ?? null;
   } catch {
@@ -95,7 +79,7 @@ export async function getSessionUserId(request?: Request): Promise<string | null
   }
 
   try {
-    const session = await loadAuthSession(request);
+    const session = await loadAuthSession();
     return gateSessionUserId(session?.user?.id ?? null, request);
   } catch (error) {
     console.error(
@@ -127,7 +111,7 @@ export async function getSessionUser(request?: Request): Promise<{
   }
 
   try {
-    const session = await loadAuthSession(request);
+    const session = await loadAuthSession();
     const user = session?.user;
     if (!user?.id) return null;
     const userId = await gateSessionUserId(user.id, request);
@@ -153,7 +137,7 @@ export async function getRealSessionUser(request?: Request): Promise<{
   email: string;
 } | null> {
   try {
-    const session = await loadAuthSession(request);
+    const session = await loadAuthSession();
     const user = session?.user;
     if (!user?.id) return null;
     return {
