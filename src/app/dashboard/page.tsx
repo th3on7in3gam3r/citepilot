@@ -2,8 +2,11 @@ import { DashboardCrawlContent } from "@/components/dashboard/DashboardCrawlCont
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 import { OverviewSeoIntro } from "@/components/dashboard/OverviewSeoIntro";
+import { getSessionUserId } from "@/lib/auth/server";
+import { countWorkspacesForUser } from "@/lib/server/workspace";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 const overviewPath = "/dashboard";
@@ -28,7 +31,27 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const params = await searchParams;
+  // Post-OAuth bounce from /start (session exchange completes on /dashboard first).
+  if (params.from === "/start") {
+    const userId = await getSessionUserId();
+    if (userId) {
+      try {
+        const count = await countWorkspacesForUser(userId);
+        if (count === 0) {
+          redirect("/start");
+        }
+      } catch {
+        /* stay on dashboard */
+      }
+    }
+  }
+
   return (
     <>
       <DashboardCrawlContent>

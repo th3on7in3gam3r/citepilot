@@ -139,12 +139,19 @@ export async function proxy(request: NextRequest) {
   ) {
     if (
       hasOAuthVerifier &&
-      (pathname.startsWith("/auth/sign-in") || pathname.startsWith("/auth/sign-up"))
+      (pathname.startsWith("/auth/sign-in") ||
+        pathname.startsWith("/auth/sign-up") ||
+        pathname === "/start")
     ) {
+      // Complete OAuth session exchange on /dashboard (protected + tested path),
+      // then send new users back to onboarding when they have no workspace.
       const dashboard = new URL("/dashboard", request.url);
       request.nextUrl.searchParams.forEach((value, key) => {
         dashboard.searchParams.set(key, value);
       });
+      if (pathname === "/start") {
+        dashboard.searchParams.set("from", "/start");
+      }
       return NextResponse.redirect(dashboard);
     }
     if (

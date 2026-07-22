@@ -23,14 +23,23 @@ export default async function StartPage({
 }) {
   const params = await searchParams;
   const userId = await getSessionUserId();
-  const promptVariant = userId
-    ? await getServerSideFlagVariant(FEATURE_FLAGS.ONBOARDING_PROMPT_SUGGESTIONS, userId)
-    : await getServerSideFlagVariant(FEATURE_FLAGS.ONBOARDING_PROMPT_SUGGESTIONS);
+  let promptVariant = "control";
+  try {
+    promptVariant = userId
+      ? await getServerSideFlagVariant(FEATURE_FLAGS.ONBOARDING_PROMPT_SUGGESTIONS, userId)
+      : await getServerSideFlagVariant(FEATURE_FLAGS.ONBOARDING_PROMPT_SUGGESTIONS);
+  } catch {
+    promptVariant = "control";
+  }
 
   if (userId && params.full !== "1") {
-    const count = await countWorkspacesForUser(userId);
-    if (count > 0) {
-      redirect("/dashboard");
+    try {
+      const count = await countWorkspacesForUser(userId);
+      if (count > 0) {
+        redirect("/dashboard");
+      }
+    } catch {
+      /* DB blip — still show onboarding rather than crash the post-login page */
     }
   }
 

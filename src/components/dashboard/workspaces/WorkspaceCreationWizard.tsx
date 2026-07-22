@@ -57,6 +57,12 @@ export function WorkspaceCreationWizard() {
       });
       const data = (await res.json()) as { available?: boolean; error?: string };
       if (!res.ok || !data.available) {
+        if (res.status === 401) {
+          setDomainError(
+            "Session not recognized — refresh the page, then try again. If it persists, sign out and back in.",
+          );
+          return false;
+        }
         setDomainError(
           data.available === false
             ? "You already have a workspace for this domain"
