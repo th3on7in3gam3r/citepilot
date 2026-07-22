@@ -32,11 +32,22 @@ export const POST = withApiLogging(async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid domain" }, { status: 400 });
   }
 
-  const taken = await workspaceDomainTaken(
-    userId,
-    domain,
-    body.excludeWorkspaceId?.trim(),
-  );
+  try {
+    const taken = await workspaceDomainTaken(
+      userId,
+      domain,
+      body.excludeWorkspaceId?.trim(),
+    );
 
-  return NextResponse.json({ available: !taken, domain: normalizeDomain(domain) });
+    return NextResponse.json({
+      available: !taken,
+      domain: normalizeDomain(domain),
+    });
+  } catch (error) {
+    console.error("POST /api/workspaces/check-domain", error);
+    return NextResponse.json(
+      { error: "Could not check domain availability. Try again in a moment." },
+      { status: 503 },
+    );
+  }
 });

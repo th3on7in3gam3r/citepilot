@@ -64,7 +64,10 @@ export function WorkspaceCreationWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain: trimmed }),
       });
-      const data = (await res.json()) as { available?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        available?: boolean;
+        error?: string;
+      };
       if (!res.ok || !data.available) {
         if (res.status === 401) {
           redirectToSignIn(pathname);
@@ -73,7 +76,10 @@ export function WorkspaceCreationWizard() {
         setDomainError(
           data.available === false
             ? "You already have a workspace for this domain"
-            : data.error ?? "Invalid domain",
+            : data.error ??
+                (res.status >= 500
+                  ? "Server error — refresh and try again"
+                  : "Invalid domain"),
         );
         return false;
       }

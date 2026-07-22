@@ -11,24 +11,32 @@ import { withApiLogging } from "@/lib/observability/api-log";
 
 /** Link signed-in user to referrer from cookie or body code (OAuth signup). */
 export const POST = withApiLogging(async function POST(request: Request) {
-  const user = await requireApiUser(request);
-  if (user instanceof NextResponse) return user;
-  const userId = apiUserId(user)!;
-  const sessionUser = await getSessionUser(request);
-  await ensureUserReferral(userId, sessionUser?.email);
+  try {
+    const user = await requireApiUser(request);
+    if (user instanceof NextResponse) return user;
+    const userId = apiUserId(user)!;
+    const sessionUser = await getSessionUser(request);
+    await ensureUserReferral(userId, sessionUser?.email);
 
-  const body = (await request.json().catch(() => ({}))) as { code?: string };
-  const cookieStore = await cookies();
-  const rawCode =
-    body.code?.trim() ||
-    cookieStore.get(REFERRAL_COOKIE)?.value ||
-    "";
-  const code = normalizeReferralCode(rawCode);
-  if (!code) {
-    return NextResponse.json({ linked: false, reason: "no_code" });
+    const body = (await request.json().catch(() => ({}))) as { code?: string };
+    const cookieStore = await cookies();
+    const rawCode =
+      body.code?.trim() ||
+      cookieStore.get(REFERRAL_COOKIE)?.value ||
+      "";
+    const code = normalizeReferralCode(rawCode);
+    if (!code) {
+      return NextResponse.json({ linked: false, reason: "no_code" });
+    }
+
+    const result = await claimReferralForUser(userId, code);
+    await triggerFreeOnboarding(userId, sessionUser?.email);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("POST /api/referrals/claim", error);
+    return NextResponse.json(
+      { error: "Could not claim referral", linked: false },
+      { status: 500 },
+    );
   }
-
-  const result = await claimReferralForUser(userId, code);
-  await triggerFreeOnboarding(userId, sessionUser?.email);
-  return NextResponse.json(result);
 });
