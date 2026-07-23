@@ -175,7 +175,14 @@ export function NotificationPreferencesPanel({
   }, [workspaceId, isFleet]);
 
   useEffect(() => {
-    if (ready && isPaid) void load();
+    if (!ready) return;
+    if (isPaid) {
+      void load();
+      return;
+    }
+    // Free tier never fetches prefs — clear the initial loading skeleton
+    // so the FeatureGate upgrade prompt can render.
+    setLoading(false);
   }, [ready, isPaid, load]);
 
   useEffect(() => {
@@ -416,7 +423,7 @@ export function NotificationPreferencesPanel({
     }
   }
 
-  if (!ready || loading) {
+  if (!ready || (isPaid && loading)) {
     return <div className="h-48 animate-pulse rounded-xl bg-surface" />;
   }
 
