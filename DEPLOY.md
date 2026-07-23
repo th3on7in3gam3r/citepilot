@@ -30,6 +30,8 @@
    | `CRON_SECRET` | Bearer for cron routes (**required** — Render sets `RENDER=true`, so production cron auth is enforced) |
    | `HEALTH_SECRET` | Full detail on `GET /api/health` |
    | `OPENAI_API_KEY` + `NEXT_PUBLIC_AUDIT_MODE=live` | Live audits |
+   | `SERPER_API_KEY` **or** `SERPAPI_API_KEY` **or** `TAVILY_API_KEY` | Backlinks / Discussions web discovery (at least one) |
+   | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Search Console OAuth (`/api/gsc/callback`) |
    | Stripe / Resend / Studio Ops / CMS keys | Same as `.env.example` |
 
 5. Neon Console → Auth → **Trusted domains / trusted origins** (no trailing slash):

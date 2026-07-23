@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
@@ -8,6 +8,7 @@ import { CompetitorAnalysisGrid } from "@/components/dashboard/competitors/Compe
 import { CompetitorCard } from "@/components/dashboard/competitors/CompetitorCard";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { FeatureGate } from "@/components/billing/FeatureGate";
+import { useToast } from "@/components/notifications/ToastProvider";
 import { useBilling } from "@/contexts/BillingContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
@@ -28,6 +29,8 @@ const feature = productFeatures.find((f) => f.id === "competitors") ?? {
 export function CompetitorsPageClient() {
   const { workspace, ready, refresh } = useWorkspaceContext();
   const { isPaid } = useBilling();
+  const toast = useToast();
+  const competitorInputRef = useRef<HTMLInputElement>(null);
   const [intelligence, setIntelligence] = useState<CompetitorIntelligence | null>(null);
   const [limits, setLimits] = useState<CompetitorLimits | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,14 @@ export function CompetitorsPageClient() {
   const [fixOpen, setFixOpen] = useState(false);
 
   const workspaceId = workspace?.workspaceId ?? workspace?.id;
+
+  function focusAddCompetitor() {
+    document.getElementById("add-competitor")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    competitorInputRef.current?.focus();
+  }
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
@@ -89,15 +100,20 @@ export function CompetitorsPageClient() {
         limits?: CompetitorLimits;
       };
       if (!res.ok) {
-        setAddError(data.error ?? "Could not add competitor");
+        const message = data.error ?? "Could not add competitor";
+        setAddError(message);
+        toast.error(message);
         return;
       }
       setIntelligence(data.intelligence ?? null);
       setLimits(data.limits ?? null);
       setCompetitorInput("");
+      toast.success("Competitor added");
       await refresh();
     } catch {
-      setAddError("Could not add competitor");
+      const message = "Could not add competitor";
+      setAddError(message);
+      toast.error(message);
     } finally {
       setAdding(false);
     }
@@ -118,7 +134,8 @@ export function CompetitorsPageClient() {
   }
 
   const tracked = workspace.competitors;
-  const canAdd = limits?.canAdd ?? false;
+  // Allow attempts while limits load; API still enforces Free max of 1.
+  const canAdd = limits?.canAdd !== false;
 
   return (
     <>
@@ -127,12 +144,13 @@ export function CompetitorsPageClient() {
         title="Competitor intelligence"
         description={feature.description}
         action={
-          <a
-            href="#add-competitor"
+          <button
+            type="button"
+            onClick={focusAddCompetitor}
             className="inline-flex rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
           >
             Add competitor →
-          </a>
+          </button>
         }
       />
 
@@ -167,14 +185,16 @@ export function CompetitorsPageClient() {
             )}
           </div>
 
-          <div id="add-competitor" className="flex w-full max-w-md flex-col gap-2">
+          <div id="add-competitor" className="flex w-full max-w-md scroll-mt-24 flex-col gap-2">
             <div className="flex gap-2">
               <input
+                ref={competitorInputRef}
                 type="text"
                 value={competitorInput}
                 onChange={(e) => setCompetitorInput(e.target.value)}
                 placeholder="rival.com"
                 disabled={!canAdd || adding}
+                aria-label="Competitor domain"
                 className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-ink disabled:opacity-50"
               />
               <button
@@ -187,9 +207,9 @@ export function CompetitorsPageClient() {
               </button>
             </div>
             {addError && <p className="text-xs text-rose-600">{addError}</p>}
-            {!canAdd && limits && (
+            {limits && !limits.canAdd && (
               <p className="text-xs text-muted">
-                Competitor limit reached —{" "}
+                Competitor limit reached ({limits.count}/{limits.max}) —{" "}
                 <Link href="/pricing" className="font-semibold text-accent hover:underline">
                   upgrade plan
                 </Link>

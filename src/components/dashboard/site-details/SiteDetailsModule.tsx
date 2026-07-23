@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
@@ -14,6 +13,8 @@ import { DomainInfoSection } from "@/components/dashboard/site-details/DomainInf
 import { GoogleDataSection } from "@/components/dashboard/site-details/GoogleDataSection";
 import { SiteDetailsFooter } from "@/components/dashboard/site-details/SiteDetailsShared";
 import { SiteDetailsSubnav } from "@/components/dashboard/site-details/SiteDetailsSubnav";
+import { useBilling } from "@/contexts/BillingContext";
+import { useUpgradeModalOptional } from "@/contexts/UpgradeModalContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { buildContentCalendar } from "@/lib/dashboard-data";
@@ -42,6 +43,8 @@ const VALID_SECTIONS = new Set<SiteDetailsSectionId>(
 export function SiteDetailsModule() {
   const router = useRouter();
   const { workspace, ready, applyWorkspace, refresh } = useWorkspaceContext();
+  const { isPaid, ready: billingReady } = useBilling();
+  const upgradeModal = useUpgradeModalOptional();
   const searchParams = useSearchParams();
   const [active, setActive] = useState<SiteDetailsSectionId>("generate");
   const [queueRefreshKey, setQueueRefreshKey] = useState(0);
@@ -122,6 +125,32 @@ export function SiteDetailsModule() {
     [router],
   );
 
+  const focusGenerateSection = useCallback(() => {
+    if (billingReady && !isPaid) {
+      upgradeModal?.openUpgradeModal({
+        feature: "article_generation",
+        title: "AI article generation",
+        description:
+          "Pilot and Fleet unlock citation-ready article drafts from your money prompts and GEO gaps.",
+        plan: "pilot",
+        unlocks: [
+          "Generate articles from uncited money prompts",
+          "Queue drafts for CMS publish",
+          "Briefs tied to Site Optimizer gaps",
+        ],
+      });
+      return;
+    }
+    goToSection("generate");
+    requestAnimationFrame(() => {
+      document
+        .getElementById("content-studio-generate")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const topic = document.getElementById("gen-topic") as HTMLInputElement | null;
+      topic?.focus();
+    });
+  }, [billingReady, goToSection, isPaid, upgradeModal]);
+
   const advanceSection = useCallback(() => {
     const idx = SITE_DETAILS_SECTIONS.findIndex((s) => s.id === active);
     const next = SITE_DETAILS_SECTIONS[idx + 1];
@@ -175,12 +204,18 @@ export function SiteDetailsModule() {
           title="Content Studio"
           description={contentFeature.description}
           action={
-            <Link href="/dashboard/content?section=generate" className={dashPrimaryCta}>
-              Generate article →
-            </Link>
+            <button
+              type="button"
+              onClick={focusGenerateSection}
+              className={dashPrimaryCta}
+            >
+              {billingReady && !isPaid
+                ? "Upgrade to generate →"
+                : "Generate article →"}
+            </button>
           }
         />
-        <ContentStudioWorkflowBanner />
+        <ContentStudioWorkflowBanner onGenerateClick={focusGenerateSection} />
       </div>
       <div className="flex flex-1 flex-col gap-5 px-4 md:px-6 lg:flex-row lg:px-8">
         <SiteDetailsSubnav
@@ -191,7 +226,10 @@ export function SiteDetailsModule() {
         />
 
         <div className="min-w-0 flex-1">
-          <div className="rounded-2xl border border-border bg-card shadow-sm dark:border-[#222] dark:bg-[#111]">
+          <div
+            id={active === "generate" ? "content-studio-generate" : undefined}
+            className="scroll-mt-24 rounded-2xl border border-border bg-card shadow-sm dark:border-[#222] dark:bg-[#111]"
+          >
             <header className="border-b border-border px-6 py-5 dark:border-[#222]">
               <h2 className="font-display text-xl font-bold text-ink">
                 {section.label}

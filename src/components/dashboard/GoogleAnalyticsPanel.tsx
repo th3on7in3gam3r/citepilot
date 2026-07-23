@@ -5,6 +5,7 @@ import { effectInit } from "@/lib/react/effect-init";
 import type { GscMetrics } from "@/lib/gsc/client";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { GoogleAnalyticsChartsGrid } from "@/components/dashboard/analytics/GoogleAnalyticsChartsGrid";
+import { useToast } from "@/components/notifications/ToastProvider";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { buildOrganicCitationBridge } from "@/lib/analytics/organic-citation-bridge";
 
@@ -15,6 +16,7 @@ export function GoogleAnalyticsPanel({
   workspace: WorkspaceSnapshot;
   preferOrganicLead?: boolean;
 }) {
+  const toast = useToast();
   const workspaceId = workspace.workspaceId ?? workspace.id;
   const [metrics, setMetrics] = useState<GscMetrics | null>(null);
   const [configured, setConfigured] = useState(false);
@@ -75,14 +77,32 @@ export function GoogleAnalyticsPanel({
 
   async function connectGsc() {
     if (!workspaceId) return;
+    if (!configured) {
+      toast.error(
+        "Google Search Console is not configured on the server. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, then redeploy.",
+      );
+      return;
+    }
     setConnecting(true);
-    const res = await fetch(
-      `/api/gsc/connect?workspaceId=${encodeURIComponent(workspaceId)}`,
-      { credentials: "include" },
-    );
-    const data = (await res.json()) as { url?: string; error?: string };
-    setConnecting(false);
-    if (data.url) window.location.href = data.url;
+    try {
+      const res = await fetch(
+        `/api/gsc/connect?workspaceId=${encodeURIComponent(workspaceId)}`,
+        { credentials: "include" },
+      );
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        toast.error(
+          data.error ??
+            "Could not start Search Console connection. Check Google OAuth env vars on the host.",
+        );
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      toast.error("Could not start Search Console connection.");
+    } finally {
+      setConnecting(false);
+    }
   }
 
   async function disconnect() {

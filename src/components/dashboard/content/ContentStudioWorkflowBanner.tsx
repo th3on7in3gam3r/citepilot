@@ -1,12 +1,41 @@
 "use client";
 
 import Link from "next/link";
+import { useBilling } from "@/contexts/BillingContext";
+import {
+  useUpgradeModalOptional,
+} from "@/contexts/UpgradeModalContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 
-export function ContentStudioWorkflowBanner() {
+export function ContentStudioWorkflowBanner({
+  onGenerateClick,
+}: {
+  onGenerateClick?: () => void;
+}) {
   const { workspace } = useWorkspaceContext();
+  const { isPaid, ready } = useBilling();
+  const upgradeModal = useUpgradeModalOptional();
   const hasAudit = Boolean(workspace?.hasRealAudit);
+
+  function handleGenerate() {
+    if (ready && !isPaid) {
+      upgradeModal?.openUpgradeModal({
+        feature: "article_generation",
+        title: "AI article generation",
+        description:
+          "Pilot and Fleet unlock citation-ready article drafts from your money prompts and GEO gaps.",
+        plan: "pilot",
+        unlocks: [
+          "Generate articles from uncited money prompts",
+          "Queue drafts for CMS publish",
+          "Briefs tied to Site Optimizer gaps",
+        ],
+      });
+      return;
+    }
+    onGenerateClick?.();
+  }
 
   return (
     <div className="mb-5 space-y-4">
@@ -33,12 +62,13 @@ export function ContentStudioWorkflowBanner() {
               turns audit gaps into briefs. Generate articles here, queue drafts, and publish to your CMS.
             </p>
           </div>
-          <Link
-            href="/dashboard/content?section=generate"
+          <button
+            type="button"
+            onClick={handleGenerate}
             className="inline-flex shrink-0 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-deep"
           >
-            Generate article →
-          </Link>
+            {ready && !isPaid ? "Upgrade to generate →" : "Generate article →"}
+          </button>
         </div>
       </div>
     </div>

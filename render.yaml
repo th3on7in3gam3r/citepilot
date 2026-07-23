@@ -9,6 +9,7 @@
 #    trusted origins: https://getcitepilot.com, https://www.getcitepilot.com, onrender URL
 #    Keep NEON_AUTH_COOKIE_SECRET in Dashboard only (do not rotate casually).
 # 5. Stripe / Resend / GSC callbacks at https://getcitepilot.com
+#    Set SERPER_API_KEY (or SERPAPI/TAVILY) for Backlinks discovery; GOOGLE_CLIENT_* for GSC.
 # 6. Cron jobs: APP_URL=https://getcitepilot.com with Authorization: Bearer $CRON_SECRET.
 
 services:
@@ -53,6 +54,20 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4o-mini
+      - key: PERPLEXITY_API_KEY
+        sync: false
+      # Web search for Backlinks / Discussions (set at least one)
+      - key: SERPER_API_KEY
+        sync: false
+      - key: SERPAPI_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      # Google Search Console OAuth
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
       - key: NEXT_PUBLIC_AUDIT_MODE
         value: live
       - key: STRIPE_SECRET_KEY
