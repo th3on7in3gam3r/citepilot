@@ -79,9 +79,12 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
   });
   const [signaldeskForm, setSignaldeskForm] = useState({
     siteUrl: "",
-    username: "",
-    appPassword: "",
+    apiKey: "",
   });
+  const [signaldeskWebhook, setSignaldeskWebhook] = useState<{
+    webhookUrl: string;
+    webhookSecret: string;
+  } | null>(null);
   const [ghostForm, setGhostForm] = useState({ siteUrl: "", adminApiKey: "" });
   const [hashnodeForm, setHashnodeForm] = useState({
     accessToken: "",
@@ -174,13 +177,34 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { error?: string; displayName?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        displayName?: string;
+        webhookUrl?: string;
+        webhookSecret?: string;
+        webhookHint?: string;
+      };
       if (!res.ok) {
         toast.error(data.error ?? "Connection failed");
         return;
       }
       toast.success(`Connected to ${data.displayName ?? provider}`);
-      setActiveId(null);
+      if (
+        provider === "signaldesk" &&
+        data.webhookUrl &&
+        data.webhookSecret
+      ) {
+        setSignaldeskWebhook({
+          webhookUrl: data.webhookUrl,
+          webhookSecret: data.webhookSecret,
+        });
+        toast.info(
+          data.webhookHint ??
+            "Copy the webhook URL and secret into Signal Desk Settings.",
+        );
+      } else {
+        setActiveId(null);
+      }
       setManageId(null);
       await load();
     } catch {
@@ -498,7 +522,10 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
       )}
 
       {activeId === "signaldesk" && (
-        <ConnectModal title="Connect SignalDesk" onClose={() => setActiveId(null)}>
+        <ConnectModal title="Connect SignalDesk" onClose={() => {
+          setActiveId(null);
+          setSignaldeskWebhook(null);
+        }}>
           <Field label="Signal Desk site URL">
             <input
               value={signaldeskForm.siteUrl}
@@ -509,35 +536,52 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
               placeholder="https://your-signaldesk.example"
             />
           </Field>
-          <Field label="Username">
-            <input
-              value={signaldeskForm.username}
-              onChange={(e) =>
-                setSignaldeskForm((f) => ({ ...f, username: e.target.value }))
-              }
-              className={inputClass}
-              placeholder="publisher"
-            />
-          </Field>
-          <Field label="Password / app password">
+          <Field label="API key">
             <input
               type="password"
-              value={signaldeskForm.appPassword}
+              value={signaldeskForm.apiKey}
               onChange={(e) =>
-                setSignaldeskForm((f) => ({ ...f, appPassword: e.target.value }))
+                setSignaldeskForm((f) => ({ ...f, apiKey: e.target.value }))
               }
               className={inputClass}
+              placeholder="sd_live_…"
             />
             <p className="mt-1 text-xs text-muted">
-              Use your Signal Desk signup username and password. Site URL must be the
-              deployed Signal Desk origin.
+              Generate in Signal Desk → Studio → Settings. Prefer Bearer API keys
+              over username/password.
             </p>
           </Field>
-          <ModalActions
-            saving={saving || testing}
-            onTest={() => void testProvider("signaldesk")}
-            onSave={() => void connectProvider("signaldesk")}
-          />
+          {signaldeskWebhook ? (
+            <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs space-y-2">
+              <p className="font-medium text-foreground">
+                Paste into Signal Desk → Settings → Publish webhook
+              </p>
+              <p>
+                <span className="text-muted">URL: </span>
+                <code className="break-all">{signaldeskWebhook.webhookUrl}</code>
+              </p>
+              <p>
+                <span className="text-muted">Secret: </span>
+                <code className="break-all">{signaldeskWebhook.webhookSecret}</code>
+              </p>
+              <button
+                type="button"
+                className="text-sm underline"
+                onClick={() => {
+                  setActiveId(null);
+                  setSignaldeskWebhook(null);
+                }}
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <ModalActions
+              saving={saving || testing}
+              onTest={() => void testProvider("signaldesk")}
+              onSave={() => void connectProvider("signaldesk")}
+            />
+          )}
         </ConnectModal>
       )}
 

@@ -219,3 +219,52 @@ export async function upsertCmsPublication<P extends CmsProvider>(input: {
     postSlug: input.postSlug,
   }))!;
 }
+
+export async function getCmsPublicationByRemoteId(input: {
+  workspaceId: string;
+  provider: CmsProvider;
+  remoteId: string;
+}): Promise<CmsPublication | null> {
+  const row = await dbGet<CmsPublicationRow>(
+    `SELECT * FROM cms_publications
+     WHERE workspace_id = ? AND provider = ? AND remote_id = ?`,
+    [input.workspaceId, input.provider, input.remoteId],
+  );
+  return row ? rowToPublication(row) : null;
+}
+
+export async function markCmsPublicationLive(input: {
+  workspaceId: string;
+  provider: CmsProvider;
+  remoteId: string;
+  remoteUrl?: string | null;
+  publishedAt?: string;
+}): Promise<CmsPublication | null> {
+  const existing = await getCmsPublicationByRemoteId({
+    workspaceId: input.workspaceId,
+    provider: input.provider,
+    remoteId: input.remoteId,
+  });
+  if (!existing) return null;
+  const now = input.publishedAt || new Date().toISOString();
+  await dbRun(
+    `UPDATE cms_publications SET
+       remote_url = COALESCE(?, remote_url),
+       published_at = ?,
+       updated_at = ?
+     WHERE workspace_id = ? AND provider = ? AND remote_id = ?`,
+    [
+      input.remoteUrl ?? null,
+      now,
+      now,
+      input.workspaceId,
+      input.provider,
+      input.remoteId,
+    ],
+  );
+  return getCmsPublicationByRemoteId({
+    workspaceId: input.workspaceId,
+    provider: input.provider,
+    remoteId: input.remoteId,
+  });
+}

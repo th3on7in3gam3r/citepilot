@@ -13,6 +13,7 @@ import { testWordPressConnection } from "@/lib/cms/wordpress";
 import { testSignalDeskConnection } from "@/lib/cms/signaldesk";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
+import { site } from "@/lib/site";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -162,12 +163,20 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     }
 
     if (provider === "signaldesk") {
+      const { randomBytes } = await import("crypto");
+      const apiKey = getString(body, "apiKey")!;
+      const webhookSecret =
+        getString(body, "webhookSecret", false) ||
+        `sd_wh_${randomBytes(24).toString("base64url")}`;
       const credentials = {
         siteUrl: getString(body, "siteUrl")!,
-        username: getString(body, "username")!,
-        appPassword: getString(body, "appPassword")!,
+        apiKey,
+        webhookSecret,
       };
       const checked = await testSignalDeskConnection(credentials);
+      const origin =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || site.url;
+      const webhookUrl = `${origin}/api/webhooks/signaldesk?workspaceId=${encodeURIComponent(workspaceId)}`;
       await upsertCmsConnection({
         workspaceId,
         provider,
@@ -175,10 +184,17 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         siteUrl: checked.siteUrl,
         credentials,
         remoteDefaults: {
-          maskedAppPassword: maskSecret(credentials.appPassword),
+          maskedApiKey: maskSecret(credentials.apiKey),
+          webhookUrl,
         },
       });
-      return NextResponse.json(toSummary(provider, checked));
+      return NextResponse.json({
+        ...toSummary(provider, checked),
+        webhookUrl,
+        webhookSecret,
+        webhookHint:
+          "Paste this webhook URL and secret into Signal Desk → Studio → Settings → Publish webhook.",
+      });
     }
 
     if (provider === "ghost") {

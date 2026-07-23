@@ -20,10 +20,7 @@ export function normalizeSignalDeskSiteUrl(value: string): string {
 }
 
 export function signalDeskAuthHeader(credentials: SignalDeskCredentials): string {
-  return `Basic ${Buffer.from(
-    `${credentials.username}:${credentials.appPassword}`,
-    "utf8",
-  ).toString("base64")}`;
+  return `Bearer ${credentials.apiKey.trim()}`;
 }
 
 function restPaths(route: string): string[] {

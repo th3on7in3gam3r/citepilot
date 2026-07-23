@@ -46,11 +46,12 @@ export type FramerCredentials = {
   summaryFieldId?: string;
 };
 
-/** Signal Desk — WordPress-compatible GEO newsroom ingest. */
+/** Signal Desk — WordPress-compatible GEO newsroom ingest (Bearer API key). */
 export type SignalDeskCredentials = {
   siteUrl: string;
-  username: string;
-  appPassword: string;
+  apiKey: string;
+  /** Stored on connect for inbound post.published verification. */
+  webhookSecret?: string;
 };
 
 export type CmsCredentialsByProvider = {
@@ -88,7 +89,7 @@ export type CmsRemoteDefaultsByProvider = {
     snippetInstalled?: boolean;
     maskedApiKey?: string;
   };
-  signaldesk: { maskedAppPassword?: string };
+  signaldesk: { maskedApiKey?: string; webhookUrl?: string };
 };
 
 export type CmsConnectionRow = {

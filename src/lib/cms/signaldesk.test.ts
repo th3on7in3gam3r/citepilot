@@ -8,17 +8,16 @@ import {
 } from "@/lib/cms/signaldesk";
 
 describe("signaldesk", () => {
-  it("normalizes site URL and builds Basic auth", () => {
+  it("normalizes site URL and builds Bearer auth", () => {
     expect(normalizeSignalDeskSiteUrl("signaldesk.example/")).toBe(
       "https://signaldesk.example",
     );
     expect(
       signalDeskAuthHeader({
         siteUrl: "https://signaldesk.example",
-        username: "citepilot",
-        appPassword: "secret",
+        apiKey: "sd_live_testkey",
       }),
-    ).toBe(`Basic ${Buffer.from("citepilot:secret").toString("base64")}`);
+    ).toBe("Bearer sd_live_testkey");
   });
 
   it("pads short meta fields to Signal Desk minimums", () => {

@@ -37,8 +37,7 @@ type ProviderForms = {
   };
   signaldesk: {
     siteUrl: string;
-    username: string;
-    appPassword: string;
+    apiKey: string;
   };
   ghost: {
     siteUrl: string;
@@ -81,8 +80,7 @@ function emptyForms(): ProviderForms {
     },
     signaldesk: {
       siteUrl: "",
-      username: "",
-      appPassword: "",
+      apiKey: "",
     },
     ghost: {
       siteUrl: "",
@@ -173,6 +171,10 @@ export function CmsConnectionsPanel({
   const [forms, setForms] = useState<ProviderForms>(emptyForms);
   const [saving, setSaving] = useState<CmsFormProvider | null>(null);
   const [removing, setRemoving] = useState<CmsFormProvider | null>(null);
+  const [signaldeskWebhook, setSignaldeskWebhook] = useState<{
+    webhookUrl: string;
+    webhookSecret: string;
+  } | null>(null);
   const load = useCallback(async () => {
     const [webflowRes, cmsRes] = await Promise.all([
       fetch(
@@ -239,13 +241,32 @@ export function CmsConnectionsPanel({
           ...forms[provider],
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        webhookUrl?: string;
+        webhookSecret?: string;
+        webhookHint?: string;
+      };
       if (!res.ok) {
         toast.error(data.error ?? `Could not connect ${providerLabels[provider]}`);
         return;
       }
 
       toast.success(`${providerLabels[provider]} connected.`);
+      if (
+        provider === "signaldesk" &&
+        data.webhookUrl &&
+        data.webhookSecret
+      ) {
+        setSignaldeskWebhook({
+          webhookUrl: data.webhookUrl,
+          webhookSecret: data.webhookSecret,
+        });
+        toast.info(
+          data.webhookHint ??
+            "Paste the webhook URL and secret into Signal Desk Settings.",
+        );
+      }
       await load();
       onChanged?.();
     } catch {
@@ -498,20 +519,28 @@ export function CmsConnectionsPanel({
               help="Your deployed Signal Desk origin — not a private laptop URL unless testing locally."
             />
             <Field
-              label="Username"
-              value={forms.signaldesk.username}
-              onChange={(value) => updateForm("signaldesk", "username", value)}
-              placeholder="publisher"
-              help="Use your Signal Desk signup username."
-            />
-            <Field
-              label="Password / app password"
+              label="API key"
               type="password"
-              value={forms.signaldesk.appPassword}
-              onChange={(value) => updateForm("signaldesk", "appPassword", value)}
-              placeholder="••••••••"
-              help="Use your Signal Desk signup password (or rotated app password from Studio)."
+              value={forms.signaldesk.apiKey}
+              onChange={(value) => updateForm("signaldesk", "apiKey", value)}
+              placeholder="sd_live_…"
+              help="Generate in Signal Desk → Studio → Settings. Sent as Authorization: Bearer."
             />
+            {signaldeskWebhook ? (
+              <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs space-y-2">
+                <p className="font-medium">
+                  Paste into Signal Desk → Settings → Publish webhook
+                </p>
+                <p className="break-all">
+                  <span className="text-muted">URL: </span>
+                  {signaldeskWebhook.webhookUrl}
+                </p>
+                <p className="break-all">
+                  <span className="text-muted">Secret: </span>
+                  {signaldeskWebhook.webhookSecret}
+                </p>
+              </div>
+            ) : null}
           </div>
         </ProviderCard>
 

@@ -60,7 +60,7 @@ function maskedForProvider(
   if (provider === "hashnode") return maskSecret(credentials.accessToken ?? "");
   if (provider === "shopify") return maskSecret(credentials.accessToken ?? "");
   if (provider === "framer") return maskSecret(credentials.apiKey ?? "");
-  if (provider === "signaldesk") return maskSecret(credentials.appPassword ?? "");
+  if (provider === "signaldesk") return maskSecret(credentials.apiKey ?? "");
   return undefined;
 }
 
