@@ -1,6 +1,4 @@
-import { getBillingByUserId } from "@/lib/billing/store";
-import { isFleetPlan, isPilotPlan } from "@/lib/billing/types";
-import { planForUser } from "@/lib/billing/limits-server";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 
 export const MEMBER_LIMIT_PILOT = 3;
 
@@ -25,14 +23,13 @@ export async function getMemberLimitsForWorkspace(
   ownerUserId: string,
   memberCount: number,
 ): Promise<MemberLimits> {
-  const billing = await getBillingByUserId(ownerUserId);
-  const plan = planForUser(billing);
+  const plan = await getEffectivePlanForUser(ownerUserId);
 
-  if (isFleetPlan(billing)) {
+  if (plan === "fleet") {
     return { plan: "fleet", max: null, count: memberCount, canInvite: true };
   }
 
-  if (isPilotPlan(billing)) {
+  if (plan === "pilot") {
     return {
       plan: "pilot",
       max: MEMBER_LIMIT_PILOT,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { optionalApiUser } from "@/lib/auth/api";
 import { getBillingByUserId } from "@/lib/billing/store";
+import { userHasFleetOverride } from "@/lib/billing/fleet-override";
 import { isFleetPlan, isPaidPlan, isPilotPlan, planDisplayName } from "@/lib/billing/types";
 import { isStripeConfigured } from "@/lib/stripe/config";
 import { withApiLogging } from "@/lib/observability/api-log";
@@ -25,6 +26,24 @@ export const GET = withApiLogging(async function GET(request: Request) {
     }
 
     const billing = await getBillingByUserId(userId);
+    const fleetOverride = await userHasFleetOverride(userId);
+
+    if (fleetOverride) {
+      return NextResponse.json({
+        configured: isStripeConfigured(),
+        plan: "fleet",
+        status: "active",
+        isPilot: false,
+        isFleet: true,
+        isPaid: true,
+        planLabel: planDisplayName("fleet", true),
+        currentPeriodEnd: billing?.currentPeriodEnd ?? null,
+        hasCustomer: Boolean(billing?.stripeCustomerId),
+        signedIn: true,
+        override: "fleet_qa",
+      });
+    }
+
     const paid = isPaidPlan(billing);
 
     return NextResponse.json({

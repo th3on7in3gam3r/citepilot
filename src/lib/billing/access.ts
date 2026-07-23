@@ -1,5 +1,6 @@
 import { getBillingByUserId } from "@/lib/billing/store";
 import { isFleetPlan, isPaidPlan } from "@/lib/billing/types";
+import { userHasFleetOverride } from "@/lib/billing/fleet-override";
 import { isNeonAuthEnabled } from "@/lib/auth/server";
 import { isLocalDevelopment, isProductionRuntime } from "@/lib/env/runtime";
 import { isStripeConfigured } from "@/lib/stripe/config";
@@ -43,6 +44,7 @@ export async function userHasPilotAccess(userId: string | null): Promise<boolean
   }
 
   if (!userId) return false;
+  if (await userHasFleetOverride(userId)) return true;
   const billing = await getBillingByUserId(userId);
   return isPaidPlan(billing);
 }
@@ -56,6 +58,7 @@ export async function userHasFleetAccess(userId: string | null): Promise<boolean
   }
 
   if (!userId) return false;
+  if (await userHasFleetOverride(userId)) return true;
   const billing = await getBillingByUserId(userId);
   return isFleetPlan(billing);
 }
