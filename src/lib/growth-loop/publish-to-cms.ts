@@ -10,6 +10,7 @@ import {
   upsertCmsPublication,
 } from "@/lib/cms/store";
 import { publishPostToShopify } from "@/lib/cms/shopify";
+import { publishPostToSignalDesk } from "@/lib/cms/signaldesk";
 import {
   CMS_PROVIDERS,
   type CmsProvider,
@@ -18,6 +19,7 @@ import {
   type GhostCredentials,
   type HashnodeCredentials,
   type ShopifyCredentials,
+  type SignalDeskCredentials,
   type WordPressCredentials,
 } from "@/lib/cms/types";
 import { publishPostToWordPress } from "@/lib/cms/wordpress";
@@ -26,6 +28,7 @@ import { resolveWebflowConfig } from "@/lib/webflow/resolve-config";
 
 const PUBLISH_ORDER: CmsProvider[] = [
   "wordpress",
+  "signaldesk",
   "webflow",
   "ghost",
   "hashnode",
@@ -114,6 +117,17 @@ export async function publishBlogPostToCms(input: {
         description: row.description,
         existingRemoteId: existing?.remoteId,
       });
+    } else if (provider === "signaldesk") {
+      result = await publishPostToSignalDesk({
+        credentials: connection.credentials as SignalDeskCredentials,
+        title: row.title,
+        slug: row.slug,
+        markdown: row.markdown,
+        description: row.description,
+        coverImageUrl: row.cover_image_url,
+        byline: "CitePilot",
+        existingRemoteId: existing?.remoteId,
+      });
     } else if (provider === "ghost") {
       result = await publishPostToGhost({
         credentials: connection.credentials as GhostCredentials,
@@ -176,6 +190,7 @@ export function cmsProviderLabel(provider: CmsProvider | "webflow"): string {
   const labels: Record<string, string> = {
     webflow: "Webflow",
     wordpress: "WordPress",
+    signaldesk: "SignalDesk",
     ghost: "Ghost",
     hashnode: "Hashnode",
     shopify: "Shopify",

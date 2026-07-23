@@ -12,6 +12,10 @@ import {
 } from "@/lib/cms/store";
 import { publishPostToShopify } from "@/lib/cms/shopify";
 import {
+  publishPostToSignalDesk,
+  SignalDeskApiError,
+} from "@/lib/cms/signaldesk";
+import {
   CMS_PROVIDERS,
   type CmsProvider,
   type CmsRemoteDefaultsByProvider,
@@ -19,6 +23,7 @@ import {
   type GhostCredentials,
   type HashnodeCredentials,
   type ShopifyCredentials,
+  type SignalDeskCredentials,
   type WordPressCredentials,
 } from "@/lib/cms/types";
 import { publishPostToWordPress } from "@/lib/cms/wordpress";
@@ -100,6 +105,17 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         description: row.description,
         existingRemoteId: existing?.remoteId,
       });
+    } else if (provider === "signaldesk") {
+      result = await publishPostToSignalDesk({
+        credentials: connection.credentials as SignalDeskCredentials,
+        title: row.title,
+        slug: row.slug,
+        markdown: row.markdown,
+        description: row.description,
+        coverImageUrl: row.cover_image_url,
+        byline: "CitePilot",
+        existingRemoteId: existing?.remoteId,
+      });
     } else if (provider === "ghost") {
       result = await publishPostToGhost({
         credentials: connection.credentials as GhostCredentials,
@@ -163,7 +179,9 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     const message = error instanceof Error ? error.message : "Publish failed";
     console.error("POST /api/content/publish/[provider]", error);
     const status =
-      error instanceof GhostApiError || error instanceof HashnodeApiError
+      error instanceof GhostApiError ||
+      error instanceof HashnodeApiError ||
+      error instanceof SignalDeskApiError
         ? Math.min(502, Math.max(400, error.status))
         : 500;
     return NextResponse.json({ error: message }, { status });

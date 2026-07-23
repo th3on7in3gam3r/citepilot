@@ -5,6 +5,7 @@ export const CMS_PROVIDERS = [
   "hashnode",
   "shopify",
   "framer",
+  "signaldesk",
 ] as const;
 
 export type CmsProvider = (typeof CMS_PROVIDERS)[number];
@@ -45,6 +46,13 @@ export type FramerCredentials = {
   summaryFieldId?: string;
 };
 
+/** Signal Desk — WordPress-compatible GEO newsroom ingest. */
+export type SignalDeskCredentials = {
+  siteUrl: string;
+  username: string;
+  appPassword: string;
+};
+
 export type CmsCredentialsByProvider = {
   webflow: WebflowCredentials;
   wordpress: WordPressCredentials;
@@ -52,6 +60,7 @@ export type CmsCredentialsByProvider = {
   hashnode: HashnodeCredentials;
   shopify: ShopifyCredentials;
   framer: FramerCredentials;
+  signaldesk: SignalDeskCredentials;
 };
 
 export type CmsRemoteDefaultsByProvider = {
@@ -79,6 +88,7 @@ export type CmsRemoteDefaultsByProvider = {
     snippetInstalled?: boolean;
     maskedApiKey?: string;
   };
+  signaldesk: { maskedAppPassword?: string };
 };
 
 export type CmsConnectionRow = {

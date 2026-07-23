@@ -109,6 +109,7 @@ export function GenerateArticlePanel({
           if (connected) {
             const providerLabels: Record<string, string> = {
               wordpress: "WordPress",
+              signaldesk: "SignalDesk",
               webflow: "Webflow",
               ghost: "Ghost",
               hashnode: "Hashnode",

@@ -7,6 +7,7 @@ import { testHashnodeConnection } from "@/lib/cms/hashnode";
 import { testShopifyConnection } from "@/lib/cms/shopify";
 import { testWebflowConnection } from "@/lib/cms/webflow";
 import { testWordPressConnection } from "@/lib/cms/wordpress";
+import { testSignalDeskConnection } from "@/lib/cms/signaldesk";
 import { maskSecret } from "@/lib/integrations/helpers";
 import { getWebflowConfig } from "@/lib/webflow/config";
 import { dbGet } from "@/lib/db";
@@ -36,6 +37,7 @@ const descriptions: Record<IntegrationId, string> = {
   hashnode: "Publish articles directly to your Hashnode blog",
   shopify: "Publish articles to your Shopify store blog",
   framer: "Install the CitePilot GEO snippet on your Framer site",
+  signaldesk: "Publish citation-ready dispatches to Signal Desk",
 };
 
 const names: Record<IntegrationId, string> = {
@@ -45,6 +47,7 @@ const names: Record<IntegrationId, string> = {
   hashnode: "Hashnode",
   shopify: "Shopify",
   framer: "Framer",
+  signaldesk: "SignalDesk",
 };
 
 function maskedForProvider(
@@ -57,6 +60,7 @@ function maskedForProvider(
   if (provider === "hashnode") return maskSecret(credentials.accessToken ?? "");
   if (provider === "shopify") return maskSecret(credentials.accessToken ?? "");
   if (provider === "framer") return maskSecret(credentials.apiKey ?? "");
+  if (provider === "signaldesk") return maskSecret(credentials.appPassword ?? "");
   return undefined;
 }
 
@@ -149,6 +153,8 @@ export async function buildIntegrationStatuses(input: {
           await testWebflowConnection(connection.credentials as never);
         } else if (provider === "wordpress") {
           await testWordPressConnection(connection.credentials as never);
+        } else if (provider === "signaldesk") {
+          await testSignalDeskConnection(connection.credentials as never);
         } else if (provider === "ghost") {
           await testGhostConnection(connection.credentials as never);
         } else if (provider === "hashnode") {

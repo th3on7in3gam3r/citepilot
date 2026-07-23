@@ -35,6 +35,11 @@ type ProviderForms = {
     username: string;
     appPassword: string;
   };
+  signaldesk: {
+    siteUrl: string;
+    username: string;
+    appPassword: string;
+  };
   ghost: {
     siteUrl: string;
     adminApiKey: string;
@@ -60,6 +65,7 @@ type ProviderForms = {
 const providerLabels: Record<CmsProvider, string> = {
   webflow: "Webflow",
   wordpress: "WordPress",
+  signaldesk: "SignalDesk",
   ghost: "Ghost",
   hashnode: "Hashnode",
   shopify: "Shopify",
@@ -69,6 +75,11 @@ const providerLabels: Record<CmsProvider, string> = {
 function emptyForms(): ProviderForms {
   return {
     wordpress: {
+      siteUrl: "",
+      username: "",
+      appPassword: "",
+    },
+    signaldesk: {
       siteUrl: "",
       username: "",
       appPassword: "",
@@ -465,6 +476,41 @@ export function CmsConnectionsPanel({
               onChange={(value) => updateForm("wordpress", "appPassword", value)}
               placeholder="xxxx xxxx xxxx xxxx"
               help="Create this in WordPress under Users → Profile → Application Passwords."
+            />
+          </div>
+        </ProviderCard>
+
+        <ProviderCard
+          title="SignalDesk"
+          status={providerMap.get("signaldesk")}
+          saving={saving === "signaldesk"}
+          removing={removing === "signaldesk"}
+          onSave={() => void saveProvider("signaldesk")}
+          onRemove={() => void disconnectProvider("signaldesk")}
+          note="Publish citation-ready dispatches to your Signal Desk newsroom."
+        >
+          <div className="grid gap-3">
+            <Field
+              label="Site URL"
+              value={forms.signaldesk.siteUrl}
+              onChange={(value) => updateForm("signaldesk", "siteUrl", value)}
+              placeholder="https://your-signaldesk.example"
+              help="Your deployed Signal Desk origin — not a private laptop URL unless testing locally."
+            />
+            <Field
+              label="Username"
+              value={forms.signaldesk.username}
+              onChange={(value) => updateForm("signaldesk", "username", value)}
+              placeholder="publisher"
+              help="Use your Signal Desk signup username."
+            />
+            <Field
+              label="Password / app password"
+              type="password"
+              value={forms.signaldesk.appPassword}
+              onChange={(value) => updateForm("signaldesk", "appPassword", value)}
+              placeholder="••••••••"
+              help="Use your Signal Desk signup password (or rotated app password from Studio)."
             />
           </div>
         </ProviderCard>

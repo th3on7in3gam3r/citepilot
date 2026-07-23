@@ -10,6 +10,7 @@ import { CMS_PROVIDERS, type CmsConnectionSummary, type CmsProvider } from "@/li
 import { testWebflowConnection } from "@/lib/cms/webflow";
 import { maskSecret } from "@/lib/integrations/helpers";
 import { testWordPressConnection } from "@/lib/cms/wordpress";
+import { testSignalDeskConnection } from "@/lib/cms/signaldesk";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
 
@@ -147,6 +148,26 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         appPassword: getString(body, "appPassword")!,
       };
       const checked = await testWordPressConnection(credentials);
+      await upsertCmsConnection({
+        workspaceId,
+        provider,
+        displayName: checked.displayName,
+        siteUrl: checked.siteUrl,
+        credentials,
+        remoteDefaults: {
+          maskedAppPassword: maskSecret(credentials.appPassword),
+        },
+      });
+      return NextResponse.json(toSummary(provider, checked));
+    }
+
+    if (provider === "signaldesk") {
+      const credentials = {
+        siteUrl: getString(body, "siteUrl")!,
+        username: getString(body, "username")!,
+        appPassword: getString(body, "appPassword")!,
+      };
+      const checked = await testSignalDeskConnection(credentials);
       await upsertCmsConnection({
         workspaceId,
         provider,

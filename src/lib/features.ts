@@ -75,6 +75,7 @@ export type CmsPlatform = {
 export const cmsPlatforms: CmsPlatform[] = [
   { id: "webflow", name: "Webflow", available: true },
   { id: "wordpress", name: "WordPress", available: true },
+  { id: "signaldesk", name: "SignalDesk", available: true },
   { id: "shopify", name: "Shopify", available: true },
   { id: "ghost", name: "Ghost", available: true },
   { id: "hashnode", name: "Hashnode", available: true },

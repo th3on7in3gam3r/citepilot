@@ -52,6 +52,7 @@ type QueueFilter = "all" | "draft" | "webflow" | CmsProvider;
 const providerLabels: Record<CmsProvider, string> = {
   webflow: "Webflow",
   wordpress: "WordPress",
+  signaldesk: "SignalDesk",
   ghost: "Ghost",
   hashnode: "Hashnode",
   shopify: "Shopify",
@@ -61,6 +62,7 @@ const providerLabels: Record<CmsProvider, string> = {
 const publishTargets: CmsProvider[] = [
   "webflow",
   "wordpress",
+  "signaldesk",
   "ghost",
   "hashnode",
   "shopify",
@@ -155,6 +157,9 @@ export function ArticleQueuePanel({
       webflow: posts.filter((post) => post.webflow).length,
       wordpress: posts.filter((post) =>
         post.publications.some((item) => item.provider === "wordpress"),
+      ).length,
+      signaldesk: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "signaldesk"),
       ).length,
       ghost: posts.filter((post) =>
         post.publications.some((item) => item.provider === "ghost"),

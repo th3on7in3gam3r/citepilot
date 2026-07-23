@@ -17,6 +17,7 @@ import { framerWidgetScriptTag } from "@/lib/integrations/helpers";
 const providerOrder: CmsProvider[] = [
   "webflow",
   "wordpress",
+  "signaldesk",
   "ghost",
   "hashnode",
   "shopify",
@@ -26,6 +27,7 @@ const providerOrder: CmsProvider[] = [
 const logoColors: Record<CmsProvider, string> = {
   webflow: "#146EF5",
   wordpress: "#21759B",
+  signaldesk: "#0f172a",
   ghost: "#15171A",
   hashnode: "#2962FF",
   shopify: "#96BF48",
@@ -71,6 +73,11 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
   const [webflowCollections, setWebflowCollections] = useState<Array<{ id: string; name: string }>>([]);
 
   const [wordpressForm, setWordpressForm] = useState({
+    siteUrl: "",
+    username: "",
+    appPassword: "",
+  });
+  const [signaldeskForm, setSignaldeskForm] = useState({
     siteUrl: "",
     username: "",
     appPassword: "",
@@ -151,6 +158,8 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
         body = { ...body, ...webflowForm };
       } else if (provider === "wordpress") {
         body = { ...body, ...wordpressForm };
+      } else if (provider === "signaldesk") {
+        body = { ...body, ...signaldeskForm };
       } else if (provider === "ghost") {
         body = { ...body, ...ghostForm };
       } else if (provider === "hashnode") {
@@ -484,6 +493,50 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
             saving={saving || testing}
             onTest={() => void testProvider("wordpress")}
             onSave={() => void connectProvider("wordpress")}
+          />
+        </ConnectModal>
+      )}
+
+      {activeId === "signaldesk" && (
+        <ConnectModal title="Connect SignalDesk" onClose={() => setActiveId(null)}>
+          <Field label="Signal Desk site URL">
+            <input
+              value={signaldeskForm.siteUrl}
+              onChange={(e) =>
+                setSignaldeskForm((f) => ({ ...f, siteUrl: e.target.value }))
+              }
+              className={inputClass}
+              placeholder="https://your-signaldesk.example"
+            />
+          </Field>
+          <Field label="Username">
+            <input
+              value={signaldeskForm.username}
+              onChange={(e) =>
+                setSignaldeskForm((f) => ({ ...f, username: e.target.value }))
+              }
+              className={inputClass}
+              placeholder="publisher"
+            />
+          </Field>
+          <Field label="Password / app password">
+            <input
+              type="password"
+              value={signaldeskForm.appPassword}
+              onChange={(e) =>
+                setSignaldeskForm((f) => ({ ...f, appPassword: e.target.value }))
+              }
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-muted">
+              Use your Signal Desk signup username and password. Site URL must be the
+              deployed Signal Desk origin.
+            </p>
+          </Field>
+          <ModalActions
+            saving={saving || testing}
+            onTest={() => void testProvider("signaldesk")}
+            onSave={() => void connectProvider("signaldesk")}
           />
         </ConnectModal>
       )}
