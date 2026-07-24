@@ -515,7 +515,7 @@ export function CmsConnectionsPanel({
               label="Site URL"
               value={forms.signaldesk.siteUrl}
               onChange={(value) => updateForm("signaldesk", "siteUrl", value)}
-              placeholder="https://your-signaldesk.example"
+              placeholder="https://www.signaldeskblog.com"
               help="Your deployed Signal Desk origin — not a private laptop URL unless testing locally."
             />
             <Field

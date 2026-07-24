@@ -7,6 +7,7 @@ import {
   GROWTH_STACK,
   aiCmoAppHref,
   kerygmaAppHref,
+  signalDeskHomeUrl,
   BIBLEFUNLAND_STUDIOS_URL,
 } from "@/lib/growth-stack";
 import { site } from "@/lib/site";
@@ -105,6 +106,10 @@ export async function Footer() {
     },
     { label: GROWTH_STACK.aiCmo.name, href: aiCmoAppHref() },
     { label: GROWTH_STACK.aegis.name, href: GROWTH_STACK.aegis.href },
+    {
+      label: "Signal Desk (publish desk)",
+      href: signalDeskHomeUrl("footer", "publish-desk"),
+    },
     { label: "Bible Funland Studios", href: BIBLEFUNLAND_STUDIOS_URL },
   ];
 

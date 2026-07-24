@@ -4,6 +4,8 @@ import {
   GROWTH_STACK,
   aiCmoAppHref,
   kerygmaAppHref,
+  signalDeskHomeUrl,
+  signalDeskPublishUrl,
 } from "@/lib/growth-stack";
 
 const cards = [
@@ -61,6 +63,39 @@ export function GrowthStackPromo() {
               </Link>
             );
           })}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/[0.06] p-5 md:flex md:items-center md:justify-between md:gap-6 dark:border-accent/25 dark:bg-accent/10">
+          <div className="max-w-2xl">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-accent">
+              Connected publish desk
+            </p>
+            <h3 className="mt-2 text-lg font-semibold text-ink dark:text-white">
+              Signal Desk
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted dark:text-white/55">
+              Citation-ready GEO newsroom for CitePilot and Cadence articles —
+              sits beside the Growth Stack, not as a billed sister seat.
+            </p>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3 md:mt-0 md:shrink-0">
+            <a
+              href={signalDeskHomeUrl("growth-stack-promo", "desk-home")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:opacity-90"
+            >
+              Open Signal Desk →
+            </a>
+            <a
+              href={signalDeskPublishUrl("growth-stack-promo", "desk-publish")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent/60 dark:text-white"
+            >
+              How to publish
+            </a>
+          </div>
         </div>
       </div>
     </section>

@@ -533,7 +533,7 @@ export function IntegrationsPanel({ workspaceId }: { workspaceId: string }) {
                 setSignaldeskForm((f) => ({ ...f, siteUrl: e.target.value }))
               }
               className={inputClass}
-              placeholder="https://your-signaldesk.example"
+              placeholder="https://www.signaldeskblog.com"
             />
           </Field>
           <Field label="API key">

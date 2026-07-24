@@ -16,7 +16,9 @@ export function StudioBundleCta() {
         The <strong className="text-foreground dark:text-white">Growth Stack</strong> bundles CitePilot
         Pilot with Cadence Pro. Agency teams: the <strong className="text-foreground dark:text-white">Studio Bundle</strong>{" "}
         adds Fleet + Team seats across the stack. Checkout on Cadence; entitlements sync when you use the
-        same email.
+        same email. Publish through{" "}
+        <strong className="text-foreground dark:text-white">Signal Desk</strong> — the connected GEO
+        desk, not a bundle seat.
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link

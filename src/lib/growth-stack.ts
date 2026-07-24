@@ -105,3 +105,36 @@ export function aiCmoStudioBillingUrl(bundle?: StudioBundleId): string {
 export function aiCmoStudioHubUrl(): string {
   return `${aiCmoPublicOrigin()}/studio`;
 }
+
+/** Connected GEO publish desk (not a Growth Stack sister product / billed seat). */
+export const SIGNAL_DESK_DEFAULT_ORIGIN = "https://www.signaldeskblog.com";
+
+export function signalDeskPublicOrigin(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SIGNAL_DESK_URL?.trim().replace(/\/+$/, "");
+  return fromEnv || SIGNAL_DESK_DEFAULT_ORIGIN;
+}
+
+export function signalDeskHomeUrl(
+  campaign = "growth-stack",
+  content = "publish-desk",
+): string {
+  return withUtm(signalDeskPublicOrigin(), {
+    source: "citepilot",
+    campaign,
+    medium: "referral",
+    content,
+  });
+}
+
+export function signalDeskPublishUrl(
+  campaign = "signal-desk-publish",
+  content = "how-to-publish",
+): string {
+  return withUtm(`${signalDeskPublicOrigin()}/publish`, {
+    source: "citepilot",
+    campaign,
+    medium: "referral",
+    content,
+  });
+}
+

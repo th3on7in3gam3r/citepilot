@@ -10,10 +10,16 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "CMS Publishing Guide",
-  description: `How ${site.name} connects to Webflow, WordPress, Ghost, Hashnode, Shopify, and Framer for article publishing.`,
+  description: `How ${site.name} connects to Signal Desk, Webflow, WordPress, Ghost, Hashnode, Shopify, and Framer for article publishing.`,
 };
 
 const providerCards = [
+  {
+    name: "Signal Desk",
+    needs: "Site URL (e.g. https://www.signaldeskblog.com) and a Bearer API key from Studio → Settings",
+    bestFor: "GEO / citation-ready publishing for CitePilot and Cadence articles.",
+    note: "Preferred connected publish desk beside the Growth Stack. Paste site URL + API key under Integrations → Signal Desk; optional publish webhook syncs status back to CitePilot.",
+  },
   {
     name: "Webflow",
     needs: "Site API token, site ID, and collection ID",
@@ -70,7 +76,7 @@ const quickAnswers = [
   },
   {
     q: "What if I do not have WordPress, Ghost, Shopify, Framer, or Webflow?",
-    a: "Skip CMS setup for now. Keep creating drafts inside CitePilot until you or a client already has a real destination site. WordPress on cheap hosting is the easiest free publish target.",
+    a: "Use Signal Desk as the connected GEO publish desk, or skip CMS setup and keep drafting inside CitePilot until you have a destination site.",
   },
   {
     q: "When should I connect a CMS?",
