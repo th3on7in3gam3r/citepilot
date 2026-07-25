@@ -18,6 +18,7 @@ import {
 } from "@/lib/money-prompts/generate";
 import { insertMoneyPrompts } from "@/lib/money-prompts/store";
 import { brandFromWorkspace } from "@/lib/money-prompts/run-check";
+import { buildDefaultSeedQueries } from "@/lib/money-prompts/seeds";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -78,14 +79,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const prefs = workspace.preferences;
-  const defaultSeeds = [
-    ...(prefs.monitoredPrompts ?? []),
-    workspace.buyerQuestion,
-  ]
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 10);
+  const defaultSeeds = buildDefaultSeedQueries(workspace);
 
   const seedQueries = parsed.data.seedQueries?.length
     ? parsed.data.seedQueries.map((s) => s.trim()).filter(Boolean)
@@ -95,7 +89,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Provide seedQueries or add monitored prompts / a buyer question in Settings.",
+          "Provide seedQueries or set a domain / description / buyer question on the workspace.",
       },
       { status: 400 },
     );

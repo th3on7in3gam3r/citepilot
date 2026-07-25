@@ -30,13 +30,13 @@ export function MoneyPromptsPageClient() {
       <>
         <DashboardPageHeader
           title="Money Prompts"
-          description="Generate the buyer prompts people type into ChatGPT and Perplexity — then track where competitors win citations."
+          description="Enter your URL — we invent buyer prompts, find citation gaps, and draft filler pages so AI engines cite you."
         />
         <FeatureGate
           feature="money_prompts"
           title="Money Prompts"
           plan="pilot"
-          description="Pilot unlocks AI money-prompt generation, citation checks, and a prioritized gap queue."
+          description="Pilot unlocks the guided URL → prompts → check → draft fillers loop."
         />
       </>
     );
@@ -46,9 +46,12 @@ export function MoneyPromptsPageClient() {
     <>
       <DashboardPageHeader
         title="Money Prompts"
-        description="Generate buyer prompts, activate monitoring, and close citation gaps across AI engines."
+        description="Enter your site → we invent buyer prompts → we find where rivals get cited → we draft pages that fill those gaps."
       />
-      <MoneyPromptsPanel workspaceId={workspaceId} />
+      <MoneyPromptsPanel
+        workspaceId={workspaceId}
+        workspaceDomain={workspace.domain}
+      />
     </>
   );
 }

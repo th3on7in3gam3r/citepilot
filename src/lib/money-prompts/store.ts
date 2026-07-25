@@ -341,3 +341,24 @@ export async function insertCitationGaps(
   }
   return out;
 }
+
+export async function getCitationGapById(
+  id: string,
+): Promise<CitationGap | null> {
+  const row = await dbGet<CitationGapRow>(
+    `SELECT * FROM citation_gaps WHERE id = ?`,
+    [id],
+  );
+  return row ? rowToCitationGap(row) : null;
+}
+
+export async function updateCitationGapStatus(
+  id: string,
+  status: CitationGapStatus,
+): Promise<CitationGap | null> {
+  await dbRun(`UPDATE citation_gaps SET status = ? WHERE id = ?`, [
+    status,
+    id,
+  ]);
+  return getCitationGapById(id);
+}
