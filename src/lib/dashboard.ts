@@ -29,6 +29,7 @@ export type DashboardNavItem = {
     | "backlinks"
     | "audit"
     | "optimizer"
+    | "money-prompts"
     | "discussions"
     | "alerts"
     | "uptime"
@@ -108,6 +109,15 @@ export const dashboardNav: DashboardNavItem[] = [
     badge: "Pilot",
   },
   {
+    id: "money-prompts",
+    label: "Money Prompts",
+    href: "/dashboard/money-prompts",
+    description: "Generate buyer prompts and track citation gaps",
+    icon: "money-prompts",
+    section: "main",
+    badge: "Pilot",
+  },
+  {
     id: "discussions",
     label: "Discussions",
     href: "/dashboard/discussions",
@@ -175,7 +185,7 @@ export const dashboardNavGroups: { label: string; itemIds: string[] }[] = [
   },
   {
     label: "Visibility",
-    itemIds: ["analytics", "geo-audit", "optimizer"],
+    itemIds: ["analytics", "geo-audit", "optimizer", "money-prompts"],
   },
   {
     label: "Research",

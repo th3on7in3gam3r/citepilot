@@ -189,3 +189,18 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+
+  - type: cron
+    name: citepilot-money-prompt-recheck
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 3 * * *"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/money-prompt-recheck"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false

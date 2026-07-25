@@ -1053,6 +1053,60 @@ function migrateSchema(db: Database.Database): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_uptime_results_monitor ON uptime_check_results(monitor_id, checked_at DESC);
+
+    CREATE TABLE IF NOT EXISTS money_prompts (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      query TEXT NOT NULL,
+      intent TEXT NOT NULL,
+      prompt_text TEXT NOT NULL,
+      target_engines TEXT NOT NULL DEFAULT '["chatgpt","perplexity","gemini","google-ai-overview"]',
+      money_score INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_money_prompts_workspace ON money_prompts(workspace_id);
+    CREATE INDEX IF NOT EXISTS idx_money_prompts_status ON money_prompts(status);
+    CREATE INDEX IF NOT EXISTS idx_money_prompts_workspace_status ON money_prompts(workspace_id, status);
+
+    CREATE TABLE IF NOT EXISTS money_prompt_checks (
+      id TEXT PRIMARY KEY,
+      prompt_id TEXT NOT NULL,
+      engine TEXT NOT NULL,
+      brand_cited INTEGER NOT NULL DEFAULT 0,
+      competitors_cited TEXT NOT NULL DEFAULT '[]',
+      raw_response TEXT,
+      checked_at TEXT NOT NULL,
+      FOREIGN KEY (prompt_id) REFERENCES money_prompts(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_money_prompt_checks_prompt ON money_prompt_checks(prompt_id);
+
+    CREATE TABLE IF NOT EXISTS citation_gaps (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      money_prompt_id TEXT,
+      query TEXT NOT NULL,
+      engine TEXT NOT NULL,
+      brand_cited INTEGER NOT NULL DEFAULT 0,
+      competitors_cited TEXT NOT NULL DEFAULT '[]',
+      gap_reason TEXT,
+      suggested_fix TEXT,
+      priority INTEGER NOT NULL DEFAULT 3,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+      FOREIGN KEY (money_prompt_id) REFERENCES money_prompts(id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_citation_gaps_workspace ON citation_gaps(workspace_id);
+    CREATE INDEX IF NOT EXISTS idx_citation_gaps_priority ON citation_gaps(priority);
+    CREATE INDEX IF NOT EXISTS idx_citation_gaps_workspace_status ON citation_gaps(workspace_id, status);
   `);
 }
 
