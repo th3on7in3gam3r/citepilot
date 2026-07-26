@@ -45,7 +45,8 @@ export function GeoScoreBadgePrompt() {
           Show off your GEO Score — embed your badge
         </p>
         <p className="mt-1 text-xs text-muted">
-          Add a live score widget to {workspace.domain}. When visitors click through, they discover
+          Add a live score widget to {workspace.domain}, or copy an agent SYSTEM_PROMPT
+          that also sets up llms.txt. When visitors click through, they discover
           CitePilot — and you look like a GEO leader.
         </p>
       </div>
@@ -55,6 +56,12 @@ export function GeoScoreBadgePrompt() {
           className="inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
         >
           Get embed code
+        </Link>
+        <Link
+          href={`/badge?domain=${encodeURIComponent(workspace.domain)}#agent-prompt`}
+          className="inline-flex rounded-full border border-accent/40 px-4 py-2 text-xs font-semibold text-accent transition hover:bg-accent/10"
+        >
+          Copy agent prompt
         </Link>
         <button
           type="button"

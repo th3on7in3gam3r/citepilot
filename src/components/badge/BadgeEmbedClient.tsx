@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useToast } from "@/components/notifications/ToastProvider";
 import type { BadgeStyle, BadgeTheme } from "@/lib/widget/geo-badge";
+import { buildBadgeSystemPrompt } from "@/lib/widget/badge-system-prompt";
 import { site } from "@/lib/site";
 
 type Props = {
@@ -32,10 +33,12 @@ function CopyBlock({
   label,
   code,
   language,
+  id,
 }: {
   label: string;
   code: string;
   language: string;
+  id?: string;
 }) {
   const toast = useToast();
   const [copied, setCopied] = useState(false);
@@ -52,7 +55,7 @@ function CopyBlock({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+    <div id={id} className="rounded-2xl border border-border bg-card p-4 scroll-mt-24">
       <div className="mb-2 flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-ink">{label}</p>
         <button
@@ -105,6 +108,12 @@ export function BadgeEmbedClient({ domain }: Props) {
 </a>`,
       markdown: `[![GEO Score](${badgeUrl})](${auditUrl})`,
       script: `<script src="${base}/widget.js" data-domain="${domain}"></script>`,
+      systemPrompt: buildBadgeSystemPrompt({
+        domain,
+        badgeUrl,
+        linkUrl: auditUrl,
+        siteUrl: base,
+      }),
     }),
     [auditUrl, badgeUrl, base, domain, imgSize.height, imgSize.width],
   );
@@ -197,6 +206,12 @@ export function BadgeEmbedClient({ domain }: Props) {
       </div>
 
       <div className="grid gap-4">
+        <CopyBlock
+          id="agent-prompt"
+          label="Agent SYSTEM_PROMPT"
+          code={snippets.systemPrompt}
+          language="Paste into Cursor / Claude system instructions — embeds badge + llms.txt"
+        />
         <CopyBlock
           label="HTML img tag"
           code={snippets.html}
