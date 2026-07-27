@@ -60,9 +60,9 @@ const providerLabels: Record<CmsProvider, string> = {
 };
 
 const publishTargets: CmsProvider[] = [
+  "signaldesk",
   "webflow",
   "wordpress",
-  "signaldesk",
   "ghost",
   "hashnode",
   "shopify",
@@ -514,9 +514,21 @@ function PublishToControl({
   onPublish: (provider: CmsProvider) => void;
   busy: boolean;
 }) {
-  const [selected, setSelected] = useState<CmsProvider>(
-    targets.find(isConnected) ?? targets[0]!,
-  );
+  const preferredTarget = (): CmsProvider => {
+    if (isConnected("signaldesk")) return "signaldesk";
+    return targets.find(isConnected) ?? targets[0]!;
+  };
+
+  const [selected, setSelected] = useState<CmsProvider>(preferredTarget);
+  const [userPicked, setUserPicked] = useState(false);
+
+  const connectedKey = targets.map((t) => `${t}:${isConnected(t) ? 1 : 0}`).join("|");
+
+  useEffect(() => {
+    if (userPicked) return;
+    setSelected(preferredTarget());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh default when connection map changes
+  }, [userPicked, connectedKey]);
 
   return (
     <div className="flex items-center gap-2">
@@ -527,7 +539,10 @@ function PublishToControl({
       <select
         id="publish-target"
         value={selected}
-        onChange={(e) => setSelected(e.target.value as CmsProvider)}
+        onChange={(e) => {
+          setUserPicked(true);
+          setSelected(e.target.value as CmsProvider);
+        }}
         className="max-w-[180px] rounded-full border border-border bg-white px-3 py-2 text-xs font-semibold text-ink"
       >
         {targets.map((provider) => {
