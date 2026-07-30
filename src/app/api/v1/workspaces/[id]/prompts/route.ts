@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { applyPromptLimit } from "@/lib/billing/prompt-limits";
-import { getBillingByUserId } from "@/lib/billing/store";
-import { planForUser } from "@/lib/billing/limits-server";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { apiErrorResponse } from "@/lib/fleet/api-error";
 import {
   requireFleetAccess,
@@ -82,8 +81,7 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     );
     const mergedList = [...new Set([...existing, ...incoming])];
 
-    const billing = await getBillingByUserId(auth.userId);
-    const plan = planForUser(billing);
+    const plan = await getEffectivePlanForUser(auth.userId);
     const { prompts, trimmed, max } = applyPromptLimit(mergedList, plan);
 
     if (trimmed && prompts.length === existing.length) {

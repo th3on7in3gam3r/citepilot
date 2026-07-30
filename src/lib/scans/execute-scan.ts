@@ -1,7 +1,6 @@
 import { resolveMonitoredPrompts } from "@/lib/audit/resolve-prompts";
 import { runCitationAudit } from "@/lib/audit/run-audit";
-import { planForUser } from "@/lib/billing/limits-server";
-import { getBillingByUserId } from "@/lib/billing/store";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import type { AuditTrigger } from "@/lib/scans/types";
 
@@ -13,8 +12,7 @@ export async function executeWorkspaceScan(input: {
   const ws = await getWorkspaceById(input.workspaceId, input.userId);
   if (!ws) throw new Error("Workspace not found");
 
-  const billing = await getBillingByUserId(input.userId);
-  const plan = planForUser(billing);
+  const plan = await getEffectivePlanForUser(input.userId);
   const prompts = resolveMonitoredPrompts({
     monitoredPrompts: ws.preferences.monitoredPrompts,
     buyerQuestion: ws.buyerQuestion,

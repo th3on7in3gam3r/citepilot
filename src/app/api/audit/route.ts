@@ -8,9 +8,8 @@ import {
 } from "@/lib/billing/prompt-limits";
 import {
   getPromptLimitsForUser,
-  planForUser,
+  getEffectivePlanForUser,
 } from "@/lib/billing/limits-server";
-import { getBillingByUserId } from "@/lib/billing/store";
 import { getRecentAuditsForWorkspace, runCitationAudit } from "@/lib/audit/run-audit";
 import { createAuditShare } from "@/lib/audit/share";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
@@ -90,8 +89,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
       competitors = ws.competitors;
     }
 
-    const billing = userId ? await getBillingByUserId(userId) : null;
-    const plan = planForUser(billing);
+    const plan = await getEffectivePlanForUser(userId);
     const maxPrompts = promptMaxForPlan(plan);
     if (maxPrompts !== null && rawPrompts.length > maxPrompts) {
       const limits = await getPromptLimitsForUser(userId, rawPrompts.length);

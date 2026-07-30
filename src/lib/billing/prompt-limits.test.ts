@@ -3,6 +3,7 @@ import {
   applyPromptLimit,
   buildPromptLimits,
   coalescePromptLimitMax,
+  promptLimitUpgradeError,
   promptMaxForPlan,
 } from "@/lib/billing/prompt-limits";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
@@ -33,5 +34,14 @@ describe("prompt limits", () => {
     expect(coalescePromptLimitMax(null)).toBeNull();
     expect(coalescePromptLimitMax(25)).toBe(25);
     expect(coalescePromptLimitMax(10)).toBe(10);
+  });
+
+  it("promptLimitUpgradeError never implies a Fleet cap", () => {
+    expect(
+      promptLimitUpgradeError(buildPromptLimits("fleet", 100)),
+    ).toContain("refresh and try again");
+    expect(
+      promptLimitUpgradeError(buildPromptLimits("fleet", 100)),
+    ).not.toMatch(/Prompt limit reached/i);
   });
 });

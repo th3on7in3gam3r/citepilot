@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
-import { planForUser } from "@/lib/billing/limits-server";
-import { getBillingByUserId } from "@/lib/billing/store";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { requireWorkspaceAccess } from "@/lib/auth/workspace-access";
 import { getBrowserScanUsageSummary } from "@/lib/scanners/browser-scan-usage";
 import { withApiLogging } from "@/lib/observability/api-log";
@@ -27,8 +26,7 @@ export const GET = withApiLogging(async function GET(
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const billing = await getBillingByUserId(userId);
-  const plan = planForUser(billing);
+  const plan = await getEffectivePlanForUser(userId);
   const summary = await getBrowserScanUsageSummary(workspaceId, plan);
 
   return NextResponse.json({

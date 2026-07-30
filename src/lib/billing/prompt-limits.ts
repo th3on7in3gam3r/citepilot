@@ -50,7 +50,7 @@ export function promptLimitUpgradeError(limits: PromptLimits): string {
   if (limits.plan === "pilot") {
     return `Pilot is limited to ${PROMPT_LIMIT_PILOT} prompts — upgrade to Fleet for unlimited monitoring.`;
   }
-  return "Prompt limit reached.";
+  return "Could not apply Fleet prompt limits — refresh and try again.";
 }
 
 export function buildPromptLimits(
