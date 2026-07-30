@@ -6,9 +6,8 @@ import {
   PILOT_UPGRADE_MESSAGE,
   userHasPilotAccess,
 } from "@/lib/billing/access";
-import { getBillingByUserId } from "@/lib/billing/store";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { applyPromptLimit } from "@/lib/billing/prompt-limits";
-import type { BillingPlan } from "@/lib/billing/types";
 import { withApiLogging } from "@/lib/observability/api-log";
 import {
   clientIpFromRequest,
@@ -149,8 +148,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
       : prompts.filter((p) => p.status === "draft").map((p) => p.id);
 
   if (activate !== false && idsToProcess.length > 0) {
-    const billing = await getBillingByUserId(userId);
-    const plan = (billing?.plan ?? "free") as BillingPlan;
+    const plan = await getEffectivePlanForUser(userId);
     let monitored = [...(workspace.preferences.monitoredPrompts ?? [])];
 
     for (const id of idsToProcess) {

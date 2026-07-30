@@ -6,7 +6,7 @@ import {
   PILOT_UPGRADE_MESSAGE,
   userHasPilotAccess,
 } from "@/lib/billing/access";
-import { getBillingByUserId } from "@/lib/billing/store";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { applyPromptLimit } from "@/lib/billing/prompt-limits";
 import { withApiLogging } from "@/lib/observability/api-log";
 import {
@@ -14,7 +14,6 @@ import {
   updateMoneyPromptStatus,
 } from "@/lib/money-prompts/store";
 import { getWorkspaceById, updateWorkspace } from "@/lib/server/workspace";
-import type { BillingPlan } from "@/lib/billing/types";
 
 export const runtime = "nodejs";
 
@@ -80,8 +79,7 @@ export const PATCH = withApiLogging(async function PATCH(
   ) {
     const workspace = await getWorkspaceById(prompt.workspaceId, userId);
     if (workspace) {
-      const billing = await getBillingByUserId(userId);
-      const plan = (billing?.plan ?? "free") as BillingPlan;
+      const plan = await getEffectivePlanForUser(userId);
       const next = [
         ...(workspace.preferences.monitoredPrompts ?? []),
         updated.promptText,
