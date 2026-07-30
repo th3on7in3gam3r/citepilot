@@ -17,6 +17,7 @@ import type {
   UptimeMonitor,
 } from "@/lib/uptime/types";
 import { MONITOR_INTERVALS } from "@/lib/uptime/types";
+import { diagnoseUptimeFailure } from "@/lib/uptime/diagnose";
 
 type MonitorForm = {
   name: string;
@@ -570,7 +571,19 @@ export function UptimePageClient() {
           </div>
         ) : (
           <div className="space-y-3">
-            {monitors.map((monitor) => (
+            {monitors.map((monitor) => {
+              const diagnosis =
+                monitor.lastStatus === "down" ||
+                monitor.lastStatus === "degraded"
+                  ? diagnoseUptimeFailure({
+                      monitorType: monitor.monitorType,
+                      status: monitor.lastStatus,
+                      statusCode: null,
+                      message: monitor.lastError,
+                    })
+                  : null;
+
+              return (
               <article
                 key={monitor.id}
                 className="rounded-xl border border-border bg-surface/50 p-4 dark:border-[#333] dark:bg-[#0f0f0f]"
@@ -604,6 +617,18 @@ export function UptimePageClient() {
                         <> · checked {formatWhen(monitor.lastCheckedAt)}</>
                       )}
                     </p>
+                    {diagnosis ? (
+                      <div className="mt-2 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs leading-relaxed text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+                        <p>
+                          <span className="font-semibold">Likely:</span>{" "}
+                          {diagnosis.cause}
+                        </p>
+                        <p className="mt-1">
+                          <span className="font-semibold">Try:</span>{" "}
+                          {diagnosis.fix}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -631,7 +656,8 @@ export function UptimePageClient() {
                   </div>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </Panel>

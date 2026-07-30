@@ -105,11 +105,23 @@ async function checkHttpLike(
       message: `HTTP ${statusCode}`,
     };
   } catch (error) {
+    const err = error instanceof Error ? error : null;
+    const cause =
+      err?.cause && typeof err.cause === "object" && err.cause !== null
+        ? (err.cause as { code?: unknown; name?: unknown })
+        : null;
+    const errorCode =
+      (typeof cause?.code === "string" && cause.code) ||
+      (typeof cause?.name === "string" && cause.name) ||
+      err?.name ||
+      undefined;
+
     return {
       status: "down",
       latencyMs: Date.now() - started,
       statusCode: null,
-      message: error instanceof Error ? error.message : "Request failed",
+      message: err?.message ?? "Request failed",
+      ...(errorCode ? { metadata: { errorCode } } : {}),
     };
   }
 }

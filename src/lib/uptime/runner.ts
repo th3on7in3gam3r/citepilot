@@ -4,6 +4,10 @@ import { postSlackMessage } from "@/lib/alerts/slack-client";
 import { getSlackConnection, listWebhookEndpoints } from "@/lib/alerts/store";
 import { runMonitorCheck } from "@/lib/uptime/checks";
 import {
+  diagnoseUptimeFailure,
+  formatUptimeDiagnosis,
+} from "@/lib/uptime/diagnose";
+import {
   getMonitorAuthForRun,
   listDueMonitors,
   recordCheckResult,
@@ -17,6 +21,8 @@ async function notifyMonitorEvent(input: {
   previousStatus: MonitorStatus;
   currentStatus: MonitorStatus;
   message: string;
+  statusCode?: number | null;
+  metadata?: Record<string, unknown>;
 }): Promise<void> {
   const wasHealthy =
     input.previousStatus === "up" || input.previousStatus === "degraded";
@@ -33,7 +39,20 @@ async function notifyMonitorEvent(input: {
   const title = recovered
     ? `Monitor recovered: ${input.monitor.name}`
     : `Monitor down: ${input.monitor.name}`;
-  const description = `${input.monitor.monitorType.toUpperCase()} · ${input.monitor.url} — ${input.message}`;
+
+  let description = `${input.monitor.monitorType.toUpperCase()} · ${input.monitor.url} — ${input.message}`;
+  if (failed) {
+    const diagnosis = diagnoseUptimeFailure({
+      monitorType: input.monitor.monitorType,
+      status: input.currentStatus,
+      statusCode: input.statusCode ?? null,
+      message: input.message,
+      metadata: input.metadata,
+    });
+    if (diagnosis) {
+      description = `${description}\n${formatUptimeDiagnosis(diagnosis)}`;
+    }
+  }
 
   await recordAlertEvent({
     userId: input.userId,
@@ -47,6 +66,7 @@ async function notifyMonitorEvent(input: {
       monitorType: input.monitor.monitorType,
       url: input.monitor.url,
       status: input.currentStatus,
+      statusCode: input.statusCode ?? null,
     },
   });
 
@@ -72,6 +92,7 @@ async function notifyMonitorEvent(input: {
     workspace_domain: domain,
     status: input.currentStatus,
     message: input.message,
+    status_code: input.statusCode ?? null,
     timestamp: new Date().toISOString(),
   };
 
@@ -122,6 +143,8 @@ export async function runSingleMonitor(
     previousStatus,
     currentStatus: outcome.status,
     message: outcome.message ?? outcome.status,
+    statusCode: outcome.statusCode,
+    metadata: outcome.metadata,
   });
 }
 
@@ -158,6 +181,8 @@ export async function runDueUptimeChecks(limit = 40): Promise<{
       previousStatus,
       currentStatus: outcome.status,
       message: outcome.message ?? outcome.status,
+      statusCode: outcome.statusCode,
+      metadata: outcome.metadata,
     }).catch(() => undefined);
   }
 
