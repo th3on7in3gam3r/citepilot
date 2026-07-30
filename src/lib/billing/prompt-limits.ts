@@ -65,3 +65,14 @@ export function buildPromptLimits(
     canAdd: max === null || promptCount < max,
   };
 }
+
+/**
+ * Parse `/api/billing/limits` prompts.max for the client.
+ * `null` = unlimited (Fleet). Only default when the field is missing (`undefined`).
+ * Do not use `?? PROMPT_LIMIT_FREE` — that incorrectly turns Fleet unlimited into 10.
+ */
+export function coalescePromptLimitMax(
+  max: number | null | undefined,
+): number | null {
+  return max === undefined ? PROMPT_LIMIT_FREE : max;
+}

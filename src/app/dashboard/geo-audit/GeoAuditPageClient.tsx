@@ -20,6 +20,7 @@ import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { coalescePromptLimitMax } from "@/lib/billing/prompt-limits";
 import { publicScorePageUrl } from "@/lib/score/public-score-url";
 import { GeoAuditFixGuide } from "@/components/dashboard/geo-audit/GeoAuditFixGuide";
 import { GeoAuditScanProgress } from "@/components/dashboard/geo-audit/GeoAuditScanProgress";
@@ -110,7 +111,7 @@ export function GeoAuditPageClient() {
         const d = (await r.json()) as {
           prompts?: { max: number | null; plan?: "free" | "pilot" | "fleet" };
         };
-        limit = d?.prompts?.max ?? PROMPT_LIMIT_FREE;
+        limit = coalescePromptLimitMax(d?.prompts?.max);
         setPromptLimitMax(limit);
         if (d.prompts?.plan) setUserPlan(d.prompts.plan);
       }

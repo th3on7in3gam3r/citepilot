@@ -33,6 +33,7 @@ import {
 } from "@/lib/onboarding";
 import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { coalescePromptLimitMax } from "@/lib/billing/prompt-limits";
 import {
   COMPETITOR_LIMIT_FLEET,
   COMPETITOR_LIMIT_FREE,
@@ -93,7 +94,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       .then((r) => (r.ok ? r.json() : null))
       .then(
         (d: { prompts?: { max: number | null } } | null) =>
-          setPromptLimitMax(d?.prompts?.max ?? PROMPT_LIMIT_FREE),
+          setPromptLimitMax(coalescePromptLimitMax(d?.prompts?.max)),
       )
       .catch(() => setPromptLimitMax(PROMPT_LIMIT_FREE));
   }, []);

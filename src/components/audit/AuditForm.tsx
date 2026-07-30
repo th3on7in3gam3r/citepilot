@@ -8,6 +8,7 @@ import { ProductCTAButton } from "@/components/ui/ProductCTA";
 import type { AuditPayload } from "@/lib/api-types";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { coalescePromptLimitMax } from "@/lib/billing/prompt-limits";
 import { HERO_CTA_VARIANT_STORAGE_KEY } from "@/lib/analytics/feature-flags";
 import { getStoredWorkspaceId, joinWaitlist, runAudit } from "@/lib/client/api";
 import { ONBOARDING_STORAGE_KEY, type OnboardingAnswers } from "@/lib/onboarding";
@@ -34,7 +35,7 @@ export function AuditForm() {
       .then((r) => (r.ok ? r.json() : null))
       .then(
         (d: { prompts?: { max: number | null } } | null) =>
-          setPromptLimitMax(d?.prompts?.max ?? PROMPT_LIMIT_FREE),
+          setPromptLimitMax(coalescePromptLimitMax(d?.prompts?.max)),
       )
       .catch(() => setPromptLimitMax(PROMPT_LIMIT_FREE));
   }, []);

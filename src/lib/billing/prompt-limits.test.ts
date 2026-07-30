@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   applyPromptLimit,
   buildPromptLimits,
+  coalescePromptLimitMax,
   promptMaxForPlan,
 } from "@/lib/billing/prompt-limits";
+import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
 
 describe("prompt limits", () => {
   it("caps free prompts at 10", () => {
@@ -24,5 +26,12 @@ describe("prompt limits", () => {
     expect(buildPromptLimits("pilot", 24).canAdd).toBe(true);
     expect(buildPromptLimits("pilot", 25).canAdd).toBe(false);
     expect(promptMaxForPlan("fleet")).toBeNull();
+  });
+
+  it("coalescePromptLimitMax keeps Fleet null unlimited", () => {
+    expect(coalescePromptLimitMax(undefined)).toBe(PROMPT_LIMIT_FREE);
+    expect(coalescePromptLimitMax(null)).toBeNull();
+    expect(coalescePromptLimitMax(25)).toBe(25);
+    expect(coalescePromptLimitMax(10)).toBe(10);
   });
 });
