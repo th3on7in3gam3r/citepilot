@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Link as LocaleLink } from "@/i18n/navigation";
 import { PricingTierActions } from "@/components/billing/PricingTierActions";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { TestimonialAvatar } from "@/components/ui/TestimonialAvatar";
@@ -301,12 +302,12 @@ export async function AgencyLanding() {
             >
               {t("footerCtaPrimary")}
             </Link>
-            <Link
-              href={agencyFooterCta.secondary.href}
+            <LocaleLink
+              href="/consulting"
               className="inline-flex w-full rounded-full border border-white/25 px-8 py-3.5 text-sm font-semibold text-white/85 transition hover:border-white/50 sm:w-auto"
             >
               {t("footerCtaSecondary")}
-            </Link>
+            </LocaleLink>
           </div>
         </section>
       </Container>

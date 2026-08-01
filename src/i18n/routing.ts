@@ -4,7 +4,7 @@ export const locales = ["en", "es", "fr"] as const;
 export type AppLocale = (typeof locales)[number];
 
 /** Marketing routes with full locale URL variants (Phase 1). */
-export const localizedPathnames = ["/", "/pricing", "/agency"] as const;
+export const localizedPathnames = ["/", "/pricing", "/agency", "/consulting"] as const;
 
 export const routing = defineRouting({
   locales: [...locales],
