@@ -47,7 +47,9 @@ export async function RecognitionStrip() {
                           ? t("pressKit")
                           : item.kind === "listing_cta"
                             ? t("directoryListings")
-                            : item.label}
+                            : item.kind === "media_inquiry"
+                              ? t("mediaInquiry")
+                              : item.label}
                     </a>
                   </li>
                 );

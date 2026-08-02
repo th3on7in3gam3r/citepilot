@@ -148,6 +148,36 @@ export function pressFounderBio(): {
   };
 }
 
+/** GEO angles for podcasts / interviews / expert quotes — no outlet names. */
+export const pressMediaTopics = [
+  "AI citation monitoring vs traditional SEO rankings",
+  "Generative Engine Optimization (GEO) for B2B brands",
+  "How agencies prove white-label citation lift to clients",
+  "What ChatGPT and Perplexity actually cite (and miss)",
+] as const;
+
+/** Draft media booking mailto — human review only; no CRM auto-publish. */
+export function pressMediaInquiryMailto(): string {
+  const subject = encodeURIComponent(
+    "CitePilot media inquiry — podcast / interview / expert quote",
+  );
+  const body = encodeURIComponent(
+    [
+      "Hi CitePilot press,",
+      "",
+      "I'd like to book the founder for a podcast, interview, or expert quote on GEO / AI citations.",
+      "",
+      "Outlet / show:",
+      "Format (podcast / interview / written quote):",
+      "Topic angle:",
+      "Target date:",
+      "",
+      "Thanks,",
+    ].join("\n"),
+  );
+  return `mailto:${pressEmail}?subject=${subject}&body=${body}`;
+}
+
 /** Recent press mentions — add items when coverage exists. */
 export const pressCoverage: { title: string; outlet: string; url: string; date?: string }[] =
   [];

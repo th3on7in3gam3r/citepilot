@@ -1,11 +1,15 @@
 import { productHuntListingUrl } from "@/lib/launch/config";
-import { pressCoverage, pressEmail } from "@/lib/press/content";
+import {
+  pressCoverage,
+  pressEmail,
+  pressMediaInquiryMailto,
+} from "@/lib/press/content";
 
 export type RecognitionItem = {
   id: string;
   label: string;
   href: string;
-  kind: "product_hunt" | "press" | "listing_cta" | "coverage";
+  kind: "product_hunt" | "press" | "listing_cta" | "media_inquiry" | "coverage";
   external?: boolean;
 };
 
@@ -53,6 +57,14 @@ export function getRecognitionItems(
       "CitePilot directory listing applications (Trustpilot, G2, etc.)",
     )}`,
     kind: "listing_cta",
+    external: true,
+  });
+
+  items.push({
+    id: "media-inquiry",
+    label: "Book podcast / interview",
+    href: pressMediaInquiryMailto(),
+    kind: "media_inquiry",
     external: true,
   });
 
