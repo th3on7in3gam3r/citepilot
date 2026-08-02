@@ -8,7 +8,7 @@ export const FEATURE_FLAGS = {
 export type FeatureFlagKey = (typeof FEATURE_FLAGS)[keyof typeof FEATURE_FLAGS];
 
 export const HERO_CTA_LABELS = {
-  control: "Start free audit",
+  control: "Start Free Audit",
   variant_a: "See where AI cites you",
   variant_b: "Get your GEO score free",
 } as const;
