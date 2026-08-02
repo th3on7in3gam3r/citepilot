@@ -53,6 +53,13 @@
     "citationsTracked": "citas rastreadas",
     "platformsMonitored": "plataformas IA monitorizadas"
   },
+  "recognition": {
+    "heading": "Reconocimiento y prensa",
+    "subhead": "Listados de terceros y kit de medios — sin valoraciones inventadas.",
+    "productHunt": "Product Hunt",
+    "pressKit": "Kit de prensa y medios",
+    "directoryListings": "Solicitar listados en directorios"
+  },
   "platforms": {
     "eyebrow": "Plataformas y ecosistemas",
     "title": "Monitoriza citas en plataformas de IA"
