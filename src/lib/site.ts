@@ -96,6 +96,7 @@ export const nav = {
       { label: "Press", href: "/press" },
       { label: "API docs", href: "/docs/api" },
       { label: "Agencies", href: "/agency" },
+      { label: "Consulting", href: "/consulting" },
     ],
       learn: [
       { label: "GEO Playbook", href: "/tools/geo-playbook" },

@@ -1,5 +1,3 @@
-import { site } from "@/lib/site";
-
 export const agencyLanding = {
   path: "/agency",
   title: "CitePilot for Agencies — Fleet GEO at scale",
@@ -107,6 +105,6 @@ export const agencyFooterCta = {
   primary: { label: "Start Fleet free trial", href: "/start?plan=fleet" },
   secondary: {
     label: "Book a demo",
-    href: `mailto:${site.supportEmail}?subject=Book%20a%20Fleet%20demo`,
+    href: "/consulting",
   },
 } as const;

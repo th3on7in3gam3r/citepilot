@@ -97,6 +97,7 @@ export async function Footer() {
     { label: t("press"), href: "/press" },
     { label: t("apiDocs"), href: "/docs/api" },
     { label: t("agencies"), href: lh("/agency") },
+    { label: t("consulting"), href: lh("/consulting") },
   ];
 
   const stackLinks = [

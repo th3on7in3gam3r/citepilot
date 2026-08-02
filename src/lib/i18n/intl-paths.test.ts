@@ -6,9 +6,11 @@ describe("shouldRunIntl", () => {
     expect(shouldRunIntl("/")).toBe(true);
     expect(shouldRunIntl("/pricing")).toBe(true);
     expect(shouldRunIntl("/agency")).toBe(true);
+    expect(shouldRunIntl("/consulting")).toBe(true);
     expect(shouldRunIntl("/es")).toBe(true);
     expect(shouldRunIntl("/es/pricing")).toBe(true);
     expect(shouldRunIntl("/fr/agency")).toBe(true);
+    expect(shouldRunIntl("/es/consulting")).toBe(true);
   });
 
   it("skips English-only app routes so they are not rewritten to /en/*", () => {
