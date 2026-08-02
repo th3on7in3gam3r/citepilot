@@ -53,6 +53,13 @@
     "citationsTracked": "citations tracked",
     "platformsMonitored": "AI platforms monitored"
   },
+  "recognition": {
+    "heading": "Recognition & press",
+    "subhead": "Third-party listings and media kit — no invented ratings.",
+    "productHunt": "Product Hunt",
+    "pressKit": "Press & media kit",
+    "directoryListings": "Request directory listings"
+  },
   "platforms": {
     "eyebrow": "Platforms & ecosystems",
     "title": "Monitor citations across AI platforms"
