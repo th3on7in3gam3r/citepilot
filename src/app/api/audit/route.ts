@@ -8,9 +8,8 @@ import {
 } from "@/lib/billing/prompt-limits";
 import {
   getPromptLimitsForUser,
-  planForUser,
+  getEffectivePlanForUser,
 } from "@/lib/billing/limits-server";
-import { getBillingByUserId } from "@/lib/billing/store";
 import { getRecentAuditsForWorkspace, runCitationAudit } from "@/lib/audit/run-audit";
 import { createAuditShare } from "@/lib/audit/share";
 import { sendAuditCompleteEmail } from "@/lib/email/notifications";
@@ -20,8 +19,9 @@ import { trackServerEvent } from "@/lib/analytics/track-server";
 import { captureServerException } from "@/lib/observability/sentry";
 import {
   AUDIT_AUTH_RATE_LIMIT_PER_HOUR,
-  AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR,
+  auditPublicRateLimitPerHour,
 } from "@/lib/rate-limit/constants";
+import { isLaunchMode, PH_PROMO_CODE } from "@/lib/launch/config";
 import {
   clientIpFromRequest,
   enforceHourlyRateLimit,
@@ -32,7 +32,7 @@ import { requireWorkspaceAccess } from "@/lib/auth/workspace-access";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export const POST = withApiLogging(async function POST(request: Request) {
   try {
@@ -43,10 +43,10 @@ export const POST = withApiLogging(async function POST(request: Request) {
         : `audit:ip:${clientIpFromRequest(request)}`,
       sessionUserId
         ? AUDIT_AUTH_RATE_LIMIT_PER_HOUR
-        : AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR,
+        : auditPublicRateLimitPerHour(),
       sessionUserId
         ? `Audit limit reached (${AUDIT_AUTH_RATE_LIMIT_PER_HOUR}/hour). Try again later.`
-        : `Free audit limit reached (${AUDIT_PUBLIC_RATE_LIMIT_PER_HOUR}/hour per IP). Sign in or try again later.`,
+        : `Free audit limit reached (${auditPublicRateLimitPerHour()}/hour per IP). Sign in or try again later.`,
     );
     if (auditRate instanceof NextResponse) return auditRate;
 
@@ -89,8 +89,7 @@ export const POST = withApiLogging(async function POST(request: Request) {
       competitors = ws.competitors;
     }
 
-    const billing = userId ? await getBillingByUserId(userId) : null;
-    const plan = planForUser(billing);
+    const plan = await getEffectivePlanForUser(userId);
     const maxPrompts = promptMaxForPlan(plan);
     if (maxPrompts !== null && rawPrompts.length > maxPrompts) {
       const limits = await getPromptLimitsForUser(userId, rawPrompts.length);
@@ -169,6 +168,9 @@ export const POST = withApiLogging(async function POST(request: Request) {
       ...audit,
       promptLimit: await getPromptLimitsForUser(userId, prompts.length),
       promptsTrimmed: trimmed,
+      ...(isLaunchMode()
+        ? { special_offer: `Use ${PH_PROMO_CODE} for 30% off Pilot` }
+        : {}),
     });
     if (trimmed) {
       response.headers.set("X-CitePilot-Prompts-Trimmed", "1");

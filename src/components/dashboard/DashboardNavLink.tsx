@@ -1,30 +1,65 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { DashboardIcon } from "@/components/dashboard/DashboardIcon";
 import type { DashboardNavItem } from "@/lib/dashboard";
+import { isDashboardNavActive } from "@/lib/dashboard-nav";
 
 export function DashboardNavLink({
   item,
-  active,
+  active: activeProp,
   onNavigate,
+  variant = "drawer",
 }: {
   item: DashboardNavItem;
-  active: boolean;
+  active?: boolean;
   onNavigate?: () => void;
+  variant?: "drawer" | "rail";
 }) {
+  const pathname = usePathname();
+  const active = activeProp ?? isDashboardNavActive(pathname, item.href);
+
+  if (variant === "rail") {
+    return (
+      <Link
+        href={item.href}
+        onClick={onNavigate}
+        data-active={active ? "true" : undefined}
+        aria-current={active ? "page" : undefined}
+        title={item.description}
+        className="dash-sidebar-link group"
+      >
+        <span className="dash-sidebar-link__icon" aria-hidden>
+          <DashboardIcon icon={item.icon} className="h-[17px] w-[17px]" />
+        </span>
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        {item.badge ? (
+          <span className="shrink-0 rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent">
+            {item.badge}
+          </span>
+        ) : null}
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-        active
-          ? "bg-accent/10 text-accent"
-          : "text-muted hover:bg-surface hover:text-ink"
-      }`}
+      aria-current={active ? "page" : undefined}
+      title={item.description}
+      className={`dash-sidebar-link group ${active ? "dash-sidebar-link--active" : ""}`}
     >
-      <DashboardIcon icon={item.icon} className="h-[18px] w-[18px] shrink-0" />
-      {item.label}
+      <span className="dash-sidebar-link__icon" aria-hidden>
+        <DashboardIcon icon={item.icon} className="h-[17px] w-[17px]" />
+      </span>
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      {item.badge ? (
+        <span className="shrink-0 rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent">
+          {item.badge}
+        </span>
+      ) : null}
     </Link>
   );
 }

@@ -175,7 +175,14 @@ export function NotificationPreferencesPanel({
   }, [workspaceId, isFleet]);
 
   useEffect(() => {
-    if (ready && isPaid) void load();
+    if (!ready) return;
+    if (isPaid) {
+      void load();
+      return;
+    }
+    // Free tier never fetches prefs — clear the initial loading skeleton
+    // so the FeatureGate upgrade prompt can render.
+    setLoading(false);
   }, [ready, isPaid, load]);
 
   useEffect(() => {
@@ -416,7 +423,7 @@ export function NotificationPreferencesPanel({
     }
   }
 
-  if (!ready || loading) {
+  if (!ready || (isPaid && loading)) {
     return <div className="h-48 animate-pulse rounded-xl bg-surface" />;
   }
 
@@ -675,7 +682,10 @@ export function NotificationPreferencesPanel({
         ) : (
           <>
             <p className="mt-1 text-xs text-muted">
-              Receive HMAC-signed POST payloads for selected events.
+              Receive HMAC-signed flat JSON payloads for Zapier, Make.com, and custom endpoints.{" "}
+              <a href="/docs/integrations" className="font-semibold text-accent hover:underline">
+                Integration guide →
+              </a>
             </p>
 
             {webhooks.length > 0 ? (

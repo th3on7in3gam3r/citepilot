@@ -7,7 +7,15 @@ import { getTranslations } from "next-intl/server";
 
 export async function SocialProofStats() {
   const t = await getTranslations("socialProof");
-  const { domainsAudited, citationsTracked } = await getPublicPlatformStats();
+  let domainsAudited = 0;
+  let citationsTracked = 0;
+  try {
+    const stats = await getPublicPlatformStats();
+    domainsAudited = stats.domainsAudited;
+    citationsTracked = stats.citationsTracked;
+  } catch {
+    // getPublicPlatformStats already soft-fails; keep homepage render resilient.
+  }
 
   const items = [
     {

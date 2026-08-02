@@ -1,5 +1,5 @@
 import { dashboardUrl } from "@/lib/email/config";
-import { agencyDisplayName, resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
+import { agencyDisplayName } from "@/lib/email/resolve-logo";
 import { site, siteLogoUrl } from "@/lib/site";
 import {
   buildEmailShell,

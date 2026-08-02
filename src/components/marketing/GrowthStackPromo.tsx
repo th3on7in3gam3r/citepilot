@@ -1,0 +1,108 @@
+import Link from "next/link";
+import {
+  BIBLEFUNLAND_STUDIOS_URL,
+  GROWTH_STACK,
+  aiCmoAppHref,
+  kerygmaAppHref,
+  moneyGapHomeUrl,
+  signalDeskHomeUrl,
+  signalDeskPublishUrl,
+} from "@/lib/growth-stack";
+
+const cards = [
+  { key: "kerygma" as const, border: "border-accent/25 hover:border-accent/50" },
+  { key: "aiCmo" as const, border: "border-white/10 hover:border-white/25" },
+  { key: "aegis" as const, border: "border-mint/20 hover:border-mint/40" },
+  { key: "moneyGap" as const, border: "border-accent/20 hover:border-accent/45" },
+];
+
+export function GrowthStackPromo() {
+  return (
+    <section className="border-y border-border bg-surface py-16 dark:border-white/10 dark:bg-[#0a0c12]">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+          Growth stack
+        </p>
+        <h2 className="font-display mt-3 max-w-2xl text-2xl font-bold tracking-tight text-ink md:text-3xl dark:text-white">
+          Citations are step one — publish and secure what you build next
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted dark:text-white/60">
+          CitePilot tracks AI visibility. Sister products from{" "}
+          <a
+            href={BIBLEFUNLAND_STUDIOS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent underline decoration-accent/30 underline-offset-2 hover:decoration-accent/60"
+          >
+            Bible Funland Studios
+          </a>{" "}
+          help you create campaigns, close revenue leaks, run social on autopilot,
+          and ship secure code.
+        </p>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map(({ key, border }) => {
+            const product = GROWTH_STACK[key];
+            const href =
+              key === "kerygma"
+                ? kerygmaAppHref("growth-stack-promo", "sister-card")
+                : key === "aiCmo"
+                  ? aiCmoAppHref()
+                  : key === "moneyGap"
+                    ? moneyGapHomeUrl("growth-stack-promo", "sister-card")
+                    : GROWTH_STACK.aegis.href;
+            return (
+              <Link
+                key={key}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`rounded-2xl border bg-white p-6 transition dark:bg-white/[0.03] ${border}`}
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted dark:text-white/45">
+                  Sister product
+                </p>
+                <h3 className="mt-2 text-lg font-semibold text-ink dark:text-white">{product.name}</h3>
+                <p className="mt-2 text-sm text-muted dark:text-white/55">{product.tagline}</p>
+                <span className="mt-4 inline-block text-sm font-semibold text-accent">Learn more →</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/[0.06] p-5 md:flex md:items-center md:justify-between md:gap-6 dark:border-accent/25 dark:bg-accent/10">
+          <div className="max-w-2xl">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-accent">
+              Connected publish desk
+            </p>
+            <h3 className="mt-2 text-lg font-semibold text-ink dark:text-white">
+              Signal Desk
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted dark:text-white/55">
+              Citation-ready GEO newsroom for CitePilot and Cadence articles —
+              sits beside the Growth Stack, not as a billed sister seat.
+            </p>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3 md:mt-0 md:shrink-0">
+            <a
+              href={signalDeskHomeUrl("growth-stack-promo", "desk-home")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:opacity-90"
+            >
+              Open Signal Desk →
+            </a>
+            <a
+              href={signalDeskPublishUrl("growth-stack-promo", "desk-publish")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent/60 dark:text-white"
+            >
+              How to publish
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

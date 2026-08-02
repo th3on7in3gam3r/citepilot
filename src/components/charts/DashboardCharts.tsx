@@ -205,15 +205,26 @@ export function DashboardBarChart({
 export function DashboardDoughnutChart({
   segments,
   total,
+  centerLabel,
+  centerHint,
   hollow = true,
   height = 144,
 }: {
   segments: { label: string; value: number; color?: string }[];
   total?: number;
+  /** Override the hollow-center text (e.g. "18.4%"). */
+  centerLabel?: string;
+  /** Optional caption under the center value (e.g. "CTR"). */
+  centerHint?: string;
   hollow?: boolean;
   height?: number;
 }) {
   const sum = total ?? (segments.reduce((s, x) => s + x.value, 0) || 1);
+  const displayCenter =
+    centerLabel ??
+    (Number.isInteger(sum)
+      ? String(sum)
+      : sum.toFixed(1).replace(/\.0$/, ""));
 
   return (
     <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -251,8 +262,15 @@ export function DashboardDoughnutChart({
           }}
         />
         {hollow && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <span className="text-lg font-bold text-[#0f172a]">{sum}</span>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-lg font-bold leading-none text-[#0f172a]">
+              {displayCenter}
+            </span>
+            {centerHint ? (
+              <span className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-[#64748b]">
+                {centerHint}
+              </span>
+            ) : null}
           </div>
         )}
       </div>

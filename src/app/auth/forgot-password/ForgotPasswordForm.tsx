@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { AuthErrorAlert } from "@/components/auth/AuthErrorAlert";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
-import { authInputClass } from "@/components/auth/auth-styles";
+import { AuthSuccessAlert } from "@/components/auth/AuthSuccessAlert";
+import { authFormCardClass, authInputClass, authLabelClass } from "@/components/auth/auth-styles";
 import { authClient } from "@/lib/auth/client";
 
 export function ForgotPasswordForm() {
@@ -41,37 +43,35 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="glass rounded-2xl p-8">
+    <div className={authFormCardClass}>
       <p className="text-xs font-semibold uppercase tracking-wider text-accent">
         Account recovery
       </p>
-      <h1 className="font-display mt-2 text-2xl font-bold text-white">
+      <h1 className="font-display mt-2 text-2xl font-bold text-ink">
         Reset your password
       </h1>
-      <p className="mt-2 text-sm text-white/60">
+      <p className="mt-2 text-sm text-muted">
         Enter your email and we&apos;ll send a reset link if an account exists.
       </p>
 
       {status === "sent" ? (
-        <div
-          role="status"
-          className="mt-6 rounded-xl border border-mint/30 bg-mint/10 px-4 py-4 text-sm text-white/80"
-        >
-          <p className="font-semibold text-mint">Check your inbox</p>
-          <p className="mt-2">
-            If an account exists for {email}, you&apos;ll receive password reset
-            instructions shortly.
-          </p>
-          <Link
-            href="/auth/sign-in"
-            className="mt-4 inline-block font-semibold text-glow hover:text-white"
-          >
-            Back to sign in →
-          </Link>
+        <div className="mt-6">
+          <AuthSuccessAlert id="forgot-password-sent" title="Check your inbox">
+            <p>
+              If an account exists for {email}, you&apos;ll receive password reset
+              instructions shortly.
+            </p>
+            <Link
+              href="/auth/sign-in"
+              className="mt-4 inline-block font-semibold text-accent hover:text-accent-deep"
+            >
+              Back to sign in →
+            </Link>
+          </AuthSuccessAlert>
         </div>
       ) : (
-        <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
-          <label htmlFor="forgot-password-email" className="block text-sm font-semibold text-white/70">
+        <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4" noValidate>
+          <label htmlFor="forgot-password-email" className={authLabelClass}>
             Email
             <input
               id="forgot-password-email"
@@ -88,9 +88,7 @@ export function ForgotPasswordForm() {
             />
           </label>
           {error && (
-            <p id="forgot-password-error" role="alert" className="text-sm text-red-300">
-              {error}
-            </p>
+            <AuthErrorAlert id="forgot-password-error">{error}</AuthErrorAlert>
           )}
           <AuthSubmitButton
             pending={status === "loading"}
@@ -100,8 +98,8 @@ export function ForgotPasswordForm() {
         </form>
       )}
 
-      <p className="mt-6 text-center text-sm text-white/60">
-        <Link href="/auth/sign-in" className="font-semibold text-accent">
+      <p className="mt-6 text-center text-sm text-muted">
+        <Link href="/auth/sign-in" className="font-semibold text-accent hover:text-accent-deep">
           ← Back to sign in
         </Link>
       </p>

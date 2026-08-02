@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getBillingByUserId, upsertBillingAccount } from "@/lib/billing/store";
-import { isPaidPlan, isActiveBillingStatus } from "@/lib/billing/types";
+import { isPaidPlan, isActiveBillingStatus, type BillingPlan } from "@/lib/billing/types";
 import { processReferralConversion } from "@/lib/referrals/process";
+import { emitStudioOpsEvent } from "@/lib/studio-ops";
 import {
   triggerChurnPrevention,
   triggerPilotRetention,
@@ -21,6 +22,7 @@ async function syncSubscription(
   const mapped = mapSubscriptionToBilling(subscription);
   const previous = await getBillingByUserId(userId);
   const wasPaid = isPaidPlan(previous);
+  const previousPlan: BillingPlan = previous?.plan ?? "free";
 
   await upsertBillingAccount({
     userId,
@@ -35,6 +37,46 @@ async function syncSubscription(
   });
 
   const updated = await getBillingByUserId(userId);
+  const nowPaid = isPaidPlan(updated);
+  const stripeCustomerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer.id;
+
+  if (!wasPaid && nowPaid && updated) {
+    emitStudioOpsEvent("subscription.upgraded", {
+      userId,
+      plan: updated.plan,
+      previousPlan,
+      stripeCustomerId,
+      stripeSubscriptionId: subscription.id,
+      status: updated.status,
+    });
+  } else if (
+    wasPaid &&
+    nowPaid &&
+    updated &&
+    previousPlan !== updated.plan &&
+    updated.plan !== "free"
+  ) {
+    emitStudioOpsEvent("subscription.upgraded", {
+      userId,
+      plan: updated.plan,
+      previousPlan,
+      stripeCustomerId,
+      stripeSubscriptionId: subscription.id,
+      status: updated.status,
+    });
+  } else if (wasPaid && !nowPaid) {
+    emitStudioOpsEvent("subscription.canceled", {
+      userId,
+      plan: previousPlan,
+      stripeCustomerId,
+      stripeSubscriptionId: subscription.id,
+      status: updated?.status ?? mapped.status,
+    });
+  }
+
   if (!wasPaid && isPaidPlan(updated)) {
     await processReferralConversion(userId);
     void triggerPilotRetention(userId).catch((err) =>

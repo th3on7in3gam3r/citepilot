@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useWorkspaceSwitcher } from "@/contexts/WorkspaceSwitcherContext";
 import { runAudit } from "@/lib/client/api";
 import { useToast } from "@/components/notifications/ToastProvider";
+
+function redirectToSignIn(pathname: string) {
+  const signIn = new URL("/auth/sign-in", window.location.origin);
+  signIn.searchParams.set("from", pathname || "/dashboard");
+  window.location.assign(`${signIn.pathname}${signIn.search}`);
+}
 
 const CATEGORIES = [
   { value: "b2b-saas", label: "B2B SaaS" },
@@ -18,6 +25,8 @@ export function WorkspaceCreationWizard() {
   const { wizardOpen, setWizardOpen } = useWorkspaceSwitcher();
   const { createClientWorkspace, refresh } = useWorkspaceContext();
   const toast = useToast();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [step, setStep] = useState(0);
   const [domain, setDomain] = useState("");
@@ -55,12 +64,22 @@ export function WorkspaceCreationWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain: trimmed }),
       });
-      const data = (await res.json()) as { available?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        available?: boolean;
+        error?: string;
+      };
       if (!res.ok || !data.available) {
+        if (res.status === 401) {
+          redirectToSignIn(pathname);
+          return false;
+        }
         setDomainError(
           data.available === false
             ? "You already have a workspace for this domain"
-            : data.error ?? "Invalid domain",
+            : data.error ??
+                (res.status >= 500
+                  ? "Server error — refresh and try again"
+                  : "Invalid domain"),
         );
         return false;
       }
@@ -90,6 +109,11 @@ export function WorkspaceCreationWizard() {
       businessType: category,
     });
     if (result.error) {
+      if (/sign in|unauthorized|401/i.test(result.error)) {
+        redirectToSignIn(pathname);
+        setBusy(false);
+        return;
+      }
       toast.error(result.error);
       setBusy(false);
       return;
@@ -98,14 +122,38 @@ export function WorkspaceCreationWizard() {
     setCreatedId(id ?? null);
 
     if (id && prompts.length > 0) {
-      await fetch(`/api/workspaces/${id}`, {
+      const patchRes = await fetch(`/api/workspaces/${id}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           preferences: { monitoredPrompts: prompts },
         }),
-      }).catch(() => undefined);
+      }).catch(() => null);
+      if (patchRes?.status === 401) {
+        redirectToSignIn(pathname);
+        setBusy(false);
+        return;
+      }
+    }
+
+    // Auto-launch first GEO audit, then land on Overview with welcome state.
+    if (id) {
+      try {
+        await runAudit({
+          domain: domain.trim(),
+          prompts,
+          workspaceId: id,
+        });
+        toast.success("Workspace created — first audit is running (~60s)");
+      } catch {
+        toast.success("Workspace created — run a GEO audit next");
+      }
+      await refresh();
+      setBusy(false);
+      close();
+      router.push("/dashboard?welcome=1");
+      return;
     }
 
     setBusy(false);
@@ -128,6 +176,7 @@ export function WorkspaceCreationWizard() {
       });
       toast.success("First scan launched — results in ~60 seconds");
       close();
+      router.push("/dashboard?welcome=1");
     } catch {
       toast.error("Failed to launch scan");
     } finally {

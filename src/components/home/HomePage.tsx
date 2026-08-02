@@ -1,5 +1,7 @@
 import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { CustomerLogosBar } from "@/components/home/CustomerLogosBar";
+import { RecognitionStrip } from "@/components/home/RecognitionStrip";
 import { SocialProofStats } from "@/components/home/SocialProofStats";
 import { FeatureSuite } from "@/components/home/FeatureSuite";
 import { GeoPlaybookPromo } from "@/components/home/GeoPlaybookPromo";
@@ -13,6 +15,7 @@ import { BottomCTA } from "@/components/home/BottomCTA";
 import { FAQ } from "@/components/home/FAQ";
 import { FreeToolsSection } from "@/components/marketing/FreeToolsSection";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
+import { GrowthStackPromo } from "@/components/marketing/GrowthStackPromo";
 
 const Differentiators = dynamic(
   () =>
@@ -45,12 +48,15 @@ const StickyProductShowcase = dynamic(
 );
 
 /** Home sections — hero + features eager; heavy below-fold sections lazy-loaded. */
-export function HomePage({ heroCtaVariant }: { heroCtaVariant?: string }) {
+export function HomePage() {
   return (
     <>
-      <Hero heroCtaVariant={heroCtaVariant} />
+      <Hero />
       <CustomerLogosBar />
-      <SocialProofStats />
+      <Suspense fallback={<HomeSectionSkeleton variant="marquee" />}>
+        <SocialProofStats />
+      </Suspense>
+      <RecognitionStrip />
       <HomeActionBar />
       <FreeToolsSection />
       <FeatureSuite />
@@ -62,6 +68,7 @@ export function HomePage({ heroCtaVariant }: { heroCtaVariant?: string }) {
       <AnswerCapsuleSection />
       <Testimonials />
       <ProductTransparencySection />
+      <GrowthStackPromo />
       <BottomCTA />
       <FAQ />
     </>

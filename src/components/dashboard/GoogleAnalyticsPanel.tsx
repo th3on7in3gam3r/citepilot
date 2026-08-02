@@ -5,6 +5,7 @@ import { effectInit } from "@/lib/react/effect-init";
 import type { GscMetrics } from "@/lib/gsc/client";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { GoogleAnalyticsChartsGrid } from "@/components/dashboard/analytics/GoogleAnalyticsChartsGrid";
+import { useToast } from "@/components/notifications/ToastProvider";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { buildOrganicCitationBridge } from "@/lib/analytics/organic-citation-bridge";
 
@@ -15,6 +16,7 @@ export function GoogleAnalyticsPanel({
   workspace: WorkspaceSnapshot;
   preferOrganicLead?: boolean;
 }) {
+  const toast = useToast();
   const workspaceId = workspace.workspaceId ?? workspace.id;
   const [metrics, setMetrics] = useState<GscMetrics | null>(null);
   const [configured, setConfigured] = useState(false);
@@ -75,14 +77,32 @@ export function GoogleAnalyticsPanel({
 
   async function connectGsc() {
     if (!workspaceId) return;
+    if (!configured) {
+      toast.error(
+        "Google Search Console is not configured on the server. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, then redeploy.",
+      );
+      return;
+    }
     setConnecting(true);
-    const res = await fetch(
-      `/api/gsc/connect?workspaceId=${encodeURIComponent(workspaceId)}`,
-      { credentials: "include" },
-    );
-    const data = (await res.json()) as { url?: string; error?: string };
-    setConnecting(false);
-    if (data.url) window.location.href = data.url;
+    try {
+      const res = await fetch(
+        `/api/gsc/connect?workspaceId=${encodeURIComponent(workspaceId)}`,
+        { credentials: "include" },
+      );
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        toast.error(
+          data.error ??
+            "Could not start Search Console connection. Check Google OAuth env vars on the host.",
+        );
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      toast.error("Could not start Search Console connection.");
+    } finally {
+      setConnecting(false);
+    }
   }
 
   async function disconnect() {
@@ -140,7 +160,7 @@ export function GoogleAnalyticsPanel({
       )}
 
       {configured && !connected && !loading && (
-        <div className="mt-4 rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.06))] px-5 py-5">
+        <div className="mt-4 rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-card to-card px-5 py-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
             Search Console connection
           </p>
@@ -189,7 +209,7 @@ export function GoogleAnalyticsPanel({
         title={preferOrganicLead ? "Organic insights" : "Organic performance"}
         className="mt-6"
       >
-        <div className="mb-6 dash-gradient-panel overflow-hidden rounded-2xl border border-[#d7def8] p-5 dark:border-accent/15">
+        <div className="mb-6 dash-gradient-panel overflow-hidden rounded-2xl border border-border p-5 dark:border-accent/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">

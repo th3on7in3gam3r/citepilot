@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { downloadGeoPlaybook } from "@/lib/marketing/geo-playbook";
 import { trackEvent } from "@/lib/analytics/track";
+import { PillButton } from "@/components/ui/PillButton";
 
 export function GeoPlaybookEmailGate() {
   const [email, setEmail] = useState("");
@@ -46,7 +47,7 @@ export function GeoPlaybookEmailGate() {
   return (
     <section
       id="geo-pdf-gate"
-      className="scroll-mt-28 rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/5 to-surface p-6 md:p-8"
+      className="scroll-mt-28 rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/8 via-white to-surface p-6 shadow-sm md:p-8"
     >
       <p className="text-xs font-semibold uppercase tracking-wider text-accent">
         PDF + newsletter
@@ -60,9 +61,14 @@ export function GeoPlaybookEmailGate() {
       </p>
 
       {done ? (
-        <p className="mt-4 text-sm font-semibold text-accent">
-          Check your inbox — your download should start automatically.
-        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-4">
+          <p className="text-sm font-semibold text-accent">
+            Check your inbox — your download should start automatically.
+          </p>
+          <PillButton href="/start" size="md">
+            Start workspace setup →
+          </PillButton>
+        </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3 sm:flex-row">
           <input
@@ -71,20 +77,18 @@ export function GeoPlaybookEmailGate() {
             placeholder="you@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="min-w-0 flex-1 rounded-xl border border-border bg-white px-4 py-3 text-sm text-ink outline-none focus:ring-2 focus:ring-accent/30"
+            className="tool-input min-w-0 flex-1"
           />
           <button
             type="submit"
             disabled={loading}
-            className="shrink-0 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="btn-marketing-primary shrink-0 rounded-full px-6 py-3 text-sm disabled:opacity-60"
           >
             {loading ? "Sending…" : "Get PDF + tips"}
           </button>
         </form>
       )}
-      {error && (
-        <p className="mt-3 text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </section>
   );
 }

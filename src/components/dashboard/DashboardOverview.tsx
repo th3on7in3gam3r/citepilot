@@ -12,20 +12,20 @@ import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPa
 import { isFleetWorkspaceDashboardView } from "@/lib/workspace/fleet-dashboard";
 
 export function DashboardOverview() {
-  const { refresh, switchWorkspace, workspace } = useWorkspaceContext();
+  const { refresh, switchWorkspace } = useWorkspaceContext();
   const { isFleet, ready: billingReady } = useBilling();
   const searchParams = useSearchParams();
   const siteId = searchParams.get("site");
   const showFleetWorkspace = isFleetWorkspaceDashboardView(isFleet, siteId);
   const toast = useToast();
 
+  // URL `?site=` is source of truth for Fleet drill-down. Do not depend on
+  // `workspace` here — that re-fired switch on every stale overwrite and raced
+  // with in-flight loads.
   useEffect(() => {
     if (!showFleetWorkspace || !siteId) return;
-    const activeId = workspace?.workspaceId ?? workspace?.id;
-    if (activeId !== siteId) {
-      void switchWorkspace(siteId);
-    }
-  }, [showFleetWorkspace, siteId, switchWorkspace, workspace]);
+    void switchWorkspace(siteId);
+  }, [showFleetWorkspace, siteId, switchWorkspace]);
 
   useEffect(() => {
     if (searchParams.get("welcome") !== "1") return;

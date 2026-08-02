@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
+import { neonDbErrorDetail } from "@/lib/db";
 import { workspaceDomainTaken } from "@/lib/server/workspace-management";
 import { withApiLogging } from "@/lib/observability/api-log";
 
@@ -32,11 +33,25 @@ export const POST = withApiLogging(async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid domain" }, { status: 400 });
   }
 
-  const taken = await workspaceDomainTaken(
-    userId,
-    domain,
-    body.excludeWorkspaceId?.trim(),
-  );
+  try {
+    const taken = await workspaceDomainTaken(
+      userId,
+      domain,
+      body.excludeWorkspaceId?.trim(),
+    );
 
-  return NextResponse.json({ available: !taken, domain: normalizeDomain(domain) });
+    return NextResponse.json({
+      available: !taken,
+      domain: normalizeDomain(domain),
+    });
+  } catch (error) {
+    console.error(
+      "POST /api/workspaces/check-domain",
+      neonDbErrorDetail(error),
+    );
+    return NextResponse.json(
+      { error: "Could not check domain availability. Try again in a moment." },
+      { status: 503 },
+    );
+  }
 });

@@ -3,9 +3,11 @@ import type { CmsConnectionSummary, CmsProvider } from "@/lib/cms/types";
 import { CMS_PROVIDERS } from "@/lib/cms/types";
 import { testFramerConnection } from "@/lib/cms/framer";
 import { testGhostConnection } from "@/lib/cms/ghost";
+import { testHashnodeConnection } from "@/lib/cms/hashnode";
 import { testShopifyConnection } from "@/lib/cms/shopify";
 import { testWebflowConnection } from "@/lib/cms/webflow";
 import { testWordPressConnection } from "@/lib/cms/wordpress";
+import { testSignalDeskConnection } from "@/lib/cms/signaldesk";
 import { maskSecret } from "@/lib/integrations/helpers";
 import { getWebflowConfig } from "@/lib/webflow/config";
 import { dbGet } from "@/lib/db";
@@ -32,16 +34,20 @@ const descriptions: Record<IntegrationId, string> = {
   webflow: "Publish articles directly to your Webflow site",
   wordpress: "Publish articles directly to your WordPress blog",
   ghost: "Publish articles directly to your Ghost site",
+  hashnode: "Publish articles directly to your Hashnode blog",
   shopify: "Publish articles to your Shopify store blog",
   framer: "Install the CitePilot GEO snippet on your Framer site",
+  signaldesk: "Publish citation-ready dispatches to Signal Desk",
 };
 
 const names: Record<IntegrationId, string> = {
   webflow: "Webflow",
   wordpress: "WordPress",
   ghost: "Ghost",
+  hashnode: "Hashnode",
   shopify: "Shopify",
   framer: "Framer",
+  signaldesk: "SignalDesk",
 };
 
 function maskedForProvider(
@@ -51,8 +57,10 @@ function maskedForProvider(
   if (provider === "webflow") return maskSecret(credentials.apiKey ?? "");
   if (provider === "wordpress") return maskSecret(credentials.appPassword ?? "");
   if (provider === "ghost") return maskSecret(credentials.adminApiKey ?? "");
+  if (provider === "hashnode") return maskSecret(credentials.accessToken ?? "");
   if (provider === "shopify") return maskSecret(credentials.accessToken ?? "");
   if (provider === "framer") return maskSecret(credentials.apiKey ?? "");
+  if (provider === "signaldesk") return maskSecret(credentials.apiKey ?? "");
   return undefined;
 }
 
@@ -145,8 +153,12 @@ export async function buildIntegrationStatuses(input: {
           await testWebflowConnection(connection.credentials as never);
         } else if (provider === "wordpress") {
           await testWordPressConnection(connection.credentials as never);
+        } else if (provider === "signaldesk") {
+          await testSignalDeskConnection(connection.credentials as never);
         } else if (provider === "ghost") {
           await testGhostConnection(connection.credentials as never);
+        } else if (provider === "hashnode") {
+          await testHashnodeConnection(connection.credentials as never);
         } else if (provider === "shopify") {
           await testShopifyConnection(connection.credentials as never);
         } else if (provider === "framer" && !framerSnippetInstalled) {

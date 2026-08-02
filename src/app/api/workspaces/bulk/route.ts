@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { resolveMonitoredPrompts } from "@/lib/audit/resolve-prompts";
 import { runCitationAudit } from "@/lib/audit/run-audit";
-import { planForUser } from "@/lib/billing/limits-server";
-import { getBillingByUserId } from "@/lib/billing/store";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { archiveWorkspaces } from "@/lib/server/workspace-management";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
@@ -15,8 +14,7 @@ async function scanWorkspace(workspaceId: string, userId: string) {
   const ws = await getWorkspaceById(workspaceId, userId);
   if (!ws) throw new Error("Workspace not found");
 
-  const billing = await getBillingByUserId(userId);
-  const plan = planForUser(billing);
+  const plan = await getEffectivePlanForUser(userId);
   const prompts = resolveMonitoredPrompts({
     monitoredPrompts: ws.preferences.monitoredPrompts,
     buyerQuestion: ws.buyerQuestion,

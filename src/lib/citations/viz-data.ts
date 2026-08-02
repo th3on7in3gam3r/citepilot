@@ -119,6 +119,21 @@ function resolveCellStatus(input: {
   }
 
   if (input.check) {
+    if (input.check.scanUnavailable) {
+      return {
+        status: "partial",
+        detail: `⚠️ Scan unavailable — ${input.check.platform} may have rate limited the scan. Will retry in next weekly scan.`,
+        checkMode: input.check.checkMode,
+      };
+    }
+    const notesLower = input.check.notes?.toLowerCase() ?? "";
+    if (notesLower.includes("captcha") || notesLower.includes("blocked")) {
+      return {
+        status: "partial",
+        detail: `⚠️ Scan blocked — ${input.check.platform} may have rate limited the scan. Will retry in next weekly scan.`,
+        checkMode: input.check.checkMode,
+      };
+    }
     if (input.check.cited) {
       return {
         status: "cited",

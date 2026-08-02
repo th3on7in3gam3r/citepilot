@@ -10,12 +10,24 @@ type SignalRow = {
 };
 
 function rows(signals: SiteSignals): SignalRow[] {
-  return [
+  const deep = signals.deepCrawl;
+  const items: SignalRow[] = [
     {
       label: "Homepage reachable",
       ok: signals.fetchOk,
       detail: signals.fetchOk ? "Live crawl succeeded" : "Could not fetch homepage",
     },
+  ];
+
+  if (deep && deep.pagesCrawled > 0) {
+    items.push({
+      label: "Deep crawl",
+      ok: deep.pagesCrawled >= 1,
+      detail: `${deep.pagesCrawled} / ${deep.maxPages} pages (Pilot+)`,
+    });
+  }
+
+  items.push(
     {
       label: "Meta description",
       ok: Boolean(signals.metaDescription),
@@ -24,7 +36,11 @@ function rows(signals: SiteSignals): SignalRow[] {
     {
       label: "JSON-LD",
       ok: signals.hasJsonLd,
-      detail: signals.hasJsonLd ? "Structured data detected" : "Not found in HTML",
+      detail: signals.hasJsonLd
+        ? deep && deep.pagesCrawled > 1
+          ? "Structured data detected across crawl"
+          : "Structured data detected"
+        : "Not found in HTML",
     },
     {
       label: "FAQ schema",
@@ -39,7 +55,9 @@ function rows(signals: SiteSignals): SignalRow[] {
     {
       label: "H1 heading",
       ok: Boolean(signals.h1),
-      detail: signals.h1 ? `"${signals.h1.slice(0, 48)}${signals.h1.length > 48 ? "…" : ""}"` : "Missing",
+      detail: signals.h1
+        ? `"${signals.h1.slice(0, 48)}${signals.h1.length > 48 ? "…" : ""}"`
+        : "Missing",
     },
     {
       label: "Content depth",
@@ -56,18 +74,22 @@ function rows(signals: SiteSignals): SignalRow[] {
       ok: signals.robotsAllows,
       detail: signals.robotsAllows ? "Crawlers allowed" : "May block crawlers",
     },
-  ];
+  );
+
+  return items;
 }
 
 export function GeoAuditSiteSignals({ signals }: { signals: SiteSignals }) {
   const items = rows(signals);
   const passed = items.filter((r) => r.ok).length;
+  const deep = signals.deepCrawl;
 
   return (
     <Panel title="Live site signals" className="mt-6">
       <p className="mb-4 text-sm text-muted">
-        Pulled from your homepage on the last audit ({passed}/{items.length} passing). Re-run
-        after publishing changes to refresh.
+        {deep && deep.pagesCrawled > 1
+          ? `Pulled from a same-domain deep crawl of ${deep.pagesCrawled} pages on the last audit (${passed}/${items.length} passing). Re-run after publishing changes to refresh.`
+          : `Pulled from your homepage on the last audit (${passed}/${items.length} passing). Re-run after publishing changes to refresh.`}
       </p>
       <ul className="grid gap-2 sm:grid-cols-2">
         {items.map((row) => (

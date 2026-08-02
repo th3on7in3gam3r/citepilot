@@ -3,6 +3,12 @@ import type { ScanDeltaSummary } from "@/lib/audit/scan-delta";
 import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import type { WorkspacePreferences } from "@/lib/settings";
 
+export type DeepCrawlMeta = {
+  pagesCrawled: number;
+  maxPages: number;
+  urls: string[];
+};
+
 export type SiteSignals = {
   title: string | null;
   metaDescription: string | null;
@@ -18,6 +24,8 @@ export type SiteSignals = {
   sitemapFound: boolean;
   fetchOk: boolean;
   geoScore: number;
+  /** Present when Pilot/Fleet deep crawl ran (Playwright/Crawlee). */
+  deepCrawl?: DeepCrawlMeta | null;
 };
 
 export type PlatformPresence = {

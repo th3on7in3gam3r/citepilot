@@ -23,7 +23,7 @@ export const gettingStartedSteps: GettingStartedStep[] = [
     id: "prompts",
     title: "Add 5+ money prompts",
     description: "Track buyer questions that drive pipeline in ChatGPT and Perplexity.",
-    href: "/dashboard/content?section=keywords",
+    href: "/dashboard/content?section=targeting",
   },
   {
     id: "cms",

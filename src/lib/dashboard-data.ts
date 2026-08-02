@@ -586,8 +586,9 @@ export function platformRowsFromWorkspace(
 
     return [...rows, ...missingFallbacks];
   }
-  return fallbackNames.map((name, i) => ({
+  // Never invent cited platforms from seed citedPlatforms counts.
+  return fallbackNames.map((name) => ({
     name,
-    cited: i < workspace.citedPlatforms,
+    cited: false as const,
   }));
 }

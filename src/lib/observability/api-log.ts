@@ -1,4 +1,4 @@
-import { after } from "next/server";
+import { after, NextResponse } from "next/server";
 
 export type ApiLogRecord = {
   method: string;
@@ -86,6 +86,17 @@ export function withApiLogging(handler: RouteHandler): RouteHandler {
       return response;
     } catch (error) {
       const durationMs = Date.now() - start;
+      console.error(
+        JSON.stringify({
+          level: "error",
+          type: "api_unhandled",
+          method,
+          path,
+          durationMs,
+          message: error instanceof Error ? error.message : "unknown",
+          ts: new Date().toISOString(),
+        }),
+      );
       scheduleAfter(async () => {
         const userId = await resolveUserId(request);
         logApiRequest({
@@ -96,7 +107,11 @@ export function withApiLogging(handler: RouteHandler): RouteHandler {
           userId,
         });
       });
-      throw error;
+      // Always return JSON — never rethrow empty 500s that break client .json().
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 },
+      );
     }
   };
 }

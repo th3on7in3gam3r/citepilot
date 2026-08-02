@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   FEATURE_FLAGS,
   HERO_CTA_VARIANT_STORAGE_KEY,
@@ -10,11 +11,15 @@ import { trackEvent } from "@/lib/analytics/track";
 import { useFeatureFlagVariant } from "@/hooks/useFeatureFlagVariant";
 
 export function HeroCta({ initialVariant }: { initialVariant?: string }) {
+  const t = useTranslations("hero");
   const variant = useFeatureFlagVariant(FEATURE_FLAGS.HERO_CTA_TEXT, {
     initialVariant,
     fallback: "control",
   });
-  const label = heroCtaLabel(variant);
+  const label =
+    variant === "variant_a" || variant === "variant_b"
+      ? heroCtaLabel(variant)
+      : t("ctaPrimary");
 
   function handleClick() {
     try {
@@ -30,7 +35,7 @@ export function HeroCta({ initialVariant }: { initialVariant?: string }) {
     <Link
       href="/audit"
       onClick={handleClick}
-      className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-8 py-3.5 text-base font-bold text-white shadow-[0_4px_20px_rgba(14,165,233,0.3)] transition hover:scale-[1.02] hover:shadow-[0_6px_24px_rgba(14,165,233,0.35)] dark:shadow-[0_4px_24px_rgba(14,165,233,0.25)] dark:hover:shadow-[0_6px_28px_rgba(14,165,233,0.3)] sm:w-auto sm:min-w-[15rem]"
+      className="btn-marketing-primary w-full max-w-sm px-8 py-4 text-base shadow-[0_6px_28px_color-mix(in_srgb,var(--color-accent)_45%,transparent)] ring-2 ring-accent/35 focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50 sm:w-auto sm:min-w-[16rem]"
     >
       {label}
     </Link>

@@ -7,6 +7,7 @@ import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import { ONBOARDING_STORAGE_KEY, type OnboardingAnswers } from "@/lib/onboarding";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { coalescePromptLimitMax } from "@/lib/billing/prompt-limits";
 import {
   INDUSTRY_OPTIONS,
   SITE_MODEL_OPTIONS,
@@ -62,7 +63,7 @@ export function DomainInfoSection({
       .then((r) => (r.ok ? r.json() : null))
       .then(
         (d: { prompts?: { max: number | null } } | null) =>
-          setPromptLimitMax(d?.prompts?.max ?? PROMPT_LIMIT_FREE),
+          setPromptLimitMax(coalescePromptLimitMax(d?.prompts?.max)),
       )
       .catch(() => setPromptLimitMax(PROMPT_LIMIT_FREE));
   }, []);

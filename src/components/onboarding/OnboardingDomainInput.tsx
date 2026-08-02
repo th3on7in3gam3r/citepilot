@@ -8,6 +8,8 @@ import {
 
 type Reachability = "idle" | "checking" | "reachable" | "unreachable";
 
+const REACHABILITY_TIMEOUT_MS = 10_000;
+
 export type DomainInputStatus = "idle" | "invalid" | "checking" | "valid" | "unreachable";
 
 function WarningIcon() {
@@ -100,8 +102,13 @@ export function OnboardingDomainInput({
     setReachability("checking");
     let cancelled = false;
 
-    const timer = setTimeout(() => {
-      void fetch(`/api/domains/check?domain=${encodeURIComponent(domain)}`)
+    const debounceTimer = setTimeout(() => {
+      const controller = new AbortController();
+      const timeoutTimer = setTimeout(() => controller.abort(), REACHABILITY_TIMEOUT_MS);
+
+      void fetch(`/api/domains/check?domain=${encodeURIComponent(domain)}`, {
+        signal: controller.signal,
+      })
         .then(async (res) => {
           if (cancelled) return;
           const data = (await res.json()) as { reachable?: boolean };
@@ -109,12 +116,15 @@ export function OnboardingDomainInput({
         })
         .catch(() => {
           if (!cancelled) setReachability("unreachable");
+        })
+        .finally(() => {
+          clearTimeout(timeoutTimer);
         });
     }, 450);
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      clearTimeout(debounceTimer);
     };
   }, [value, format]);
 

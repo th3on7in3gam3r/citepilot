@@ -13,9 +13,9 @@ describe("feature-flags", () => {
   });
 
   it("heroCtaLabel maps variants", () => {
-    expect(heroCtaLabel("control")).toBe("Start free audit");
+    expect(heroCtaLabel("control")).toBe("Start Free Audit");
     expect(heroCtaLabel("variant_a")).toBe("See where AI cites you");
     expect(heroCtaLabel("variant_b")).toBe("Get your GEO score free");
-    expect(heroCtaLabel(undefined)).toBe("Start free audit");
+    expect(heroCtaLabel(undefined)).toBe("Start Free Audit");
   });
 });

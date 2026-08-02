@@ -9,9 +9,9 @@ export type ProductFeature = {
 export const productFeatures: ProductFeature[] = [
   {
     id: "content",
-    title: "Branded SEO Content",
+    title: "Content Studio",
     description:
-      "Generates brand-aligned articles optimized for search and AI visibility. Structured to rank, attract traffic, and build authority.",
+      "Generate branded GEO articles, manage your queue, and publish to CMS — or start from Site Optimizer briefs.",
     dashboardHref: "/dashboard/content",
   },
   {
@@ -75,8 +75,10 @@ export type CmsPlatform = {
 export const cmsPlatforms: CmsPlatform[] = [
   { id: "webflow", name: "Webflow", available: true },
   { id: "wordpress", name: "WordPress", available: true },
+  { id: "signaldesk", name: "SignalDesk", available: true },
   { id: "shopify", name: "Shopify", available: true },
   { id: "ghost", name: "Ghost", available: true },
+  { id: "hashnode", name: "Hashnode", available: true },
   { id: "framer", name: "Framer", available: true },
 ];
 

@@ -1,19 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
 import { BlogManagerPanel } from "@/components/dashboard/BlogManagerPanel";
 import { CmsConnectionsPanel } from "@/components/dashboard/CmsConnectionsPanel";
 import { GenerateArticlePanel } from "@/components/dashboard/GenerateArticlePanel";
-import { CompetitorAnalysisGrid } from "@/components/dashboard/competitors/CompetitorAnalysisGrid";
+import { ContentStudioWorkflowBanner } from "@/components/dashboard/content/ContentStudioWorkflowBanner";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 import { DomainInfoSection } from "@/components/dashboard/site-details/DomainInfoSection";
 import { GoogleDataSection } from "@/components/dashboard/site-details/GoogleDataSection";
-import { KeywordsSection } from "@/components/dashboard/site-details/KeywordsSection";
 import { SiteDetailsFooter } from "@/components/dashboard/site-details/SiteDetailsShared";
 import { SiteDetailsSubnav } from "@/components/dashboard/site-details/SiteDetailsSubnav";
+import { useBilling } from "@/contexts/BillingContext";
+import { useUpgradeModalOptional } from "@/contexts/UpgradeModalContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { buildContentCalendar } from "@/lib/dashboard-data";
 import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import { buildWeeklyEditorialMix } from "@/lib/content-strategy";
@@ -27,7 +30,11 @@ import type { SiteDetailsSectionId } from "@/lib/site-details-sections";
 import { SITE_DETAILS_SECTIONS } from "@/lib/site-details-sections";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
+import { contentStudioLegacyRedirect } from "@/lib/content-studio";
 import { effectInit } from "@/lib/react/effect-init";
+import { productFeatures } from "@/lib/features";
+
+const contentFeature = productFeatures.find((f) => f.id === "content")!;
 
 const VALID_SECTIONS = new Set<SiteDetailsSectionId>(
   SITE_DETAILS_SECTIONS.map((s) => s.id),
@@ -36,20 +43,27 @@ const VALID_SECTIONS = new Set<SiteDetailsSectionId>(
 export function SiteDetailsModule() {
   const router = useRouter();
   const { workspace, ready, applyWorkspace, refresh } = useWorkspaceContext();
+  const { isPaid, ready: billingReady } = useBilling();
+  const upgradeModal = useUpgradeModalOptional();
   const searchParams = useSearchParams();
-  const [active, setActive] = useState<SiteDetailsSectionId>("domain-info");
+  const [active, setActive] = useState<SiteDetailsSectionId>("generate");
   const [queueRefreshKey, setQueueRefreshKey] = useState(0);
   const [completionCtx, setCompletionCtx] = useState<SiteDetailsCompletionContext>({});
 
   useEffect(() => {
     const section = searchParams.get("section");
+    const legacy = contentStudioLegacyRedirect(section);
+    if (legacy) {
+      router.replace(legacy);
+      return;
+    }
     if (section && VALID_SECTIONS.has(section as SiteDetailsSectionId)) {
       const t = setTimeout(() => {
         setActive(section as SiteDetailsSectionId);
       }, 0);
       return () => clearTimeout(t);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const section = SITE_DETAILS_SECTIONS.find((s) => s.id === active)!;
   const workspaceId = workspace?.workspaceId ?? workspace?.id ?? "";
@@ -111,6 +125,32 @@ export function SiteDetailsModule() {
     [router],
   );
 
+  const focusGenerateSection = useCallback(() => {
+    if (billingReady && !isPaid) {
+      upgradeModal?.openUpgradeModal({
+        feature: "article_generation",
+        title: "AI article generation",
+        description:
+          "Pilot and Fleet unlock citation-ready article drafts from your money prompts and GEO gaps.",
+        plan: "pilot",
+        unlocks: [
+          "Generate articles from uncited money prompts",
+          "Queue drafts for CMS publish",
+          "Briefs tied to Site Optimizer gaps",
+        ],
+      });
+      return;
+    }
+    goToSection("generate");
+    requestAnimationFrame(() => {
+      document
+        .getElementById("content-studio-generate")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const topic = document.getElementById("gen-topic") as HTMLInputElement | null;
+      topic?.focus();
+    });
+  }, [billingReady, goToSection, isPaid, upgradeModal]);
+
   const advanceSection = useCallback(() => {
     const idx = SITE_DETAILS_SECTIONS.findIndex((s) => s.id === active);
     const next = SITE_DETAILS_SECTIONS[idx + 1];
@@ -146,18 +186,7 @@ export function SiteDetailsModule() {
 
   if (!workspaceId) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#e2e8f0] bg-card p-12 text-center">
-        <p className="font-display text-xl font-bold text-ink">No site yet</p>
-        <p className="mt-2 text-sm text-muted">
-          Complete onboarding to configure your site details and content workspace.
-        </p>
-        <Link
-          href="/start"
-          className="mt-6 inline-flex rounded-full bg-[#0ea5e9] px-6 py-3 text-sm font-semibold text-white"
-        >
-          Start setup →
-        </Link>
-      </div>
+      <DashboardNoWorkspaceEmpty description="Complete setup to configure site details, content targeting, and your editorial workspace." />
     );
   }
 
@@ -169,6 +198,25 @@ export function SiteDetailsModule() {
 
   return (
     <div className="-mx-4 flex min-h-[calc(100dvh-8rem)] flex-col md:-mx-6 lg:-mx-8">
+      <div className="px-4 md:px-6 lg:px-8">
+        <DashboardPageHeader
+          headingLevel="h2"
+          title="Content Studio"
+          description={contentFeature.description}
+          action={
+            <button
+              type="button"
+              onClick={focusGenerateSection}
+              className={dashPrimaryCta}
+            >
+              {billingReady && !isPaid
+                ? "Upgrade to generate →"
+                : "Generate article →"}
+            </button>
+          }
+        />
+        <ContentStudioWorkflowBanner onGenerateClick={focusGenerateSection} />
+      </div>
       <div className="flex flex-1 flex-col gap-5 px-4 md:px-6 lg:flex-row lg:px-8">
         <SiteDetailsSubnav
           active={active}
@@ -178,7 +226,10 @@ export function SiteDetailsModule() {
         />
 
         <div className="min-w-0 flex-1">
-          <div className="rounded-2xl border border-border bg-card shadow-sm dark:border-[#222] dark:bg-[#111]">
+          <div
+            id={active === "generate" ? "content-studio-generate" : undefined}
+            className="scroll-mt-24 rounded-2xl border border-border bg-card shadow-sm dark:border-[#222] dark:bg-[#111]"
+          >
             <header className="border-b border-border px-6 py-5 dark:border-[#222]">
               <h2 className="font-display text-xl font-bold text-ink">
                 {section.label}
@@ -268,24 +319,6 @@ function SectionBody({
           mode="targeting"
         />
       );
-    case "competitors":
-      return (
-        <div className="space-y-8">
-          <CompetitorAnalysisGrid workspace={workspace} />
-          <div className="border-t border-[#eef2f6] pt-8">
-            <p className="mb-4 text-sm font-semibold text-ink">Tracked competitors</p>
-            <DomainInfoSection
-              workspace={workspace}
-              workspaceId={workspaceId}
-              onSaved={onSaved}
-              onContinue={onContinue}
-              mode="competitors"
-            />
-          </div>
-        </div>
-      );
-    case "keywords":
-      return <KeywordsSection workspace={workspace} onContinue={onContinue} />;
     case "working-files":
       return (
         <div className="space-y-6">

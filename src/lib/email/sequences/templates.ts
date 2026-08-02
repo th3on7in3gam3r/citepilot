@@ -3,6 +3,12 @@ import { PILOT_PRICE_LABEL } from "./constants";
 import { appBaseUrl } from "@/lib/stripe/config";
 import { dashboardUrl } from "@/lib/email/config";
 import { unsubscribeUrl } from "@/lib/email/unsubscribe";
+import {
+  founderName,
+  phLaunchDateLabel,
+  phLaunchUrl,
+  productHuntListingUrl,
+} from "@/lib/launch/config";
 
 export function classifyGapFixType(topGap: string): GapFixType {
   const g = topGap.toLowerCase();
@@ -232,6 +238,74 @@ ${cta(portalUrl, "Update payment method →")}`,
 ${cta(portalUrl, "Update payment →")}`,
         ),
         text: `Final payment reminder for CitePilot: ${portalUrl}`,
+      };
+    }
+  }
+
+  if (sequence === "ph_prelaunch") {
+    if (emailNumber === 1) {
+      const phUrl = productHuntListingUrl();
+      const launchPage = phLaunchUrl("/launch");
+      return {
+        subject: "We're launching on Product Hunt tomorrow 🚀",
+        html: layout(
+          userId,
+          `<h1 style="font-size:22px;margin:0 0 12px">Product Hunt launch tomorrow</h1>
+<p>Hey ${name},</p>
+<p>Tomorrow, CitePilot goes live on Product Hunt — and your support means everything to a small team.</p>
+<p>If CitePilot has been useful to you, a quick upvote takes 10 seconds and helps more teams discover it:</p>
+${cta(phUrl, "Support CitePilot on Product Hunt →")}
+<p>The link goes live at 12:01 AM PST on ${phLaunchDateLabel()}.</p>
+<p>As a thank-you for being an early user, we're giving Product Hunt visitors 30% off Pilot. You already have access — but if you know anyone who should be tracking their AI citations, send them this link:</p>
+<p><a href="${launchPage}">${launchPage}</a></p>
+<p>Thank you for believing in this early.<br/>${founderName()}</p>
+<p style="font-size:13px;color:#64748b"><strong>P.S.</strong> — If you have 2 minutes, a comment on the PH listing helps even more than an upvote.</p>`,
+        ),
+        text: `We're launching on Product Hunt tomorrow. Support us: ${phUrl}. Share: ${launchPage}`,
+      };
+    }
+  }
+
+  if (sequence === "ph_launch_day") {
+    if (emailNumber === 1) {
+      const phUrl = productHuntListingUrl();
+      return {
+        subject: "We're live on Product Hunt — thank you ❤️",
+        html: layout(
+          userId,
+          `<h1 style="font-size:22px;margin:0 0 12px">We're live on Product Hunt!</h1>
+<p>Hey ${name},</p>
+<p>We're live! If you haven't had a chance to upvote yet, here's the link:</p>
+${cta(phUrl, "Vote for CitePilot on Product Hunt →")}
+<p>We're reading every comment. If you want to share what you've found useful about CitePilot, a comment on the listing goes a long way.</p>
+<p>Thank you,<br/>${founderName()}</p>`,
+        ),
+        text: `We're live on Product Hunt! Vote here: ${phUrl}`,
+      };
+    }
+  }
+
+  if (sequence === "ph_welcome") {
+    if (emailNumber === 1) {
+      const auditUrl = phLaunchUrl("/audit");
+      return {
+        subject: "Welcome from Product Hunt 👋",
+        html: layout(
+          userId,
+          `<h1 style="font-size:22px;margin:0 0 12px">Thanks for joining from Product Hunt</h1>
+<p>Hey ${name},</p>
+<p>Thanks for signing up through Product Hunt — really means a lot.</p>
+<p>Here's what to do first:</p>
+<ol>
+<li>Enter your domain → Run a free citation audit (60 seconds)</li>
+<li>See where ChatGPT, Perplexity, and Google AI cite you today</li>
+<li>Get your first weekly action plan</li>
+</ol>
+${cta(auditUrl, "Start your free audit →")}
+<p>If you have questions, reply directly to this email — I read every one.</p>
+<p>${founderName()}, CitePilot</p>`,
+        ),
+        text: `Welcome from Product Hunt. Start your free audit: ${auditUrl}`,
       };
     }
   }

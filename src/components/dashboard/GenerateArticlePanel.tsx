@@ -57,14 +57,19 @@ export function GenerateArticlePanel({
   useEffect(() => {
     const pTopic = searchParams.get("topic");
     const pAngle = searchParams.get("angle");
+    const pBrief = searchParams.get("brief");
     const pFormat = searchParams.get("format");
     const pPillar = searchParams.get("pillar");
 
-    if (!pTopic && !pAngle && !pFormat && !pPillar) return;
+    if (!pTopic && !pAngle && !pBrief && !pFormat && !pPillar) return;
 
     const t = setTimeout(() => {
       if (pTopic) setTopic(pTopic);
-      if (pAngle) setAngle(pAngle);
+      if (pBrief) {
+        setAngle(pBrief);
+      } else if (pAngle) {
+        setAngle(pAngle);
+      }
       if (pFormat && pFormat in CONTENT_TYPE_LABELS) {
         setContentType(pFormat as ContentType);
       }
@@ -104,7 +109,10 @@ export function GenerateArticlePanel({
           if (connected) {
             const providerLabels: Record<string, string> = {
               wordpress: "WordPress",
+              signaldesk: "SignalDesk",
+              webflow: "Webflow",
               ghost: "Ghost",
+              hashnode: "Hashnode",
               shopify: "Shopify",
               framer: "Framer",
             };
@@ -162,7 +170,11 @@ export function GenerateArticlePanel({
         post?: { slug: string; title: string; url: string };
       };
       if (!res.ok) {
-        toast.error(data.error ?? "Generation failed");
+        const fallback =
+          res.status === 502 || res.status === 504
+            ? "Generation timed out or failed upstream — try News/Tutorial format or retry in a minute."
+            : "Generation failed";
+        toast.error(data.error ?? fallback);
         setLoading(false);
         return;
       }
