@@ -8,6 +8,7 @@ type SectionProps = {
   /** Tighter vertical padding for scroll-driven sections */
   compact?: boolean;
   containerClassName?: string;
+  ariaLabelledBy?: string;
 };
 
 export function Section({
@@ -16,13 +17,18 @@ export function Section({
   className = "",
   compact = false,
   containerClassName = "",
+  ariaLabelledBy,
 }: SectionProps) {
   const pad = compact
     ? "py-14 md:py-18"
     : "py-20 md:py-28 lg:py-32";
 
   return (
-    <section id={id} className={`${pad} ${className}`}>
+    <section
+      id={id}
+      aria-labelledby={ariaLabelledBy}
+      className={`${pad} ${className}`}
+    >
       <Container className={containerClassName}>{children}</Container>
     </section>
   );

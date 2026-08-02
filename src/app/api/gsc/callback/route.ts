@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { connectGscForWorkspace, exchangeGscCode } from "@/lib/gsc/client";
 import { appBaseUrl } from "@/lib/stripe/config";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const stateRaw = searchParams.get("state");
@@ -50,4 +51,4 @@ export async function GET(request: Request) {
     console.error("GSC callback", err);
     return NextResponse.redirect(`${redirectBase}?gsc=error`);
   }
-}
+});

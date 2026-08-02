@@ -13,6 +13,7 @@ import {
   getWorkspaceById,
   toSnapshot,
 } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -34,7 +35,7 @@ function downloadFilename(domain: string) {
   return `${safeDomain || "workspace"}-citepilot-export.json`;
 }
 
-export async function GET(request: Request, { params }: Params) {
+export const GET = withApiLogging(async function GET(request: Request, { params }: Params) {
   try {
     const auth = await requireFleetAccess(request);
     if (auth instanceof NextResponse) return auth;
@@ -95,4 +96,4 @@ export async function GET(request: Request, { params }: Params) {
       { status: 500 },
     );
   }
-}
+});

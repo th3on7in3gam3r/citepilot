@@ -52,7 +52,7 @@ export function AuditSeoIntro() {
                 GEO Audit
               </Link>{" "}
               in the workspace after signup, or follow the{" "}
-              <Link href="/nurture#geo-perplexity" className="font-semibold text-accent">
+              <Link href="/geo-playbook#geo-perplexity" className="font-semibold text-accent">
                 Perplexity citation playbook
               </Link>{" "}
               for structured data and entity optimization steps.

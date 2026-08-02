@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server";
-import { ensureDb, isPostgres, postgresEnvVar } from "@/lib/db";
+import {
+  ensureDb,
+  isPostgres,
+  neonDbErrorDetail,
+  postgresEnvVar,
+  postgresHealthDetail,
+} from "@/lib/db";
+import {
+  neonAuthEnvCheck,
+  probeNeonAuthUpstream,
+} from "@/lib/auth/neon-auth-health";
 import { webflowEnvStatus } from "@/lib/webflow/config";
 import { stripeEnvStatus } from "@/lib/stripe/config";
 import { isEmailConfigured } from "@/lib/email/config";
 import { isGscConfigured } from "@/lib/gsc/config";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -13,50 +24,37 @@ function hasKey(name: string): boolean {
   return Boolean(process.env[name]?.trim());
 }
 
-export async function GET() {
+function opsReportConfigured(): boolean {
+  return Boolean(
+    process.env.OPS_REPORT_EMAIL?.trim() ||
+      process.env.ADMIN_OPS_EMAIL?.trim() ||
+      isEmailConfigured(),
+  );
+}
+
+function isAuthorizedHealthRequest(request: Request): boolean {
+  const secret = process.env.HEALTH_SECRET?.trim();
+  if (!secret) return false;
+  return request.headers.get("x-health-secret") === secret;
+}
+
+function buildDetailedChecks(): Record<string, Check> {
   const checks: Record<string, Check> = {
     database: { ok: false },
     openai: { ok: hasKey("OPENAI_API_KEY") },
     perplexity: { ok: hasKey("PERPLEXITY_API_KEY") },
     stackexchange: { ok: hasKey("STACKEXCHANGE_KEY") },
     serper: { ok: hasKey("SERPER_API_KEY") },
+    serpapi: { ok: hasKey("SERPAPI_API_KEY") },
     tavily: { ok: hasKey("TAVILY_API_KEY") },
     openPageRank: { ok: hasKey("OPEN_PAGERANK_API_KEY") },
     admin: {
-      ok: hasKey("ADMIN_SECRET"),
-      detail: hasKey("ADMIN_SECRET")
-        ? "Admin routes require sign-in"
-        : "Dev mode — set ADMIN_SECRET for production",
+      ok: Boolean(process.env.ADMIN_EMAILS?.trim()),
+      detail: process.env.ADMIN_EMAILS?.trim()
+        ? "Admin routes require ADMIN_EMAILS session"
+        : "Set ADMIN_EMAILS (comma-separated admin emails)",
     },
-    neonAuth: (() => {
-      const baseUrl = process.env.NEON_AUTH_BASE_URL?.trim();
-      const secret = process.env.NEON_AUTH_COOKIE_SECRET?.trim();
-      if (baseUrl && secret && secret.length >= 32) {
-        return {
-          ok: true,
-          detail: "Dashboard + workspace APIs require sign-in",
-        };
-      }
-      if (!baseUrl && !secret) {
-        return {
-          ok: false,
-          detail: "Missing NEON_AUTH_BASE_URL and NEON_AUTH_COOKIE_SECRET",
-        };
-      }
-      if (!baseUrl) {
-        return { ok: false, detail: "Missing NEON_AUTH_BASE_URL" };
-      }
-      if (!secret) {
-        return {
-          ok: false,
-          detail: "Missing NEON_AUTH_COOKIE_SECRET (generate: openssl rand -base64 32)",
-        };
-      }
-      return {
-        ok: false,
-        detail: `NEON_AUTH_COOKIE_SECRET too short (${secret.length} chars, need 32+)`,
-      };
-    })(),
+    neonAuth: neonAuthEnvCheck(),
     webflow: (() => {
       const env = webflowEnvStatus();
       return { ok: env.ok, detail: env.detail };
@@ -84,27 +82,44 @@ export async function GET() {
         : "Set CRON_SECRET for /api/cron/weekly-digest",
     },
     opsReport: {
-      ok: Boolean(process.env.ADMIN_OPS_EMAIL?.trim() || isEmailConfigured()),
-      detail: process.env.ADMIN_OPS_EMAIL?.trim()
-        ? `Weekly ops report → ${process.env.ADMIN_OPS_EMAIL.trim()}`
-        : isEmailConfigured()
-          ? "Weekly ops report uses EMAIL_FROM address"
-          : "Set ADMIN_OPS_EMAIL + RESEND_API_KEY for ops report",
+      ok: opsReportConfigured(),
+      detail: opsReportConfigured()
+        ? "Weekly ops report recipient configured"
+        : "Set OPS_REPORT_EMAIL + RESEND_API_KEY for ops report",
     },
   };
+
+  return checks;
+}
+
+export const GET = withApiLogging(async function GET(request: Request) {
+  if (!isAuthorizedHealthRequest(request)) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const checks = buildDetailedChecks();
+  const pgMeta = postgresHealthDetail();
 
   try {
     await ensureDb();
     checks.database = {
       ok: true,
       detail: isPostgres()
-        ? `postgres (${postgresEnvVar() ?? "DATABASE_URL"})`
+        ? `postgres (${postgresEnvVar() ?? "DATABASE_URL"}; ${pgMeta.driver}; ${pgMeta.hostKind}; pooled=${pgMeta.hasPooled}; direct=${pgMeta.hasDirect})`
         : "sqlite (.data/citepilot.db)",
     };
   } catch (error) {
     checks.database = {
       ok: false,
-      detail: error instanceof Error ? error.message : "Database unavailable",
+      detail: `${neonDbErrorDetail(error)} [${pgMeta.driver}; ${pgMeta.hostKind}; pooled=${pgMeta.hasPooled}; direct=${pgMeta.hasDirect}]`,
+    };
+  }
+
+  if (checks.neonAuth.ok) {
+    const upstream = await probeNeonAuthUpstream();
+    checks.neonAuth = {
+      ok: upstream.ok,
+      detail: upstream.detail,
     };
   }
 
@@ -117,4 +132,4 @@ export async function GET() {
     },
     { status: ok ? 200 : 503 },
   );
-}
+});

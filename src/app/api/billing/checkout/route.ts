@@ -6,14 +6,18 @@ import { getBillingByUserId } from "@/lib/billing/store";
 import {
   appBaseUrl,
   isStripeConfigured,
+  stripeFleetAnnualPriceId,
   stripeFleetPriceId,
+  stripePilotAnnualPriceId,
   stripePilotPriceId,
 } from "@/lib/stripe/config";
 import { getStripe } from "@/lib/stripe/server";
+import { validatePilotPromoCode } from "@/lib/stripe/promo";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json(
       { error: "Stripe not configured — set STRIPE_SECRET_KEY and STRIPE_PILOT_PRICE_ID" },
@@ -29,17 +33,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in required" }, { status: 401 });
     }
 
-    const body = (await request.json().catch(() => ({}))) as { plan?: BillingPlan };
+    const body = (await request.json().catch(() => ({}))) as {
+      plan?: BillingPlan;
+      interval?: "monthly" | "annual";
+      promoCode?: string;
+    };
     const plan = body.plan === "fleet" ? "fleet" : "pilot";
+    const interval = body.interval === "annual" ? "annual" : "monthly";
 
-    const priceId = plan === "fleet" ? stripeFleetPriceId() : stripePilotPriceId();
+    const priceId =
+      interval === "annual"
+        ? plan === "fleet"
+          ? stripeFleetAnnualPriceId() ?? stripeFleetPriceId()
+          : stripePilotAnnualPriceId() ?? stripePilotPriceId()
+        : plan === "fleet"
+          ? stripeFleetPriceId()
+          : stripePilotPriceId();
     if (!priceId) {
       return NextResponse.json(
         {
           error:
             plan === "fleet"
-              ? "Fleet checkout not configured — set STRIPE_FLEET_PRICE_ID"
-              : "Pilot price not configured",
+              ? interval === "annual"
+                ? "Fleet annual checkout not configured — set STRIPE_FLEET_ANNUAL_PRICE_ID"
+                : "Fleet checkout not configured — set STRIPE_FLEET_PRICE_ID"
+              : interval === "annual"
+                ? "Pilot annual checkout not configured — set STRIPE_PILOT_ANNUAL_PRICE_ID"
+                : "Pilot price not configured",
         },
         { status: 503 },
       );
@@ -54,28 +74,47 @@ export async function POST(request: Request) {
     const base = appBaseUrl();
     const billing = await getBillingByUserId(userId);
 
+    let discounts: { promotion_code: string }[] | undefined;
+    let promoApplied: string | undefined;
+    const promoCode = body.promoCode?.trim();
+    if (promoCode) {
+      if (plan !== "pilot" || interval !== "monthly") {
+        return NextResponse.json(
+          { error: "Promo codes apply to Pilot monthly only" },
+          { status: 400 },
+        );
+      }
+      const validation = await validatePilotPromoCode(promoCode);
+      if (!validation.valid || !validation.promotionCodeId) {
+        return NextResponse.json({ error: validation.message }, { status: 400 });
+      }
+      discounts = [{ promotion_code: validation.promotionCodeId }];
+      promoApplied = validation.message;
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: billing?.stripeCustomerId ?? undefined,
       customer_email: billing?.stripeCustomerId ? undefined : sessionUser.email,
       client_reference_id: userId,
-      metadata: { userId, plan },
+      metadata: { userId, plan, promoCode: promoCode?.toUpperCase() ?? "" },
       subscription_data: {
-        metadata: { userId, plan },
+        metadata: { userId, plan, promoCode: promoCode?.toUpperCase() ?? "" },
       },
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${base}/dashboard/settings?billing=success`,
+      success_url: `${base}/dashboard?upgraded=true&plan=${plan}`,
       cancel_url: `${base}/pricing?billing=canceled`,
-      allow_promotion_codes: true,
+      allow_promotion_codes: !discounts,
+      discounts,
     });
 
     if (!session.url) {
       return NextResponse.json({ error: "Could not start checkout" }, { status: 502 });
     }
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url, promoApplied });
   } catch (error) {
     console.error("POST /api/billing/checkout", error);
     return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
   }
-}
+});

@@ -1,0 +1,2 @@
+# Static PNG exports for Product Hunt gallery + thumbnail.
+# Generate with: node scripts/generate-press-assets.mjs

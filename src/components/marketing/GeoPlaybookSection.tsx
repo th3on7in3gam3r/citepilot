@@ -328,14 +328,14 @@ export function GeoPlaybookSection() {
         <div className="space-y-8 p-6 sm:p-10">
           <div>
             <h2 className="font-display text-2xl font-bold leading-tight text-ink sm:text-3xl lg:text-4xl">
-              Stop Optimizing for Clicks That Don&apos;t Exist. Get Cited in the
-              AI Answers Your Buyers Actually Read.
+              Stop Optimizing for Clicks That Don&apos;t Exist. Track Whether
+              You&apos;re Cited in the AI Answers Your Buyers Actually Read.
             </h2>
             <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted sm:text-lg">
               Traditional SEO is bleeding traffic to AI engines. Acquire the
               definitive technical blueprint to map your B2B SaaS &ldquo;Money
               Prompts,&rdquo; audit your brand&apos;s current AI visibility, and
-              claim your unfair share of generative recommendations on autopilot.
+              close citation gaps with weekly monitoring and prioritized fixes.
             </p>
           </div>
           <ul className="grid gap-4 sm:grid-cols-2">

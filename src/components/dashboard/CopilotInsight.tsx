@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { FeatureGate } from "@/components/billing/FeatureGate";
 import { trackEvent } from "@/lib/analytics/track";
 
 type CopilotKind = "prioritize" | "explain-gap";
@@ -129,10 +129,21 @@ export function CopilotInsight({
 
       {needsUpgrade && (
         <div className="mt-3">
-          <UpgradePrompt
+          <FeatureGate
+            feature={
+              kind === "prioritize"
+                ? "copilot_insights_prioritize"
+                : "copilot_insights_explain"
+            }
             compact
             title="CitePilot Insights (Pilot+)"
             description="Grounded explanations and weekly prioritization from your audit data — included on Pilot and Fleet."
+            cta="Upgrade to Pilot →"
+            highlights={[
+              "Explain any GEO gap in plain language",
+              "Prioritized fix list from live audit data",
+              "Unlimited Insights on Pilot+",
+            ]}
           />
         </div>
       )}

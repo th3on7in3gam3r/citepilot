@@ -43,7 +43,7 @@ export const differentiators = [
 
 /** Sales deck + landing subcopy — import where needed */
 export const positioning = {
-  tagline: "Get cited in AI answers — then prove it moved.",
+  tagline: "Track citations in AI answers — then prove what moved.",
   oneLiner:
     "Most GEO tools report visibility. CitePilot closes the loop: audit gaps, ship fixes, publish content, measure citation lift per prompt.",
   audience:
@@ -103,6 +103,14 @@ export const faq = [
     q: "How does ongoing monitoring work?",
     a: "Pilot and Fleet re-scan your monitored prompts on a weekly schedule, store citation history for trend charts, and email digests or score-drop alerts when configured in Settings.",
   },
+  {
+    q: "Does CitePilot guarantee I'll get cited in AI answers?",
+    a: "No. CitePilot monitors citation presence, recommends fixes, and measures change after you ship them. We do not control what any AI engine cites, and audit scores are informational — not outcome guarantees.",
+  },
+  {
+    q: "What does Autopilot automate?",
+    a: "Weekly re-scans, optional Insights action plans, and optional email reports with citation deltas. It does not edit your live site or auto-publish to CMS — you remain in control of every change.",
+  },
 ] as const;
 
 export const pricingTiers = [
@@ -113,7 +121,7 @@ export const pricingTiers = [
     description: "One-time citation snapshot for your domain.",
     features: [
       "Up to 10 money prompts",
-      "8 AI platform scan",
+      "8 AI platforms (live + estimated)",
       "Gap summary & competitor mentions",
       "Shareable report link",
     ],
@@ -125,14 +133,15 @@ export const pricingTiers = [
     name: "Pilot",
     price: "$79",
     period: "/mo",
-    description: "For founders and small teams shipping weekly.",
+    description: "One plan — daily SEO content, backlinks, and AI visibility on autopilot.",
     features: [
-      "25 monitored prompts",
-      "Weekly prioritized action plan",
-      "Citation delta tracking",
-      "Email alerts on competitor moves",
-      "CitePilot Insights (prioritize fixes & explain gaps)",
-      "CMS publish (Webflow, WordPress, Ghost, Shopify, Framer)",
+      "Growth Loop — paste URL once, daily articles forever",
+      "Auto-publish to WordPress, Webflow, Ghost & more",
+      "Automatic backlink placements via CitePilot network",
+      "Weekly AI citation rescans + Autopilot insights",
+      "3 workspaces · 25 monitored prompts · 8 AI platforms",
+      "Citation alerts, competitor tracking & GEO optimizer",
+      "Uptime monitoring, article queue & proof reports",
     ],
     cta: "Subscribe to Pilot",
     href: "/audit",
@@ -144,7 +153,7 @@ export const pricingTiers = [
     period: "/mo",
     description: "For agencies managing multiple brands.",
     features: [
-      "Unlimited client workspaces",
+      "Everything in Pilot, unlimited client workspaces",
       "White-label audit reports",
       "JSON export + API keys",
       "CSV bulk prompt import",

@@ -12,16 +12,20 @@ import { WORKSPACES_RATE_LIMIT_PER_HOUR } from "@/lib/rate-limit/constants";
 import { rateLimitHeaders } from "@/lib/rate-limit/hourly";
 import { enforceHourlyRateLimit } from "@/lib/rate-limit/request";
 import {
+  listWorkspaceMetaForUser,
+} from "@/lib/server/workspace-management";
+import {
   createWorkspace,
   enrichSnapshotWithBacklinks,
   listRecentWorkspaces,
   listWorkspacesForUser,
   toSnapshot,
 } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -36,9 +40,46 @@ export async function GET(request: Request) {
 
     const limits = await getWorkspaceLimitsForUser(userId);
 
-    const workspaces = userId
-      ? await listWorkspacesForUser(userId)
-      : await listRecentWorkspaces(10);
+    if (userId) {
+      const [meta, payloads] = await Promise.all([
+        listWorkspaceMetaForUser(userId),
+        listWorkspacesForUser(userId, 200),
+      ]);
+      const byId = new Map(payloads.map((w) => [w.id, w]));
+      const snapshots = await Promise.all(
+        meta.map(async (item) => {
+          const workspace = byId.get(item.id);
+          const snapshot = workspace
+            ? await enrichSnapshotWithBacklinks(
+                toSnapshot(workspace),
+                item.id,
+              )
+            : null;
+          return {
+            id: item.id,
+            domain: item.domain,
+            displayName: item.displayName,
+            businessType: item.businessType,
+            buyerQuestion: item.buyerQuestion,
+            updatedAt: item.updatedAt,
+            citationScore: item.citationScore,
+            hasRealAudit: item.hasRealAudit,
+            promptCount: item.promptCount,
+            lastScanAt: item.lastScanAt,
+            status: item.status,
+            archivedAt: item.archivedAt,
+            scoreDeltaWeek: item.scoreDeltaWeek,
+            workspace: snapshot,
+          };
+        }),
+      );
+      return NextResponse.json(
+        { workspaces: snapshots, limits },
+        { headers: rateLimitHeaders(rate) },
+      );
+    }
+
+    const workspaces = await listRecentWorkspaces(10);
 
     const snapshots = await Promise.all(
       workspaces.map(async (workspace) => {
@@ -73,9 +114,9 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -135,4 +176,4 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
+});

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { getBacklinkDashboard } from "@/lib/backlinks/store";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId")?.trim();
   if (!workspaceId) {
@@ -32,4 +33,4 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json(dashboard);
-}
+});

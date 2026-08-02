@@ -1,10 +1,10 @@
-import { Panel } from "@/components/dashboard/DashboardUI";
+import { DismissibleSeoIntro } from "@/components/dashboard/DismissibleSeoIntro";
 import Link from "next/link";
 
 /** Server-rendered backlinks hub overview for SEO and orientation. */
 export function BacklinksSeoIntro() {
   return (
-    <Panel className="mt-10">
+    <DismissibleSeoIntro id="backlinks" className="mt-10">
       <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
         Authority backlinks for GEO citation lift
       </h1>
@@ -90,6 +90,6 @@ export function BacklinksSeoIntro() {
           </ul>
         </section>
       </div>
-    </Panel>
+    </DismissibleSeoIntro>
   );
 }

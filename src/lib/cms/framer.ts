@@ -16,12 +16,72 @@ type FramerCollectionItem = {
   slug: string;
 };
 
+type FramerField = {
+  id: string;
+  name?: string;
+  type: string;
+};
+
 type FramerCollection = {
   id: string;
   name?: string;
   getItems(): Promise<FramerCollectionItem[]>;
+  getFields(): Promise<FramerField[]>;
   addItems(items: unknown[]): Promise<void>;
 };
+
+function normalizeFieldKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function resolveFramerField(
+  fields: FramerField[],
+  keyOrName: string,
+  label: string,
+): FramerField {
+  const needle = normalizeFieldKey(keyOrName);
+  const match =
+    fields.find((field) => normalizeFieldKey(field.id) === needle) ??
+    fields.find(
+      (field) => field.name && normalizeFieldKey(field.name) === needle,
+    );
+
+  if (match) return match;
+
+  const available = fields
+    .map((field) => `${field.name ?? field.id} → id: ${field.id} (${field.type})`)
+    .join("; ");
+
+  throw new FramerApiError(
+    `Framer ${label} field "${keyOrName}" not found. Available fields: ${available}`,
+    400,
+  );
+}
+
+function fieldPayload(
+  field: FramerField,
+  value: string,
+): { type: string; value: string } {
+  return { type: field.type, value };
+}
+
+async function resolveFramerFieldMap(
+  collection: FramerCollection,
+  credentials: FramerCredentials,
+): Promise<{
+  title: FramerField;
+  body: FramerField;
+  summary?: FramerField;
+}> {
+  const fields = await collection.getFields();
+  const title = resolveFramerField(fields, credentials.titleFieldId, "title");
+  const body = resolveFramerField(fields, credentials.bodyFieldId, "body");
+  const summary = credentials.summaryFieldId
+    ? resolveFramerField(fields, credentials.summaryFieldId, "summary")
+    : undefined;
+
+  return { title, body, summary };
+}
 
 async function openFramer(credentials: FramerCredentials) {
   return connect(credentials.projectUrl, credentials.apiKey);
@@ -42,12 +102,23 @@ async function resolveFramerItemId(
 
 async function getFramerCollection(
   framer: Awaited<ReturnType<typeof openFramer>>,
-  collectionId: string,
+  collectionIdOrName: string,
 ): Promise<FramerCollection> {
   const collections = (await framer.getCollections()) as FramerCollection[];
-  const collection = collections.find((item) => item.id === collectionId);
+  const needle = collectionIdOrName.trim().toLowerCase();
+  const collection = collections.find(
+    (item) =>
+      item.id === collectionIdOrName ||
+      item.name?.trim().toLowerCase() === needle,
+  );
   if (!collection) {
-    throw new FramerApiError("Framer collection not found for this project", 404);
+    const available = collections
+      .map((item) => `${item.name ?? item.id} → id: ${item.id}`)
+      .join("; ");
+    throw new FramerApiError(
+      `Framer collection "${collectionIdOrName}" not found. Available collections: ${available}`,
+      404,
+    );
   }
   return collection;
 }
@@ -68,16 +139,27 @@ export async function testFramerConnection(
   const framer = await openFramer(credentials);
   try {
     const collection = await getFramerCollection(framer, credentials.collectionId);
+    const resolved = await resolveFramerFieldMap(collection, credentials);
     const published = await framer.getPublishInfo();
+    const fieldSummary = [
+      `${resolved.title.name ?? "title"} (${resolved.title.id})`,
+      `${resolved.body.name ?? "body"} (${resolved.body.id})`,
+      resolved.summary
+        ? `${resolved.summary.name ?? "summary"} (${resolved.summary.id})`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
     return {
       displayName: "Framer project",
       siteUrl:
         published.production?.url ||
         hostnameToUrl(published.staging?.url) ||
         credentials.projectUrl,
-      detail: `Collection: ${collection.name || credentials.collectionId}`,
+      detail: `Collection: ${collection.name || collection.id} · Fields: ${fieldSummary}`,
       remoteDefaults: {
-        collectionName: collection.name || credentials.collectionId,
+        collectionName: collection.name || collection.id,
       },
     };
   } finally {
@@ -96,27 +178,27 @@ export async function publishPostToFramer(input: {
   const framer = await openFramer(input.credentials);
   try {
     const collection = await getFramerCollection(framer, input.credentials.collectionId);
+    const resolved = await resolveFramerFieldMap(collection, input.credentials);
     const existingId = await resolveFramerItemId(
       collection,
       input.slug,
       input.existingRemoteId,
     );
+    const bodyValue =
+      resolved.body.type === "formattedText"
+        ? markdownToCmsHtml(input.markdown)
+        : input.markdown;
+
     const fieldData: Record<string, { type: string; value: string }> = {
-      [input.credentials.titleFieldId]: {
-        type: "string",
-        value: input.title,
-      },
-      [input.credentials.bodyFieldId]: {
-        type: "formattedText",
-        value: markdownToCmsHtml(input.markdown),
-      },
+      [resolved.title.id]: fieldPayload(resolved.title, input.title),
+      [resolved.body.id]: fieldPayload(resolved.body, bodyValue),
     };
 
-    if (input.credentials.summaryFieldId) {
-      fieldData[input.credentials.summaryFieldId] = {
-        type: "string",
-        value: input.description,
-      };
+    if (resolved.summary) {
+      fieldData[resolved.summary.id] = fieldPayload(
+        resolved.summary,
+        input.description,
+      );
     }
 
     const itemPayload: {

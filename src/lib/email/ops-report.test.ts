@@ -6,7 +6,9 @@ import { gatherOpsReportStats } from "@/lib/email/ops-report";
 describe("gatherOpsReportStats", () => {
   it("counts new workspaces and audits in range", async () => {
     await ensureDb();
-    const now = new Date().toISOString();
+    // Use a timestamp slightly in the past so the row is safely inside the
+    // [since, until) window even when the query runs in the same millisecond.
+    const now = new Date(Date.now() - 1000).toISOString();
     const wsId = uuidv4();
 
     await dbRun(

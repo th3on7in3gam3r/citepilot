@@ -19,6 +19,8 @@ describe("citation-grade", () => {
     const metrics = buildExecutiveBriefingMetrics({
       ...base,
       hasRealAudit: true,
+      citedPlatforms: 3,
+      totalPlatforms: 8,
       promptResults: [
         { prompt: "a", cited: true, reason: "" },
         { prompt: "b", cited: false, reason: "" },

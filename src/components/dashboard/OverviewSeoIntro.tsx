@@ -1,4 +1,4 @@
-import { Panel } from "@/components/dashboard/DashboardUI";
+import { DismissibleSeoIntro } from "@/components/dashboard/DismissibleSeoIntro";
 import Link from "next/link";
 
 type OverviewSeoIntroProps = {
@@ -10,7 +10,7 @@ type OverviewSeoIntroProps = {
 export function OverviewSeoIntro({ section = "header" }: OverviewSeoIntroProps) {
   if (section === "footer") {
     return (
-      <Panel className="mt-10">
+      <DismissibleSeoIntro id="overview-footer" className="mt-10">
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 select-none">
             <span className="font-display text-sm font-semibold text-ink">
@@ -51,7 +51,7 @@ export function OverviewSeoIntro({ section = "header" }: OverviewSeoIntroProps) 
               </p>
               <p className="mt-2">
                 New to GEO? Start with the{" "}
-                <Link href="/nurture" className="font-semibold text-accent">
+                <Link href="/geo-playbook" className="font-semibold text-accent">
                   GEO Playbook
                 </Link>
                 , map buyer intent via{" "}
@@ -131,12 +131,12 @@ export function OverviewSeoIntro({ section = "header" }: OverviewSeoIntroProps) 
             </section>
           </div>
         </details>
-      </Panel>
+      </DismissibleSeoIntro>
     );
   }
 
   return (
-    <Panel className="mb-8">
+    <DismissibleSeoIntro id="overview-header" className="mb-8">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
           Citation Dashboard
@@ -215,6 +215,6 @@ export function OverviewSeoIntro({ section = "header" }: OverviewSeoIntroProps) 
           </p>
         </div>
       </details>
-    </Panel>
+    </DismissibleSeoIntro>
   );
 }

@@ -7,8 +7,7 @@ import {
   runCitationAudit,
 } from "@/lib/audit/run-audit";
 import { resolveMonitoredPrompts } from "@/lib/audit/resolve-prompts";
-import { planForUser } from "@/lib/billing/limits-server";
-import { getBillingByUserId } from "@/lib/billing/store";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { captureServerException } from "@/lib/observability/sentry";
 import { AUTOPILOT_MANUAL_LIMIT_PER_HOUR } from "@/lib/rate-limit/constants";
 import {
@@ -17,13 +16,14 @@ import {
 } from "@/lib/rate-limit/hourly";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function POST(request: Request, { params }: Params) {
+export const POST = withApiLogging(async function POST(request: Request, { params }: Params) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -81,8 +81,7 @@ export async function POST(request: Request, { params }: Params) {
     const runFreshAudit = body.runAudit === true || !audit;
 
     if (runFreshAudit) {
-      const billing = await getBillingByUserId(userId);
-      const plan = planForUser(billing);
+      const plan = await getEffectivePlanForUser(userId);
       const prompts = resolveMonitoredPrompts({
         monitoredPrompts: promptsFromPreferences(
           workspace.preferences,
@@ -154,4 +153,4 @@ export async function POST(request: Request, { params }: Params) {
       { status: 500 },
     );
   }
-}
+});

@@ -46,7 +46,7 @@ export function StickyProductShowcase() {
   const step = steps[active];
 
   return (
-    <section id="journey" className="relative overflow-hidden bg-[#04060c]">
+    <section id="journey" className="relative overflow-hidden bg-[#04060c]" aria-labelledby="journey-heading">
       {/* Ambient glows */}
       <div className="hero-premium-orb hero-premium-orb--cyan" aria-hidden />
       <div
@@ -62,7 +62,7 @@ export function StickyProductShowcase() {
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
             Go beyond dashboards
           </p>
-          <h2 className="font-display mt-4 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+          <h2 id="journey-heading" className="font-display mt-4 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
             CitePilot{" "}
             <span className="text-shimmer">has it all</span>
           </h2>
@@ -80,14 +80,16 @@ export function StickyProductShowcase() {
           {steps.map((s, i) => (
             <button
               key={s.id}
+              id={`journey-tab-${s.id}`}
               role="tab"
               aria-selected={active === i}
+              aria-controls={`journey-panel-${s.id}`}
               type="button"
               onClick={() => setActive(i)}
               className={`flex items-center gap-2 rounded-full border px-5 py-2 text-xs font-semibold transition-all duration-300 ${
                 active === i
                   ? "border-accent/60 bg-accent/15 text-accent shadow-[0_0_20px_rgba(14,165,233,0.2)]"
-                  : "border-white/10 bg-white/5 text-white/40 hover:border-white/20 hover:text-white/70"
+                  : "border-white/10 bg-white/5 text-white/55 hover:border-white/20 hover:text-white/80"
               }`}
             >
               <span
@@ -101,7 +103,12 @@ export function StickyProductShowcase() {
         </div>
 
         {/* ── Main product panel ── */}
-        <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-4 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] backdrop-blur-sm md:p-6 lg:p-8">
+        <div
+          className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-4 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] backdrop-blur-sm md:p-6 lg:p-8"
+          role="tabpanel"
+          id={`journey-panel-${step.id}`}
+          aria-labelledby={`journey-tab-${step.id}`}
+        >
           <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12 xl:gap-16">
 
             {/* Left — mockup */}
@@ -209,7 +216,7 @@ export function StickyProductShowcase() {
               </div>
 
               {/* Step counter */}
-              <p className="mt-6 text-[11px] font-medium text-white/25">
+              <p className="mt-6 text-[11px] font-medium text-white/45">
                 {active + 1} of {steps.length} steps
               </p>
             </div>

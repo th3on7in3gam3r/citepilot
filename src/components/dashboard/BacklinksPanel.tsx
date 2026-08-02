@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type {
   BacklinkDashboard,
@@ -194,7 +197,15 @@ export function BacklinksPanel() {
     await load({ refresh: true });
   }
 
-  if (!ready || !workspace || !workspaceId) return null;
+  if (!ready) {
+    return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
+  }
+
+  if (!workspace || !workspaceId) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to discover referring pages and track domain authority." />
+    );
+  }
 
   const profile = data?.profile;
   const network = data?.network;
@@ -206,13 +217,41 @@ export function BacklinksPanel() {
         headingLevel="h2"
         title="Backlink workspace"
         description={feature.description}
+        action={
+          workspace.hasRealAudit ? (
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              disabled={refreshing}
+              className={dashPrimaryCta}
+            >
+              {refreshing ? "Scanning…" : "Refresh backlink scan →"}
+            </button>
+          ) : (
+            <Link href="/dashboard/geo-audit" className={dashPrimaryCta}>
+              Run GEO audit →
+            </Link>
+          )
+        }
       />
+
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Run a GEO audit first"
+          description="Authority signals and referring-page discovery are most useful after your first citation scan establishes a baseline for this domain."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/competitors"
+          secondaryLabel="Add competitors"
+        />
+      )}
 
       {!data?.searchConfigured && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           <p className="font-semibold">Web search not configured</p>
           <p className="mt-1 text-amber-900">
-            Add <code className="text-xs">SERPER_API_KEY</code> or{" "}
+            Add <code className="text-xs">SERPER_API_KEY</code>,{" "}
+            <code className="text-xs">SERPAPI_API_KEY</code>, or{" "}
             <code className="text-xs">TAVILY_API_KEY</code> to discover referring
             pages. Competitors from Settings still appear as peer targets.
           </p>
@@ -229,13 +268,18 @@ export function BacklinksPanel() {
                 Domain rating
               </p>
               <p className="font-display mt-2 text-5xl font-bold text-ink">
-                {profile?.domainRating ?? workspace.domainRating}
+                {profile?.domainRating ??
+                  (workspace.hasRealAudit ? workspace.domainRating : "—")}
               </p>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-orange-400 to-orange-500"
                   style={{
-                    width: `${Math.min(100, profile?.domainRating ?? workspace.domainRating)}%`,
+                    width: `${Math.min(
+                      100,
+                      profile?.domainRating ??
+                        (workspace.hasRealAudit ? workspace.domainRating : 0),
+                    )}%`,
                   }}
                 />
               </div>
@@ -302,9 +346,18 @@ export function BacklinksPanel() {
         {loading ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : (profile?.sources.length ?? 0) === 0 ? (
-          <p className="text-sm text-muted">
-            No sources yet — run a refresh or add competitors in Settings.
-          </p>
+          <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+            <p className="text-sm text-muted">
+              No sources yet — refresh the scan or add competitors in Settings.
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              className="mt-3 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-deep"
+            >
+              Refresh backlink scan →
+            </button>
+          </div>
         ) : (
           <ul className="divide-y divide-border">
             {profile!.sources.map((s) => (
@@ -446,7 +499,11 @@ export function BacklinksPanel() {
 
       <Panel title="Placements" className="mt-6">
         {(data?.placements.length ?? 0) === 0 ? (
-          <p className="text-sm text-muted">No placements yet.</p>
+          <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+            <p className="text-sm text-muted">
+              No placements yet — join the network and request a placement above.
+            </p>
+          </div>
         ) : (
           <ul className="divide-y divide-border">
             {data!.placements.map((p) => (

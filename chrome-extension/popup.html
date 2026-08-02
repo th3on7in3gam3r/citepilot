@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CitePilot</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <img src="icons/icon32.png" alt="" width="24" height="24" class="logo" />
+      <div class="header-copy">
+        <p class="brand">CitePilot</p>
+        <p id="domain" class="domain">Checking…</p>
+      </div>
+    </header>
+
+    <main id="main">
+      <div id="loading" class="loading">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Checking AI citations…</p>
+      </div>
+
+      <div id="content" class="content hidden">
+        <div id="score-row" class="score-row hidden">
+          <span class="score-label">Citation score</span>
+          <strong id="score" class="score">—</strong>
+        </div>
+
+        <p id="status" class="status"></p>
+
+        <ul id="platforms" class="platforms" aria-label="Platform citation status"></ul>
+
+        <div id="workspace" class="workspace hidden">
+          <p class="workspace-label">Your tracked prompts</p>
+          <ul id="prompts" class="prompts"></ul>
+        </div>
+
+        <div class="actions">
+          <a id="full-report" class="btn btn-primary" href="#" target="_blank" rel="noopener">
+            Full report →
+          </a>
+          <a id="secondary-cta" class="btn btn-secondary" href="#" target="_blank" rel="noopener">
+            Get weekly monitoring →
+          </a>
+        </div>
+      </div>
+
+      <div id="error" class="error hidden">
+        <p>Could not load citation data.</p>
+        <button type="button" id="retry" class="btn btn-secondary">Retry</button>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <a href="https://getcitepilot.com/chrome-extension" target="_blank" rel="noopener">
+        About this extension
+      </a>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

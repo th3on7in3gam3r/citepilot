@@ -1,5 +1,15 @@
 import type { AudienceSegment, ContentType, EditorialPillarId } from "@/lib/content-strategy";
 
+export type BlogAuthor = {
+  name: string;
+  role?: string;
+};
+
+export const DEFAULT_BLOG_AUTHOR: BlogAuthor = {
+  name: "CitePilot Editorial",
+  role: "GEO & SEO team",
+};
+
 export type BlogPost = {
   slug: string;
   title: string;
@@ -7,6 +17,7 @@ export type BlogPost = {
   pillar: EditorialPillarId;
   audience: AudienceSegment;
   contentType: ContentType;
+  author: BlogAuthor;
   publishedAt: string;
   readingMinutes: number;
   seoTitle: string;
@@ -17,6 +28,9 @@ export type BlogPost = {
   /** Full markdown body for AI-generated posts */
   markdown?: string;
   source?: "static" | "generated";
+  /** Hero cover for cards and social — absolute URL or site-relative path */
+  coverImageUrl?: string;
+  coverImageAlt?: string;
 };
 
 export type BlogSection =

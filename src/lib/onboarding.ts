@@ -9,6 +9,7 @@ export type OnboardingAnswers = {
 };
 
 export const ONBOARDING_STORAGE_KEY = "citepilot_onboarding";
+export const ONBOARDING_WELCOME_TOAST_KEY = "citepilot_welcome_toast";
 export const TOTAL_STEPS = 5;
 
 export type StepMeta = {
