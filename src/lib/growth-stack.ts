@@ -21,6 +21,13 @@ export const GROWTH_STACK = {
     tagline: "Security scanning in your pull requests",
     href: "https://aegis-loop.com",
   },
+  moneyGap: {
+    name: "MoneyGap AI",
+    tagline: "Find and close revenue leaks on your site",
+    href:
+      process.env.NEXT_PUBLIC_MONEYGAP_URL?.trim().replace(/\/+$/, "") ||
+      "https://www.moneygap-ai.com",
+  },
 } as const;
 
 /** Pulse-friendly sources for growth-stack campaigns. */
@@ -67,6 +74,18 @@ export function kerygmaAppHref(
 
 export function aiCmoAppHref(): string {
   return process.env.NEXT_PUBLIC_AI_CMO_APP_URL ?? GROWTH_STACK.aiCmo.href;
+}
+
+export function moneyGapHomeUrl(
+  campaign = "growth-stack",
+  content?: string,
+): string {
+  return withUtm(GROWTH_STACK.moneyGap.href, {
+    source: "citepilot",
+    campaign,
+    medium: "referral",
+    content,
+  });
 }
 
 export function kerygmaSignUpUrl(
