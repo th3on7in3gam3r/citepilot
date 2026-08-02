@@ -12,6 +12,13 @@ import {
   getPreviousAuditScore,
   getRecentAuditsForWorkspace,
 } from "@/lib/audit/run-audit";
+import {
+  dispatchAuditCompletedWebhooks,
+  dispatchCitationChangeAlerts,
+  dispatchWeeklySlackDigest,
+  recordEmailAlertEvent,
+  scoreDropExceeded,
+} from "@/lib/alerts/dispatch";
 import { userHasPilotAccess } from "@/lib/billing/access";
 import {
   cronPeriodKey,
@@ -20,12 +27,22 @@ import {
 } from "@/lib/cron/dispatch-log";
 import { appBaseUrl } from "@/lib/stripe/config";
 import { dashboardUrl } from "@/lib/email/config";
-import { sendEmail } from "@/lib/email/send";
+import { sendEmail, type SendEmailResult, isValidRecipientEmail } from "@/lib/email/send";
+import { digestUnsubscribeUrl } from "@/lib/email/unsubscribe";
 import { dbAll, dbGet } from "@/lib/db";
 import { parsePreferences, type WorkspacePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { userHasFleetAccess } from "@/lib/billing/access";
+import {
+  getNotificationPreferences,
+  isDigestDayDue,
+} from "@/lib/notifications/preferences-store";
+import { buildWeeklyDigestEmail } from "@/lib/email/templates/weekly-digest";
+import { buildAuditCompleteEmail } from "@/lib/email/templates/audit-complete";
+import { resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
+import { resolveUserEmail } from "@/lib/email/recipient";
+import { whiteLabelFromName } from "@/lib/white-label/email-layout";
 
-const SCORE_DROP_THRESHOLD = 5;
 const DIGEST_JOB = "weekly-digest";
 
 function recipientEmail(
@@ -37,11 +54,11 @@ function recipientEmail(
   return fallbackEmail?.trim() || null;
 }
 
-function layout(title: string, body: string): string {
+function layout(title: string, body: string, footerHref = "/dashboard"): string {
   return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;max-width:560px;margin:0 auto;padding:24px">
 <h1 style="font-size:20px;margin:0 0 16px">${title}</h1>
 ${body}
-<p style="margin-top:32px;font-size:12px;color:#666"><a href="${dashboardUrl("/dashboard/analytics")}">Open CitePilot analytics</a></p>
+<p style="margin-top:32px;font-size:12px;color:#666"><a href="${dashboardUrl(footerHref)}">Open CitePilot dashboard</a></p>
 </body></html>`;
 }
 
@@ -94,6 +111,25 @@ function competitorMoveHtml(
       `<p><strong>New competitor-related gaps</strong>:</p><ul>${delta.newCompetitorGaps
         .slice(0, 5)
         .map((g) => `<li>${g}</li>`)
+        .join("")}</ul>`,
+    );
+  }
+
+  if (delta.competitorRateSurges.length > 0) {
+    parts.push(
+      `<p><strong>Competitor citation rate surges</strong> (&gt;10% week-over-week):</p><ul>${delta.competitorRateSurges
+        .map(
+          (s) =>
+            `<li>${s.competitor}: ${s.previousRate}% → ${s.currentRate}% (+${s.delta}%)</li>`,
+        )
+        .join("")}</ul>`,
+    );
+  }
+
+  if (delta.newEntrantDomains.length > 0) {
+    parts.push(
+      `<p><strong>New competitors on your money prompts</strong>:</p><ul>${delta.newEntrantDomains
+        .map((d) => `<li>${d}</li>`)
         .join("")}</ul>`,
     );
   }
@@ -170,11 +206,11 @@ export async function sendCompetitorMoveEmail(input: {
   return sendEmail({
     to: input.to,
     subject,
-    html: layout(`Competitor alert — ${input.domain}`, competitorMoveHtml(
-      input.domain,
-      input.delta,
-      input.competitors,
-    )),
+    html: layout(
+      `Competitor alert — ${input.domain}`,
+      competitorMoveHtml(input.domain, input.delta, input.competitors),
+      "/dashboard/competitors",
+    ),
     text: `Competitor movement on ${input.domain}`,
   });
 }
@@ -189,60 +225,112 @@ export async function sendAuditCompleteEmail(input: {
 
   const prefs = ws.preferences;
   const to = recipientEmail(prefs, input.userEmail);
-  if (!to) return;
-
-  const previousScore = await getPreviousAuditScore(
-    input.workspaceId,
-    input.audit.id,
-  );
-  const deltaScore =
-    previousScore != null ? input.audit.score - previousScore : null;
-  const dropped =
-    deltaScore != null && deltaScore <= -SCORE_DROP_THRESHOLD;
-
-  if (dropped && prefs.scoreDropAlerts) {
-    await sendEmail({
-      to,
-      subject: `Citation score dropped for ${input.audit.domain} (${input.audit.score}/100)`,
-      html: layout(
-        `Score alert — ${input.audit.domain}`,
-        `<p>Your citation score changed from <strong>${previousScore}</strong> to <strong>${input.audit.score}</strong> (${deltaScore} points).</p>
-<ul>${input.audit.gaps.slice(0, 4).map((g) => `<li>${g}</li>`).join("")}</ul>
-<p>Competitors tracked: ${ws.competitors.length ? ws.competitors.join(", ") : "none yet"}</p>`,
-      ),
-      text: `Score dropped to ${input.audit.score} for ${input.audit.domain}`,
-    });
-  } else if (prefs.auditCompleteEmail) {
-    await sendEmail({
-      to,
-      subject: `GEO audit complete — ${input.audit.domain} scored ${input.audit.score}/100`,
-      html: layout(
-        `Audit complete — ${input.audit.domain}`,
-        `<p>Score: <strong>${input.audit.score}/100</strong> · ${input.audit.cited}/${input.audit.total} prompts cited</p>
-${deltaScore != null ? `<p>Change since last audit: ${deltaScore >= 0 ? "+" : ""}${deltaScore}</p>` : ""}
-<p>Top gaps:</p><ul>${input.audit.gaps.slice(0, 5).map((g) => `<li>${g}</li>`).join("")}</ul>`,
-      ),
-      text: `Audit complete: ${input.audit.score}/100 for ${input.audit.domain}`,
-    });
-  }
-
-  if (!prefs.competitorMoveAlerts) return;
 
   const owner = await dbGet<{ user_id: string | null }>(
     `SELECT user_id FROM workspaces WHERE id = ?`,
     [input.workspaceId],
   );
-  const paid = owner?.user_id
-    ? await userHasPilotAccess(owner.user_id)
-    : false;
-  if (!paid) return;
+  const userId = owner?.user_id ?? null;
+
+  const previousScore = await getPreviousAuditScore(
+    input.workspaceId,
+    input.audit.id,
+  );
+  const dropped =
+    previousScore != null &&
+    prefs.scoreDropAlerts &&
+    scoreDropExceeded(
+      previousScore,
+      input.audit.score,
+      prefs.scoreDropThresholdPercent,
+    );
+
+  if (to) {
+    if (dropped) {
+      const rendered = buildAuditCompleteEmail({
+        domain: input.audit.domain,
+        score: input.audit.score,
+        cited: input.audit.cited,
+        total: input.audit.total,
+        gaps: input.audit.gaps,
+        previousScore,
+        variant: "score_drop",
+      });
+      await sendEmail({
+        to,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
+      });
+      if (userId) {
+        await recordEmailAlertEvent({
+          userId,
+          workspaceId: input.workspaceId,
+          eventType: "score.drop",
+          title: `Score dropped — ${input.audit.domain}`,
+          description: `${previousScore} → ${input.audit.score}`,
+        });
+      }
+    } else if (prefs.auditCompleteEmail) {
+      const rendered = buildAuditCompleteEmail({
+        domain: input.audit.domain,
+        score: input.audit.score,
+        cited: input.audit.cited,
+        total: input.audit.total,
+        gaps: input.audit.gaps,
+        previousScore,
+        variant: "complete",
+      });
+      await sendEmail({
+        to,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
+      });
+      if (userId) {
+        await recordEmailAlertEvent({
+          userId,
+          workspaceId: input.workspaceId,
+          eventType: "audit.complete",
+          title: `Audit complete — ${input.audit.domain}`,
+          description: `Score ${input.audit.score}/100`,
+        });
+      }
+    }
+  }
 
   const audits = await getRecentAuditsForWorkspace(input.workspaceId, 2);
-  const previous =
+  const previousAudit =
     audits.find((a) => a.id !== input.audit.id) ?? audits[1] ?? null;
+
+  if (userId) {
+    await dispatchCitationChangeAlerts({
+      workspaceId: input.workspaceId,
+      userId,
+      audit: input.audit,
+      previousAudit,
+    }).catch((err) =>
+      console.error("[alerts] citation dispatch failed", err),
+    );
+
+    await dispatchAuditCompletedWebhooks({
+      workspaceId: input.workspaceId,
+      userId,
+      audit: input.audit,
+      previousAudit,
+    }).catch((err) =>
+      console.error("[alerts] audit.completed webhook failed", err),
+    );
+  }
+
+  if (!prefs.competitorMoveAlerts || !to) return;
+
+  const paid = userId ? await userHasPilotAccess(userId) : false;
+  if (!paid) return;
+
   const moveDelta = buildDeltaFromAudits(
     input.audit,
-    previous,
+    previousAudit,
     ws.competitors,
   );
 
@@ -253,12 +341,22 @@ ${deltaScore != null ? `<p>Change since last audit: ${deltaScore >= 0 ? "+" : ""
     to,
     delta: moveDelta,
     competitors: ws.competitors,
-  }).then((result) => {
+  }).then(async (result) => {
     if (!result.ok) {
       console.error(
         `[email] Competitor move alert failed for workspace ${input.workspaceId}:`,
         result.error,
       );
+      return;
+    }
+    if (userId) {
+      await recordEmailAlertEvent({
+        userId,
+        workspaceId: input.workspaceId,
+        eventType: "competitor.move",
+        title: `Competitor movement — ${input.audit.domain}`,
+        description: `${moveDelta.promptsLost.length} lost · ${moveDelta.promptsWon.length} gained`,
+      });
     }
   });
 }
@@ -306,6 +404,35 @@ export async function sendScheduledProofReportEmail(input: {
   }
 }
 
+export async function sendScoreDropTestEmail(input: {
+  domain: string;
+  to: string;
+  currentScore: number;
+  previousScore: number;
+  gaps: string[];
+  whiteLabel?: WorkspacePreferences["whiteLabel"];
+  fleetBranding?: boolean;
+}): Promise<SendEmailResult> {
+  const delta = input.currentScore - input.previousScore;
+  const wl = input.whiteLabel;
+  const fromName =
+    input.fleetBranding && wl?.agencyName?.trim()
+      ? wl.agencyName.trim()
+      : "CitePilot";
+
+  return sendEmail({
+    to: input.to,
+    subject: `[Test] Citation score dropped for ${input.domain} (${input.currentScore}/100)`,
+    html: layout(
+      `Score drop alert — ${input.domain}`,
+      `<p>This is a <strong>test alert</strong> from ${fromName}.</p>
+<p>Your citation score changed from <strong>${input.previousScore}</strong> to <strong>${input.currentScore}</strong> (${delta} points).</p>
+<ul>${input.gaps.slice(0, 4).map((g) => `<li>${g}</li>`).join("")}</ul>`,
+    ),
+    text: `[Test] Score dropped to ${input.currentScore} for ${input.domain}`,
+  });
+}
+
 export async function sendWeeklyDigestEmail(input: {
   domain: string;
   buyerQuestion: string;
@@ -314,31 +441,51 @@ export async function sendWeeklyDigestEmail(input: {
   previousScore: number | null;
   gaps: string[];
   to: string;
-}): Promise<{ ok: boolean; error?: string }> {
-  const delta =
-    input.previousScore != null
-      ? input.score - input.previousScore
-      : null;
+  whiteLabel?: WorkspacePreferences["whiteLabel"];
+  workspaceId?: string;
+  fleetBranding?: boolean;
+  allowTestFromFallback?: boolean;
+}): Promise<SendEmailResult> {
+  const headerLogoSrc =
+    input.fleetBranding && input.whiteLabel
+      ? await resolveEmailLogoSrc({
+          workspaceId: input.workspaceId,
+          logoUrl: input.whiteLabel.logoUrl,
+        })
+      : undefined;
+
+  const rendered = buildWeeklyDigestEmail({
+    domain: input.domain,
+    buyerQuestion: input.buyerQuestion,
+    competitors: input.competitors,
+    score: input.score,
+    previousScore: input.previousScore,
+    gaps: input.gaps,
+    whiteLabel: input.whiteLabel,
+    workspaceId: input.workspaceId,
+    fleetBranding: input.fleetBranding,
+    headerLogoSrc,
+    unsubscribeUrl: input.workspaceId
+      ? digestUnsubscribeUrl(input.workspaceId)
+      : undefined,
+  });
+
+  const wl = input.whiteLabel;
+  const useFleetLayout = input.fleetBranding && wl;
 
   return sendEmail({
     to: input.to,
-    subject: `Weekly citation digest — ${input.domain}`,
-    html: layout(
-      `Weekly digest — ${input.domain}`,
-      `<p>Citation score: <strong>${input.score}/100</strong>${
-        delta != null
-          ? ` (${delta >= 0 ? "+" : ""}${delta} vs last week)`
-          : ""
-      }</p>
-<p>Money prompt: <em>${input.buyerQuestion || "—"}</em></p>
-<p>Priority gaps:</p><ul>${input.gaps.slice(0, 5).map((g) => `<li>${g}</li>`).join("")}</ul>
-${
-  input.competitors.length
-    ? `<p>Competitors on your radar: ${input.competitors.slice(0, 5).join(", ")}</p>`
-    : ""
-}`,
-    ),
-    text: `Weekly digest for ${input.domain}: score ${input.score}/100`,
+    subject: rendered.subject,
+    html: rendered.html,
+    text: rendered.text,
+    fromName: useFleetLayout ? whiteLabelFromName(wl) : undefined,
+    replyTo:
+      useFleetLayout &&
+      wl?.replyToEmail &&
+      isValidRecipientEmail(wl.replyToEmail)
+        ? wl.replyToEmail.trim()
+        : undefined,
+    allowTestFromFallback: input.allowTestFromFallback,
   });
 }
 
@@ -373,24 +520,28 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
   console.info(`[cron] ${DIGEST_JOB} started period=${periodKey} workspaces=${rows.length}`);
 
   for (const row of rows) {
-    const prefs = parsePreferences(row.preferences);
-    if (!prefs.weeklyDigest) {
+    if (!row.user_id) {
       result.skipped++;
       continue;
     }
 
-    const to = prefs.monitoringEmail?.trim();
-    if (!to) {
+    const notifPrefs = await getNotificationPreferences(row.id, row.user_id);
+    if (!notifPrefs.emailWeeklyDigest) {
       result.skipped++;
-      await recordCronDispatch({
-        jobName: DIGEST_JOB,
-        workspaceId: row.id,
-        periodKey,
-        status: "skipped",
-        error: "no monitoring email",
-      });
       continue;
     }
+
+    if (!isDigestDayDue(notifPrefs)) {
+      result.skipped++;
+      continue;
+    }
+
+    const prefs = parsePreferences(row.preferences);
+
+    const to = recipientEmail(
+      prefs,
+      row.user_id ? await resolveUserEmail(row.user_id) : null,
+    );
 
     if (await wasCronDispatched(DIGEST_JOB, row.id, periodKey)) {
       result.alreadySent++;
@@ -419,17 +570,71 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
     const gaps = latest?.latestAudit?.gaps ?? [];
 
     try {
-      const sendResult = await sendWeeklyDigestEmail({
-        domain: row.domain,
-        buyerQuestion: row.buyer_question ?? "",
-        competitors,
-        score: audits[0]!.score,
-        previousScore: audits[1]?.score ?? null,
-        gaps,
-        to,
-      });
+      let emailSent = false;
+      if (to) {
+        const fleetBranding = row.user_id
+          ? await userHasFleetAccess(row.user_id)
+          : false;
+        const sendResult = await sendWeeklyDigestEmail({
+          domain: row.domain,
+          buyerQuestion: row.buyer_question ?? "",
+          competitors,
+          score: audits[0]!.score,
+          previousScore: audits[1]?.score ?? null,
+          gaps,
+          to,
+          whiteLabel: prefs.whiteLabel,
+          workspaceId: row.id,
+          fleetBranding,
+        });
 
-      if (sendResult.ok) {
+        if (sendResult.ok) {
+          emailSent = true;
+          if (row.user_id) {
+            await recordEmailAlertEvent({
+              userId: row.user_id,
+              workspaceId: row.id,
+              eventType: "weekly.digest",
+              title: `Weekly digest — ${row.domain}`,
+              description: `Score ${audits[0]!.score}/100`,
+            });
+          }
+        } else {
+          result.failed++;
+          const err = sendResult.error ?? "send failed";
+          result.errors.push({ workspaceId: row.id, domain: row.domain, error: err });
+          console.error(`[cron] ${DIGEST_JOB} failed`, row.domain, err);
+          await recordCronDispatch({
+            jobName: DIGEST_JOB,
+            workspaceId: row.id,
+            periodKey,
+            status: "failed",
+            error: err,
+          });
+          continue;
+        }
+      }
+
+      let slackSent = false;
+      if (row.user_id && latest?.latestAudit) {
+        const recent = await getRecentAuditsForWorkspace(row.id, 2);
+        const previousAudit =
+          recent.find((a) => a.id !== latest.latestAudit!.id) ??
+          recent[1] ??
+          null;
+        const slackResult = await dispatchWeeklySlackDigest({
+          workspaceId: row.id,
+          userId: row.user_id,
+          audit: latest.latestAudit,
+          previousAudit,
+        }).catch((err) => {
+          console.error(`[cron] ${DIGEST_JOB} slack`, row.domain, err);
+          return { ok: false as const };
+        });
+        slackSent = slackResult.ok;
+      }
+
+      if (emailSent || slackSent) {
         result.sent++;
         await recordCronDispatch({
           jobName: DIGEST_JOB,
@@ -437,17 +642,14 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
           periodKey,
           status: "sent",
         });
-      } else {
-        result.failed++;
-        const err = sendResult.error ?? "send failed";
-        result.errors.push({ workspaceId: row.id, domain: row.domain, error: err });
-        console.error(`[cron] ${DIGEST_JOB} failed`, row.domain, err);
+      } else if (!to) {
+        result.skipped++;
         await recordCronDispatch({
           jobName: DIGEST_JOB,
           workspaceId: row.id,
           periodKey,
-          status: "failed",
-          error: err,
+          status: "skipped",
+          error: "no monitoring email or slack channel",
         });
       }
     } catch (err) {

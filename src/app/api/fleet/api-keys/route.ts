@@ -5,10 +5,11 @@ import {
   createFleetApiKey,
   listFleetApiKeys,
 } from "@/lib/fleet/api-keys";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   const user = await requireApiUser(request);
   if (user instanceof NextResponse) return user;
   const userId = apiUserId(user);
@@ -22,11 +23,14 @@ export async function GET(request: Request) {
     );
   }
 
-  const keys = await listFleetApiKeys(userId);
+  const keys = await listFleetApiKeys(
+    userId,
+    new URL(request.url).searchParams.get("workspaceId") ?? undefined,
+  );
   return NextResponse.json({ keys });
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   const user = await requireApiUser(request);
   if (user instanceof NextResponse) return user;
   const userId = apiUserId(user);
@@ -40,8 +44,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json().catch(() => ({}))) as { name?: string };
-  const created = await createFleetApiKey(userId, body.name ?? "API key");
+  const body = (await request.json().catch(() => ({}))) as {
+    name?: string;
+    workspaceId?: string;
+  };
+  const created = await createFleetApiKey(
+    userId,
+    body.name ?? "API key",
+    body.workspaceId ?? null,
+  );
   if ("error" in created) {
     return NextResponse.json(
       { error: "Maximum API keys reached", code: "KEY_LIMIT" },
@@ -53,4 +64,4 @@ export async function POST(request: Request) {
     key: created,
     message: "Copy this key now — it will not be shown again.",
   });
-}
+});

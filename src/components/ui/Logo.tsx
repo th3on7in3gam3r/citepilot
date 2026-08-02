@@ -18,15 +18,16 @@ export function Logo({
     >
       <Image
         src="/logo-mark.svg"
-        alt=""
+        alt="CitePilot logo"
         width={32}
         height={32}
         className="h-8 w-8 shrink-0"
         priority
-        aria-hidden
       />
       {showWordmark && (
-        <span className={light ? "text-white" : "text-ink"}>
+        <span
+          className={`whitespace-nowrap ${light ? "text-white" : "text-foreground"}`}
+        >
           {site.name.slice(0, 4)}
           <span className="text-accent">{site.name.slice(4)}</span>
         </span>

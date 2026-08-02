@@ -150,7 +150,15 @@ export const privacyPolicy: LegalSection[] = [
     title: "Retention and deletion",
     paragraphs: [
       "We retain data while your account is active and as needed for legal, billing, and security purposes.",
-      "You can delete a workspace from Settings. To delete your account or request removal of personal data, contact us at the email below.",
+      "You can delete a workspace from Settings. You can delete your account and all associated data at any time from Settings → Account. We process deletion requests within 30 days.",
+      "Stripe payment records required for tax compliance may be retained for up to 7 years in accordance with applicable law.",
+    ],
+  },
+  {
+    title: "Your right to deletion",
+    paragraphs: [
+      "Under GDPR and similar laws, you have the right to request erasure of your personal data. Use Settings → Account → Delete my account to start a verified deletion request.",
+      "You may download a copy of your data first (data portability) from the same screen. After requesting deletion, you will receive a confirmation email with a link to cancel within 7 days if the request was made in error.",
     ],
   },
   {

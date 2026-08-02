@@ -8,7 +8,14 @@ export const getCitedByChatgptPost: BlogPost = {
   pillar: "geo",
   audience: "saas",
   contentType: "pillar",
+  author: {
+    name: "Jordan Ellis",
+    role: "Head of GEO, CitePilot",
+  },
   publishedAt: "2026-05-20",
+  coverImageUrl: "/images/blog/how-to-get-cited-by-chatgpt.jpg",
+  coverImageAlt:
+    "Abstract illustration of AI citation networks and search visibility",
   readingMinutes: 11,
   seoTitle: "How to Get Cited by ChatGPT | CitePilot",
   tldr:

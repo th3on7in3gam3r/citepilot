@@ -3,84 +3,111 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
+import { AuthDivider } from "@/components/auth/AuthDivider";
+import { AuthErrorAlert } from "@/components/auth/AuthErrorAlert";
+import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import { authFormCardClass, authInputClass, authLabelClass } from "@/components/auth/auth-styles";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { DEFAULT_POST_AUTH_PATH, resolveAuthRedirect } from "@/lib/auth/redirect";
 import { signInWithEmail } from "./actions";
 
 export function SignInForm() {
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") ?? "/dashboard";
+  const from = resolveAuthRedirect(
+    searchParams.get("from") ?? searchParams.get("redirect"),
+  );
   const oauthError = searchParams.get("error") === "google";
   const [state, formAction, pending] = useActionState(signInWithEmail, null);
 
+  const signUpHref =
+    from !== DEFAULT_POST_AUTH_PATH
+      ? `/auth/sign-up?from=${encodeURIComponent(from)}`
+      : "/auth/sign-up";
+
   return (
-    <div className="glass rounded-2xl p-8">
+    <div className={authFormCardClass}>
       <p className="text-xs font-semibold uppercase tracking-wider text-accent">
         CitePilot account
       </p>
-      <h1 className="font-display mt-2 text-2xl font-bold text-white">
-        Sign in
-      </h1>
-      <p className="mt-2 text-sm text-white/60">
+      <h1 className="font-display mt-2 text-2xl font-bold text-ink">Sign in</h1>
+      <p className="mt-2 text-sm text-muted">
         Access your citation dashboard and saved workspaces.
       </p>
 
       <div className="mt-6">
-        <GoogleSignInButton variant="dark" />
+        <GoogleSignInButton variant="light" callbackPath={DEFAULT_POST_AUTH_PATH} />
       </div>
 
-      <div className="my-6 flex items-center gap-3">
-        <span className="h-px flex-1 bg-white/[0.12]" />
-        <span className="text-xs font-medium uppercase tracking-wide text-white/50">
-          or email
-        </span>
-        <span className="h-px flex-1 bg-white/[0.12]" />
-      </div>
+      <AuthDivider />
 
       {oauthError && (
-        <p className="mb-4 rounded-xl border border-red-500/40 bg-red-900/30 px-4 py-3 text-sm text-red-300">
-          Google sign-in was canceled or failed. Try again or use email below.
-        </p>
+        <div className="mb-4">
+          <AuthErrorAlert id="sign-in-oauth-error">
+            Google sign-in was canceled or failed. Try again or use email below.
+          </AuthErrorAlert>
+        </div>
       )}
 
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-4" noValidate>
         <input type="hidden" name="from" value={from} />
-        <label className="block text-sm font-semibold text-white/70">
+        <label htmlFor="sign-in-email" className={authLabelClass}>
           Email
           <input
+            id="sign-in-email"
             name="email"
             type="email"
             required
+            aria-required="true"
             autoComplete="email"
             suppressHydrationWarning
-            className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20"
+            aria-invalid={Boolean(state?.error)}
+            aria-describedby={state?.error ? "sign-in-error" : undefined}
+            className={authInputClass}
           />
         </label>
-        <label className="block text-sm font-semibold text-white/70">
-          Password
-          <input
-            name="password"
-            type="password"
-            required
+
+        <div>
+          <PasswordField
+            label="Password"
             autoComplete="current-password"
-            suppressHydrationWarning
-            className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20"
+            invalid={Boolean(state?.error)}
+            describedBy={state?.error ? "sign-in-error" : undefined}
           />
-        </label>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <label htmlFor="sign-in-remember" className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+              <input
+                id="sign-in-remember"
+                type="checkbox"
+                name="rememberMe"
+                defaultChecked
+                className="h-4 w-4 rounded border-border bg-card text-accent focus:ring-accent/30"
+              />
+              Stay signed in
+            </label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm font-semibold text-accent hover:text-accent-deep"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        </div>
+
         {state?.error && (
-          <p className="text-sm text-red-600">{state.error}</p>
+          <AuthErrorAlert id="sign-in-error">{state.error}</AuthErrorAlert>
         )}
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-full bg-[#10b981] py-3 text-sm font-semibold text-white disabled:opacity-60"
-        >
-          {pending ? "Signing in…" : "Sign in"}
-        </button>
+
+        <AuthSubmitButton
+          pending={pending}
+          pendingLabel="Signing in…"
+          label="Sign in"
+        />
       </form>
 
-      <p className="mt-6 text-center text-sm text-white/60">
+      <p className="mt-6 text-center text-sm text-muted">
         No account?{" "}
-        <Link href="/auth/sign-up" className="font-semibold text-accent">
+        <Link href={signUpHref} className="font-semibold text-accent">
           Create one
         </Link>
       </p>

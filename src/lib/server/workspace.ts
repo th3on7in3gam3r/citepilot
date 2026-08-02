@@ -20,6 +20,8 @@ import {
   emptyScanDeltaSummary,
 } from "@/lib/audit/scan-delta";
 import { userHasPilotAccess } from "@/lib/billing/access";
+import { requireWorkspaceAccess } from "@/lib/auth/workspace-access";
+import { listWorkspaceIdsForMember } from "@/lib/server/workspace-members";
 import { getContentStrategy } from "@/lib/content-strategy/store";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
 import {
@@ -27,6 +29,8 @@ import {
   mergePreferences,
   parsePreferences,
 } from "@/lib/settings";
+import { createDefaultNotificationPreferences } from "@/lib/notifications/preferences-store";
+import { emitStudioOpsEvent } from "@/lib/studio-ops";
 
 type WorkspaceRow = {
   id: string;
@@ -55,10 +59,14 @@ function parseStringArray(raw: string | null, fallback: string[] = []): string[]
   }
 }
 
-function canAccessWorkspace(row: WorkspaceRow, userId: string | null): boolean {
+async function canAccessWorkspace(
+  row: WorkspaceRow,
+  userId: string | null,
+): Promise<boolean> {
   if (!userId) return true;
   if (!row.user_id) return true;
-  return row.user_id === userId;
+  if (row.user_id === userId) return true;
+  return (await requireWorkspaceAccess(userId, row.id, "viewer")) != null;
 }
 
 function rowToPayload(
@@ -153,37 +161,82 @@ export async function enrichSnapshotWithBacklinks(
   snapshot: WorkspaceSnapshotResponse,
   workspaceId: string,
 ): Promise<WorkspaceSnapshotResponse> {
-  const [metrics, citationHistory, contentStrategy, recentAudits, ownerRow] =
-    await Promise.all([
-      getBacklinkMetricsForWorkspace(workspaceId),
-      getCitationSnapshots(workspaceId),
-      getContentStrategy(workspaceId),
-      snapshot.hasRealAudit
-        ? getRecentAuditsForWorkspace(workspaceId, 2)
-        : Promise.resolve([]),
-      dbGet<{ user_id: string | null }>(
-        `SELECT user_id FROM workspaces WHERE id = ?`,
-        [workspaceId],
-      ),
-    ]);
+  const [
+    metricsResult,
+    citationHistoryResult,
+    contentStrategyResult,
+    recentAuditsResult,
+    ownerRowResult,
+  ] = await Promise.allSettled([
+    getBacklinkMetricsForWorkspace(workspaceId),
+    getCitationSnapshots(workspaceId),
+    getContentStrategy(workspaceId),
+    snapshot.hasRealAudit
+      ? getRecentAuditsForWorkspace(workspaceId, 2)
+      : Promise.resolve([]),
+    dbGet<{ user_id: string | null }>(
+      `SELECT user_id FROM workspaces WHERE id = ?`,
+      [workspaceId],
+    ),
+  ]);
 
-  let scanDelta = emptyScanDeltaSummary;
-  if (recentAudits.length >= 2) {
-    scanDelta = buildScanDeltaSummary({
-      current: recentAudits[0]!,
-      previous: recentAudits[1]!,
-      trackedCompetitors: snapshot.competitors,
-    });
-  } else if (recentAudits.length === 1) {
-    scanDelta = buildScanDeltaSummary({
-      current: recentAudits[0]!,
-      previous: null,
-    });
+  if (metricsResult.status === "rejected") {
+    console.error("enrichSnapshot: backlink metrics failed", metricsResult.reason);
+  }
+  if (citationHistoryResult.status === "rejected") {
+    console.error("enrichSnapshot: citation history failed", citationHistoryResult.reason);
+  }
+  if (contentStrategyResult.status === "rejected") {
+    console.error("enrichSnapshot: content strategy failed", contentStrategyResult.reason);
+  }
+  if (recentAuditsResult.status === "rejected") {
+    console.error("enrichSnapshot: recent audits failed", recentAuditsResult.reason);
+  }
+  if (ownerRowResult.status === "rejected") {
+    console.error("enrichSnapshot: owner lookup failed", ownerRowResult.reason);
   }
 
-  const paid = ownerRow?.user_id
-    ? await userHasPilotAccess(ownerRow.user_id)
-    : false;
+  const metrics =
+    metricsResult.status === "fulfilled" ? metricsResult.value : null;
+  const citationHistory =
+    citationHistoryResult.status === "fulfilled"
+      ? citationHistoryResult.value
+      : [];
+  const contentStrategy =
+    contentStrategyResult.status === "fulfilled"
+      ? contentStrategyResult.value
+      : null;
+  const recentAudits =
+    recentAuditsResult.status === "fulfilled" ? recentAuditsResult.value : [];
+  const ownerRow =
+    ownerRowResult.status === "fulfilled" ? ownerRowResult.value : null;
+
+  let scanDelta = emptyScanDeltaSummary;
+  try {
+    if (recentAudits.length >= 2) {
+      scanDelta = buildScanDeltaSummary({
+        current: recentAudits[0]!,
+        previous: recentAudits[1]!,
+        trackedCompetitors: snapshot.competitors,
+      });
+    } else if (recentAudits.length === 1) {
+      scanDelta = buildScanDeltaSummary({
+        current: recentAudits[0]!,
+        previous: null,
+      });
+    }
+  } catch (error) {
+    console.error("enrichSnapshot: scan delta failed", workspaceId, error);
+  }
+
+  let paid = false;
+  if (ownerRow?.user_id) {
+    try {
+      paid = await userHasPilotAccess(ownerRow.user_id);
+    } catch (error) {
+      console.error("enrichSnapshot: pilot access check failed", error);
+    }
+  }
   const freeExplainGapTeaserAvailable =
     snapshot.hasRealAudit &&
     !snapshot.preferences.freeExplainGapUsed &&
@@ -253,6 +306,17 @@ export async function createWorkspace(
     ],
   );
 
+  if (userId) {
+    await createDefaultNotificationPreferences({ workspaceId: id, userId });
+  }
+
+  emitStudioOpsEvent("workspace.created", {
+    workspaceId: id,
+    userId,
+    domain,
+    businessType: answers.businessType,
+  });
+
   const row = await dbGet<WorkspaceRow>(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
@@ -268,7 +332,7 @@ export async function getWorkspaceById(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
   );
-  if (!row || !canAccessWorkspace(row, userId)) return null;
+  if (!row || !(await canAccessWorkspace(row, userId))) return null;
   const latestAudit = await getLatestAuditForWorkspace(id);
   return rowToPayload(row, latestAudit);
 }
@@ -282,7 +346,8 @@ export async function updateWorkspace(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
   );
-  if (!row || !canAccessWorkspace(row, userId)) return null;
+  if (!row) return null;
+  if (!(await requireWorkspaceAccess(userId, id, "editor"))) return null;
   const existing = rowToPayload(
     row,
     await getLatestAuditForWorkspace(id),
@@ -347,13 +412,35 @@ export async function listWorkspacesForUser(
   userId: string,
   limit = 100,
 ): Promise<WorkspacePayload[]> {
-  const rows = await dbAll<WorkspaceRow>(
+  const memberIds = await listWorkspaceIdsForMember(userId);
+  const ownedRows = await dbAll<WorkspaceRow>(
     `SELECT * FROM workspaces
-     WHERE user_id = ?
+     WHERE user_id = ? AND archived_at IS NULL
      ORDER BY updated_at DESC
      LIMIT ?`,
     [userId, limit],
   );
+
+  let memberRows: WorkspaceRow[] = [];
+  if (memberIds.length > 0) {
+    const placeholders = memberIds.map(() => "?").join(", ");
+    memberRows = await dbAll<WorkspaceRow>(
+      `SELECT * FROM workspaces
+       WHERE id IN (${placeholders}) AND archived_at IS NULL
+       ORDER BY updated_at DESC`,
+      memberIds,
+    );
+  }
+
+  const seen = new Set<string>();
+  const rows: WorkspaceRow[] = [];
+  for (const row of [...ownedRows, ...memberRows]) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    rows.push(row);
+    if (rows.length >= limit) break;
+  }
+
   return Promise.all(
     rows.map(async (row) => {
       const latestAudit = await getLatestAuditForWorkspace(row.id);
@@ -435,6 +522,32 @@ export async function getCitationSnapshots(
   }));
 }
 
+/** Delete all rows that reference a workspace, in FK-safe order. */
+export async function deleteWorkspaceDependents(id: string): Promise<void> {
+  await dbRun(`DELETE FROM notification_preferences WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM workspace_members WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM cron_dispatch_log WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM cms_publications WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM cms_connections WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM gsc_connections WHERE workspace_id = ?`, [id]);
+  await dbRun(
+    `DELETE FROM backlink_placements WHERE requester_workspace_id = ? OR partner_workspace_id = ?`,
+    [id, id],
+  );
+  await dbRun(`DELETE FROM backlink_sources WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM backlink_network WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM backlink_profiles WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM browser_scan_usage WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM audit_shares WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM workspace_content_strategies WHERE workspace_id = ?`, [
+    id,
+  ]);
+  await dbRun(`DELETE FROM audit_runs WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM blog_posts WHERE workspace_id = ?`, [id]);
+}
+
 export async function deleteWorkspace(
   id: string,
   userId: string | null = null,
@@ -443,7 +556,8 @@ export async function deleteWorkspace(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
   );
-  if (!row || !canAccessWorkspace(row, userId)) return false;
+  if (!row) return false;
+  if (!(await requireWorkspaceAccess(userId, id, "owner"))) return false;
 
   return adminDeleteWorkspace(id);
 }
@@ -456,16 +570,7 @@ export async function adminDeleteWorkspace(id: string): Promise<boolean> {
   );
   if (!row) return false;
 
-  await dbRun(`DELETE FROM cron_dispatch_log WHERE workspace_id = ?`, [id]);
-  await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [
-    id,
-  ]);
-  await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
-  await dbRun(`DELETE FROM workspace_content_strategies WHERE workspace_id = ?`, [
-    id,
-  ]);
-  await dbRun(`DELETE FROM audit_runs WHERE workspace_id = ?`, [id]);
-  await dbRun(`DELETE FROM blog_posts WHERE workspace_id = ?`, [id]);
+  await deleteWorkspaceDependents(id);
   const result = await dbRun(`DELETE FROM workspaces WHERE id = ?`, [id]);
   return result.changes > 0;
 }
@@ -476,6 +581,8 @@ export async function deleteWaitlistEntry(id: string): Promise<boolean> {
 }
 
 export async function deleteAuditRun(id: string): Promise<boolean> {
+  await dbRun(`DELETE FROM platform_citation_checks WHERE audit_id = ?`, [id]);
+  await dbRun(`DELETE FROM audit_shares WHERE audit_id = ?`, [id]);
   const result = await dbRun(`DELETE FROM audit_runs WHERE id = ?`, [id]);
   return result.changes > 0;
 }

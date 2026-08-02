@@ -26,43 +26,73 @@ export class WebflowApiError extends Error {
   }
 }
 
+const MAX_RETRIES = 3;
+
+/** Parse Retry-After header: supports seconds (integer) and HTTP-date. */
+function parseRetryAfterMs(header: string | null): number {
+  if (!header) return 10_000;
+  const secs = parseInt(header, 10);
+  if (!isNaN(secs)) return Math.min(secs, 60) * 1000;
+  const date = new Date(header);
+  if (!isNaN(date.getTime())) {
+    const diff = date.getTime() - Date.now();
+    return Math.max(diff, 0);
+  }
+  return 10_000;
+}
+
 async function webflowFetch<T>(
   config: WebflowConfig,
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-      "Content-Type": "application/json",
-      accept: "application/json",
-      ...init?.headers,
-    },
-  });
+  let attempt = 0;
 
-  const text = await res.text();
-  let body: unknown = null;
-  if (text) {
-    try {
-      body = JSON.parse(text);
-    } catch {
-      body = text;
+  while (true) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+        accept: "application/json",
+        ...init?.headers,
+      },
+    });
+
+    // Retry on 429 with exponential back-off up to MAX_RETRIES
+    if (res.status === 429 && attempt < MAX_RETRIES) {
+      const waitMs = parseRetryAfterMs(res.headers.get("Retry-After")) * Math.pow(2, attempt);
+      console.warn(`Webflow 429 — waiting ${waitMs}ms before retry ${attempt + 1}/${MAX_RETRIES}`);
+      await new Promise((r) => setTimeout(r, waitMs));
+      attempt++;
+      continue;
     }
-  }
 
-  if (!res.ok) {
-    const message =
-      typeof body === "object" &&
-      body !== null &&
-      "message" in body &&
-      typeof (body as { message: unknown }).message === "string"
-        ? (body as { message: string }).message
-        : text || `Webflow API error (${res.status})`;
-    throw new WebflowApiError(message, res.status);
-  }
+    const text = await res.text();
+    let body: unknown = null;
+    if (text) {
+      try {
+        body = JSON.parse(text);
+      } catch {
+        body = text;
+      }
+    }
 
-  return body as T;
+    if (!res.ok) {
+      const message =
+        res.status === 429
+          ? "Webflow API rate limit reached — please wait a minute and try again"
+          : typeof body === "object" &&
+            body !== null &&
+            "message" in body &&
+            typeof (body as { message: unknown }).message === "string"
+          ? (body as { message: string }).message
+          : text || `Webflow API error (${res.status})`;
+      throw new WebflowApiError(message, res.status);
+    }
+
+    return body as T;
+  }
 }
 
 function isSiteNotPublishedError(error: WebflowApiError): boolean {
@@ -105,7 +135,9 @@ function fieldSlugs(config: WebflowConfig): {
   };
 }
 
-export async function getWebflowConnectionStatus(): Promise<{
+export async function getWebflowConnectionStatus(
+  config?: WebflowConfig | null,
+): Promise<{
   configured: boolean;
   connected: boolean;
   collectionName?: string;
@@ -113,24 +145,41 @@ export async function getWebflowConnectionStatus(): Promise<{
   sitePreviewUrl?: string;
   detail?: string;
 }> {
-  const config = getWebflowConfig();
-  if (!config) {
+  const resolved = config ?? getWebflowConfig();
+  if (!resolved) {
     return { configured: false, connected: false, detail: "Not configured" };
   }
 
-  return {
-    configured: true,
-    connected: true,
-    sitePreviewUrl: config.sitePreviewUrl,
-    detail: `Ready — maps to ${config.fieldName}, ${config.fieldSlug}, ${config.fieldBody}`,
-  };
+  try {
+    const { testWebflowConnection } = await import("@/lib/cms/webflow");
+    const checked = await testWebflowConnection({
+      apiKey: resolved.apiKey,
+      siteId: resolved.siteId,
+      collectionId: resolved.collectionId,
+    });
+    return {
+      configured: true,
+      connected: true,
+      siteName: checked.remoteDefaults.siteName,
+      collectionName: checked.remoteDefaults.collectionName,
+      sitePreviewUrl: checked.remoteDefaults.sitePreviewUrl,
+      detail: checked.detail,
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      connected: false,
+      detail: error instanceof Error ? error.message : "Webflow API check failed",
+    };
+  }
 }
 
 export async function publishPostToWebflow(
   input: WebflowPublishInput,
   existingItemId?: string | null,
+  configOverride?: WebflowConfig | null,
 ): Promise<WebflowPublishResult> {
-  const config = getWebflowConfig();
+  const config = configOverride ?? getWebflowConfig();
   if (!config) {
     throw new WebflowApiError(
       "Webflow is not configured (WEBFLOW_API_KEY, WEBFLOW_SITE_ID, WEBFLOW_COLLECTION_ID)",

@@ -57,7 +57,10 @@ export function GoogleDataSection({
   }, [workspaceId]);
 
   useEffect(() => {
-    void loadGsc();
+    const t = setTimeout(() => {
+      void loadGsc();
+    }, 0);
+    return () => clearTimeout(t);
   }, [loadGsc]);
 
   useEffect(() => {
@@ -67,7 +70,10 @@ export function GoogleDataSection({
   // Sync digest toggle when workspace loads
   useEffect(() => {
     if (workspace?.preferences?.weeklyDigest !== undefined) {
-      setWeeklyDigest(workspace.preferences.weeklyDigest);
+      const t = setTimeout(() => {
+        setWeeklyDigest(workspace.preferences.weeklyDigest);
+      }, 0);
+      return () => clearTimeout(t);
     }
   }, [workspace?.preferences?.weeklyDigest]);
 
@@ -79,7 +85,7 @@ export function GoogleDataSection({
       );
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
-        window.location.href = data.url;
+        window.location.assign(data.url);
         return;
       }
       toast.warning("Search Console unavailable", {

@@ -220,7 +220,7 @@ export function CitationVolumeChart({
         )}
 
         {!compact && (
-          <aside className="rounded-2xl border border-[#d7def8] bg-[linear-gradient(180deg,rgba(123,147,240,0.08),rgba(255,255,255,0.96))] p-4">
+          <aside className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-card to-card p-4">
             <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)_180px] lg:items-start">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -243,7 +243,7 @@ export function CitationVolumeChart({
                   {PLATFORM_REACH.map((p) => (
                     <li
                       key={p.id}
-                      className="rounded-xl border border-white/80 bg-white/90 px-3 py-2 text-[11px] shadow-sm"
+                      className="rounded-xl border border-border bg-card px-3 py-2 text-[11px] shadow-sm dark:border-[#333]"
                     >
                       <div className="flex items-center gap-1.5">
                         <span aria-hidden>{p.flag}</span>

@@ -3,9 +3,24 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
-import { CitationVolumeChart } from "@/components/dashboard/CitationVolumeChart";
+import { AnalyticsChartsGrid } from "@/components/dashboard/analytics/AnalyticsChartsGrid";
+import { CitationVisualizations } from "@/components/dashboard/visualizations/CitationVisualizations";
 import { GoogleAnalyticsPanel } from "@/components/dashboard/GoogleAnalyticsPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
+import {
+  DashboardFilterBar,
+  DashboardFilterSelect,
+  DashboardFilterTabs,
+} from "@/components/dashboard/layout/DashboardToolbar";
+import {
+  DashboardTable,
+  DashboardTableBody,
+  DashboardTableHead,
+  DashboardTableRow,
+  DashboardTableTd,
+  DashboardTableTh,
+} from "@/components/dashboard/layout/DashboardTable";
 import { GooeyFilter, LiquidToggle } from "@/components/ui/liquid-toggle";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { PromptRow } from "@/lib/features";
@@ -17,8 +32,16 @@ import {
   type CompetitorBenchmarkResult,
   type CorrelationInsight,
 } from "@/lib/dashboard-data";
+import {
+  DASHBOARD_PERIOD_OPTIONS,
+  DASHBOARD_PLATFORM_OPTIONS,
+  filterPromptRowsByPlatform,
+  type DashboardPeriod,
+  type DashboardPlatformFilter,
+} from "@/lib/dashboard/overview-filters";
 
 type Tab = "google" | "llms";
+type PromptFilter = "all" | "cited" | "gaps";
 
 const sentimentStyle = {
   Positive: "bg-emerald-50 text-emerald-700",
@@ -85,6 +108,9 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
   const workspaceId = workspace.workspaceId ?? workspace.id;
   const [tab, setTab] = useState<Tab>("llms");
   const [gscConnected, setGscConnected] = useState(false);
+  const [periodFilter, setPeriodFilter] = useState<DashboardPeriod>("90d");
+  const [platformFilter, setPlatformFilter] = useState<DashboardPlatformFilter>("all");
+  const [promptFilter, setPromptFilter] = useState<PromptFilter>("all");
 
   const loadGscStatus = useCallback(async () => {
     if (!workspaceId) return;
@@ -111,19 +137,55 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
     () => promptRowsForWorkspace(workspace),
     [workspace],
   );
+  const filteredRows = useMemo(() => {
+    let next = filterPromptRowsByPlatform(rows, platformFilter);
+    if (promptFilter === "cited") next = next.filter((row) => row.cited);
+    if (promptFilter === "gaps") next = next.filter((row) => !row.cited);
+    return next;
+  }, [rows, platformFilter, promptFilter]);
   const benchmark = useMemo(
-    () => buildCompetitorBenchmark(workspace, rows),
-    [workspace, rows],
+    () => buildCompetitorBenchmark(workspace, filteredRows),
+    [workspace, filteredRows],
   );
   const correlations = useMemo(
-    () => buildCorrelationInsights(workspace, rows),
-    [workspace, rows],
+    () => buildCorrelationInsights(workspace, filteredRows),
+    [workspace, filteredRows],
   );
 
   return (
     <>
       <GooeyFilter />
-      <div className="overflow-hidden rounded-2xl border border-border bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.06))] p-4 shadow-sm">
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Run your first GEO audit"
+          description="LLM citation charts, prompt tables, and visibility KPIs stay blank until a live scan lands — no projected demo numbers."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/content?section=targeting"
+          secondaryLabel="Edit money prompts"
+        />
+      )}
+      <DashboardFilterBar>
+        <DashboardFilterSelect
+          label="Site"
+          value={workspace.domain}
+          options={[{ value: workspace.domain, label: workspace.domain }]}
+        />
+        <DashboardFilterSelect
+          label="Period"
+          value={periodFilter}
+          options={DASHBOARD_PERIOD_OPTIONS}
+          onChange={(value) => setPeriodFilter(value as DashboardPeriod)}
+        />
+        <DashboardFilterSelect
+          label="Platforms"
+          value={platformFilter}
+          options={DASHBOARD_PLATFORM_OPTIONS}
+          onChange={(value) => setPlatformFilter(value as DashboardPlatformFilter)}
+        />
+      </DashboardFilterBar>
+
+      <div className="dash-gradient-panel mt-5 overflow-hidden rounded-2xl border border-border p-4 shadow-sm dark:border-accent/15">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -142,10 +204,6 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
               onChange={setTab}
               gscConnected={gscConnected}
             />
-            <select className="rounded-full border border-border bg-white px-4 py-2 text-sm text-muted shadow-sm">
-              <option>Last 30 days</option>
-              <option>Last 90 days</option>
-            </select>
           </div>
         </div>
       </div>
@@ -153,7 +211,10 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
       {tab === "llms" ? (
         <LLMPanel
           workspace={workspace}
-          rows={rows}
+          rows={filteredRows}
+          allRows={rows}
+          promptFilter={promptFilter}
+          onPromptFilterChange={setPromptFilter}
           benchmark={benchmark}
           correlations={correlations}
         />
@@ -162,12 +223,6 @@ export function AnalyticsDashboard({ workspace }: { workspace: WorkspaceSnapshot
           workspace={workspace}
           preferOrganicLead={gscConnected}
         />
-      )}
-      {!workspace.hasRealAudit && (
-        <p className="mt-4 text-center text-xs text-muted">
-          Run a citation audit from Settings or Overview to replace estimates with
-          live prompt results.
-        </p>
       )}
     </>
   );
@@ -187,7 +242,7 @@ function AnalyticsSourceToggle({
 
   return (
     <div
-      className="flex min-w-[11rem] flex-col items-stretch gap-2.5 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm"
+      className="flex min-w-[11rem] flex-col items-stretch gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm dark:border-[#333] dark:bg-[#111]"
       role="group"
       aria-label="Analytics data source"
     >
@@ -230,18 +285,56 @@ function AnalyticsSourceToggle({
 function LLMPanel({
   workspace,
   rows,
+  allRows,
+  promptFilter,
+  onPromptFilterChange,
   benchmark,
   correlations,
 }: {
   workspace: WorkspaceSnapshot;
   rows: PromptRow[];
+  allRows: PromptRow[];
+  promptFilter: PromptFilter;
+  onPromptFilterChange: (value: PromptFilter) => void;
   benchmark: CompetitorBenchmarkResult;
   correlations: CorrelationInsight[];
 }) {
+  const workspaceId = workspace.workspaceId ?? workspace.id;
+  const [platformRates, setPlatformRates] = useState<
+    import("@/lib/citations/viz-data").PlatformCitationRate[] | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    let cancelled = false;
+    fetch(`/api/workspaces/${encodeURIComponent(workspaceId)}/citations/visualization`, {
+      credentials: "include",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { heatmap?: { platformRates: import("@/lib/citations/viz-data").PlatformCitationRate[] } } | null) => {
+        if (!cancelled && data?.heatmap?.platformRates) {
+          setPlatformRates(data.heatmap.platformRates);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceId]);
+
   return (
     <>
-      <Panel title="Brand presence" className="mt-6">
-        <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.1),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
+      <div className="mt-6">
+        <AnalyticsChartsGrid
+          workspace={workspace}
+          rows={rows}
+          platformRates={platformRates}
+        />
+      </div>
+
+      <CitationVisualizations workspace={workspace} />
+      <Panel title="Brand presence" className="mt-6" id="money-prompts">
+        <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-border p-5 dark:border-accent/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -253,43 +346,51 @@ function LLMPanel({
                 which buyer questions still need a stronger answer footprint.
               </p>
             </div>
-            <div className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+            <div className="rounded-full border border-white/80 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
               Buyer question: {workspace.buyerQuestion}
             </div>
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm">
+            <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted">
                 Visibility score
               </p>
               <div className="mt-2 flex items-end justify-between gap-4">
                 <p className="font-display text-4xl font-bold text-ink">
-                  {workspace.visibilityScore}%
+                  {workspace.hasRealAudit ? `${workspace.visibilityScore}%` : "—"}
                 </p>
                 <span className="rounded-full bg-ink px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
-                  {workspace.hasRealAudit ? "Live signal" : "Projected"}
+                  {workspace.hasRealAudit ? "Live signal" : "Awaiting audit"}
                 </span>
               </div>
               <p className="mt-2 text-sm text-muted">
-                Combined view across prompt coverage, citation evidence, and current AI
-                visibility strength.
+                {workspace.hasRealAudit
+                  ? "Combined view across prompt coverage, citation evidence, and current AI visibility strength."
+                  : "Visibility score fills in after your first GEO audit — no projected placeholders."}
               </p>
             </div>
             <PromptsCard workspace={workspace} />
           </div>
         </div>
-        <PromptTable rows={rows} hasRealAudit={workspace.hasRealAudit} />
+        <div className="mt-5 space-y-3">
+          <DashboardFilterTabs
+            items={[
+              { id: "all", label: "All prompts", count: allRows.length },
+              { id: "cited", label: "Cited", count: allRows.filter((row) => row.cited).length },
+              {
+                id: "gaps",
+                label: "Gaps",
+                count: allRows.filter((row) => !row.cited).length,
+              },
+            ]}
+            value={promptFilter}
+            onChange={onPromptFilterChange}
+          />
+          <PromptTable rows={rows} hasRealAudit={workspace.hasRealAudit} />
+        </div>
       </Panel>
       <CompetitorBenchmarkPanel workspace={workspace} benchmark={benchmark} />
-      <div className="mt-6">
-        <CitationVolumeChart
-          seed={0}
-          citationScore={workspace.citationScore}
-          hasRealAudit={workspace.hasRealAudit}
-          citationHistory={workspace.citationHistory}
-        />
-      </div>
       <CorrelationInsightsPanel insights={correlations} />
     </>
   );
@@ -302,7 +403,7 @@ function CorrelationInsightsPanel({
 }) {
   return (
     <Panel title="Correlation insights" className="mt-6">
-      <div className="overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.08),rgba(255,255,255,0.98),rgba(34,211,238,0.08))] p-5">
+      <div className="dash-gradient-panel overflow-hidden rounded-2xl border border-border p-5 dark:border-accent/15">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
           Directional analysis
         </p>
@@ -339,7 +440,7 @@ function CorrelationInsightsPanel({
                   {insight.confidence} confidence
                 </span>
                 {insight.estimatedLift && (
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink">
+                  <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-ink">
                     Est. lift {insight.estimatedLift}
                   </span>
                 )}
@@ -352,7 +453,7 @@ function CorrelationInsightsPanel({
                 {insight.platforms.map((platform) => (
                   <span
                     key={platform}
-                    className="rounded-full border border-border bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted"
+                    className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted"
                   >
                     {platform}
                   </span>
@@ -395,7 +496,7 @@ function CompetitorBenchmarkPanel({
           {!workspace.hasRealAudit && (
             <Link
               href="/audit"
-              className="mt-4 inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink"
+              className="mt-4 inline-flex rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-ink"
             >
               Run citation audit
             </Link>
@@ -424,15 +525,15 @@ function CompetitorBenchmarkPanel({
               </p>
             </div>
             <div className="grid gap-2 text-xs text-muted sm:grid-cols-3">
-              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="font-semibold text-ink">Prompt leaders</p>
                 <p className="mt-1">See who wins each tracked buyer question.</p>
               </div>
-              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="font-semibold text-ink">Gap sizing</p>
                 <p className="mt-1">Spot where a few points could flip the outcome.</p>
               </div>
-              <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="font-semibold text-ink">Executive-ready</p>
                 <p className="mt-1">A cleaner competitive view for clients and teams.</p>
               </div>
@@ -440,7 +541,7 @@ function CompetitorBenchmarkPanel({
           </div>
           <Link
             href="/dashboard/settings"
-            className="mt-5 inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
+            className="mt-5 inline-flex rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface"
           >
             Add competitors in Settings
           </Link>
@@ -483,7 +584,7 @@ function CompetitorBenchmarkPanel({
 
   return (
     <Panel title="Competitor benchmark" className="mt-6">
-      <div className="relative overflow-hidden rounded-2xl border border-[#d7def8] bg-[linear-gradient(135deg,rgba(123,147,240,0.12),rgba(255,255,255,0.98),rgba(34,211,238,0.1))] p-5">
+      <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-card to-card p-5">
         <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-accent/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 left-12 h-28 w-28 translate-y-8 rounded-full bg-glow/15 blur-3xl" />
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -500,10 +601,10 @@ function CompetitorBenchmarkPanel({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+            <span className="rounded-full border border-white/80 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
               {prompts.length} tracked prompt{prompts.length === 1 ? "" : "s"}
             </span>
-            <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
+            <span className="rounded-full border border-white/80 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
               {brands.length} brands compared
             </span>
             {uncitedBehind > 0 && (
@@ -515,7 +616,7 @@ function CompetitorBenchmarkPanel({
         </div>
 
         <div className="mt-5 grid gap-3 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+          <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Your standing
             </p>
@@ -534,7 +635,7 @@ function CompetitorBenchmarkPanel({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+          <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Prompt split
             </p>
@@ -551,7 +652,7 @@ function CompetitorBenchmarkPanel({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm backdrop-blur">
+          <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Priority opportunity
             </p>
@@ -616,7 +717,7 @@ function CompetitorBenchmarkPanel({
                         You
                       </span>
                     )}
-                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {benchmarkRankLabel(rank)}
                     </span>
                   </div>
@@ -626,7 +727,7 @@ function CompetitorBenchmarkPanel({
                         <span>Visibility strength</span>
                         <span>{formatScore(brand.avgVisibility)}/100</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white">
+                      <div className="h-2 overflow-hidden rounded-full bg-card">
                         <div
                           className={`h-full rounded-full ${
                             isYou ? "bg-gradient-to-r from-[#7b93f0] to-accent" : "bg-ink/75"
@@ -641,7 +742,7 @@ function CompetitorBenchmarkPanel({
                         <span>Prompt share</span>
                         <span>{promptShare}%</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white">
+                      <div className="h-2 overflow-hidden rounded-full bg-card">
                         <div
                           className={`h-full rounded-full ${
                             isYou ? "bg-gradient-to-r from-mint to-glow" : "bg-ink/50"
@@ -653,7 +754,7 @@ function CompetitorBenchmarkPanel({
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border/80 bg-white/80 px-4 py-3">
+                <div className="rounded-xl border border-border/80 bg-card/80 px-4 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                     Avg visibility
                   </p>
@@ -662,7 +763,7 @@ function CompetitorBenchmarkPanel({
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-border/80 bg-white/80 px-4 py-3">
+                <div className="rounded-xl border border-border/80 bg-card/80 px-4 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                     Prompts led
                   </p>
@@ -693,7 +794,7 @@ function CompetitorBenchmarkPanel({
                 </div>
 
                 <div className="text-left lg:text-right">
-                  <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                  <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                     {promptShare}% prompt share
                   </span>
                 </div>
@@ -737,16 +838,16 @@ function CompetitorBenchmarkPanel({
                       : `Not cited on this prompt — ${prompt.leader} is the inferred leader from audit settings.`}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {prompt.leader}
                     </span>
-                    <span className="rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {prompt.youCited ? "Cited" : "Not cited"}
                     </span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink">
+                  <span className="rounded-full bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink">
                     Your rank #{yourPromptRank}
                   </span>
                   <span
@@ -773,10 +874,10 @@ function CompetitorBenchmarkPanel({
                       key={score.brand}
                       className={`rounded-xl border px-4 py-3 transition ${
                         isLeader
-                          ? "border-[#cbd6ff] bg-white shadow-sm"
+                          ? "border-[#cbd6ff] bg-card shadow-sm"
                           : isYou
-                            ? "border-mint/25 bg-white/85"
-                            : "border-border/80 bg-white/75"
+                            ? "border-mint/25 bg-card/85"
+                            : "border-border/80 bg-card/75"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -836,7 +937,7 @@ function CompetitorBenchmarkPanel({
 
 function PromptsCard({ workspace }: { workspace: WorkspaceSnapshot }) {
   return (
-    <div className="rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-sm">
+    <div className="rounded-2xl border border-white/80 bg-card px-5 py-4 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted">
         Prompts tracked
       </p>
@@ -864,98 +965,79 @@ function PromptTable({
 }) {
   if (hasRealAudit && rows.length === 0) {
     return (
-      <p className="mt-6 text-sm text-muted">
-        No prompt results in the latest audit. Re-run a citation audit to refresh this table.
-      </p>
+      <div className="mt-6 rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+        <p className="text-sm text-muted">
+          No prompt results in the latest audit. Re-run a citation audit to refresh this table.
+        </p>
+        <Link
+          href="/dashboard/geo-audit"
+          className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+        >
+          Run GEO audit →
+        </Link>
+      </div>
     );
   }
 
   if (!hasRealAudit) {
     return (
-      <p className="mt-6 text-sm text-muted">
-        Run a citation audit to populate prompt-level visibility from live or technical checks.
-      </p>
+      <div className="mt-6 rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+        <p className="text-sm text-muted">
+          Run a citation audit to populate prompt-level visibility from live checks.
+        </p>
+        <Link
+          href="/dashboard/geo-audit"
+          className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+        >
+          Run GEO audit →
+        </Link>
+      </div>
     );
   }
 
   return (
-    <div className="mt-6 space-y-3">
-      {rows.map((row) => (
-        <div
-          key={row.prompt}
-          className="rounded-2xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.96))] px-5 py-4 shadow-sm"
-        >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="font-semibold text-ink">{row.prompt}</p>
-              <p className="mt-1 text-sm text-muted">
-                {row.leader === "You"
-                  ? "Your brand currently leads this tracked prompt."
-                  : `${row.leader} currently leads this tracked prompt.`}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink shadow-sm">
-                {row.visibility === null
-                  ? "—"
-                  : row.fromAudit
-                    ? row.cited
-                      ? "Cited"
-                      : "Not cited"
-                    : `Visibility ${row.visibility}%`}
-              </span>
+    <DashboardTable minWidth="640px">
+      <DashboardTableHead>
+        <DashboardTableRow header>
+          <DashboardTableTh>Money prompt</DashboardTableTh>
+          <DashboardTableTh>Status</DashboardTableTh>
+          <DashboardTableTh>Leader</DashboardTableTh>
+          <DashboardTableTh>Platforms</DashboardTableTh>
+          <DashboardTableTh>Sentiment</DashboardTableTh>
+        </DashboardTableRow>
+      </DashboardTableHead>
+      <DashboardTableBody>
+        {rows.map((row) => (
+          <DashboardTableRow key={row.prompt}>
+            <DashboardTableTd className="max-w-[280px] font-medium text-ink">
+              {row.prompt}
+            </DashboardTableTd>
+            <DashboardTableTd>
               <span
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${sentimentStyle[row.sentiment]}`}
+                className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                  row.cited
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-amber-50 text-amber-700"
+                }`}
+              >
+                {row.fromAudit ? (row.cited ? "Cited" : "Gap") : `Visibility ${row.visibility ?? "—"}%`}
+              </span>
+            </DashboardTableTd>
+            <DashboardTableTd className="text-muted">{row.leader}</DashboardTableTd>
+            <DashboardTableTd className="max-w-[180px] truncate text-xs text-muted">
+              {row.models.join(", ")}
+            </DashboardTableTd>
+            <DashboardTableTd>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${sentimentStyle[row.sentiment]}`}
               >
                 {row.sentiment}
               </span>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 lg:grid-cols-[1.3fr_0.9fr_0.8fr]">
-            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                Visible in
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {row.models.map((m) => (
-                  <span
-                    key={m}
-                    className="rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-muted"
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                Prompt leader
-              </p>
-              <p className="mt-2 font-semibold text-ink">{row.leader}</p>
-            </div>
-
-            <div className="rounded-xl border border-border/80 bg-surface/60 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                Strength
-              </p>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#7b93f0] via-accent to-glow"
-                  style={{
-                    width:
-                      row.visibility === null
-                        ? "0%"
-                        : `${Math.max(8, Math.min(100, row.visibility))}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+            </DashboardTableTd>
+          </DashboardTableRow>
+        ))}
+      </DashboardTableBody>
+    </DashboardTable>
   );
 }
 

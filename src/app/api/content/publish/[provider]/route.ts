@@ -3,7 +3,8 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { getGeneratedPostBySlug } from "@/lib/blog/store";
 import { publishPostToFramer } from "@/lib/cms/framer";
-import { publishPostToGhost } from "@/lib/cms/ghost";
+import { publishPostToGhost, GhostApiError } from "@/lib/cms/ghost";
+import { publishPostToHashnode, HashnodeApiError } from "@/lib/cms/hashnode";
 import {
   getCmsConnection,
   getCmsPublication,
@@ -11,16 +12,23 @@ import {
 } from "@/lib/cms/store";
 import { publishPostToShopify } from "@/lib/cms/shopify";
 import {
+  publishPostToSignalDesk,
+  SignalDeskApiError,
+} from "@/lib/cms/signaldesk";
+import {
   CMS_PROVIDERS,
   type CmsProvider,
   type CmsRemoteDefaultsByProvider,
   type FramerCredentials,
   type GhostCredentials,
+  type HashnodeCredentials,
   type ShopifyCredentials,
+  type SignalDeskCredentials,
   type WordPressCredentials,
 } from "@/lib/cms/types";
 import { publishPostToWordPress } from "@/lib/cms/wordpress";
 import { getWorkspaceById } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -31,12 +39,18 @@ function parseProvider(value: string): CmsProvider | null {
   return CMS_PROVIDERS.includes(value as CmsProvider) ? (value as CmsProvider) : null;
 }
 
-export async function POST(request: Request, { params }: Params) {
+export const POST = withApiLogging(async function POST(request: Request, { params }: Params) {
   try {
     const { provider: rawProvider } = await params;
     const provider = parseProvider(rawProvider);
     if (!provider) {
       return NextResponse.json({ error: "Unsupported provider" }, { status: 404 });
+    }
+    if (provider === "webflow") {
+      return NextResponse.json(
+        { error: "Use /api/content/publish/webflow for Webflow publishing" },
+        { status: 400 },
+      );
     }
 
     const user = await requireApiUser(request);
@@ -91,9 +105,29 @@ export async function POST(request: Request, { params }: Params) {
         description: row.description,
         existingRemoteId: existing?.remoteId,
       });
+    } else if (provider === "signaldesk") {
+      result = await publishPostToSignalDesk({
+        credentials: connection.credentials as SignalDeskCredentials,
+        title: row.title,
+        slug: row.slug,
+        markdown: row.markdown,
+        description: row.description,
+        coverImageUrl: row.cover_image_url,
+        byline: "CitePilot",
+        existingRemoteId: existing?.remoteId,
+      });
     } else if (provider === "ghost") {
       result = await publishPostToGhost({
         credentials: connection.credentials as GhostCredentials,
+        title: row.title,
+        slug: row.slug,
+        markdown: row.markdown,
+        description: row.description,
+        existingRemoteId: existing?.remoteId,
+      });
+    } else if (provider === "hashnode") {
+      result = await publishPostToHashnode({
+        credentials: connection.credentials as HashnodeCredentials,
         title: row.title,
         slug: row.slug,
         markdown: row.markdown,
@@ -106,6 +140,7 @@ export async function POST(request: Request, { params }: Params) {
         credentials: connection.credentials as ShopifyCredentials,
         blogId: defaults.blogId,
         blogHandle: defaults.blogHandle,
+        authorName: defaults.shopName,
         title: row.title,
         slug: row.slug,
         markdown: row.markdown,
@@ -143,6 +178,12 @@ export async function POST(request: Request, { params }: Params) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Publish failed";
     console.error("POST /api/content/publish/[provider]", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const status =
+      error instanceof GhostApiError ||
+      error instanceof HashnodeApiError ||
+      error instanceof SignalDeskApiError
+        ? Math.min(502, Math.max(400, error.status))
+        : 500;
+    return NextResponse.json({ error: message }, { status });
   }
-}
+});

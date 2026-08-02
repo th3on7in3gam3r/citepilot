@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { grantBillingPlan } from "@/lib/billing/store";
 import type { BillingPlan } from "@/lib/billing/types";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       userId?: string;
@@ -42,4 +43,4 @@ export async function POST(request: Request) {
     console.error("POST /api/admin/billing/grant", error);
     return NextResponse.json({ error: "Grant failed" }, { status: 500 });
   }
-}
+});

@@ -3,7 +3,7 @@ export type BacklinkSource = {
   url: string;
   title: string;
   sourceDomain: string;
-  discoverySource: "serper" | "tavily" | "competitor";
+  discoverySource: "serper" | "serpapi" | "tavily" | "competitor";
 };
 
 export type NetworkPeer = {

@@ -1,44 +1,52 @@
+import { Container } from "@/components/ui/Container";
 import { PillButton } from "@/components/ui/PillButton";
 import { ProductCTA } from "@/components/ui/ProductCTA";
-import { Container } from "@/components/ui/Container";
-import { nav } from "@/lib/site";
+import { localizedHref } from "@/lib/i18n/localized-href";
+import { getLocale, getTranslations } from "next-intl/server";
 
-export function HomeActionBar() {
+export async function HomeActionBar() {
+  const t = await getTranslations("homeActionBar");
+  const nav = await getTranslations("nav");
+  const locale = await getLocale();
+
   return (
     <section
       id="get-started"
-      className="relative z-10 border-t border-border/80 bg-cream pb-14 pt-10 md:pb-16 md:pt-12"
-      aria-label="Get started"
+      className="relative z-10 border-t border-border/80 bg-background pb-14 pt-10 md:pb-16 md:pt-12"
+      aria-labelledby="get-started-heading"
     >
       <Container>
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-accent">
-            Get started
+            {t("eyebrow")}
           </p>
-          <p className="mt-2 text-lg text-muted">
-            Run a free audit or build your full citation workspace.
-          </p>
+          <h2 id="get-started-heading" className="mt-2 text-lg font-semibold text-ink">
+            {t("title")}
+          </h2>
         </div>
 
         <div className="mx-auto mt-8 flex max-w-4xl flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
-          <PillButton href={nav.startAnalysis.href} size="lg" className="sm:shrink-0">
-            {nav.startAnalysis.label}
+          <PillButton href="/start" size="lg" className="sm:shrink-0">
+            {nav("startAnalysis")}
           </PillButton>
           <ProductCTA
-            href={nav.cta.href}
-            variant="outline"
-            sublabel="Skip setup · ~60 sec"
+            href="/tools/citation-checker"
+            variant="accent"
+            sublabel={nav("tools.citationCheckerDesc")}
           >
-            Quick citation audit
+            {nav("tools.citationChecker")}
+          </ProductCTA>
+          <ProductCTA href="/audit" variant="outline" sublabel={nav("tools.fullAuditDesc")}>
+            {nav("tools.fullAudit")}
           </ProductCTA>
           <ProductCTA
-            href="/#journey"
+            href={`${localizedHref(locale, "/")}#journey`}
             variant="outline"
             sublabel="See the product"
             showArrow={false}
             className="!border-border/80 !bg-surface/50 hover:!border-accent/40"
           >
-            How it works
+            {nav("howItWorks")}
           </ProductCTA>
           <ProductCTA
             href="/ai-visibility"
@@ -47,7 +55,7 @@ export function HomeActionBar() {
             showArrow={false}
             className="!border-border/80 !bg-surface/50 hover:!border-accent/40"
           >
-            AI visibility
+            {nav("aiVisibility")}
           </ProductCTA>
         </div>
       </Container>

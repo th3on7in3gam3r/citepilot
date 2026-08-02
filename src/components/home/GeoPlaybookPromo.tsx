@@ -20,11 +20,12 @@ const PLAYBOOK_HIGHLIGHTS = [
 
 export function GeoPlaybookPromo() {
   return (
-    <Section id="geo-playbook" className="bg-white">
-      <div className="overflow-hidden rounded-3xl border border-accent/25 bg-gradient-to-br from-surface via-white to-accent/5 shadow-sm">
+    <Section id="geo-playbook" className="bg-background" ariaLabelledBy="geo-playbook-heading">
+      <div className="overflow-hidden rounded-3xl border border-accent/25 bg-gradient-to-br from-surface via-white to-accent/5 shadow-sm dark:border-accent/20 dark:from-[#111] dark:via-[#111] dark:to-accent/10 dark:shadow-black/20">
         <div className="grid gap-0 lg:grid-cols-2">
-          <div className="border-b border-border p-8 sm:p-10 lg:border-b-0 lg:border-r">
+          <div className="border-b border-border p-8 dark:border-[#222] sm:p-10 lg:border-b-0 lg:border-r lg:dark:border-[#222]">
             <SectionHeading
+              id="geo-playbook-heading"
               eyebrow="Free resource"
               title="The complete GEO Playbook"
               description="Authoritative guides for money prompts, RAG citations, and Perplexity footnote optimization — not a thin lead magnet."
@@ -52,7 +53,7 @@ export function GeoPlaybookPromo() {
               ))}
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <ProductCTA href="/nurture" sublabel="35 min · interactive">
+              <ProductCTA href="/tools/geo-playbook" sublabel="35 min · interactive">
                 Read the GEO Playbook
               </ProductCTA>
               <ProductCTA
@@ -80,7 +81,7 @@ export function GeoPlaybookPromo() {
               ranking.
             </p>
             <Link
-              href="/nurture#geo-perplexity"
+              href="/tools/geo-playbook#geo-perplexity"
               className="mt-6 inline-flex text-sm font-semibold text-accent hover:underline"
             >
               Open the Perplexity playbook →

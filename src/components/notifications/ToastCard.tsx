@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   TOAST_STYLES,
   type ToastRecord,
@@ -19,38 +19,31 @@ export function ToastCard({
   const [expanded, setExpanded] = useState(hasBody);
   const [paused, setPaused] = useState(false);
   const [remainingMs, setRemainingMs] = useState(toast.duration);
-  const startRef = useRef(Date.now());
-  const pausedAtRef = useRef<number | null>(null);
 
   const dismiss = useCallback(() => onDismiss(toast.id), [onDismiss, toast.id]);
 
   useEffect(() => {
     if (toast.duration <= 0) return;
+    if (paused) return;
 
+    let lastTick = Date.now();
     const tick = () => {
-      if (paused) return;
-      const elapsed = Date.now() - startRef.current;
-      const left = Math.max(0, toast.duration - elapsed);
-      setRemainingMs(left);
-      if (left <= 0) dismiss();
+      const now = Date.now();
+      const delta = now - lastTick;
+      lastTick = now;
+
+      setRemainingMs((prev) => Math.max(0, prev - delta));
     };
 
-    tick();
     const id = window.setInterval(tick, 50);
     return () => window.clearInterval(id);
-  }, [toast.duration, paused, dismiss]);
+  }, [toast.duration, paused]);
 
   useEffect(() => {
-    if (paused) {
-      pausedAtRef.current = Date.now();
-      return;
+    if (toast.duration > 0 && remainingMs <= 0) {
+      dismiss();
     }
-    if (pausedAtRef.current) {
-      const pauseDuration = Date.now() - pausedAtRef.current;
-      startRef.current += pauseDuration;
-      pausedAtRef.current = null;
-    }
-  }, [paused]);
+  }, [remainingMs, toast.duration, dismiss]);
 
   const secondsLeft = Math.max(1, Math.ceil(remainingMs / 1000));
   const progressPct =
@@ -58,10 +51,12 @@ export function ToastCard({
 
   const isDark = toast.theme !== "light";
 
+  const isError = toast.type === "error";
+
   return (
     <div
-      role="status"
-      aria-live="polite"
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
       className={`w-[min(100vw-2rem,380px)] overflow-hidden rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.18)] ring-1 ${
         isDark
           ? `bg-[#0f172a] text-white ring-white/10`

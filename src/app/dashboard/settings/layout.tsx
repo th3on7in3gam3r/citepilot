@@ -11,10 +11,17 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+import { SettingsSubNav } from "@/components/dashboard/settings/SettingsSubNav";
+
 export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      <SettingsSubNav />
+      {children}
+    </>
+  );
 }
