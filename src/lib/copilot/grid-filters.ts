@@ -79,7 +79,7 @@ export function isFilterPrompt(prompt: string): boolean {
   );
 }
 
-function colByAlias(text: string): string | null {
+function _colByAlias(text: string): string | null {
   const p = text.toLowerCase();
   if (/nd\s*score|domain rating|dr\b/.test(p)) return "ndScore";
   if (/\bcpc\b|cost per click/.test(p)) return "cpc";

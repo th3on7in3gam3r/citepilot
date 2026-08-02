@@ -3,6 +3,8 @@ import { privacyPolicy } from "@/lib/legal";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
 
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "Privacy Policy for GEO & AI Citation",
   description:

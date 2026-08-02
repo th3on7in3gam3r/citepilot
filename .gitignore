@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+citepilot-extension.zip
 
 # debug
 npm-debug.log*
@@ -36,6 +37,10 @@ yarn-error.log*
 
 # local database
 .data/
+
+# crawlee default disk storage (we use MemoryStorage in production)
+/storage
+/result.csv
 
 # vercel
 .vercel

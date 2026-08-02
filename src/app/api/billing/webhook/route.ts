@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { upsertBillingAccount } from "@/lib/billing/store";
+import { getBillingByUserId, upsertBillingAccount } from "@/lib/billing/store";
+import { isPaidPlan, isActiveBillingStatus, type BillingPlan } from "@/lib/billing/types";
+import { processReferralConversion } from "@/lib/referrals/process";
+import { emitStudioOpsEvent } from "@/lib/studio-ops";
+import {
+  triggerChurnPrevention,
+  triggerPilotRetention,
+} from "@/lib/email/sequences/engine";
 import { stripeWebhookSecret } from "@/lib/stripe/config";
 import { captureServerException } from "@/lib/observability/sentry";
 import { getStripe, mapSubscriptionToBilling } from "@/lib/stripe/server";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
@@ -12,6 +20,10 @@ async function syncSubscription(
   userId: string,
 ): Promise<void> {
   const mapped = mapSubscriptionToBilling(subscription);
+  const previous = await getBillingByUserId(userId);
+  const wasPaid = isPaidPlan(previous);
+  const previousPlan: BillingPlan = previous?.plan ?? "free";
+
   await upsertBillingAccount({
     userId,
     stripeCustomerId:
@@ -23,9 +35,65 @@ async function syncSubscription(
     status: mapped.status,
     currentPeriodEnd: mapped.currentPeriodEnd,
   });
+
+  const updated = await getBillingByUserId(userId);
+  const nowPaid = isPaidPlan(updated);
+  const stripeCustomerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer.id;
+
+  if (!wasPaid && nowPaid && updated) {
+    emitStudioOpsEvent("subscription.upgraded", {
+      userId,
+      plan: updated.plan,
+      previousPlan,
+      stripeCustomerId,
+      stripeSubscriptionId: subscription.id,
+      status: updated.status,
+    });
+  } else if (
+    wasPaid &&
+    nowPaid &&
+    updated &&
+    previousPlan !== updated.plan &&
+    updated.plan !== "free"
+  ) {
+    emitStudioOpsEvent("subscription.upgraded", {
+      userId,
+      plan: updated.plan,
+      previousPlan,
+      stripeCustomerId,
+      stripeSubscriptionId: subscription.id,
+      status: updated.status,
+    });
+  } else if (wasPaid && !nowPaid) {
+    emitStudioOpsEvent("subscription.canceled", {
+      userId,
+      plan: previousPlan,
+      stripeCustomerId,
+      stripeSubscriptionId: subscription.id,
+      status: updated?.status ?? mapped.status,
+    });
+  }
+
+  if (!wasPaid && isPaidPlan(updated)) {
+    await processReferralConversion(userId);
+    void triggerPilotRetention(userId).catch((err) =>
+      console.error("Pilot retention sequence failed", err),
+    );
+  }
+
+  const wasActive = previous && isActiveBillingStatus(previous.status);
+  const isPastDue = updated?.status === "past_due";
+  if (wasActive && isPastDue) {
+    void triggerChurnPrevention(userId).catch((err) =>
+      console.error("Churn sequence failed", err),
+    );
+  }
 }
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   // Intentionally not app-rate-limited: Stripe signs payloads and retries on failure.
   const secret = stripeWebhookSecret();
   if (!secret) {
@@ -71,6 +139,26 @@ export async function POST(request: Request) {
         await syncSubscription(subscription, userId);
         break;
       }
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId =
+          typeof invoice.customer === "string"
+            ? invoice.customer
+            : invoice.customer?.id;
+        if (!customerId) break;
+        const row = await import("@/lib/db").then((m) =>
+          m.dbGet<{ user_id: string }>(
+            `SELECT user_id FROM billing_accounts WHERE stripe_customer_id = ?`,
+            [customerId],
+          ),
+        );
+        if (row?.user_id) {
+          void triggerChurnPrevention(row.user_id).catch((err) =>
+            console.error("Churn sequence failed", err),
+          );
+        }
+        break;
+      }
       default:
         break;
     }
@@ -84,4 +172,4 @@ export async function POST(request: Request) {
     console.error("Stripe webhook handler", event.type, error);
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
-}
+});

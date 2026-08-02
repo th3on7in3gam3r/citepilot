@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/admin/auth";
 import {
   getAdminStats,
   listRecentAudits,
   listRecentWorkspaces,
   listWaitlist,
 } from "@/lib/server/workspace";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export const GET = withApiLogging(async function GET(request: Request) {
+  const admin = await requireAdminApi(request);
+  if (admin instanceof Response) return admin;
+
   try {
     const stats = await getAdminStats();
     const workspaces = await listRecentWorkspaces(10);
@@ -32,4 +37,4 @@ export async function GET() {
     console.error("GET /api/admin/stats", error);
     return NextResponse.json({ error: "Failed to load admin stats" }, { status: 500 });
   }
-}
+});

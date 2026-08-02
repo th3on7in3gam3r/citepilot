@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { ADMIN_COOKIE } from "@/lib/constants";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export const POST = withApiLogging(async function POST(request: Request) {
   const adminSecret = process.env.ADMIN_SECRET;
   if (!adminSecret) {
     return NextResponse.json(
@@ -25,10 +26,10 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24 * 7,
   });
   return response;
-}
+});
 
-export async function DELETE() {
+export const DELETE = withApiLogging(async function DELETE() {
   const response = NextResponse.json({ ok: true });
   response.cookies.delete(ADMIN_COOKIE);
   return response;
-}
+});

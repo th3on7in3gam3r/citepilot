@@ -178,7 +178,7 @@ export function ChatGptPromptsLanding() {
               See Analytics
             </ProductCTA>
             <ProductCTA
-              href="/nurture"
+              href="/geo-playbook"
               variant="outline"
               sublabel="RAG + money prompts"
               showArrow={false}

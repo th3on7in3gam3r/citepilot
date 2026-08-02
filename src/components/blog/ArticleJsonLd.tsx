@@ -1,23 +1,34 @@
-import { site } from "@/lib/site";
+import { blogPostImageUrl } from "@/lib/blog/covers";
 import type { BlogPost } from "@/lib/blog/types";
 import { clampMetaDescription } from "@/lib/seo/meta";
+import { site } from "@/lib/site";
+
+const homeUrl = site.url.replace(/\/$/, "");
 
 export function ArticleJsonLd({ post }: { post: BlogPost }) {
-  const url = `${site.url.replace(/\/$/, "")}/blog/${post.slug}`;
+  const url = `${homeUrl}/blog/${post.slug}`;
   const description = clampMetaDescription(post.description);
-  const data = {
+  const image = blogPostImageUrl(post);
+
+  const article = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: post.title,
     description,
     datePublished: post.publishedAt,
-    author: { "@type": "Organization", name: site.name },
-    publisher: {
-      "@type": "Organization",
-      name: site.name,
-      logo: { "@type": "ImageObject", url: `${site.url}/logo-mark.svg` },
+    author: {
+      "@type": "Person",
+      name: post.author.name,
+      ...(post.author.role ? { jobTitle: post.author.role } : {}),
     },
-    mainEntityOfPage: url,
+    publisher: {
+      "@id": `${homeUrl}#organization`,
+    },
+    image,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url,
+    },
   };
 
   const hasFaq = post.faqs.length > 0;
@@ -37,7 +48,7 @@ export function ArticleJsonLd({ post }: { post: BlogPost }) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(article) }}
       />
       {faq && (
         <script

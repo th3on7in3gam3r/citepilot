@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="CitePilot mark">
+  <rect width="40" height="40" rx="10" fill="#070b14"/>
+  <path d="M12 14.5C10.2 14.5 9 16 9 18v4c0 2 1.2 3.5 3 3.5" stroke="#0ea5e9" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M28 14.5c1.8 0 3 1.5 3 3.5v4c0 2-1.2 3.5-3 3.5" stroke="#22d3ee" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M20 26V14M16.5 17.5 20 14l3.5 3.5" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

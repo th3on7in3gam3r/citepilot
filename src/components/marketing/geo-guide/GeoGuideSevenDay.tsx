@@ -22,8 +22,11 @@ export function GeoGuideSevenDay() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setCompleted(loadCompletedDays());
-    setHydrated(true);
+    const t = setTimeout(() => {
+      setCompleted(loadCompletedDays());
+      setHydrated(true);
+    }, 0);
+    return () => clearTimeout(t);
   }, []);
 
   const toggleDay = useCallback((day: number) => {

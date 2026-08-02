@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import { AuthFormFallback } from "@/components/auth/AuthFormFallback";
 import { SignInForm } from "./SignInForm";
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<p className="text-center text-sm text-muted">Loading…</p>}>
+    <Suspense fallback={<AuthFormFallback />}>
       <SignInForm />
     </Suspense>
   );

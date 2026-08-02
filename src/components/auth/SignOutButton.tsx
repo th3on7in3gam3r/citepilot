@@ -1,24 +1,26 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import posthog from "posthog-js";
+import { authClient } from "@/lib/auth/client";
+import { redirectHomeAfterSignOut } from "@/lib/i18n/locale-cookie";
 
 export function SignOutButton({ className }: { className?: string }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleSignOut() {
     setLoading(true);
     try {
-      await fetch("/api/auth/sign-out", {
-        method: "POST",
-        credentials: "include",
-      });
+      await authClient.signOut();
     } catch (error) {
       console.error("Sign out failed", error);
     }
-    router.push("/");
-    router.refresh();
+    try {
+      if (posthog.__loaded) posthog.reset();
+    } catch {
+      /* ignore */
+    }
+    redirectHomeAfterSignOut();
   }
 
   return (

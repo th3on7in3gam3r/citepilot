@@ -1,6 +1,7 @@
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { pillars } from "@/lib/content";
+import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 
 const icons: Record<string, ReactNode> = {
@@ -24,20 +25,23 @@ const icons: Record<string, ReactNode> = {
   ),
 };
 
-export function Pillars() {
+export async function Pillars() {
+  const t = await getTranslations("pillars");
+
   return (
-    <Section id="pillars" className="bg-white">
+    <Section id="pillars" className="bg-background" ariaLabelledBy="pillars-heading">
       <SectionHeading
-        eyebrow="Product"
-        title="Three pillars. One outcome: more citations."
-        description="Everything serves prompt-level citation lift — no feature buffet."
+        id="pillars-heading"
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
         align="center"
       />
       <div className="mt-14 grid gap-8 md:mt-16 md:grid-cols-3 md:gap-6 lg:gap-8">
         {pillars.map((pillar) => (
           <article
             key={pillar.id}
-            className="rounded-2xl border border-border bg-cream p-8 md:p-10 transition hover:border-accent/40 hover:shadow-md"
+            className="rounded-2xl border border-border bg-cream p-8 transition hover:border-accent/40 hover:shadow-md dark:border-[#222] dark:bg-card md:p-10"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
               {icons[pillar.icon]}

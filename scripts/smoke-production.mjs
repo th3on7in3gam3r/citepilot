@@ -61,6 +61,20 @@ await check("GET /audit", async () => {
   return `status ${res.status}`;
 });
 
+await check("GET /launch", async () => {
+  const res = await fetchStatus("/launch");
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const html = await res.text();
+  if (!html.includes("Product Hunt")) throw new Error("missing launch content");
+  return `status ${res.status}`;
+});
+
+await check("GET /press", async () => {
+  const res = await fetchStatus("/press");
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  return `status ${res.status}`;
+});
+
 await check("GET /pricing", async () => {
   const res = await fetchStatus("/pricing");
   if (!res.ok) throw new Error(`status ${res.status}`);

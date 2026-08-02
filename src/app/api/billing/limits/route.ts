@@ -1,19 +1,18 @@
 import { NextResponse } from "next/server";
-import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { optionalApiUser } from "@/lib/auth/api";
 import { workspaceLimitMessage } from "@/lib/billing/limits";
 import { promptLimitMessage } from "@/lib/billing/prompt-limits";
 import {
   getPromptLimitsForUser,
   getWorkspaceLimitsForUser,
 } from "@/lib/billing/limits-server";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   try {
-    const user = await requireApiUser(request);
-    if (user instanceof NextResponse) return user;
-    const userId = apiUserId(user);
+    const { userId } = await optionalApiUser(request);
 
     const [workspaceLimits, promptLimits] = await Promise.all([
       getWorkspaceLimitsForUser(userId),
@@ -32,4 +31,4 @@ export async function GET(request: Request) {
     console.error("GET /api/billing/limits", error);
     return NextResponse.json({ error: "Could not load limits" }, { status: 500 });
   }
-}
+});

@@ -5,6 +5,10 @@ import { userHasPilotAccess } from "@/lib/billing/access";
 import { completeCopilot } from "@/lib/copilot/complete";
 import { buildCopilotContext } from "@/lib/copilot/workspace-context";
 import {
+  attachSerpToContextJson,
+  fetchSerpContext,
+} from "@/lib/search/serp-context";
+import {
   buildPrioritizeUserMessage,
   COPILOT_SYSTEM_PROMPT,
 } from "@/lib/copilot/prompts";
@@ -93,7 +97,11 @@ export async function runAutopilotForWorkspace(input: {
     );
 
     if (snapshot.hasRealAudit) {
-      const contextJson = buildCopilotContext(snapshot);
+      const serp = await fetchSerpContext(snapshot);
+      const contextJson = attachSerpToContextJson(
+        buildCopilotContext(snapshot),
+        serp,
+      );
       const result = await completeCopilot(
         COPILOT_SYSTEM_PROMPT,
         buildPrioritizeUserMessage(contextJson),
