@@ -28,12 +28,18 @@ export type DashboardNavItem = {
     | "competitors"
     | "backlinks"
     | "audit"
+    | "optimizer"
+    | "money-prompts"
     | "discussions"
     | "alerts"
+    | "uptime"
+    | "growth-loop"
     | "settings"
     | "help"
     | "feedback";
   section?: "main" | "footer";
+  /** Shown on free-tier rail so Pilot/Fleet clicks are not a surprise dead end. */
+  badge?: "Pilot" | "Fleet";
 };
 
 export const dashboardNav: DashboardNavItem[] = [
@@ -55,9 +61,9 @@ export const dashboardNav: DashboardNavItem[] = [
   },
   {
     id: "content",
-    label: "Content",
+    label: "Content Studio",
     href: "/dashboard/content",
-    description: "Branded SEO articles, 30-day strategy, and publishing",
+    description: "Generate articles, manage queue, and publish to CMS",
     icon: "content",
     section: "main",
   },
@@ -94,6 +100,24 @@ export const dashboardNav: DashboardNavItem[] = [
     section: "main",
   },
   {
+    id: "optimizer",
+    label: "Site Optimizer",
+    href: "/dashboard/optimizer",
+    description: "AI fixes for SEO, AEO, LLM citations, and robots.txt",
+    icon: "optimizer",
+    section: "main",
+    badge: "Pilot",
+  },
+  {
+    id: "money-prompts",
+    label: "Money Prompts",
+    href: "/dashboard/money-prompts",
+    description: "Generate buyer prompts and track citation gaps",
+    icon: "money-prompts",
+    section: "main",
+    badge: "Pilot",
+  },
+  {
     id: "discussions",
     label: "Discussions",
     href: "/dashboard/discussions",
@@ -110,9 +134,27 @@ export const dashboardNav: DashboardNavItem[] = [
     section: "main",
   },
   {
+    id: "uptime",
+    label: "Uptime",
+    href: "/dashboard/uptime",
+    description: "HTTP, SSL, port, keyword, and cron monitors with instant alerts",
+    icon: "uptime",
+    section: "main",
+    badge: "Pilot",
+  },
+  {
+    id: "growth-loop",
+    label: "Growth Loop",
+    href: "/dashboard/growth-loop",
+    description: "Paste your URL once — daily SEO articles, backlinks, and AI visibility",
+    icon: "growth-loop",
+    section: "main",
+    badge: "Pilot",
+  },
+  {
     id: "feedback",
     label: "Suggest a feature",
-    href: "/feedback",
+    href: "/dashboard/feedback",
     description: "Upvote ideas and share what to build next",
     icon: "feedback",
     section: "footer",
@@ -132,6 +174,30 @@ export const dashboardNav: DashboardNavItem[] = [
     description: "Guides, docs, and support",
     icon: "help",
     section: "footer",
+  },
+];
+
+/** Sidebar groupings for the dashboard shell. */
+export const dashboardNavGroups: { label: string; itemIds: string[] }[] = [
+  {
+    label: "Overview",
+    itemIds: ["overview", "workspaces"],
+  },
+  {
+    label: "Visibility",
+    itemIds: ["analytics", "geo-audit", "optimizer", "money-prompts"],
+  },
+  {
+    label: "Research",
+    itemIds: ["content", "competitors", "backlinks", "discussions"],
+  },
+  {
+    label: "Operations",
+    itemIds: ["growth-loop", "alerts", "uptime"],
+  },
+  {
+    label: "Account",
+    itemIds: ["settings", "help", "feedback"],
   },
 ];
 
@@ -181,9 +247,7 @@ export function buildWorkspaceSnapshot(
   const domain =
     answers.domain?.replace(/^https?:\/\//, "").replace(/\/$/, "") ||
     "yourbrand.com";
-  const hash = domainSeed(domain);
   const promptsTracked = 1 + (answers.buyerQuestion ? 4 : 0);
-  const citedPlatforms = Math.min(PLATFORMS.length, 2 + (hash % 3));
 
   return {
     domain,
@@ -193,16 +257,17 @@ export function buildWorkspaceSnapshot(
     competitors: answers.competitors ?? [],
     buyerQuestion:
       answers.buyerQuestion || "best tool for [your category]",
-    citationScore: Math.min(92, 48 + (hash % 40)),
-    citedPlatforms,
+    // No fabricated KPIs — real scores only after hasRealAudit via toSnapshot.
+    citationScore: 0,
+    citedPlatforms: 0,
     totalPlatforms: PLATFORMS.length,
     promptsTracked,
-    contentDrafts: 3,
-    sourceCount: 12 + (hash % 8),
-    communityMentions: 4 + (hash % 6),
-    weeklyLift: "+12.4%",
-    domainRating: 12 + (hash % 58),
-    visibilityScore: 35 + (hash % 45),
+    contentDrafts: 0,
+    sourceCount: 0,
+    communityMentions: 0,
+    weeklyLift: "—",
+    domainRating: 0,
+    visibilityScore: 0,
     gaps: [],
     auditId: null,
     auditMode: null,

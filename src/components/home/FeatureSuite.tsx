@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { authClient } from "@/lib/auth/client";
 import { productFeatures } from "@/lib/features";
 
 export function FeatureSuite() {
+  const t = useTranslations("features");
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
@@ -29,9 +31,9 @@ export function FeatureSuite() {
     <Section id="features" className="bg-background" ariaLabelledBy="features-heading">
       <SectionHeading
         id="features-heading"
-        eyebrow="Product"
-        title="A powerful suite of features — all in one place."
-        description="Citation-first GEO: content, authority, technical audits, and LLM tracking in a single workspace."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
         align="center"
       />
       <div className="mt-14 grid gap-6 md:mt-16 md:grid-cols-2 lg:grid-cols-3">

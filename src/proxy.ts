@@ -4,7 +4,12 @@ import { auth, getRealSessionUser, isNeonAuthEnabled } from "@/lib/auth/server";
 import { checkAdminEmailAccess, isAdminApiPublic } from "@/lib/admin-auth";
 import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
+import { isCrawlerUserAgent } from "@/lib/crawler-ua";
 import { intlMiddleware, shouldRunIntl } from "@/lib/i18n/intl-proxy";
+import { isNonLocalizedRootPath } from "@/lib/i18n/intl-paths";
+import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
+import { routing } from "@/i18n/routing";
+import { enforceTwoFactorAccess } from "@/lib/security/fleet-2fa";
 
 const dashboardAuthProxy =
   isNeonAuthEnabled() && auth
@@ -59,6 +64,7 @@ function isPrimaryHost(host: string): boolean {
   if (!host) return true;
   if (PRIMARY_HOSTS.has(host)) return true;
   if (host.endsWith(".vercel.app")) return true;
+  if (host.endsWith(".onrender.com")) return true;
   return false;
 }
 
@@ -103,6 +109,15 @@ export async function proxy(request: NextRequest) {
   const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
 
   const sessionUser = await getRealSessionUser(request);
+  const twoFactorBlock = await enforceTwoFactorAccess(
+    request,
+    pathname,
+    sessionUser?.id,
+  );
+  if (twoFactorBlock) {
+    return withApiCorsHeaders(request, twoFactorBlock);
+  }
+
   const admin = await checkAdminEmailAccess(pathname, sessionUser?.email);
   if (admin.protected && !admin.allowed && !isAdminApiPublic(pathname)) {
     if (pathname.startsWith("/api/admin")) {
@@ -125,18 +140,28 @@ export async function proxy(request: NextRequest) {
   ) {
     if (
       hasOAuthVerifier &&
-      (pathname.startsWith("/auth/sign-in") || pathname.startsWith("/auth/sign-up"))
+      (pathname.startsWith("/auth/sign-in") ||
+        pathname.startsWith("/auth/sign-up") ||
+        pathname === "/start")
     ) {
+      // Complete OAuth session exchange on /dashboard (protected + tested path),
+      // then send new users back to onboarding when they have no workspace.
       const dashboard = new URL("/dashboard", request.url);
       request.nextUrl.searchParams.forEach((value, key) => {
         dashboard.searchParams.set(key, value);
       });
+      if (pathname === "/start") {
+        dashboard.searchParams.set("from", "/start");
+      }
       return NextResponse.redirect(dashboard);
     }
+    // SEO hubs stay crawlable for bots only — human browsers always run
+    // Neon Auth middleware so session cookies match API requireApiUser.
     if (
       request.method === "GET" &&
       !hasOAuthVerifier &&
-      isDashboardSeoHubPath(pathname)
+      isDashboardSeoHubPath(pathname) &&
+      isCrawlerUserAgent(request.headers.get("user-agent"))
     ) {
       return NextResponse.next();
     }
@@ -145,6 +170,17 @@ export async function proxy(request: NextRequest) {
 
   if (shouldRunIntl(pathname)) {
     return withApiCorsHeaders(request, intlMiddleware(request));
+  }
+
+  if (isNonLocalizedRootPath(pathname)) {
+    const response = NextResponse.next();
+    // App routes outside [locale] are English-only — keep nav/switcher on EN.
+    response.cookies.set(LOCALE_COOKIE_NAME, routing.defaultLocale, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    return withApiCorsHeaders(request, response);
   }
 
   return withApiCorsHeaders(request, NextResponse.next());

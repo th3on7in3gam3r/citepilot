@@ -4,7 +4,12 @@ export {
   dbGet,
   dbRun,
   ensureDb,
+  isNeonComputeQuotaError,
+  isNeonHostname,
   isPostgres,
+  neonDbErrorDetail,
   postgresConnectionString,
   postgresEnvVar,
+  postgresHealthDetail,
+  shouldUseTcpPostgres,
 } from "@/lib/db/query";

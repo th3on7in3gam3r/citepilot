@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
+import { getSessionUser } from "@/lib/auth/server";
 import {
+  getMemberLimitsForOwner,
   inviteWorkspaceMember,
-  listWorkspaceMembers,
-} from "@/lib/server/workspace-management";
+  listWorkspaceMembersForOwner,
+} from "@/lib/server/workspace-members";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
@@ -19,15 +21,25 @@ export const GET = withApiLogging(async function GET(request: Request, { params 
   }
 
   const { id } = await params;
-  const members = await listWorkspaceMembers(id, userId);
+  const [members, limits] = await Promise.all([
+    listWorkspaceMembersForOwner(id, userId),
+    getMemberLimitsForOwner(id, userId),
+  ]);
+
+  if (!limits) {
+    return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+  }
+
   return NextResponse.json({
-    members: members.map((m) => ({
-      id: m.id,
-      email: m.email,
-      role: m.role,
-      invitedAt: m.invited_at,
-      acceptedAt: m.accepted_at,
-    })),
+    data: {
+      members,
+      limits,
+      owner: {
+        email: null,
+        role: "owner" as const,
+        status: "accepted" as const,
+      },
+    },
   });
 });
 
@@ -40,21 +52,29 @@ export const POST = withApiLogging(async function POST(request: Request, { param
   }
 
   const { id } = await params;
-  const body = (await request.json()) as { email?: string };
+  const body = (await request.json()) as { email?: string; role?: string };
   const email = body.email?.trim();
+  const role = body.role === "editor" ? "editor" : "viewer";
+
   if (!email) {
-    return NextResponse.json({ error: "email is required" }, { status: 400 });
+    return NextResponse.json({ error: "email is required" }, { status: 422 });
   }
 
+  const session = await getSessionUser(request);
   const result = await inviteWorkspaceMember({
     workspaceId: id,
     ownerUserId: userId,
     email,
+    role,
+    inviterName: session?.name || session?.email || "A teammate",
   });
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 422 });
+    return NextResponse.json(
+      { error: result.error, code: result.code },
+      { status: result.code === "MEMBER_LIMIT" ? 403 : 422 },
+    );
   }
 
-  return NextResponse.json({ ok: true, id: result.id });
+  return NextResponse.json({ data: { id: result.id } });
 });

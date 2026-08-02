@@ -21,6 +21,7 @@ import {
   TOTAL_STEPS,
   type OnboardingAnswers,
 } from "@/lib/onboarding";
+import { domainFormatStatus } from "@/lib/onboarding/domain-validation";
 import {
   FEATURE_FLAGS,
   ONBOARDING_PROMPT_EXAMPLES,
@@ -72,6 +73,7 @@ export function OnboardingFlow({
   const [domainStatus, setDomainStatus] = useState<DomainInputStatus>("idle");
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const meta = stepMeta[step];
   const isLast = step === TOTAL_STEPS - 1;
@@ -145,6 +147,7 @@ export function OnboardingFlow({
   }, []);
 
   function next() {
+    if (!canContinue() || submitting) return;
     if (step < TOTAL_STEPS - 1) {
       const nextStep = step + 1;
       setStep(nextStep);
@@ -161,12 +164,14 @@ export function OnboardingFlow({
   async function finish() {
     setSubmitting(true);
     setCompleted(true);
+    setSubmitError(null);
     sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
     sessionStorage.setItem(ONBOARDING_WELCOME_TOAST_KEY, "1");
 
     try {
       const res = await fetch("/api/workspaces", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(answers),
       });
@@ -199,18 +204,63 @@ export function OnboardingFlow({
             })
             .catch(() => undefined);
         }
-      }
-    } catch {
-      /* proceed to dashboard with sessionStorage fallback */
-    }
 
-    router.push("/dashboard?welcome=1");
+        router.push("/dashboard?welcome=1");
+        return;
+      }
+
+      if (res.status === 401) {
+        setSubmitting(false);
+        setCompleted(false);
+        const signUp = new URL("/auth/sign-up", window.location.origin);
+        signUp.searchParams.set("from", "/start");
+        if (answers.domain.trim()) {
+          signUp.searchParams.set("domain", answers.domain.trim());
+        }
+        router.push(`${signUp.pathname}${signUp.search}`);
+        return;
+      }
+
+      setSubmitting(false);
+      setCompleted(false);
+      setSubmitError("Could not create your workspace — try again.");
+      return;
+    } catch {
+      setSubmitting(false);
+      setCompleted(false);
+      setSubmitError("Something went wrong — try again.");
+      return;
+    }
+  }
+
+  function continueDisabledHint(): string | undefined {
+    if (submitting) return undefined;
+    switch (step) {
+      case 0: {
+        const format = domainFormatStatus(answers.domain);
+        if (format === "empty") return "Enter your website to continue";
+        if (format === "invalid") return "Enter a valid domain (e.g. yoursite.com)";
+        return undefined;
+      }
+      case 1:
+        return answers.businessType.length === 0 ? "Select a business type" : undefined;
+      case 2:
+        return answers.description.trim().length <= 10
+          ? "Add a short description (at least 10 characters)"
+          : undefined;
+      case 4:
+        return answers.buyerQuestion.trim().length <= 5
+          ? "Enter a buyer question (at least 6 characters)"
+          : undefined;
+      default:
+        return undefined;
+    }
   }
 
   function canContinue(): boolean {
     switch (step) {
       case 0:
-        return domainStatus === "valid" || domainStatus === "unreachable";
+        return domainFormatStatus(answers.domain) === "valid";
       case 1:
         return answers.businessType.length > 0;
       case 2:
@@ -269,7 +319,7 @@ export function OnboardingFlow({
           </Link>
         </header>
 
-        <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col px-6 pb-10 md:px-10 lg:px-14 lg:pb-14">
+        <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col px-6 pb-28 md:px-10 md:pb-10 lg:px-14 lg:pb-14">
           <h1 className="sr-only">Start GEO and AI citation analysis</h1>
           <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center py-6 lg:py-10">
             <OnboardingStepProgress step={step} />
@@ -331,16 +381,10 @@ export function OnboardingFlow({
               {step === 2 && (
                 <div className="space-y-8">
                   <div>
-                    <label htmlFor="onboarding-description" className="mb-2 flex items-center justify-between">
+                    <label htmlFor="onboarding-description" className="mb-2 block">
                       <span className="text-sm font-bold text-ink">
                         Business description
                       </span>
-                      <button
-                        type="button"
-                        className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-ink transition hover:border-accent/40 hover:bg-surface"
-                      >
-                        <span className="text-accent" aria-hidden>✦</span> Generate with AI
-                      </button>
                     </label>
                     <textarea
                       id="onboarding-description"
@@ -541,14 +585,24 @@ export function OnboardingFlow({
             <OnboardingContinue
               onClick={next}
               disabled={!canContinue() || submitting}
+              loading={submitting}
+              disabledHint={continueDisabledHint()}
               label={
                 submitting
                   ? "Starting your audit…"
                   : isLast
                     ? "Run my analysis"
-                    : "Continue"
+                    : step === 0
+                      ? "Start"
+                      : "Continue"
               }
             />
+
+            {submitError && (
+              <p role="alert" className="mt-4 text-center text-sm text-red-600">
+                {submitError}
+              </p>
+            )}
 
             {step > 0 && !submitting && (
               <button
@@ -566,7 +620,7 @@ export function OnboardingFlow({
       </div>
 
       <OnboardingAside />
-      <OnboardingExitIntent active={!completed} completed={completed} />
+      <OnboardingExitIntent active={!completed} completed={completed} step={step} />
     </div>
   );
 }

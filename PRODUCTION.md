@@ -48,7 +48,7 @@ Covers `/api/health`, marketing pages, cron auth gates, and copilot auth. Manual
 
 - [ ] `RESEND_API_KEY` + verified `EMAIL_FROM` domain on Vercel
 - [ ] `CRON_SECRET` set on Vercel (required in production — cron routes return 503 without it)
-- [ ] Vercel cron (`vercel.json`): `weekly-rescan` Mon **12:00** UTC · `weekly-digest` Mon **14:00** UTC · `weekly-ops-report` Mon **15:00** UTC
+- [ ] Vercel cron (`vercel.json`): `weekly-rescan` Mon **12:00** UTC · `weekly-digest` daily **14:00** UTC (per workspace digest day) · `weekly-ops-report` Mon **15:00** UTC
 - [ ] Re-run audit with score drop ≥5 triggers alert when `scoreDropAlerts` is on
 - [ ] Pilot workspace: second audit with prompt loss triggers **Competitor move alerts** when enabled
 - [ ] Pilot+ with monitoring email: **Weekly proof report email** on → after Monday re-scan, inbox gets delta + `/report/proof` link + client share URL

@@ -52,15 +52,19 @@ type QueueFilter = "all" | "draft" | "webflow" | CmsProvider;
 const providerLabels: Record<CmsProvider, string> = {
   webflow: "Webflow",
   wordpress: "WordPress",
+  signaldesk: "SignalDesk",
   ghost: "Ghost",
+  hashnode: "Hashnode",
   shopify: "Shopify",
   framer: "Framer",
 };
 
 const publishTargets: CmsProvider[] = [
+  "signaldesk",
   "webflow",
   "wordpress",
   "ghost",
+  "hashnode",
   "shopify",
   "framer",
 ];
@@ -154,8 +158,14 @@ export function ArticleQueuePanel({
       wordpress: posts.filter((post) =>
         post.publications.some((item) => item.provider === "wordpress"),
       ).length,
+      signaldesk: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "signaldesk"),
+      ).length,
       ghost: posts.filter((post) =>
         post.publications.some((item) => item.provider === "ghost"),
+      ).length,
+      hashnode: posts.filter((post) =>
+        post.publications.some((item) => item.provider === "hashnode"),
       ).length,
       shopify: posts.filter((post) =>
         post.publications.some((item) => item.provider === "shopify"),
@@ -287,19 +297,21 @@ export function ArticleQueuePanel({
     return post.publications.some((p) => p.provider === provider);
   }
 
-  function publicationDate(post: QueuePost): string {
-    const labels: string[] = [];
+  function publicationDateSegments(post: QueuePost): string[] {
+    const segments = [`Draft ${new Date(post.publishedAt).toLocaleDateString()}`];
     if (post.webflow?.publishedAt) {
-      labels.push(`Webflow ${new Date(post.webflow.publishedAt).toLocaleDateString()}`);
+      segments.push(
+        `Webflow ${new Date(post.webflow.publishedAt).toLocaleDateString()}`,
+      );
     }
     for (const publication of post.publications) {
-      labels.push(
+      segments.push(
         `${providerLabels[publication.provider]} ${new Date(
           publication.publishedAt,
         ).toLocaleDateString()}`,
       );
     }
-    return labels.join(" · ");
+    return segments;
   }
 
   return (
@@ -399,37 +411,37 @@ export function ArticleQueuePanel({
             return (
               <li
                 key={post.slug}
-                className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between"
+                className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={post.url}
-                      className="font-medium text-accent hover:underline"
-                      target="_blank"
-                    >
-                      {post.title}
-                    </Link>
-                    <StatusBadge tone="blog">CitePilot blog</StatusBadge>
-                    {onWebflow && <StatusBadge tone="live">Live on Webflow</StatusBadge>}
-                    {post.publications.map((publication) => (
-                      <StatusBadge key={publication.provider} tone="live">
-                        Live on {providerLabels[publication.provider]}
-                      </StatusBadge>
-                    ))}
-                    {!onWebflow && post.publications.length === 0 && (
-                      <StatusBadge tone="draft">CMS pending</StatusBadge>
-                    )}
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted">
-                    {post.description}
-                  </p>
-                  <p className="mt-2 text-xs text-muted">
-                    Draft {new Date(post.publishedAt).toLocaleDateString()}
-                    {publicationDate(post) ? ` · ${publicationDate(post)}` : ""}
-                  </p>
+                <Link
+                  href={post.url}
+                  className="font-medium text-accent hover:underline"
+                  target="_blank"
+                >
+                  {post.title}
+                </Link>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge tone="blog">CitePilot blog</StatusBadge>
+                  {onWebflow && <StatusBadge tone="live">Live on Webflow</StatusBadge>}
+                  {post.publications.map((publication) => (
+                    <StatusBadge key={publication.provider} tone="live">
+                      Live on {providerLabels[publication.provider]}
+                    </StatusBadge>
+                  ))}
+                  {!onWebflow && post.publications.length === 0 && (
+                    <StatusBadge tone="draft">CMS pending</StatusBadge>
+                  )}
                 </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                  {publicationDateSegments(post).map((segment, index) => (
+                    <span key={`${index}-${segment}`} className="inline-flex items-center gap-x-2">
+                      {index > 0 ? <span aria-hidden="true">·</span> : null}
+                      <span className="whitespace-nowrap">{segment}</span>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm leading-relaxed text-muted">{post.description}</p>
+                <div className="flex flex-wrap items-center gap-2">
                   {onWebflow && post.webflow?.liveUrl && (
                     <a
                       href={post.webflow.liveUrl}
@@ -502,9 +514,21 @@ function PublishToControl({
   onPublish: (provider: CmsProvider) => void;
   busy: boolean;
 }) {
-  const [selected, setSelected] = useState<CmsProvider>(
-    targets.find(isConnected) ?? targets[0]!,
-  );
+  const preferredTarget = (): CmsProvider => {
+    if (isConnected("signaldesk")) return "signaldesk";
+    return targets.find(isConnected) ?? targets[0]!;
+  };
+
+  const [selected, setSelected] = useState<CmsProvider>(preferredTarget);
+  const [userPicked, setUserPicked] = useState(false);
+
+  const connectedKey = targets.map((t) => `${t}:${isConnected(t) ? 1 : 0}`).join("|");
+
+  useEffect(() => {
+    if (userPicked) return;
+    setSelected(preferredTarget());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh default when connection map changes
+  }, [userPicked, connectedKey]);
 
   return (
     <div className="flex items-center gap-2">
@@ -515,7 +539,10 @@ function PublishToControl({
       <select
         id="publish-target"
         value={selected}
-        onChange={(e) => setSelected(e.target.value as CmsProvider)}
+        onChange={(e) => {
+          setUserPicked(true);
+          setSelected(e.target.value as CmsProvider);
+        }}
         className="max-w-[180px] rounded-full border border-border bg-white px-3 py-2 text-xs font-semibold text-ink"
       >
         {targets.map((provider) => {

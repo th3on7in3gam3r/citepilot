@@ -5,9 +5,10 @@ export const site = {
   description:
     "CitePilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.",
   url: "https://getcitepilot.com",
-  /** Apex redirects static assets to www — use for OG images and logos in metadata. */
-  wwwUrl: "https://www.getcitepilot.com",
+  /** Prefer apex; www is redirected to apex by the host (Render). */
+  wwwUrl: "https://getcitepilot.com",
   supportEmail: "hello@getcitepilot.com",
+  pressEmail: "press@getcitepilot.com",
   foundingDate: "2025",
   social: {
     twitter: "https://twitter.com/citepilot",
@@ -92,8 +93,10 @@ export const nav = {
     company: [
       { label: "System Status", href: "/status" },
       { label: "Changelog", href: "/changelog" },
+      { label: "Press", href: "/press" },
       { label: "API docs", href: "/docs/api" },
       { label: "Agencies", href: "/agency" },
+      { label: "Consulting", href: "/consulting" },
     ],
       learn: [
       { label: "GEO Playbook", href: "/tools/geo-playbook" },

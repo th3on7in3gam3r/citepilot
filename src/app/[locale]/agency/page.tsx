@@ -1,10 +1,13 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { AgencyJsonLd } from "@/components/marketing/AgencyJsonLd";
 import { AgencyLanding } from "@/components/marketing/AgencyLanding";
 import { localeAlternates } from "@/lib/i18n/metadata";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
+
+export const revalidate = 86400;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -27,8 +30,9 @@ export default async function AgencyPage({ params }: Props) {
 
   return (
     <>
+      <AgencyJsonLd />
       <Header light overlay />
-      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[var(--hero-bg)]">
         <AgencyLanding />
       </main>
       <Footer />

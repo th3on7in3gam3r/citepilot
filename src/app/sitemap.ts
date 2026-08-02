@@ -9,7 +9,7 @@ import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-const LOCALIZED_MARKETING_PATHS = ["", "/pricing", "/agency"] as const;
+const LOCALIZED_MARKETING_PATHS = ["", "/pricing", "/agency", "/consulting"] as const;
 
 function localeUrl(base: string, locale: string, path: string): string {
   const normalized = path.startsWith("/") ? path : path ? `/${path}` : "";
@@ -32,6 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/ai-visibility",
     "/docs/api",
     "/changelog",
+    "/launch",
+    "/press",
     "/status",
     "/terms",
     "/privacy",
@@ -51,7 +53,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: localeUrl(base, locale, path),
         lastModified: new Date(),
         changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),
-        priority: path === "" ? 1 : path === "/pricing" || path === "/agency" ? 0.85 : 0.7,
+        priority:
+          path === ""
+            ? 1
+            : path === "/pricing" || path === "/agency" || path === "/consulting"
+              ? 0.85
+              : 0.7,
       }));
     }
 
@@ -60,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${base}${path}`,
         lastModified: new Date(),
         changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),
-        priority: path === "" ? 1 : toolPaths.has(path) || path === "/audit" ? 0.9 : 0.7,
+        priority: path === "" ? 1 : toolPaths.has(path) || path === "/audit" ? 0.9 : path === "/press" || path === "/launch" ? 0.5 : 0.7,
       },
     ];
   });

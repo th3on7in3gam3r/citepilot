@@ -1,14 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { CompetitorAnalysisGrid } from "@/components/dashboard/competitors/CompetitorAnalysisGrid";
 import { CompetitorCard } from "@/components/dashboard/competitors/CompetitorCard";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { FeatureGate } from "@/components/billing/FeatureGate";
+import { useToast } from "@/components/notifications/ToastProvider";
 import { useBilling } from "@/contexts/BillingContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { cleanDomainInput, domainFormatStatus } from "@/lib/onboarding/domain-validation";
 import type { CompetitorIntelligence } from "@/lib/competitors/intelligence";
 import type { CompetitorLimits } from "@/lib/competitors/limits";
@@ -25,6 +29,8 @@ const feature = productFeatures.find((f) => f.id === "competitors") ?? {
 export function CompetitorsPageClient() {
   const { workspace, ready, refresh } = useWorkspaceContext();
   const { isPaid } = useBilling();
+  const toast = useToast();
+  const competitorInputRef = useRef<HTMLInputElement>(null);
   const [intelligence, setIntelligence] = useState<CompetitorIntelligence | null>(null);
   const [limits, setLimits] = useState<CompetitorLimits | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +42,14 @@ export function CompetitorsPageClient() {
   const [fixOpen, setFixOpen] = useState(false);
 
   const workspaceId = workspace?.workspaceId ?? workspace?.id;
+
+  function focusAddCompetitor() {
+    document.getElementById("add-competitor")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    competitorInputRef.current?.focus();
+  }
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
@@ -86,15 +100,20 @@ export function CompetitorsPageClient() {
         limits?: CompetitorLimits;
       };
       if (!res.ok) {
-        setAddError(data.error ?? "Could not add competitor");
+        const message = data.error ?? "Could not add competitor";
+        setAddError(message);
+        toast.error(message);
         return;
       }
       setIntelligence(data.intelligence ?? null);
       setLimits(data.limits ?? null);
       setCompetitorInput("");
+      toast.success("Competitor added");
       await refresh();
     } catch {
-      setAddError("Could not add competitor");
+      const message = "Could not add competitor";
+      setAddError(message);
+      toast.error(message);
     } finally {
       setAdding(false);
     }
@@ -105,10 +124,18 @@ export function CompetitorsPageClient() {
     setFixOpen(true);
   }
 
-  if (!ready || !workspace) return null;
+  if (!ready) {
+    return <div className="h-96 animate-pulse rounded-2xl bg-surface" />;
+  }
+  if (!workspace) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to track competitors and citation gaps." />
+    );
+  }
 
   const tracked = workspace.competitors;
-  const canAdd = limits?.canAdd ?? false;
+  // Allow attempts while limits load; API still enforces Free max of 1.
+  const canAdd = limits?.canAdd !== false;
 
   return (
     <>
@@ -116,7 +143,25 @@ export function CompetitorsPageClient() {
         headingLevel="h2"
         title="Competitor intelligence"
         description={feature.description}
+        action={
+          <button
+            type="button"
+            onClick={focusAddCompetitor}
+            className="inline-flex rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
+          >
+            Add competitor →
+          </button>
+        }
       />
+
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Add rivals, then run an audit"
+          description="Track competitor domains now. Prompt-by-prompt citation gaps and steal-their-citations actions unlock after your first GEO audit."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+        />
+      )}
 
       <Panel title="Tracked competitors">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -140,14 +185,16 @@ export function CompetitorsPageClient() {
             )}
           </div>
 
-          <div className="flex w-full max-w-md flex-col gap-2">
+          <div id="add-competitor" className="flex w-full max-w-md scroll-mt-24 flex-col gap-2">
             <div className="flex gap-2">
               <input
+                ref={competitorInputRef}
                 type="text"
                 value={competitorInput}
                 onChange={(e) => setCompetitorInput(e.target.value)}
                 placeholder="rival.com"
                 disabled={!canAdd || adding}
+                aria-label="Competitor domain"
                 className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-ink disabled:opacity-50"
               />
               <button
@@ -160,9 +207,9 @@ export function CompetitorsPageClient() {
               </button>
             </div>
             {addError && <p className="text-xs text-rose-600">{addError}</p>}
-            {!canAdd && limits && (
+            {limits && !limits.canAdd && (
               <p className="text-xs text-muted">
-                Competitor limit reached —{" "}
+                Competitor limit reached ({limits.count}/{limits.max}) —{" "}
                 <Link href="/pricing" className="font-semibold text-accent hover:underline">
                   upgrade plan
                 </Link>
@@ -190,12 +237,18 @@ export function CompetitorsPageClient() {
           <p className="text-sm text-muted">
             Alerts fire when a competitor gains a citation you lost, citation rate surges
             &gt;10% week-over-week, or new domains appear on your money prompts. Manage in{" "}
-            <Link href="/dashboard/settings" className="font-semibold text-accent hover:underline">
+            <Link href="/dashboard/settings#notifications" className="font-semibold text-accent hover:underline">
               Settings → Notifications
             </Link>
             .
           </p>
         </Panel>
+      )}
+
+      {workspace.hasRealAudit && (
+        <div className="mt-6">
+          <CompetitorAnalysisGrid workspace={workspace} />
+        </div>
       )}
 
       {loading && (

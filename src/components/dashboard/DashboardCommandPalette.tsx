@@ -80,7 +80,7 @@ export function DashboardCommandPalette() {
               value="new prompt add money prompt"
               onSelect={() => {
                 setOpen(false);
-                router.push("/dashboard/content?section=keywords");
+                router.push("/dashboard/content?section=targeting");
               }}
               className="cursor-pointer rounded-lg px-3 py-2.5 text-sm text-ink aria-selected:bg-surface"
             >
@@ -116,6 +116,8 @@ export function DashboardCommandPalette() {
           <Command.Group heading="Navigate" className="mt-2 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
             {[
               { label: "Overview", href: "/dashboard" },
+              { label: "Content Studio", href: "/dashboard/content" },
+              { label: "Site Optimizer", href: "/dashboard/optimizer" },
               { label: "Analytics", href: "/dashboard/analytics" },
               { label: "GEO Audit", href: "/dashboard/geo-audit" },
               { label: "Settings", href: "/dashboard/settings" },

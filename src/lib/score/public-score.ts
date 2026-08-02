@@ -24,21 +24,29 @@ export async function getPublicScorePageData(
   const domain = normalizeDomain(decodeURIComponent(rawDomain));
   if (!domain || !domain.includes(".")) return null;
 
-  const isPublic = await isDomainScorePublic(domain);
-  if (!isPublic) return null;
+  try {
+    const isPublic = await isDomainScorePublic(domain);
+    if (!isPublic) return null;
 
-  const audit = await getLatestAuditByDomain(domain);
-  if (!audit) return null;
+    const audit = await getLatestAuditByDomain(domain);
+    if (!audit) return null;
 
-  const profile = await getDomainScoreProfile(domain);
-  const platforms = PUBLIC_SCORE_PLATFORMS.map((name) => ({
-    name,
-    present: audit.platforms.find((p) => p.name === name)?.present ?? false,
-  }));
+    const profile = await getDomainScoreProfile(domain);
+    const platforms = PUBLIC_SCORE_PLATFORMS.map((name) => ({
+      name,
+      present: audit.platforms.find((p) => p.name === name)?.present ?? false,
+    }));
 
-  const relatedDomains = await getRelatedScoreDomains(domain).catch(() => []);
+    const relatedDomains = await getRelatedScoreDomains(domain).catch(() => []);
 
-  return { domain, audit, profile, platforms, relatedDomains };
+    return { domain, audit, profile, platforms, relatedDomains };
+  } catch (error) {
+    console.error(
+      "[public-score] failed",
+      error instanceof Error ? error.message : "unknown",
+    );
+    return null;
+  }
 }
 
 export function auditToScoreOgData(audit: AuditPayload): AuditOgData {

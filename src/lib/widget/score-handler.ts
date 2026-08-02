@@ -3,6 +3,7 @@ import { normalizeDomain } from "@/lib/audit/site-analyzer";
 import { trackServerEvent } from "@/lib/analytics/track-server";
 import {
   parseBadgeStyle,
+  parseBadgeTheme,
   renderGeoBadgeSvg,
   widgetPlatformSummary,
   type BadgeScoreData,
@@ -69,6 +70,7 @@ export async function handleWidgetScoreRequest(
   const url = new URL(request.url);
   const format = url.searchParams.get("format");
   const style = parseBadgeStyle(url.searchParams.get("style"));
+  const theme = parseBadgeTheme(url.searchParams.get("theme"));
 
   const data = await badgeDataFromAudit(domain);
 
@@ -94,7 +96,7 @@ export async function handleWidgetScoreRequest(
     );
   }
 
-  const svg = renderGeoBadgeSvg(data, style);
+  const svg = renderGeoBadgeSvg(data, style, theme);
   return new Response(svg, {
     headers: {
       ...cacheHeaders,

@@ -264,23 +264,26 @@ await fetch("${API_BASE}/workspaces/${WS}/prompts/import", {
     id: "webhooks",
     title: "Webhooks",
     intro:
-      "Fleet plan — register webhook endpoints in Dashboard → Settings → Alerts. CitePilot POSTs signed JSON when citation changes are detected after a re-scan.",
+      "Fleet plan — register webhook endpoints in Dashboard → Settings → Integrations. CitePilot POSTs flat, Zapier-friendly JSON when citations change or audits complete.",
     bullets: [
       "citation.change_detected — prompt gained or lost citation coverage",
+      "audit.completed — scan finished with score and citation rate",
+      "Flat field names (workspace_domain, prompt, delta) — no nested objects",
       "X-CitePilot-Signature: sha256=HMAC-SHA256(secret, raw body)",
-      "Content-Type: application/json",
+      "Works with Zapier Catch Hook and Make.com Custom webhook",
     ],
     jsonExample: `{
   "event": "citation.change_detected",
-  "workspace": "brightlayer.io",
-  "timestamp": "2026-06-14T00:00:00Z",
-  "data": {
-    "prompt": "best CRM for agencies",
-    "platform": "chatgpt",
-    "change": "gained",
-    "citation_rate_before": 0.50,
-    "citation_rate_after": 0.58
-  }
+  "workspace_domain": "brightlayer.io",
+  "workspace_id": "abc123",
+  "prompt": "best CRM for agencies",
+  "platform": "chatgpt",
+  "change": "gained",
+  "citation_rate_before": 0.50,
+  "citation_rate_after": 0.58,
+  "delta": "+8%",
+  "timestamp": "2026-06-14T08:00:00Z",
+  "report_url": "https://getcitepilot.com/dashboard/geo-audit?workspace=abc123"
 }`,
     body: "Verify signatures with your signing secret (set when adding the endpoint). Reject requests when the signature does not match.",
     samples: {

@@ -216,6 +216,8 @@ export function GoogleAnalyticsChartsGrid({
           <DashboardDoughnutChart
             segments={doughnutSegments}
             height={200}
+            centerLabel={`${Number(kpis?.ctr ?? 0).toFixed(1)}%`}
+            centerHint="CTR"
           />
         </ChartCard>
 

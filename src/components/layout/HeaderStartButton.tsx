@@ -51,7 +51,7 @@ export function HeaderStartButton({ onDark }: { onDark: boolean }) {
   return (
     <Link
       href="/start"
-      className="group relative inline-flex shrink-0 items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#6b8cff] via-accent to-accent-deep px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_rgba(14,165,233,0.4)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_6px_28px_rgba(14,165,233,0.5)] active:scale-[0.98] sm:gap-2.5 sm:px-5"
+      className="btn-marketing-primary group relative inline-flex shrink-0 items-center gap-2 overflow-hidden px-4 py-2.5 text-sm font-semibold sm:gap-2.5 sm:px-5"
     >
       <span
         className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"

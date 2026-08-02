@@ -7,19 +7,27 @@ import { withApiLogging } from "@/lib/observability/api-log";
 export const runtime = "nodejs";
 
 export const GET = withApiLogging(async function GET(request: Request) {
-  const { userId } = await optionalApiUser(request);
-  if (!userId) {
-    return NextResponse.json({ daysActive: 0, workspaceCount: 0 });
+  try {
+    const { userId } = await optionalApiUser(request);
+    if (!userId) {
+      return NextResponse.json({ daysActive: 0, workspaceCount: 0 });
+    }
+
+    const daysActive = await getUserDaysActive(userId);
+    const row = await dbGet<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM workspaces WHERE user_id = ?`,
+      [userId],
+    );
+
+    return NextResponse.json({
+      daysActive,
+      workspaceCount: row?.count ?? 0,
+    });
+  } catch (error) {
+    console.error("GET /api/user/activity", error);
+    return NextResponse.json(
+      { daysActive: 0, workspaceCount: 0, error: "Could not load activity" },
+      { status: 500 },
+    );
   }
-
-  const daysActive = await getUserDaysActive(userId);
-  const row = await dbGet<{ count: number }>(
-    `SELECT COUNT(*) AS count FROM workspaces WHERE user_id = ?`,
-    [userId],
-  );
-
-  return NextResponse.json({
-    daysActive,
-    workspaceCount: row?.count ?? 0,
-  });
 });

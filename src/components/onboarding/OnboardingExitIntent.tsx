@@ -8,9 +8,11 @@ export const ONBOARDING_EXIT_EMAIL_KEY = "citepilot_onboarding_email";
 export function OnboardingExitIntent({
   active,
   completed,
+  step = 0,
 }: {
   active: boolean;
   completed: boolean;
+  step?: number;
 }) {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
@@ -29,7 +31,7 @@ export function OnboardingExitIntent({
   }, []);
 
   useEffect(() => {
-    if (!active || completed || saved) return;
+    if (!active || completed || saved || step < 1) return;
 
     const onMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 8) setVisible(true);
@@ -37,7 +39,7 @@ export function OnboardingExitIntent({
 
     document.addEventListener("mouseleave", onMouseLeave);
     return () => document.removeEventListener("mouseleave", onMouseLeave);
-  }, [active, completed, saved]);
+  }, [active, completed, saved, step]);
 
   const saveEmail = useCallback(() => {
     const trimmed = email.trim();
@@ -52,7 +54,7 @@ export function OnboardingExitIntent({
   return (
     <div
       ref={dialogRef}
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-[pricing-price-in_0.28s_ease-out] rounded-2xl border border-border bg-white p-4 shadow-xl sm:left-auto sm:right-5"
+      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-[pricing-price-in_0.28s_ease-out] rounded-2xl border border-border bg-white p-4 shadow-xl lg:left-6 lg:right-[calc(50%+1.5rem)]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-exit-title"

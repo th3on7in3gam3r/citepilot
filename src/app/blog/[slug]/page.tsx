@@ -10,7 +10,7 @@ import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
 import { BlogPostMeta } from "@/components/blog/BlogPostMeta";
 import { MarkdownArticle } from "@/components/blog/MarkdownArticle";
 import { Container } from "@/components/ui/Container";
-import { getPostBySlug } from "@/lib/blog";
+import { getPostBySlug, getAllSlugs } from "@/lib/blog";
 import { blogPostImageUrl } from "@/lib/blog/covers";
 import { pillarHref } from "@/lib/blog/utils";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
@@ -19,7 +19,23 @@ import { EDITORIAL_PILLARS } from "@/lib/content-strategy";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
+
+/** Allow runtime slugs when DB was empty/unavailable at build time. */
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const slugs = await getAllSlugs();
+    return slugs.map((slug) => ({ slug }));
+  } catch (error) {
+    console.warn(
+      "[blog] generateStaticParams fallback:",
+      error instanceof Error ? error.message : error,
+    );
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -62,10 +78,10 @@ export default async function BlogPostPage({ params }: Props) {
       <ArticleJsonLd post={post} />
       <ArticleReadingProgress />
       <BlogLayout>
-        <Container className="px-4 pt-28 pb-16 md:pt-32">
+        <Container className="px-4 pb-16 pt-28 md:pt-32">
           <Link
             href="/blog"
-            className="text-sm font-medium text-glow hover:text-white"
+            className="text-sm font-medium text-glow transition hover:text-white"
           >
             ← Blog
           </Link>
@@ -82,10 +98,10 @@ export default async function BlogPostPage({ params }: Props) {
               )}
             </div>
             <BlogPostMeta post={post} />
-            <h1 className="font-display mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-[2.75rem]">
+            <h1 className="content-page-title mt-4 text-white">
               {post.title}
             </h1>
-            <p className="mt-4 text-lg leading-relaxed text-white/60">
+            <p className="content-page-lead mt-4 text-white/60">
               {description}
             </p>
           </header>

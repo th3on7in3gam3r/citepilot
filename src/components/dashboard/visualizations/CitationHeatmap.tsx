@@ -12,6 +12,8 @@ import {
   HEATMAP_PLATFORMS,
   heatmapCellColor,
 } from "@/lib/citations/viz-data";
+import { PlatformScanBadge } from "@/components/dashboard/PlatformScanBadge";
+import { isBrowserScanPlatform } from "@/lib/scanners/platform-config";
 
 type SortMode = "citation_rate" | "alphabetical" | "recent";
 type StatusFilter = "all" | HeatmapCellStatus;
@@ -102,7 +104,13 @@ function CitationDetailDrawer({
   );
 }
 
-export function CitationHeatmap({ data }: { data: CitationHeatmapData }) {
+export function CitationHeatmap({
+  data,
+  plan = "free",
+}: {
+  data: CitationHeatmapData;
+  plan?: "free" | "pilot" | "fleet";
+}) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [sort, setSort] = useState<SortMode>("citation_rate");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -237,7 +245,12 @@ export function CitationHeatmap({ data }: { data: CitationHeatmapData }) {
                   : "bg-surface text-muted line-through opacity-60"
               }`}
             >
-              {platform.label}
+              <span className="inline-flex items-center gap-1">
+                {platform.label}
+                {isBrowserScanPlatform(platform.dbName) && (
+                  <PlatformScanBadge platformName={platform.dbName} plan={plan} compact />
+                )}
+              </span>
             </button>
           );
         })}

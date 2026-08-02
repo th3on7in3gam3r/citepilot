@@ -2,18 +2,46 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { SignOutButton } from "@/components/auth/SignOutButton";
+import { PlatformScanBadge } from "@/components/dashboard/PlatformScanBadge";
+import { effectInit } from "@/lib/react/effect-init";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
 import { getFixActionLabel } from "@/lib/geo/fixes";
 import { CopilotDashboardPrompt } from "@/components/dashboard/copilot/CopilotDashboardPrompt";
 import { DashboardCard } from "@/components/dashboard/layout/DashboardCard";
+import { DashboardEmptyState } from "@/components/dashboard/layout/DashboardEmptyState";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
+import { DashboardMetricTile } from "@/components/dashboard/layout/DashboardMetricTile";
+import {
+  DashboardTable,
+  DashboardTableBody,
+  DashboardTableHead,
+  DashboardTableRow,
+  DashboardTableTd,
+  DashboardTableTh,
+} from "@/components/dashboard/layout/DashboardTable";
+import { DashboardFilterBar, DashboardFilterSelect, DashboardFilterTabs } from "@/components/dashboard/layout/DashboardToolbar";
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 import { DashboardWorkspaceEmpty } from "@/components/dashboard/overview/DashboardWorkspaceEmpty";
 import { DashboardOverviewLead } from "@/components/dashboard/overview/DashboardOverviewLead";
+import { GrowthLoopOverviewBanner } from "@/components/dashboard/growth-loop/GrowthLoopOverviewBanner";
+import { CiteStatusBadge } from "@/components/dashboard/CiteStatusBadge";
+import { CiteStatusMilestones } from "@/components/dashboard/CiteStatusMilestones";
+import { useCiteStatusCelebration } from "@/hooks/useCiteStatusCelebration";
 import { PromptSparkline } from "@/components/dashboard/PromptSparkline";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { PLATFORMS } from "@/lib/dashboard";
+import {
+  DASHBOARD_PERIOD_OPTIONS,
+  DASHBOARD_PLATFORM_OPTIONS,
+  filterDailyByPeriod,
+  filterHistoryByPeriod,
+  filterPlatformRows,
+  filterPromptRowsByPlatform,
+  periodDisplayLabel,
+  type DashboardPeriod,
+  type DashboardPlatformFilter,
+} from "@/lib/dashboard/overview-filters";
 import { DashboardWidgetGrid } from "@/components/dashboard/copilot/DashboardWidgetGrid";
 import {
   platformRowsFromWorkspace,
@@ -23,7 +51,6 @@ import {
   DashboardGaugeChart,
   DashboardLineChart,
   DashboardRingChart,
-  DashboardSparkline,
 } from "@/components/charts/DashboardCharts";
 import { RosenLineChart } from "@/components/charts/RosenLineChart";
 import { RosenHorizontalBarChart } from "@/components/charts/RosenBarChart";
@@ -36,6 +63,7 @@ import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import {
   auditStatus,
   citationTrendStatus,
+  platformCoverageStatus,
 } from "@/lib/dashboard-data-status";
 import type { PromptRow } from "@/lib/features";
 import {
@@ -49,48 +77,41 @@ function formatCompact(n: number): string {
   return String(n);
 }
 
-function DashboardNoWorkspace() {
-  return (
-    <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-      <p className="font-display text-lg font-bold text-ink">No workspace yet</p>
-      <p className="mt-2 text-sm text-muted">
-        Add a site or complete setup to see citation data here — nothing below is
-        real until you connect a domain.
-      </p>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <Link
-          href="/start"
-          className="inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-deep"
-        >
-          Start setup →
-        </Link>
-        <Link
-          href="/dashboard/settings"
-          className="inline-flex rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent/40"
-        >
-          Add site in settings
-        </Link>
-      </div>
-      <div className="mt-8 border-t border-border pt-6">
-        <SignOutButton className="text-sm font-semibold text-muted hover:text-ink disabled:opacity-60" />
-      </div>
-    </div>
-  );
-}
-
 export function MyDashboardOverview({
   showAgencyBackLink = false,
 }: {
   showAgencyBackLink?: boolean;
 }) {
-  const { workspace, ready } = useWorkspaceContext();
+  const { workspace, ready, loadError, refresh } = useWorkspaceContext();
 
   if (!ready) {
     return <DashboardPageSkeleton />;
   }
 
+  if (loadError) {
+    return (
+      <DashboardEmptyState
+        title="Couldn’t load workspaces"
+        description={loadError}
+        primaryHref="/dashboard"
+        primaryLabel="Reload dashboard →"
+        secondaryHref="/start"
+        secondaryLabel="Start setup"
+        footer={
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="text-sm font-semibold text-accent hover:text-accent-deep"
+          >
+            Retry now
+          </button>
+        }
+      />
+    );
+  }
+
   if (!workspace) {
-    return <DashboardNoWorkspace />;
+    return <DashboardNoWorkspaceEmpty />;
   }
 
   return <MyDashboardOverviewContent workspace={workspace} showAgencyBackLink={showAgencyBackLink} />;
@@ -108,6 +129,25 @@ function MyDashboardOverviewContent({
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
   const [isFixOpen, setIsFixOpen] = useState(false);
+  const [userPlan, setUserPlan] = useState<"free" | "pilot" | "fleet">("free");
+  const [promptFilter, setPromptFilter] = useState<"all" | "cited" | "gaps">("all");
+  const [periodFilter, setPeriodFilter] = useState<DashboardPeriod>("90d");
+  const [platformFilter, setPlatformFilter] = useState<DashboardPlatformFilter>("all");
+
+  useCiteStatusCelebration(workspace);
+
+  effectInit(() => {
+    let cancelled = false;
+    void fetch("/api/billing/limits", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { prompts?: { plan?: "free" | "pilot" | "fleet" } } | null) => {
+        if (!cancelled && data?.prompts?.plan) setUserPlan(data.prompts.plan);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  });
 
   function handleOpenFix(gapText: string) {
     setSelectedGap(gapText);
@@ -122,36 +162,44 @@ function MyDashboardOverviewContent({
     () => promptRowsForWorkspace(workspace),
     [workspace],
   );
-
-  const citedCount = platformRows.filter((p) => p.cited).length;
-  const history = workspace.citationHistory ?? [];
-  const historyValues = useMemo(
-    () =>
-      history.length > 0
-        ? history.map((h) => Math.round(h.visibilityIndex))
-        : [
-            workspace.citationScore - 8,
-            workspace.citationScore - 4,
-            workspace.citationScore,
-          ],
-    [history, workspace.citationScore],
+  const filteredPlatformRows = useMemo(
+    () => filterPlatformRows(platformRows, platformFilter),
+    [platformRows, platformFilter],
+  );
+  const filteredPromptRowsAll = useMemo(
+    () => filterPromptRowsByPlatform(promptRows, platformFilter),
+    [promptRows, platformFilter],
   );
 
-  const historyLabels = useMemo(() => {
-    if (history.length > 0) {
-      return history.map((point, index, all) => {
-        const parsed = new Date(point.recordedAt);
-        if (Number.isNaN(parsed.getTime())) return `Audit ${index + 1}`;
-        return parsed.toLocaleDateString("en-US", {
-          month: "short",
-          day: all.length <= 6 ? "numeric" : undefined,
-        });
-      });
-    }
-    return historyValues.map((_, i) => `W${i + 1}`);
-  }, [history, historyValues]);
+  const citedCount = filteredPlatformRows.filter((p) => p.cited).length;
+  const platformDenominator =
+    platformFilter === "all" ? PLATFORMS.length : Math.max(1, filteredPlatformRows.length);
+  const history = workspace.citationHistory ?? [];
+  const filteredHistory = useMemo(
+    () => filterHistoryByPeriod(history, periodFilter),
+    [history, periodFilter],
+  );
+  const historyValues = useMemo(() => {
+    if (filteredHistory.length === 0) return [];
+    return filteredHistory.map((h) => Math.round(h.visibilityIndex));
+  }, [filteredHistory]);
 
-  const gscDaily = gsc?.daily ?? [];
+  const historyLabels = useMemo(() => {
+    if (filteredHistory.length === 0) return [];
+    return filteredHistory.map((point, index, all) => {
+      const parsed = new Date(point.recordedAt);
+      if (Number.isNaN(parsed.getTime())) return `Audit ${index + 1}`;
+      return parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: all.length <= 6 ? "numeric" : undefined,
+      });
+    });
+  }, [filteredHistory]);
+
+  const gscDaily = useMemo(
+    () => filterDailyByPeriod(gsc?.daily ?? [], periodFilter),
+    [gsc?.daily, periodFilter],
+  );
   const gscChartLabels = useMemo(
     () =>
       gscDaily.map((point) => {
@@ -164,14 +212,15 @@ function MyDashboardOverviewContent({
 
   const auditDataStatus = auditStatus(workspace);
   const trendDataStatus = citationTrendStatus(workspace);
+  const platformDataStatus = platformCoverageStatus(workspace);
 
-  const citedPromptsCount = promptRows.filter((r) => r.cited).length;
+  const citedPromptsCount = filteredPromptRowsAll.filter((r) => r.cited).length;
   const trackedCount = workspace.promptsTracked;
-  const gapsCount = workspace.gaps.length || 3;
+  const gapsCount = workspace.gaps.length;
 
   const citedPlatformNames = useMemo(
-    () => platformRows.filter((p) => p.cited).map((p) => p.name),
-    [platformRows]
+    () => filteredPlatformRows.filter((p) => p.cited).map((p) => p.name),
+    [filteredPlatformRows],
   );
 
   const citedPromptsList = useMemo(
@@ -181,17 +230,7 @@ function MyDashboardOverviewContent({
 
   const firstTrackedQuery = workspace.buyerQuestion || "best tool for saas";
 
-  const gapsList = useMemo(
-    () =>
-      workspace.gaps.length > 0
-        ? workspace.gaps
-        : [
-            "Missing FAQPage schema — high-impact for AI answer extraction",
-            "No Organization schema — weakens brand entity recognition",
-            "Thin homepage content (<300 words) — add an answer capsule above the fold",
-          ],
-    [workspace.gaps]
-  );
+  const gapsList = workspace.gaps;
 
   const keywordBuckets = useMemo(() => {
     return [
@@ -200,9 +239,8 @@ function MyDashboardOverviewContent({
         href: "/dashboard/analytics#money-prompts",
         value: citedPromptsCount,
         delta: `${Math.round((citedPromptsCount / Math.max(1, trackedCount)) * 100)}% rate`,
-        spark: [2, 3, 4, 5, citedPromptsCount],
         color: "#0ea5e9",
-        theme: "sky",
+        theme: "sky" as const,
         info: citedPromptsCount > 0 ? (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
             Cited on: <strong className="text-sky-600 font-semibold">&quot;{citedPromptsList[0]}&quot;</strong>
@@ -216,9 +254,8 @@ function MyDashboardOverviewContent({
         href: "/dashboard/geo-audit#platform-coverage",
         value: citedCount,
         delta: `${citedCount}/${PLATFORMS.length} LLMs`,
-        spark: [1, 2, citedCount, citedCount, citedCount],
         color: "#8b5cf6",
-        theme: "violet",
+        theme: "violet" as const,
         info: citedCount > 0 ? (
           <div className="flex flex-wrap gap-1">
             {citedPlatformNames.slice(0, 3).map((name) => (
@@ -241,12 +278,11 @@ function MyDashboardOverviewContent({
       },
       {
         label: "Tracked",
-        href: "/dashboard/content?section=keywords",
+        href: "/dashboard/content?section=targeting",
         value: trackedCount,
         delta: "Keywords",
-        spark: [1, 2, 3, trackedCount, trackedCount],
         color: "#10b981",
-        theme: "emerald",
+        theme: "emerald" as const,
         info: (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
             Target: <strong className="text-emerald-600 font-semibold">&quot;{firstTrackedQuery}&quot;</strong>
@@ -257,14 +293,15 @@ function MyDashboardOverviewContent({
         label: "Gaps",
         href: "/dashboard/geo-audit#priority-fixes",
         value: gapsCount,
-        delta: "Needs fix",
-        spark: [5, 4, 3, 2, gapsCount],
+        delta: gapsCount > 0 ? "Needs fix" : "None found",
         color: "#f43f5e",
-        theme: "rose",
-        info: (
+        theme: "rose" as const,
+        info: gapsCount > 0 ? (
           <span className="line-clamp-2 leading-relaxed text-slate-600">
             Fix: <strong className="text-rose-600 font-semibold">{gapsList[0]}</strong>
           </span>
+        ) : (
+          <span className="text-slate-400 italic font-normal">No GEO gaps from your latest audit</span>
         ),
       },
     ];
@@ -279,7 +316,15 @@ function MyDashboardOverviewContent({
     gapsList,
   ]);
 
-  const topPrompts = promptRows.slice(0, 5);
+  const topPrompts = filteredPromptRowsAll.slice(0, 5);
+  const filteredPromptRows = useMemo(() => {
+    const rows = topPrompts.length
+      ? topPrompts
+      : [{ prompt: workspace.buyerQuestion, cited: false, leader: "—" } as PromptRow];
+    if (promptFilter === "cited") return rows.filter((row) => row.cited);
+    if (promptFilter === "gaps") return rows.filter((row) => !row.cited);
+    return rows;
+  }, [topPrompts, promptFilter, workspace.buyerQuestion]);
   const moneyPromptList = (
     topPrompts.length
       ? topPrompts
@@ -297,22 +342,11 @@ function MyDashboardOverviewContent({
         </Link>
       )}
       <DashboardOverviewLead workspace={workspace} />
+      <GrowthLoopOverviewBanner workspace={workspace} />
 
       {!workspace.hasRealAudit ? (
         <>
           <DashboardWorkspaceEmpty workspace={workspace} />
-          <div
-            data-tour="results"
-            className="rounded-2xl border border-dashed border-border bg-surface/80 px-6 py-8 text-center"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Citation results
-            </p>
-            <p className="mt-2 text-sm text-muted">
-              Your citation score, platform heatmap, and weekly action plan will
-              appear here after your first scan.
-            </p>
-          </div>
           <GettingStartedChecklist workspace={workspace} />
         </>
       ) : (
@@ -321,13 +355,42 @@ function MyDashboardOverviewContent({
 
       <WeeklyMonitoringPanel workspace={workspace} />
 
+      <DashboardFilterBar
+        actions={
+          <Link
+            href="/dashboard/geo-audit"
+            className="rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-accent-deep"
+          >
+            Run new scan →
+          </Link>
+        }
+      >
+        <DashboardFilterSelect
+          label="Site"
+          value={workspace.domain}
+          options={[{ value: workspace.domain, label: workspace.domain }]}
+        />
+        <DashboardFilterSelect
+          label="Period"
+          value={periodFilter}
+          options={DASHBOARD_PERIOD_OPTIONS}
+          onChange={(value) => setPeriodFilter(value as DashboardPeriod)}
+        />
+        <DashboardFilterSelect
+          label="Platforms"
+          value={platformFilter}
+          options={DASHBOARD_PLATFORM_OPTIONS}
+          onChange={(value) => setPlatformFilter(value as DashboardPlatformFilter)}
+        />
+      </DashboardFilterBar>
+
       <CopilotDashboardPrompt />
       <DashboardWidgetGrid workspace={workspace} />
 
       {/* Position Tracking */}
       <DashboardCard
         title="Citation position tracking"
-        action="Last 90 days"
+        action={periodDisplayLabel(periodFilter)}
         dataStatus={auditDataStatus}
         className="overflow-hidden"
       >
@@ -352,196 +415,118 @@ function MyDashboardOverviewContent({
 
           {/* 4 stat tiles */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {keywordBuckets.map((b) => {
-              const isRose = b.theme === "rose";
-              const isSky = b.theme === "sky";
-              const isViolet = b.theme === "violet";
-              const isEmerald = b.theme === "emerald";
-              
-              const borderClass = isSky 
-                ? "border-sky-100 hover:border-sky-200 dark:border-sky-900/50 dark:hover:border-sky-800/60" 
-                : isViolet 
-                ? "border-violet-100 hover:border-violet-200 dark:border-violet-900/50 dark:hover:border-violet-800/60" 
-                : isEmerald 
-                ? "border-emerald-100 hover:border-emerald-200 dark:border-emerald-900/50 dark:hover:border-emerald-800/60" 
-                : "border-rose-100 hover:border-rose-200 dark:border-rose-900/50 dark:hover:border-rose-800/60";
-
-              const bgClass = isSky 
-                ? "bg-gradient-to-br from-sky-50/40 via-card to-card dark:from-sky-950/30 dark:via-[#111] dark:to-[#111]" 
-                : isViolet 
-                ? "bg-gradient-to-br from-violet-50/40 via-card to-card dark:from-violet-950/30 dark:via-[#111] dark:to-[#111]" 
-                : isEmerald 
-                ? "bg-gradient-to-br from-emerald-50/40 via-card to-card dark:from-emerald-950/30 dark:via-[#111] dark:to-[#111]" 
-                : "bg-gradient-to-br from-rose-50/40 via-card to-card dark:from-rose-950/30 dark:via-[#111] dark:to-[#111]";
-
-              const textClass = isRose ? "text-rose-700 dark:text-rose-300" : "text-foreground";
-              const accentBar = isSky 
-                ? "bg-gradient-to-r from-sky-400 to-blue-500" 
-                : isViolet 
-                ? "bg-gradient-to-r from-violet-400 to-indigo-500" 
-                : isEmerald 
-                ? "bg-gradient-to-r from-emerald-400 to-teal-500" 
-                : "bg-gradient-to-r from-rose-400 to-pink-500";
-
-              const badgeBg = isSky 
-                ? "bg-sky-50 border-sky-100 text-sky-700 dark:bg-sky-950/40 dark:border-sky-900/50 dark:text-sky-300" 
-                : isViolet 
-                ? "bg-violet-50 border-violet-100 text-violet-700 dark:bg-violet-950/40 dark:border-violet-900/50 dark:text-violet-300" 
-                : isEmerald 
-                ? "bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300" 
-                : "bg-rose-50 border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300";
-
-              return (
-                <Link
-                  key={b.label}
-                  href={b.href}
-                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,23,42,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${borderClass} ${bgClass}`}
-                  aria-label={`${b.label}: ${formatCompact(b.value)} — view details`}
-                >
-                  {/* Top accent sliver */}
-                  <div
-                    className={`absolute inset-x-0 top-0 h-[3px] transition-all duration-200 ${accentBar}`}
-                    aria-hidden
-                  />
-                  
-                  {/* Card Header (Label + Icon) */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-                      {b.label}
-                    </span>
-                    <div className={`flex items-center justify-center p-1.5 rounded-lg border transition-transform duration-200 group-hover:scale-110 ${badgeBg}`}>
-                      {b.theme === "sky" && (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                      )}
-                      {b.theme === "violet" && (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                        </svg>
-                      )}
-                      {b.theme === "emerald" && (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
-                      {b.theme === "rose" && (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Card Body (Value + Trend badge) */}
-                  <div className="mt-4 flex items-baseline justify-between">
-                    <span className={`font-display text-[28px] font-extrabold tracking-tight leading-none ${textClass}`}>
-                      {formatCompact(b.value)}
-                    </span>
-                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${badgeBg}`}>
-                      {b.delta}
-                    </span>
-                  </div>
-
-                  {/* Card Info/Details */}
-                  <div className="mt-3 flex items-center min-h-[36px] border-t border-slate-100/40 pt-2 text-[10px]">
-                    {b.info}
-                  </div>
-
-                  {/* Card Footer (Sparkline) */}
-                  <div className="mt-4 pt-3 border-t border-slate-100/50">
-                    <DashboardSparkline
-                      values={b.spark}
-                      color={b.color}
-                      className="h-7 w-full"
-                    />
-                  </div>
-                </Link>
-              );
-            })}
+            {keywordBuckets.map((b) => (
+              <DashboardMetricTile
+                key={b.label}
+                label={b.label}
+                value={formatCompact(b.value)}
+                delta={b.delta}
+                href={b.href}
+                theme={b.theme}
+                footer={b.info}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Bottom row: prompt table */}
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-border shadow-sm dark:border-[#222]">
-          <table className="w-full min-w-[420px] text-left text-xs">
-            <thead>
-              <tr className="border-b border-border bg-surface">
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Money prompt</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">4-wk trend</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Status</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">vs Competitor</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Leader</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {(topPrompts.length
-                ? topPrompts
-                : [{ prompt: workspace.buyerQuestion, cited: false, leader: "—" }]
-              ).map((row) => {
+        {/* Prompt table with filters */}
+        <div className="mt-5 space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <DashboardFilterTabs
+              items={[
+                { id: "all", label: "All prompts", count: topPrompts.length || 1 },
+                { id: "cited", label: "Cited", count: citedPromptsCount },
+                { id: "gaps", label: "Gaps", count: Math.max(0, (topPrompts.length || 1) - citedPromptsCount) },
+              ]}
+              value={promptFilter}
+              onChange={setPromptFilter}
+            />
+            <Link
+              href="/dashboard/content?section=targeting"
+              className="text-xs font-semibold text-accent hover:text-accent-deep"
+            >
+              Manage prompts →
+            </Link>
+          </div>
+
+          <DashboardTable minWidth="420px">
+            <DashboardTableHead>
+              <DashboardTableRow header>
+                <DashboardTableTh>Money prompt</DashboardTableTh>
+                <DashboardTableTh>4-wk trend</DashboardTableTh>
+                <DashboardTableTh>Status</DashboardTableTh>
+                <DashboardTableTh>vs competitor</DashboardTableTh>
+                <DashboardTableTh>Leader</DashboardTableTh>
+              </DashboardTableRow>
+            </DashboardTableHead>
+            <DashboardTableBody>
+              {filteredPromptRows.map((row) => {
                 const promptRow = row as PromptRow;
                 const vs = competitorForPrompt(workspace, promptRow);
                 const trend = promptCitationTrend(workspace, promptRow);
                 return (
-                <tr key={row.prompt} className="bg-card transition-colors duration-100 hover:bg-surface dark:bg-[#111] dark:hover:bg-[#161616]">
-                  <td className="px-4 py-3 pr-2 font-medium text-ink">
-                    {row.prompt.length > 52 ? `${row.prompt.slice(0, 52)}…` : row.prompt}
-                  </td>
-                  <td className="px-4 py-3">
-                    <PromptSparkline values={trend} positive={Boolean(row.cited)} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${
-                        row.cited
-                          ? "border-[#bae6fd] bg-[#e0f2fe] text-[#0284c7]"
-                          : "border-amber-200 bg-amber-50 text-amber-700"
-                      }`}
-                    >
+                  <DashboardTableRow key={row.prompt}>
+                    <DashboardTableTd className="max-w-[240px] font-medium text-ink">
+                      {row.prompt.length > 52 ? `${row.prompt.slice(0, 52)}…` : row.prompt}
+                    </DashboardTableTd>
+                    <DashboardTableTd>
+                      <PromptSparkline values={trend} positive={Boolean(row.cited)} />
+                    </DashboardTableTd>
+                    <DashboardTableTd>
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          row.cited ? "bg-[#0ea5e9]" : "bg-amber-400"
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${
+                          row.cited
+                            ? "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-300"
+                            : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
                         }`}
-                        aria-hidden
-                      />
-                      {row.cited ? "Cited" : "Gap"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-[11px] font-semibold ${
-                        vs.clientAhead ? "text-emerald-600" : "text-red-600"
-                      }`}
-                    >
-                      {vs.clientAhead ? "You" : vs.name}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted">
-                    <span className="max-w-[180px] truncate block">{row.leader ?? "—"}</span>
-                  </td>
-                </tr>
-              );
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            row.cited ? "bg-accent" : "bg-amber-400"
+                          }`}
+                          aria-hidden
+                        />
+                        {row.cited ? "Cited" : "Gap"}
+                      </span>
+                    </DashboardTableTd>
+                    <DashboardTableTd>
+                      <span
+                        className={`text-[11px] font-semibold ${
+                          vs.clientAhead ? "text-emerald-600" : "text-rose-600"
+                        }`}
+                      >
+                        {vs.clientAhead ? "You" : vs.name}
+                      </span>
+                    </DashboardTableTd>
+                    <DashboardTableTd className="max-w-[180px] truncate text-muted">
+                      {row.leader ?? "—"}
+                    </DashboardTableTd>
+                  </DashboardTableRow>
+                );
               })}
-            </tbody>
-          </table>
+            </DashboardTableBody>
+          </DashboardTable>
         </div>
       </DashboardCard>
 
       {/* Row 2 */}
       <div className="grid gap-5 lg:grid-cols-2">
-        <DashboardCard title="Platform overview" dataStatus={auditDataStatus}>
+        <DashboardCard title="Platform overview" dataStatus={platformDataStatus}>
           <div className="flex flex-wrap items-center justify-around gap-4 border-b border-border pb-5">
             <DashboardRingChart
               value={workspace.domainRating || workspace.citationScore}
               label="DR"
             />
             <DashboardRingChart
-              value={workspace.visibilityScore || citedCount * 12}
+              value={
+                workspace.visibilityScore > 0
+                  ? workspace.visibilityScore
+                  : Math.round((citedCount / platformDenominator) * 100)
+              }
               label="Visibility"
             />
             <DashboardRingChart
-              value={Math.round((citedCount / PLATFORMS.length) * 100)}
+              value={Math.round((citedCount / platformDenominator) * 100)}
               label="Coverage"
             />
           </div>
@@ -550,16 +535,20 @@ function MyDashboardOverviewContent({
           <div className="mt-5">
             <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Engine Coverage</p>
             <RosenHorizontalBarChart
-              data={platformRows.map((p) => ({
+              data={filteredPlatformRows.map((p) => ({
                 label: p.name,
-                // Use real share if available; otherwise derive a stable value from citation status
-                value: p.share != null ? p.share : p.cited ? 65 : 12,
+                value: typeof p.share === "number" ? p.share : p.cited ? 100 : 0,
                 color: p.cited ? "#6366f1" : "#cbd5e1",
               }))}
               maxValue={100}
               formatValue={(v) => `${v}%`}
-              height={platformRows.length * 30}
+              height={Math.max(1, filteredPlatformRows.length) * 30}
             />
+            {filteredPlatformRows.every((p) => p.share == null) ? (
+              <p className="mt-2 text-[11px] text-muted">
+                Share % appears after audits that return platform share data. Bars show cited vs missing for now.
+              </p>
+            ) : null}
           </div>
         </DashboardCard>
 
@@ -567,11 +556,11 @@ function MyDashboardOverviewContent({
           title="Sessions & engagement"
           action="View full report"
           actionHref="/dashboard/analytics"
-          dataStatus={auditDataStatus}
+          dataStatus={trendDataStatus}
         >
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
             {[
-              { label: "Platforms cited", value: `${citedCount}/${PLATFORMS.length}` },
+              { label: "Platforms cited", value: `${citedCount}/${platformDenominator}` },
               { label: "Prompts tracked", value: String(workspace.promptsTracked) },
               { label: "Content drafts", value: String(workspace.contentDrafts) },
               { label: "Backlink sources", value: String(workspace.sourceCount) },
@@ -585,11 +574,17 @@ function MyDashboardOverviewContent({
             ))}
           </div>
           <div className="mt-4">
-            <DashboardLineChart
-              labels={historyLabels}
-              series={[{ label: "Citations", values: historyValues, color: CHART_COLORS.primary }]}
-              height={96}
-            />
+            {historyValues.length >= 2 ? (
+              <DashboardLineChart
+                labels={historyLabels}
+                series={[{ label: "Citations", values: historyValues, color: CHART_COLORS.primary }]}
+                height={96}
+              />
+            ) : (
+              <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
+                Not enough history yet — run another audit to see citation trends.
+              </p>
+            )}
           </div>
         </DashboardCard>
       </div>
@@ -641,27 +636,39 @@ function MyDashboardOverviewContent({
           <GscConnectCard workspaceId={workspaceId} />
         )}
 
-        <DashboardCard title="Visibility" dataStatus={auditDataStatus}>
+        <DashboardCard
+          title="Visibility"
+          dataStatus={
+            workspace.visibilityScore > 0 || historyValues.length >= 2
+              ? trendDataStatus
+              : "estimated"
+          }
+        >
           <div className="flex items-start justify-between">
             <div>
               <p className="text-3xl font-bold text-ink">
-                {(workspace.visibilityScore || workspace.citationScore * 0.4).toFixed(1)}%
+                {workspace.visibilityScore > 0
+                  ? `${workspace.visibilityScore.toFixed(1)}%`
+                  : "—"}
                 <span className="ml-1 text-sm font-medium text-accent">
-                  {workspace.weeklyLiftAvailable ? workspace.weeklyLift : "—"}
+                  {workspace.weeklyLiftAvailable ? workspace.weeklyLift : ""}
                 </span>
               </p>
               <p className="mt-1 text-xs text-muted">AI answer share</p>
             </div>
-            <span className="rounded-full bg-accent/10 px-2 py-1 text-[11px] font-semibold text-accent-deep">
-              Rank ↑ {Math.max(1, 30 - workspace.citationScore / 3)}
-            </span>
           </div>
           <div className="mt-4 rounded-xl bg-gradient-to-t from-accent/10 to-transparent p-2">
-            <DashboardLineChart
-              labels={historyLabels}
-              series={[{ label: "Visibility", values: historyValues, color: CHART_COLORS.secondary }]}
-              height={88}
-            />
+            {historyValues.length >= 2 ? (
+              <DashboardLineChart
+                labels={historyLabels}
+                series={[{ label: "Visibility", values: historyValues, color: CHART_COLORS.secondary }]}
+                height={88}
+              />
+            ) : (
+              <p className="px-2 py-6 text-center text-sm text-muted">
+                Not enough history yet
+              </p>
+            )}
           </div>
         </DashboardCard>
       </div>
@@ -673,7 +680,7 @@ function MyDashboardOverviewContent({
           title="Platform presence"
           action="View full report"
           actionHref="/dashboard/geo-audit"
-          dataStatus={auditDataStatus}
+          dataStatus={platformDataStatus}
         >
           <div className="mb-3 flex gap-3 text-[11px] text-muted">
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accent" /> Cited</span>
@@ -685,7 +692,11 @@ function MyDashboardOverviewContent({
               <div className="flex h-2 flex-1 overflow-hidden rounded-full bg-border">
                 <div
                   className={`h-full ${p.cited ? "bg-accent" : "bg-[#cbd5e1]"}`}
-                  style={{ width: p.cited ? `${p.share ?? 70}%` : "100%" }}
+                  style={{
+                    width: p.cited
+                      ? `${typeof p.share === "number" ? p.share : 100}%`
+                      : "100%",
+                  }}
                 />
               </div>
             </div>
@@ -722,27 +733,55 @@ function MyDashboardOverviewContent({
           title="Priority GEO gaps"
           action="GEO Audit"
           actionHref="/dashboard/geo-audit"
-          dataStatus={workspace.gaps.length > 0 ? auditDataStatus : "demo"}
+          dataStatus={workspace.gaps.length > 0 ? auditDataStatus : "live"}
         >
-          <ul className="space-y-3 text-xs text-slate-600">
-            {gapsList.slice(0, 4).map((gap, idx) => (
-              <li key={idx} className="flex items-start justify-between gap-3 group/item">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100">
-                    {idx + 1}
-                  </span>
-                  <span className="leading-relaxed text-slate-700">{gap}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenFix(gap)}
-                  className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100/50 rounded-lg hover:bg-rose-100/70 hover:border-rose-200 transition duration-150 cursor-pointer opacity-70 group-hover/item:opacity-100"
+          {gapsList.length > 0 ? (
+            <ul className="space-y-3 text-xs text-slate-600">
+              {gapsList.slice(0, 4).map((gap, idx) => (
+                <li key={idx} className="flex items-start justify-between gap-3 group/item">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100">
+                      {idx + 1}
+                    </span>
+                    <span className="leading-relaxed text-slate-700">{gap}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenFix(gap)}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100/50 rounded-lg hover:bg-rose-100/70 hover:border-rose-200 transition duration-150 cursor-pointer opacity-70 group-hover/item:opacity-100"
+                  >
+                    {getFixActionLabel(gap, workspace.domain)} ✦
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted">
+                No priority gaps from your latest audit. Re-run GEO audit after content changes.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/dashboard/geo-audit"
+                  className="inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-deep"
                 >
-                  {getFixActionLabel(gap, workspace.domain)} ✦
-                </button>
-              </li>
-            ))}
-          </ul>
+                  Run new scan →
+                </Link>
+                <Link
+                  href="/dashboard/optimizer"
+                  className="inline-flex rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink hover:border-accent/40"
+                >
+                  Open Site Optimizer
+                </Link>
+              </div>
+            </div>
+          )}
+          <Link
+            href="/dashboard/optimizer"
+            className="mt-4 inline-flex text-xs font-semibold text-accent hover:underline"
+          >
+            Generate all fixes →
+          </Link>
         </DashboardCard>
       </div>
 
@@ -783,8 +822,9 @@ function MyDashboardOverviewContent({
               <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Score</p>
-                  <div className="flex items-baseline gap-1.5 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
                     <span className="text-3xl font-extrabold tracking-tight text-ink">{workspace.citationScore}%</span>
+                    <CiteStatusBadge score={workspace.citationScore} size="sm" />
                     {workspace.weeklyLiftAvailable && (
                       <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
                         {workspace.weeklyLift}
@@ -818,6 +858,7 @@ function MyDashboardOverviewContent({
                     >
                       <span className="font-semibold truncate max-w-[100px]">{p.name}</span>
                       <div className="flex items-center gap-1.5">
+                        <PlatformScanBadge platformName={p.name} plan={userPlan} compact />
                         <span className={`h-1.5 w-1.5 rounded-full ${p.cited ? "bg-emerald-500 animate-pulse" : "bg-slate-300"}`} />
                         <span className={`text-[9px] font-bold uppercase tracking-wider ${p.cited ? "text-emerald-600" : "text-slate-400"}`}>
                           {p.cited ? "Cited" : "Gap"}
@@ -827,6 +868,7 @@ function MyDashboardOverviewContent({
                   ))}
                 </div>
               </div>
+              <CiteStatusMilestones workspace={workspace} compact />
             </div>
           </DashboardCard>
         </div>

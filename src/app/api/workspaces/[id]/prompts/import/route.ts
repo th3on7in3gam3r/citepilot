@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { parsePromptCsv } from "@/lib/prompts/csv";
 import { applyPromptLimit } from "@/lib/billing/prompt-limits";
-import { getBillingByUserId } from "@/lib/billing/store";
-import { planForUser } from "@/lib/billing/limits-server";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { requireFleetAccess } from "@/lib/fleet/request-auth";
 import { mergePreferences } from "@/lib/settings";
 import { getWorkspaceById, updateWorkspace } from "@/lib/server/workspace";
@@ -139,8 +138,7 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     const existing = workspace.preferences.monitoredPrompts ?? [];
     const { merged, imported, skipped } = mergePrompts(existing, accepted);
 
-    const billing = await getBillingByUserId(userId);
-    const plan = planForUser(billing);
+    const plan = await getEffectivePlanForUser(userId);
     const { prompts, trimmed, max } = applyPromptLimit(merged, plan);
     const trimmedCount = merged.length - prompts.length;
 

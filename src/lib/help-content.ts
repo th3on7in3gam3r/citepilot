@@ -104,6 +104,18 @@ export const helpWorkflow: HelpWorkflowStep[] = [
 
 export const helpQuickAnswers: HelpQuickAnswer[] = [
   {
+    q: "What is Growth Loop?",
+    a: "Growth Loop is a Pilot+ automation: paste your site URL once, connect a CMS, and CitePilot generates daily SEO articles, optional auto-publish, backlink placements, and weekly AI visibility rescans. Open Operations → Growth Loop in the dashboard.",
+  },
+  {
+    q: "What is Uptime monitoring?",
+    a: "Pilot and Fleet can add HTTP, SSL, port, keyword, and cron health monitors that check every few minutes. Down or degraded states trigger alerts via Slack, webhooks, and your Alerts history. Free accounts see a preview — upgrade to Pilot to create monitors.",
+  },
+  {
+    q: "Where do I suggest product features?",
+    a: "Signed-in users can open Account → Suggest a feature in the dashboard sidebar to upvote the roadmap and submit ideas. Pilot and Fleet customers help prioritize what we ship next.",
+  },
+  {
     q: "What is the public score page vs the proof report?",
     a: "After an audit, CitePilot publishes a free SEO page at /score/yourdomain.com with your headline GEO score. Your proof report link (from email or Share) is the detailed private report — optional password. Both are linked from GEO Audit and post-audit emails. See /help/public-score-pages.",
   },
@@ -160,11 +172,15 @@ export const helpQuickAnswers: HelpQuickAnswer[] = [
     a: "One-shot AI guidance grounded in your workspace audit — not a general chat. On Overview, use “Prioritize with CitePilot” for your top 3 weekly actions. On GEO Audit, use “Explain with CitePilot” on any gap. Requires a completed audit and Pilot or Fleet.",
   },
   {
+    q: "What is Site Optimizer?",
+    a: "Site Optimizer is a Pilot+ tool (Monitor → Site Optimizer). It reads your latest GEO audit — gaps, money prompts, robots.txt, and schema signals — and generates a prioritized plan with copy-paste code plus file placement, or prompts for content gaps. Open it from the sidebar, GEO Audit, or Overview after a completed audit.",
+  },
+  {
     q: "What is CitePilot Autopilot?",
     a: "Autopilot is a Pilot+ feature that runs after your weekly Monday re-scan. It summarizes what changed since the last scan, optionally generates a prioritized 7-day plan using CitePilot Insights, and can email a client-ready report with proof link and share URL to your monitoring email. Turn it on per workspace under Settings → CitePilot Autopilot, and you can also run it on-demand.",
   },
   {
     q: "Does Autopilot ever publish to my CMS?",
-    a: "No. Autopilot never auto-publishes content. It only re-scans prompts, generates a plan, and (optionally) emails you. You remain in control of publishing from the Content tab or your CMS.",
+    a: "No. Autopilot never auto-publishes content. It only re-scans prompts, generates a plan, and (optionally) emails you. You remain in control of publishing from Content Studio or your CMS.",
   },
 ];
