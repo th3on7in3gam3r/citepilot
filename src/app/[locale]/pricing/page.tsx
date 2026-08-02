@@ -7,6 +7,7 @@ import { StudioBundleCta } from "@/components/pricing/StudioBundleCta";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
+import { PricingJsonLd } from "@/components/marketing/PricingJsonLd";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
 import { pricingPageFaqItems } from "@/lib/marketing/site-faq";
@@ -40,6 +41,7 @@ export default async function PricingPage({ params }: Props) {
 
   return (
     <>
+      <PricingJsonLd />
       <Header light overlay />
       <MainContent className="bg-background">
         <MarketingDarkHero

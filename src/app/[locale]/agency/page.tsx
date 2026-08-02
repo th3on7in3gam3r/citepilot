@@ -1,5 +1,6 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { AgencyJsonLd } from "@/components/marketing/AgencyJsonLd";
 import { AgencyLanding } from "@/components/marketing/AgencyLanding";
 import { localeAlternates } from "@/lib/i18n/metadata";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
@@ -29,6 +30,7 @@ export default async function AgencyPage({ params }: Props) {
 
   return (
     <>
+      <AgencyJsonLd />
       <Header light overlay />
       <main id="main-content" tabIndex={-1} className="bg-[var(--hero-bg)]">
         <AgencyLanding />
