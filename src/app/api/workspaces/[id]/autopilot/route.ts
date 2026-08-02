@@ -7,8 +7,7 @@ import {
   runCitationAudit,
 } from "@/lib/audit/run-audit";
 import { resolveMonitoredPrompts } from "@/lib/audit/resolve-prompts";
-import { planForUser } from "@/lib/billing/limits-server";
-import { getBillingByUserId } from "@/lib/billing/store";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { captureServerException } from "@/lib/observability/sentry";
 import { AUTOPILOT_MANUAL_LIMIT_PER_HOUR } from "@/lib/rate-limit/constants";
 import {
@@ -82,8 +81,7 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     const runFreshAudit = body.runAudit === true || !audit;
 
     if (runFreshAudit) {
-      const billing = await getBillingByUserId(userId);
-      const plan = planForUser(billing);
+      const plan = await getEffectivePlanForUser(userId);
       const prompts = resolveMonitoredPrompts({
         monitoredPrompts: promptsFromPreferences(
           workspace.preferences,

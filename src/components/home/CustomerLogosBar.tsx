@@ -1,4 +1,5 @@
 import { customerMarqueeNames } from "@/lib/marketing/customer-marquee";
+import { getTranslations } from "next-intl/server";
 
 function MarqueeRow({
   names,
@@ -20,7 +21,7 @@ function MarqueeRow({
         {track.map((name, i) => (
           <span
             key={`${name}-${i}`}
-            className="shrink-0 font-display text-base font-semibold tracking-tight text-ink/35 dark:text-white/30 md:text-lg"
+            className="shrink-0 font-display text-base font-semibold tracking-tight text-ink/50 dark:text-white/50 md:text-lg"
           >
             {name}
           </span>
@@ -30,18 +31,19 @@ function MarqueeRow({
   );
 }
 
-export function CustomerLogosBar() {
+export async function CustomerLogosBar() {
+  const t = await getTranslations("customerLogos");
   const firstRow = customerMarqueeNames.slice(0, 6);
   const secondRow = customerMarqueeNames.slice(6);
 
   return (
     <section
       className="border-b border-border bg-background py-8 md:py-10"
-      aria-label="Trusted by teams using CitePilot"
+      aria-labelledby="customer-logos-heading"
     >
-      <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-        Trusted by teams at
-      </p>
+      <h2 id="customer-logos-heading" className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+        {t("title")}
+      </h2>
 
       <div className="customer-marquee-mask relative mt-6 space-y-4 motion-reduce:hidden md:mt-8 md:space-y-5">
         <MarqueeRow names={firstRow} />
@@ -52,7 +54,7 @@ export function CustomerLogosBar() {
         {customerMarqueeNames.map((name) => (
           <li
             key={name}
-            className="font-display text-base font-semibold tracking-tight text-ink/35 dark:text-white/30 md:text-lg"
+            className="font-display text-base font-semibold tracking-tight text-ink/50 dark:text-white/50 md:text-lg"
           >
             {name}
           </li>

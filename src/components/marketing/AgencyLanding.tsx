@@ -1,19 +1,17 @@
 import Link from "next/link";
+import { Link as LocaleLink } from "@/i18n/navigation";
 import { PricingTierActions } from "@/components/billing/PricingTierActions";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { TestimonialAvatar } from "@/components/ui/TestimonialAvatar";
 import { Container } from "@/components/ui/Container";
 import { testimonials } from "@/lib/data/testimonials";
 import {
-  agencyFaqs,
-  agencyFleetFeatures,
   agencyFooterCta,
   agencyLanding,
-  agencyPainPoints,
   agencyPricing,
   agencyTestimonialAuthors,
-  agencyWorkflow,
 } from "@/lib/marketing/agency-landing";
+import { getTranslations } from "next-intl/server";
 
 function FeatureIcon({ type }: { type: string }) {
   const cls = "h-6 w-6 text-accent";
@@ -80,45 +78,70 @@ function AgencyTestimonialCard({
   );
 }
 
-export function AgencyLanding() {
-  const featuredTestimonials = testimonials.filter((t) =>
-    (agencyTestimonialAuthors as readonly string[]).includes(t.author),
+export async function AgencyLanding() {
+  const t = await getTranslations("agency");
+  const featuredTestimonials = testimonials.filter((item) =>
+    (agencyTestimonialAuthors as readonly string[]).includes(item.author),
   );
+
+  const painPoints = [t("problem0"), t("problem1"), t("problem2")];
+  const fleetFeatures = [
+    { icon: "workspaces", title: t("featureWorkspacesTitle"), body: t("featureWorkspacesBody") },
+    { icon: "whitelabel", title: t("featureWhitelabelTitle"), body: t("featureWhitelabelBody") },
+    { icon: "csv", title: t("featureCsvTitle"), body: t("featureCsvBody") },
+    { icon: "api", title: t("featureApiTitle"), body: t("featureApiBody") },
+    { icon: "support", title: t("featureSupportTitle"), body: t("featureSupportBody") },
+  ];
+  const workflow = [
+    { step: 1, title: t("workflow1Title"), body: t("workflow1Body") },
+    { step: 2, title: t("workflow2Title"), body: t("workflow2Body") },
+    { step: 3, title: t("workflow3Title"), body: t("workflow3Body") },
+  ];
+  const pricingFeatures = [
+    t("pricingFeature0"),
+    t("pricingFeature1"),
+    t("pricingFeature2"),
+    t("pricingFeature3"),
+    t("pricingFeature4"),
+  ];
+  const faqs = [
+    { q: t("faq0q"), a: t("faq0a") },
+    { q: t("faq1q"), a: t("faq1a") },
+    { q: t("faq2q"), a: t("faq2a") },
+    { q: t("faq3q"), a: t("faq3a") },
+    { q: t("faq4q"), a: t("faq4a") },
+  ];
 
   return (
     <>
       <MarketingDarkHero
-        eyebrow="Fleet · $249/mo"
-        title={agencyLanding.hero.headline}
-        description={agencyLanding.hero.sub}
+        eyebrow={t("heroEyebrow")}
+        title={t("heroTitle")}
+        description={t("heroDescription")}
       >
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href={agencyLanding.hero.ctaHref}
             className="inline-flex rounded-full bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_32px_rgba(14,165,233,0.35)] transition hover:bg-accent-deep"
           >
-            {agencyLanding.hero.cta}
+            {t("heroCta")}
           </Link>
           <Link
             href="/docs/api"
             className="inline-flex rounded-full border border-white/20 px-7 py-3.5 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
           >
-            Fleet API docs
+            {t("heroApiDocs")}
           </Link>
         </div>
       </MarketingDarkHero>
 
-      <Container className="py-16 md:py-24">
-        {/* Problem */}
+      <Container className="py-12 md:py-16 lg:py-20">
         <section className="mx-auto max-w-3xl text-center" aria-labelledby="agency-problem">
-          <h2
-            id="agency-problem"
-            className="font-display text-2xl font-bold text-white md:text-3xl lg:text-4xl"
-          >
-            {agencyPainPoints.headline}
+          <h2 id="agency-problem" className="marketing-section-title marketing-section-title-on-dark md:text-[1.875rem]">
+            {t("problemTitle")}
           </h2>
-          <ul className="mt-10 space-y-4 text-left">
-            {agencyPainPoints.items.map((item) => (
+          <ul className="mt-7 space-y-3 text-left md:mt-8">
+            {painPoints.map((item) => (
               <li
                 key={item}
                 className="flex gap-4 rounded-2xl border border-red-500/20 bg-red-500/[0.06] px-5 py-4 text-sm leading-relaxed text-white/75 md:text-base"
@@ -134,20 +157,17 @@ export function AgencyLanding() {
 
         {/* Fleet features */}
         <section
-          className="mx-auto mt-20 max-w-5xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-5xl"
           aria-labelledby="agency-features"
         >
-          <h2
-            id="agency-features"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
-            Built for agencies on Fleet
+          <h2 id="agency-features" className="marketing-section-title marketing-section-title-on-dark text-center">
+            {t("featuresTitle")}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-white/55 md:text-base">
-            Everything you need to productize GEO — without building your own citation stack.
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-white/55 md:mt-4 md:text-base">
+            {t("featuresSub")}
           </p>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
-            {agencyFleetFeatures.map((feature) => (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:gap-5">
+            {fleetFeatures.map((feature) => (
               <article
                 key={feature.title}
                 className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm"
@@ -166,17 +186,14 @@ export function AgencyLanding() {
 
         {/* Workflow */}
         <section
-          className="mx-auto mt-20 max-w-4xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-4xl"
           aria-labelledby="agency-workflow"
         >
-          <h2
-            id="agency-workflow"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
-            How agencies use CitePilot
+          <h2 id="agency-workflow" className="marketing-section-title marketing-section-title-on-dark text-center">
+            {t("workflowTitle")}
           </h2>
-          <ol className="mt-12 space-y-6">
-            {agencyWorkflow.map((step) => (
+          <ol className="mt-8 space-y-4 md:mt-10">
+            {workflow.map((step) => (
               <li
                 key={step.step}
                 className="flex gap-5 rounded-2xl border border-white/10 bg-gradient-to-r from-accent/10 to-transparent p-6 md:gap-8 md:p-8"
@@ -199,16 +216,13 @@ export function AgencyLanding() {
 
         {/* Testimonials */}
         <section
-          className="mx-auto mt-20 max-w-4xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-4xl"
           aria-labelledby="agency-testimonials"
         >
-          <h2
-            id="agency-testimonials"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
-            Agencies already shipping with CitePilot
+          <h2 id="agency-testimonials" className="marketing-section-title marketing-section-title-on-dark text-center">
+            {t("testimonialsTitle")}
           </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-4 md:mt-10 md:grid-cols-2 md:gap-5">
             {featuredTestimonials.map((review) => (
               <AgencyTestimonialCard key={review.author} review={review} />
             ))}
@@ -217,7 +231,7 @@ export function AgencyLanding() {
 
         {/* Pricing */}
         <section
-          className="mx-auto mt-20 max-w-lg md:mt-28"
+          className="marketing-section-gap mx-auto max-w-lg"
           aria-labelledby="agency-pricing"
         >
           <div className="rounded-2xl border border-accent/35 bg-gradient-to-b from-accent/20 to-white/[0.04] p-8 text-center shadow-[0_0_48px_rgba(14,165,233,0.12)] md:p-10">
@@ -225,7 +239,7 @@ export function AgencyLanding() {
               id="agency-pricing"
               className="text-xs font-semibold uppercase tracking-[0.2em] text-glow"
             >
-              Fleet plan
+              {t("pricingLabel")}
             </p>
             <p className="font-display mt-3 text-5xl font-bold text-white">
               {agencyPricing.price}
@@ -234,20 +248,18 @@ export function AgencyLanding() {
               </span>
             </p>
             <p className="mt-4 text-sm leading-relaxed text-white/65 md:text-base">
-              {agencyPricing.tagline}
+              {t("pricingTagline")}
             </p>
             <ul className="mt-6 space-y-2 text-left text-sm text-white/55">
-              <li>✓ Unlimited client workspaces</li>
-              <li>✓ White-label share links & proof PDFs</li>
-              <li>✓ Fleet API keys + JSON export</li>
-              <li>✓ CSV bulk prompt import</li>
-              <li>✓ Priority support</li>
+              {pricingFeatures.map((feature) => (
+                <li key={feature}>{feature}</li>
+              ))}
             </ul>
             <div className="mt-8">
               <PricingTierActions
                 tierName="Fleet"
                 href={agencyPricing.href}
-                cta={agencyPricing.cta}
+                cta={t("pricingCta")}
                 variant="dark"
               />
             </div>
@@ -256,17 +268,14 @@ export function AgencyLanding() {
 
         {/* FAQ */}
         <section
-          className="mx-auto mt-20 max-w-3xl md:mt-28"
+          className="marketing-section-gap mx-auto max-w-3xl"
           aria-labelledby="agency-faq"
         >
-          <h2
-            id="agency-faq"
-            className="font-display text-center text-2xl font-bold text-white md:text-3xl"
-          >
-            Agency FAQ
+          <h2 id="agency-faq" className="marketing-section-title marketing-section-title-on-dark text-center">
+            {t("faqTitle")}
           </h2>
-          <dl className="mt-10 space-y-4">
-            {agencyFaqs.map((faq) => (
+          <dl className="mt-7 space-y-3 md:mt-8">
+            {faqs.map((faq) => (
               <div
                 key={faq.q}
                 className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm"
@@ -280,28 +289,25 @@ export function AgencyLanding() {
 
         {/* Footer CTA */}
         <section
-          className="mx-auto mt-20 max-w-3xl text-center md:mt-28"
+          className="marketing-section-gap mx-auto max-w-3xl text-center"
           aria-labelledby="agency-cta"
         >
-          <h2
-            id="agency-cta"
-            className="font-display text-2xl font-bold text-white md:text-3xl"
-          >
-            {agencyFooterCta.headline}
+          <h2 id="agency-cta" className="marketing-section-title marketing-section-title-on-dark">
+            {t("footerCtaTitle")}
           </h2>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row md:mt-7">
             <Link
               href={agencyFooterCta.primary.href}
               className="inline-flex w-full rounded-full bg-accent px-8 py-3.5 text-sm font-bold text-white sm:w-auto"
             >
-              {agencyFooterCta.primary.label}
+              {t("footerCtaPrimary")}
             </Link>
-            <Link
-              href={agencyFooterCta.secondary.href}
+            <LocaleLink
+              href="/consulting"
               className="inline-flex w-full rounded-full border border-white/25 px-8 py-3.5 text-sm font-semibold text-white/85 transition hover:border-white/50 sm:w-auto"
             >
-              {agencyFooterCta.secondary.label}
-            </Link>
+              {t("footerCtaSecondary")}
+            </LocaleLink>
           </div>
         </section>
       </Container>

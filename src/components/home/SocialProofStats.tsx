@@ -3,22 +3,41 @@ import {
   formatPublicStat,
   getPublicPlatformStats,
 } from "@/lib/server/public-stats";
+import { getTranslations } from "next-intl/server";
 
 export async function SocialProofStats() {
-  const { domainsAudited, citationsTracked } = await getPublicPlatformStats();
+  const t = await getTranslations("socialProof");
+  let domainsAudited = 0;
+  let citationsTracked = 0;
+  try {
+    const stats = await getPublicPlatformStats();
+    domainsAudited = stats.domainsAudited;
+    citationsTracked = stats.citationsTracked;
+  } catch {
+    // getPublicPlatformStats already soft-fails; keep homepage render resilient.
+  }
 
   const items = [
-    { value: formatPublicStat(domainsAudited), label: "domains audited" },
-    { value: formatPublicStat(citationsTracked), label: "citations tracked" },
-    { value: "8", label: "AI platforms monitored" },
+    {
+      value: formatPublicStat(domainsAudited),
+      label: t("domainsAudited"),
+    },
+    {
+      value: formatPublicStat(citationsTracked),
+      label: t("citationsTracked"),
+    },
+    { value: "8", label: t("platformsMonitored") },
   ] as const;
 
   return (
     <section
       className="border-b border-border bg-background py-10 dark:bg-card md:py-12"
-      aria-label="Platform stats"
+      aria-labelledby="social-proof-heading"
     >
       <Container>
+        <h2 id="social-proof-heading" className="sr-only">
+          {t("heading")}
+        </h2>
         <ul className="flex flex-col divide-y divide-border md:flex-row md:items-center md:divide-x md:divide-y-0">
           {items.map((stat) => (
             <li

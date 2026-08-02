@@ -30,6 +30,7 @@ export function CookieConsentBanner() {
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-label="Cookie consent"
       className="fixed inset-x-0 bottom-0 z-[100] border-t border-border bg-ink px-4 py-3 text-white shadow-[0_-8px_32px_rgba(0,0,0,0.2)]"
     >

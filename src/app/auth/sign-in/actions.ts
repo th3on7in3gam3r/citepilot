@@ -1,7 +1,10 @@
 "use server";
 
-import { auth } from "@/lib/auth/server";
+import { auth, getRealSessionUser } from "@/lib/auth/server";
+import { resolveAuthRedirect } from "@/lib/auth/redirect";
 import { redirect } from "next/navigation";
+import { isTotpEnabledForUser } from "@/lib/security/totp-store";
+import { isTwoFactorVerified } from "@/lib/security/totp-session";
 
 export async function signInWithEmail(
   _prev: { error: string } | null,
@@ -23,6 +26,16 @@ export async function signInWithEmail(
     return { error: error.message ?? "Sign in failed" };
   }
 
-  const from = formData.get("from") as string | null;
-  redirect(from && from.startsWith("/") ? from : "/dashboard");
+  const destination = resolveAuthRedirect(formData.get("from") as string | null);
+
+  const session = await getRealSessionUser();
+  if (
+    session?.id &&
+    (await isTotpEnabledForUser(session.id)) &&
+    !(await isTwoFactorVerified(session.id))
+  ) {
+    redirect(`/auth/2fa?from=${encodeURIComponent(destination)}`);
+  }
+
+  redirect(destination);
 }

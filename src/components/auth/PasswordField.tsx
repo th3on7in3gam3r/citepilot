@@ -11,6 +11,8 @@ export function PasswordField({
   required = true,
   id,
   onChange,
+  invalid,
+  describedBy,
 }: {
   name?: string;
   label?: string;
@@ -19,6 +21,8 @@ export function PasswordField({
   required?: boolean;
   id?: string;
   onChange?: (value: string) => void;
+  invalid?: boolean;
+  describedBy?: string;
 }) {
   const [visible, setVisible] = useState(false);
   const fieldId = id ?? name;
@@ -32,9 +36,12 @@ export function PasswordField({
           name={name}
           type={visible ? "text" : "password"}
           required={required}
+          aria-required={required}
           minLength={minLength}
           autoComplete={autoComplete}
           suppressHydrationWarning
+          aria-invalid={invalid}
+          aria-describedby={describedBy}
           onChange={(e) => onChange?.(e.target.value)}
           className={`${authInputClass} mt-0 pr-11`}
         />

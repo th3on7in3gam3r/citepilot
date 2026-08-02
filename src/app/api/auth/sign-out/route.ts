@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
-import { WORKSPACE_COOKIE } from "@/lib/constants";
+import { WORKSPACE_COOKIE, TOTP_VERIFIED_COOKIE, TOTP_CHALLENGE_COOKIE } from "@/lib/constants";
+import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
 import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
@@ -26,5 +27,8 @@ export const POST = withApiLogging(async function POST() {
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set(WORKSPACE_COOKIE, "", { path: "/", maxAge: 0 });
+  response.cookies.set(TOTP_VERIFIED_COOKIE, "", { path: "/", maxAge: 0 });
+  response.cookies.set(TOTP_CHALLENGE_COOKIE, "", { path: "/", maxAge: 0 });
+  response.cookies.set(LOCALE_COOKIE_NAME, "", { path: "/", maxAge: 0 });
   return response;
 });

@@ -1,8 +1,6 @@
 import Script from "next/script";
-import { PostHogInit } from "@/components/analytics/PostHogInit";
 
 const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN?.trim();
-const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim();
 
 export function AnalyticsScripts() {
   return (
@@ -15,7 +13,6 @@ export function AnalyticsScripts() {
           strategy="afterInteractive"
         />
       )}
-      {posthogKey ? <PostHogInit /> : null}
     </>
   );
 }

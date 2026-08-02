@@ -13,9 +13,9 @@ import {
   getRecentAuditsForWorkspace,
 } from "@/lib/audit/run-audit";
 import {
+  dispatchAuditCompletedWebhooks,
   dispatchCitationChangeAlerts,
   dispatchWeeklySlackDigest,
-  isWeeklyDigestDay,
   recordEmailAlertEvent,
   scoreDropExceeded,
 } from "@/lib/alerts/dispatch";
@@ -33,8 +33,14 @@ import { dbAll, dbGet } from "@/lib/db";
 import { parsePreferences, type WorkspacePreferences } from "@/lib/settings";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { userHasFleetAccess } from "@/lib/billing/access";
+import {
+  getNotificationPreferences,
+  isDigestDayDue,
+} from "@/lib/notifications/preferences-store";
 import { buildWeeklyDigestEmail } from "@/lib/email/templates/weekly-digest";
+import { buildAuditCompleteEmail } from "@/lib/email/templates/audit-complete";
 import { resolveEmailLogoSrc } from "@/lib/email/resolve-logo";
+import { resolveUserEmail } from "@/lib/email/recipient";
 import { whiteLabelFromName } from "@/lib/white-label/email-layout";
 
 const DIGEST_JOB = "weekly-digest";
@@ -48,11 +54,11 @@ function recipientEmail(
   return fallbackEmail?.trim() || null;
 }
 
-function layout(title: string, body: string): string {
+function layout(title: string, body: string, footerHref = "/dashboard"): string {
   return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;max-width:560px;margin:0 auto;padding:24px">
 <h1 style="font-size:20px;margin:0 0 16px">${title}</h1>
 ${body}
-<p style="margin-top:32px;font-size:12px;color:#666"><a href="${dashboardUrl("/dashboard/analytics")}">Open CitePilot analytics</a></p>
+<p style="margin-top:32px;font-size:12px;color:#666"><a href="${dashboardUrl(footerHref)}">Open CitePilot dashboard</a></p>
 </body></html>`;
 }
 
@@ -105,6 +111,25 @@ function competitorMoveHtml(
       `<p><strong>New competitor-related gaps</strong>:</p><ul>${delta.newCompetitorGaps
         .slice(0, 5)
         .map((g) => `<li>${g}</li>`)
+        .join("")}</ul>`,
+    );
+  }
+
+  if (delta.competitorRateSurges.length > 0) {
+    parts.push(
+      `<p><strong>Competitor citation rate surges</strong> (&gt;10% week-over-week):</p><ul>${delta.competitorRateSurges
+        .map(
+          (s) =>
+            `<li>${s.competitor}: ${s.previousRate}% → ${s.currentRate}% (+${s.delta}%)</li>`,
+        )
+        .join("")}</ul>`,
+    );
+  }
+
+  if (delta.newEntrantDomains.length > 0) {
+    parts.push(
+      `<p><strong>New competitors on your money prompts</strong>:</p><ul>${delta.newEntrantDomains
+        .map((d) => `<li>${d}</li>`)
         .join("")}</ul>`,
     );
   }
@@ -181,11 +206,11 @@ export async function sendCompetitorMoveEmail(input: {
   return sendEmail({
     to: input.to,
     subject,
-    html: layout(`Competitor alert — ${input.domain}`, competitorMoveHtml(
-      input.domain,
-      input.delta,
-      input.competitors,
-    )),
+    html: layout(
+      `Competitor alert — ${input.domain}`,
+      competitorMoveHtml(input.domain, input.delta, input.competitors),
+      "/dashboard/competitors",
+    ),
     text: `Competitor movement on ${input.domain}`,
   });
 }
@@ -211,8 +236,6 @@ export async function sendAuditCompleteEmail(input: {
     input.workspaceId,
     input.audit.id,
   );
-  const deltaScore =
-    previousScore != null ? input.audit.score - previousScore : null;
   const dropped =
     previousScore != null &&
     prefs.scoreDropAlerts &&
@@ -224,16 +247,20 @@ export async function sendAuditCompleteEmail(input: {
 
   if (to) {
     if (dropped) {
+      const rendered = buildAuditCompleteEmail({
+        domain: input.audit.domain,
+        score: input.audit.score,
+        cited: input.audit.cited,
+        total: input.audit.total,
+        gaps: input.audit.gaps,
+        previousScore,
+        variant: "score_drop",
+      });
       await sendEmail({
         to,
-        subject: `Citation score dropped for ${input.audit.domain} (${input.audit.score}/100)`,
-        html: layout(
-          `Score alert — ${input.audit.domain}`,
-          `<p>Your citation score changed from <strong>${previousScore}</strong> to <strong>${input.audit.score}</strong> (${deltaScore} points).</p>
-<ul>${input.audit.gaps.slice(0, 4).map((g) => `<li>${g}</li>`).join("")}</ul>
-<p>Competitors tracked: ${ws.competitors.length ? ws.competitors.join(", ") : "none yet"}</p>`,
-        ),
-        text: `Score dropped to ${input.audit.score} for ${input.audit.domain}`,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
       });
       if (userId) {
         await recordEmailAlertEvent({
@@ -245,16 +272,20 @@ export async function sendAuditCompleteEmail(input: {
         });
       }
     } else if (prefs.auditCompleteEmail) {
+      const rendered = buildAuditCompleteEmail({
+        domain: input.audit.domain,
+        score: input.audit.score,
+        cited: input.audit.cited,
+        total: input.audit.total,
+        gaps: input.audit.gaps,
+        previousScore,
+        variant: "complete",
+      });
       await sendEmail({
         to,
-        subject: `GEO audit complete — ${input.audit.domain} scored ${input.audit.score}/100`,
-        html: layout(
-          `Audit complete — ${input.audit.domain}`,
-          `<p>Score: <strong>${input.audit.score}/100</strong> · ${input.audit.cited}/${input.audit.total} prompts cited</p>
-${deltaScore != null ? `<p>Change since last audit: ${deltaScore >= 0 ? "+" : ""}${deltaScore}</p>` : ""}
-<p>Top gaps:</p><ul>${input.audit.gaps.slice(0, 5).map((g) => `<li>${g}</li>`).join("")}</ul>`,
-        ),
-        text: `Audit complete: ${input.audit.score}/100 for ${input.audit.domain}`,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
       });
       if (userId) {
         await recordEmailAlertEvent({
@@ -280,6 +311,15 @@ ${deltaScore != null ? `<p>Change since last audit: ${deltaScore >= 0 ? "+" : ""
       previousAudit,
     }).catch((err) =>
       console.error("[alerts] citation dispatch failed", err),
+    );
+
+    await dispatchAuditCompletedWebhooks({
+      workspaceId: input.workspaceId,
+      userId,
+      audit: input.audit,
+      previousAudit,
+    }).catch((err) =>
+      console.error("[alerts] audit.completed webhook failed", err),
     );
   }
 
@@ -362,6 +402,35 @@ export async function sendScheduledProofReportEmail(input: {
       result.error,
     );
   }
+}
+
+export async function sendScoreDropTestEmail(input: {
+  domain: string;
+  to: string;
+  currentScore: number;
+  previousScore: number;
+  gaps: string[];
+  whiteLabel?: WorkspacePreferences["whiteLabel"];
+  fleetBranding?: boolean;
+}): Promise<SendEmailResult> {
+  const delta = input.currentScore - input.previousScore;
+  const wl = input.whiteLabel;
+  const fromName =
+    input.fleetBranding && wl?.agencyName?.trim()
+      ? wl.agencyName.trim()
+      : "CitePilot";
+
+  return sendEmail({
+    to: input.to,
+    subject: `[Test] Citation score dropped for ${input.domain} (${input.currentScore}/100)`,
+    html: layout(
+      `Score drop alert — ${input.domain}`,
+      `<p>This is a <strong>test alert</strong> from ${fromName}.</p>
+<p>Your citation score changed from <strong>${input.previousScore}</strong> to <strong>${input.currentScore}</strong> (${delta} points).</p>
+<ul>${input.gaps.slice(0, 4).map((g) => `<li>${g}</li>`).join("")}</ul>`,
+    ),
+    text: `[Test] Score dropped to ${input.currentScore} for ${input.domain}`,
+  });
 }
 
 export async function sendWeeklyDigestEmail(input: {
@@ -451,18 +520,28 @@ export async function runWeeklyDigestBatch(): Promise<WeeklyDigestBatchResult> {
   console.info(`[cron] ${DIGEST_JOB} started period=${periodKey} workspaces=${rows.length}`);
 
   for (const row of rows) {
+    if (!row.user_id) {
+      result.skipped++;
+      continue;
+    }
+
+    const notifPrefs = await getNotificationPreferences(row.id, row.user_id);
+    if (!notifPrefs.emailWeeklyDigest) {
+      result.skipped++;
+      continue;
+    }
+
+    if (!isDigestDayDue(notifPrefs)) {
+      result.skipped++;
+      continue;
+    }
+
     const prefs = parsePreferences(row.preferences);
-    if (!prefs.weeklyDigest) {
-      result.skipped++;
-      continue;
-    }
 
-    if (!isWeeklyDigestDay(prefs.weeklyDigestDay)) {
-      result.skipped++;
-      continue;
-    }
-
-    const to = prefs.monitoringEmail?.trim();
+    const to = recipientEmail(
+      prefs,
+      row.user_id ? await resolveUserEmail(row.user_id) : null,
+    );
 
     if (await wasCronDispatched(DIGEST_JOB, row.id, periodKey)) {
       result.alreadySent++;

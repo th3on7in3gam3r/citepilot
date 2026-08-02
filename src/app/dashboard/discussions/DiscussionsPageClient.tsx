@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { effectInit } from "@/lib/react/effect-init";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { notifyChecklistUpdate } from "@/components/dashboard/GettingStartedChecklist";
 import type { DiscussionThread } from "@/lib/api-types";
 import { productFeatures } from "@/lib/features";
@@ -40,7 +42,14 @@ export function DiscussionsPageClient() {
       .finally(() => setLoading(false));
   }, [workspace]);
 
-  if (!ready || !workspace) return null;
+  if (!ready) {
+    return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
+  }
+  if (!workspace) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to scan buyer-intent discussions for your domain." />
+    );
+  }
 
   return (
     <>
@@ -48,7 +57,38 @@ export function DiscussionsPageClient() {
         headingLevel="h2"
         title="Buyer discussion radar"
         description={feature.description}
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              if (!workspace) return;
+              const query = workspace.buyerQuestion || workspace.domain;
+              setLoading(true);
+              void fetch(`/api/discussions?q=${encodeURIComponent(query)}`)
+                .then((r) => r.json())
+                .then((data: { threads: DiscussionThread[] }) =>
+                  setThreads(data.threads ?? []),
+                )
+                .catch(() => setThreads([]))
+                .finally(() => setLoading(false));
+            }}
+            disabled={loading}
+            className="rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep disabled:opacity-50"
+          >
+            {loading ? "Scanning…" : "Scan again →"}
+          </button>
+        }
       />
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Scan works better after an audit"
+          description="We search HN, Stack Overflow, and the web using your money prompt. Run a GEO audit first so buyer-question targeting matches live citation gaps."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+          secondaryHref="/dashboard/settings"
+          secondaryLabel="Edit buyer question"
+        />
+      )}
       <Panel title="Buyer-intent threads">
         <p className="mb-4 text-sm text-muted">
           Threads from <strong className="text-ink">Hacker News</strong>,{" "}
@@ -63,9 +103,26 @@ export function DiscussionsPageClient() {
           <p className="text-sm text-muted">Searching discussions…</p>
         )}
         {!loading && threads.length === 0 && (
-          <p className="text-sm text-muted">
-            No threads found — refine your buyer question in Settings.
-          </p>
+          <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center">
+            <p className="text-sm text-muted">
+              No threads found yet — refine your buyer question, or ensure a search
+              API key is configured for broader coverage.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="/dashboard/settings"
+                className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-deep"
+              >
+                Edit buyer question →
+              </a>
+              <a
+                href="/dashboard/geo-audit"
+                className="inline-flex text-sm font-semibold text-accent hover:underline"
+              >
+                Run GEO audit
+              </a>
+            </div>
+          </div>
         )}
         <ul className="space-y-3">
           {threads.map((t) => (

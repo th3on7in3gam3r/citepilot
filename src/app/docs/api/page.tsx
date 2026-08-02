@@ -8,6 +8,8 @@ import { apiDocsLanding } from "@/lib/marketing/api-docs-data";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: clampSeoTitle(apiDocsLanding.shortTitle),
   description: clampMetaDescription(apiDocsLanding.description),
@@ -24,7 +26,7 @@ export default function ApiDocsPage() {
   return (
     <>
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <MarketingDarkHero
           eyebrow="Developers"
           title={apiDocsLanding.title}

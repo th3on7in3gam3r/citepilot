@@ -50,7 +50,7 @@ export function promptLimitUpgradeError(limits: PromptLimits): string {
   if (limits.plan === "pilot") {
     return `Pilot is limited to ${PROMPT_LIMIT_PILOT} prompts — upgrade to Fleet for unlimited monitoring.`;
   }
-  return "Prompt limit reached.";
+  return "Could not apply Fleet prompt limits — refresh and try again.";
 }
 
 export function buildPromptLimits(
@@ -64,4 +64,15 @@ export function buildPromptLimits(
     count: promptCount,
     canAdd: max === null || promptCount < max,
   };
+}
+
+/**
+ * Parse `/api/billing/limits` prompts.max for the client.
+ * `null` = unlimited (Fleet). Only default when the field is missing (`undefined`).
+ * Do not use `?? PROMPT_LIMIT_FREE` — that incorrectly turns Fleet unlimited into 10.
+ */
+export function coalescePromptLimitMax(
+  max: number | null | undefined,
+): number | null {
+  return max === undefined ? PROMPT_LIMIT_FREE : max;
 }

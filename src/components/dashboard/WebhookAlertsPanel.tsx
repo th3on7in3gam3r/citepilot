@@ -138,7 +138,11 @@ export function WebhookAlertsPanel({ workspaceId }: { workspaceId: string }) {
     <div className="mt-6 rounded-xl border border-border bg-surface/50 p-4">
       <h3 className="text-sm font-semibold text-ink">Webhook endpoint</h3>
       <p className="mt-1 text-xs text-muted">
-        Fleet only — receive signed JSON when citations change. See{" "}
+        Fleet only — receive flat JSON when citations change. See{" "}
+        <a href="/docs/zapier" className="font-semibold text-accent hover:underline">
+          Zapier guide
+        </a>{" "}
+        or{" "}
         <a href="/docs/api#webhooks" className="font-semibold text-accent hover:underline">
           API docs
         </a>

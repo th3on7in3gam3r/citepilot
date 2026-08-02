@@ -33,7 +33,7 @@ export default async function StatusPage() {
   return (
     <>
       <Header light overlay />
-      <main className="hero-premium relative min-h-[70vh] text-white">
+      <main id="main-content" tabIndex={-1} className="hero-premium relative min-h-[70vh] text-white">
         <div className="hero-premium-grid" aria-hidden />
         <Container className="relative z-10 px-4 pt-28 pb-16 md:pt-32">
           <header className="mx-auto max-w-2xl text-center">

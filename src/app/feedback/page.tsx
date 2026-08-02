@@ -14,7 +14,7 @@ export default function FeedbackPage() {
   return (
     <>
       <Header />
-      <main className="bg-cream pt-24 pb-16">
+      <main id="main-content" tabIndex={-1} className="bg-cream pt-24 pb-16">
         <Container className="max-w-3xl">
           <header className="mb-8">
             <p className="text-xs font-semibold uppercase tracking-wider text-accent">

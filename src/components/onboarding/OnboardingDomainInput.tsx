@@ -8,6 +8,8 @@ import {
 
 type Reachability = "idle" | "checking" | "reachable" | "unreachable";
 
+const REACHABILITY_TIMEOUT_MS = 10_000;
+
 export type DomainInputStatus = "idle" | "invalid" | "checking" | "valid" | "unreachable";
 
 function WarningIcon() {
@@ -100,8 +102,13 @@ export function OnboardingDomainInput({
     setReachability("checking");
     let cancelled = false;
 
-    const timer = setTimeout(() => {
-      void fetch(`/api/domains/check?domain=${encodeURIComponent(domain)}`)
+    const debounceTimer = setTimeout(() => {
+      const controller = new AbortController();
+      const timeoutTimer = setTimeout(() => controller.abort(), REACHABILITY_TIMEOUT_MS);
+
+      void fetch(`/api/domains/check?domain=${encodeURIComponent(domain)}`, {
+        signal: controller.signal,
+      })
         .then(async (res) => {
           if (cancelled) return;
           const data = (await res.json()) as { reachable?: boolean };
@@ -109,12 +116,15 @@ export function OnboardingDomainInput({
         })
         .catch(() => {
           if (!cancelled) setReachability("unreachable");
+        })
+        .finally(() => {
+          clearTimeout(timeoutTimer);
         });
     }, 450);
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      clearTimeout(debounceTimer);
     };
   }, [value, format]);
 
@@ -131,15 +141,21 @@ export function OnboardingDomainInput({
 
   return (
     <div>
+      <label htmlFor="onboarding-domain" className="sr-only">
+        Website domain
+      </label>
       <div className="relative">
         <input
+          id="onboarding-domain"
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="yourwebsite.com"
           autoComplete="url"
           spellCheck={false}
-          className={`w-full rounded-full border bg-white py-4 pl-6 text-lg text-ink outline-none transition placeholder:text-muted/50 focus:ring-2 ${borderClass} ${
+          required
+          aria-required="true"
+          className={`w-full rounded-full border bg-white py-4 pl-6 text-lg text-ink outline-none transition placeholder:text-muted/70 focus:ring-2 ${borderClass} ${
             showTrailing ? "pr-12" : "pr-6"
           }`}
           onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
@@ -166,12 +182,12 @@ export function OnboardingDomainInput({
       </div>
 
       {status === "invalid" && (
-        <p id="domain-error" className="mt-2 text-sm text-red-600">
+        <p id="domain-error" role="alert" className="mt-2 text-sm text-red-600">
           Enter a valid domain (e.g. yoursite.com)
         </p>
       )}
       {status === "unreachable" && (
-        <p id="domain-warning" className="mt-2 text-sm text-amber-600">
+        <p id="domain-warning" role="status" className="mt-2 text-sm text-amber-700">
           We&apos;ll still run the audit but some signals may be limited
         </p>
       )}

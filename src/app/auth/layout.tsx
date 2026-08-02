@@ -18,7 +18,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 mb-8 lg:hidden">
           <Logo />
         </div>
-        <div className="relative z-10 w-full max-w-md">{children}</div>
+        <main id="main-content" tabIndex={-1} className="relative z-10 w-full max-w-md">
+          {children}
+        </main>
       </div>
     </div>
   );

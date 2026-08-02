@@ -3,12 +3,17 @@ import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { PILOT_UPGRADE_MESSAGE, userHasPilotAccess } from "@/lib/billing/access";
 import { testFramerConnection } from "@/lib/cms/framer";
 import { testGhostConnection } from "@/lib/cms/ghost";
+import { testHashnodeConnection, normalizeHashnodePublicationId } from "@/lib/cms/hashnode";
 import { deleteCmsConnection, getCmsConnection, upsertCmsConnection } from "@/lib/cms/store";
 import { testShopifyConnection } from "@/lib/cms/shopify";
 import { CMS_PROVIDERS, type CmsConnectionSummary, type CmsProvider } from "@/lib/cms/types";
+import { testWebflowConnection } from "@/lib/cms/webflow";
+import { maskSecret } from "@/lib/integrations/helpers";
 import { testWordPressConnection } from "@/lib/cms/wordpress";
+import { testSignalDeskConnection } from "@/lib/cms/signaldesk";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
+import { site } from "@/lib/site";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -116,6 +121,27 @@ export const POST = withApiLogging(async function POST(request: Request, { param
     const auth = await requireOwnedWorkspace(request, workspaceId);
     if (auth instanceof NextResponse) return auth;
 
+    if (provider === "webflow") {
+      const credentials = {
+        apiKey: getString(body, "apiKey")!,
+        siteId: getString(body, "siteId")!,
+        collectionId: getString(body, "collectionId")!,
+      };
+      const checked = await testWebflowConnection(credentials);
+      await upsertCmsConnection({
+        workspaceId,
+        provider,
+        displayName: checked.displayName,
+        siteUrl: checked.siteUrl,
+        credentials,
+        remoteDefaults: {
+          ...checked.remoteDefaults,
+          maskedApiKey: maskSecret(credentials.apiKey),
+        },
+      });
+      return NextResponse.json(toSummary(provider, checked));
+    }
+
     if (provider === "wordpress") {
       const credentials = {
         siteUrl: getString(body, "siteUrl")!,
@@ -129,8 +155,46 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         displayName: checked.displayName,
         siteUrl: checked.siteUrl,
         credentials,
+        remoteDefaults: {
+          maskedAppPassword: maskSecret(credentials.appPassword),
+        },
       });
       return NextResponse.json(toSummary(provider, checked));
+    }
+
+    if (provider === "signaldesk") {
+      const { randomBytes } = await import("crypto");
+      const apiKey = getString(body, "apiKey")!;
+      const webhookSecret =
+        getString(body, "webhookSecret", false) ||
+        `sd_wh_${randomBytes(24).toString("base64url")}`;
+      const credentials = {
+        siteUrl: getString(body, "siteUrl")!,
+        apiKey,
+        webhookSecret,
+      };
+      const checked = await testSignalDeskConnection(credentials);
+      const origin =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || site.url;
+      const webhookUrl = `${origin}/api/webhooks/signaldesk?workspaceId=${encodeURIComponent(workspaceId)}`;
+      await upsertCmsConnection({
+        workspaceId,
+        provider,
+        displayName: checked.displayName,
+        siteUrl: checked.siteUrl,
+        credentials,
+        remoteDefaults: {
+          maskedApiKey: maskSecret(credentials.apiKey),
+          webhookUrl,
+        },
+      });
+      return NextResponse.json({
+        ...toSummary(provider, checked),
+        webhookUrl,
+        webhookSecret,
+        webhookHint:
+          "Paste this webhook URL and secret into Signal Desk → Studio → Settings → Publish webhook.",
+      });
     }
 
     if (provider === "ghost") {
@@ -145,6 +209,28 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         displayName: checked.displayName,
         siteUrl: checked.siteUrl,
         credentials,
+        remoteDefaults: {
+          maskedAdminApiKey: maskSecret(credentials.adminApiKey),
+        },
+      });
+      return NextResponse.json(toSummary(provider, checked));
+    }
+
+    if (provider === "hashnode") {
+      const credentials = {
+        accessToken: getString(body, "accessToken")!,
+        publicationId: normalizeHashnodePublicationId(getString(body, "publicationId")!),
+      };
+      const checked = await testHashnodeConnection(credentials);
+      await upsertCmsConnection({
+        workspaceId,
+        provider,
+        displayName: checked.displayName,
+        siteUrl: checked.siteUrl,
+        credentials,
+        remoteDefaults: {
+          maskedAccessToken: maskSecret(credentials.accessToken),
+        },
       });
       return NextResponse.json(toSummary(provider, checked));
     }
@@ -161,7 +247,10 @@ export const POST = withApiLogging(async function POST(request: Request, { param
         displayName: checked.displayName,
         siteUrl: checked.siteUrl,
         credentials,
-        remoteDefaults: checked.remoteDefaults,
+        remoteDefaults: {
+          ...checked.remoteDefaults,
+          maskedAccessToken: maskSecret(credentials.accessToken),
+        },
       });
       return NextResponse.json(toSummary(provider, checked));
     }
@@ -181,7 +270,10 @@ export const POST = withApiLogging(async function POST(request: Request, { param
       displayName: checked.displayName,
       siteUrl: checked.siteUrl,
       credentials,
-      remoteDefaults: checked.remoteDefaults,
+      remoteDefaults: {
+        ...checked.remoteDefaults,
+        maskedApiKey: maskSecret(credentials.apiKey),
+      },
     });
     return NextResponse.json(toSummary(provider, checked));
   } catch (error) {

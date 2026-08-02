@@ -22,3 +22,7 @@ export const answerCapsuleBlocks = [
   answerCapsulePrimary,
   answerCapsuleAlternatives,
 ] as const;
+
+/** Single above-the-fold paragraph — all core buyer phrases for GEO crawlers. */
+export const heroGeoAnswer =
+  "CitePilot is a B2B generative engine optimization platform and AI citation tracking tool — the best alternative to Semrush, Ahrefs, Moz, and BrightEdge for monitoring ChatGPT, Perplexity, Gemini, and Google AI Overviews. Run free GEO audits, track money prompts weekly, and ship client-ready proof reports.";

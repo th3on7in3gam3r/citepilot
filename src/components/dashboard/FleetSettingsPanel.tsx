@@ -1,77 +1,47 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FleetApiKeysPanel } from "@/components/dashboard/FleetApiKeysPanel";
 import { Panel } from "@/components/dashboard/DashboardUI";
-import { useToast } from "@/components/notifications/ToastProvider";
+import { PromptImportModal } from "@/components/dashboard/prompts/PromptImportModal";
 
 export function FleetSettingsPanel({
   workspaceId,
+  domain,
+  existingPrompts,
   onPromptsImported,
 }: {
   workspaceId: string;
-  onPromptsImported: (prompts: string[]) => void;
+  domain: string;
+  existingPrompts: string[];
+  onPromptsImported: () => void;
 }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [importing, setImporting] = useState(false);
-  const toast = useToast();
-
-  async function importCsv(file: File) {
-    setImporting(true);
-    const form = new FormData();
-    form.append("file", file);
-    const res = await fetch(`/api/workspaces/${workspaceId}/prompts/import`, {
-      method: "POST",
-      credentials: "include",
-      body: form,
-    });
-    const data = (await res.json()) as {
-      error?: string;
-      imported?: number;
-      trimmed?: boolean;
-      monitoredPrompts?: string[];
-    };
-    setImporting(false);
-    if (!res.ok) {
-      toast.error(data.error ?? "Import failed");
-      return;
-    }
-    toast.success(
-      `Imported ${data.imported} prompt${data.imported === 1 ? "" : "s"}`,
-      {
-        description: data.trimmed ? "Trimmed to your plan limit." : undefined,
-      },
-    );
-    if (data.monitoredPrompts) onPromptsImported(data.monitoredPrompts);
-  }
+  const [importOpen, setImportOpen] = useState(false);
 
   return (
     <>
       <Panel title="Fleet — bulk prompt import" className="mt-6" id="fleet-import">
         <p className="mb-4 text-sm text-muted">
-          Upload a CSV with a <code className="text-xs">prompt</code> column or one
-          prompt per line. Imports replace your monitored prompt list.
+          Import prompts from CSV, JSON, or pre-built templates. New prompts are
+          merged with your existing list (duplicates skipped).
         </p>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void importCsv(file);
-            e.target.value = "";
-          }}
-        />
         <button
           type="button"
-          disabled={importing}
-          onClick={() => fileRef.current?.click()}
-          className="rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50"
+          onClick={() => setImportOpen(true)}
+          className="rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-surface"
         >
-          {importing ? "Importing…" : "Import prompts from CSV"}
+          Import prompts
         </button>
       </Panel>
+
+      <PromptImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        workspaceId={workspaceId}
+        domain={domain}
+        existingPrompts={existingPrompts}
+        onImported={onPromptsImported}
+      />
 
       <FleetApiKeysPanel workspaceId={workspaceId} />
     </>

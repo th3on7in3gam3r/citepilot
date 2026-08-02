@@ -13,7 +13,11 @@ export function CitationDashboardMock({
   const bodyPad = compact ? "p-3 sm:p-3.5" : "p-5";
 
   return (
-    <div className={shell}>
+    <div
+      className={shell}
+      role="img"
+      aria-label="Sample citation analysis dashboard for brightlayer.io"
+    >
       <div
         className={`flex items-center gap-2 border-b border-white/[0.08] bg-[#070b14] ${chromePad}`}
       >

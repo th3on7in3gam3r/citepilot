@@ -11,6 +11,7 @@ export type AnalyticsEvent =
   | "cms_published"
   | "second_audit_completed"
   | "insights_completed"
+  | "optimizer_generated"
   | "autopilot_run"
   | "citation_checker_started"
   | "citation_checker_completed"
@@ -37,11 +38,17 @@ export type AnalyticsEvent =
   | "tool_upgrade_cta_clicked"
   | "proof_report_viewed"
   | "proof_report_cta_clicked"
+  | "score_page_cta_clicked"
   | "proof_report_share_clicked"
   | "audit_share_created"
   | "audit_feedback_submitted"
   | "cancel_survey_submitted"
-  | "feature_request_submitted";
+  | "feature_request_submitted"
+  | "hero_cta_clicked"
+  | "first_scan_completed"
+  | "ph_launch_page_visited"
+  | "ph_launch_cta_clicked"
+  | "ph_launch_signup_completed";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

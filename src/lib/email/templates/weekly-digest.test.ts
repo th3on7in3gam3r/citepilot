@@ -55,6 +55,37 @@ describe("buildWeeklyDigestEmail", () => {
     expect(html).toContain("Powered by Growth Agency via CitePilot");
   });
 
+  it("uses a hosted logo URL when provided", () => {
+    const logoUrl =
+      "https://www.getcitepilot.com/api/white-label/logo?workspaceId=ws_1";
+    const { html } = buildWeeklyDigestEmail({
+      domain: "client.com",
+      buyerQuestion: "Best CRM?",
+      competitors: [],
+      score: 55,
+      previousScore: null,
+      gaps: ["Improve entity coverage"],
+      fleetBranding: true,
+      workspaceId: "ws_1",
+      headerLogoSrc: logoUrl,
+      whiteLabel: {
+        agencyName: "Growth Agency",
+        logoUrl: "",
+        hidePoweredBy: false,
+        poweredByMode: "agency_via_citepilot",
+        primaryColor: "#6366f1",
+        customReportDomain: "",
+        customDomainVerified: false,
+        emailFromName: "",
+        replyToEmail: "",
+      },
+    });
+
+    expect(html).toContain(logoUrl);
+    expect(html).not.toContain("data:image");
+    expect(html).toContain("Growth Agency");
+  });
+
   it("falls back to domain name when agency name is empty", () => {
     const { html } = buildWeeklyDigestEmail({
       domain: "biblefunlandstudios.com",

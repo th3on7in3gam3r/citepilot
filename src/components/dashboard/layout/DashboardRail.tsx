@@ -1,101 +1,98 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DashboardIcon } from "@/components/dashboard/DashboardIcon";
+import { DashboardBrand } from "@/components/dashboard/layout/DashboardBrand";
+import { DashboardSidebarNav } from "@/components/dashboard/layout/DashboardSidebarNav";
 import { authClient } from "@/lib/auth/client";
-import { dashboardNav } from "@/lib/dashboard";
-import { isDashboardNavActive } from "@/lib/dashboard-nav";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+
+function PlanBadge({ plan }: { plan: "free" | "pilot" | "fleet" | string }) {
+  const styles =
+    plan === "fleet"
+      ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300"
+      : plan === "pilot"
+        ? "border-accent/30 bg-accent/10 text-accent-deep dark:text-accent"
+        : "border-[var(--dashboard-sidebar-border)] bg-[var(--color-surface)] text-muted";
+
+  const label = plan === "fleet" ? "Fleet" : plan === "pilot" ? "Pilot" : "Free";
+
+  return (
+    <span
+      className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles}`}
+    >
+      {label}
+    </span>
+  );
+}
 
 export function DashboardRail() {
-  const pathname = usePathname();
-  const items = dashboardNav.filter((item) => item.section !== "footer");
-  const footer = dashboardNav.filter((item) => item.section === "footer" && item.id !== "settings");
+  const { workspace, limits, ready } = useWorkspaceContext();
   const [initial, setInitial] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
-      if (data?.user) {
-        const name = data.user.name || "";
-        const email = data.user.email || "";
-        const letter = name.trim() ? name[0] : email.trim() ? email[0] : "";
-        if (letter) {
-          setInitial(letter.toUpperCase());
-        }
-      }
+      if (!data?.user) return;
+      const name = data.user.name || "";
+      const userEmail = data.user.email || "";
+      setEmail(userEmail);
+      const letter = name.trim() ? name[0] : userEmail.trim() ? userEmail[0] : "";
+      if (letter) setInitial(letter.toUpperCase());
     });
   }, []);
 
+  const plan = limits?.plan ?? "free";
+
   return (
-    <aside className="flex h-[100dvh] w-[72px] shrink-0 flex-col items-center bg-[#0c1512] py-5">
-      <Link
-        href="/dashboard"
-        className="mb-8 flex h-11 w-11 items-center justify-center rounded-xl transition hover:opacity-90"
-        aria-label="CitePilot dashboard"
-      >
-        <Image
-          src="/logo-mark.svg"
-          alt="CitePilot"
-          width={44}
-          height={44}
-          className="h-11 w-11"
-          priority
-        />
-      </Link>
+    <aside
+      className="dash-rail flex h-[100dvh] w-[280px] shrink-0 flex-col"
+      aria-label="Dashboard sidebar"
+    >
+      <div className="dash-rail__brand">
+        <DashboardBrand />
+      </div>
 
-      <nav className="flex flex-1 flex-col items-center gap-2">
-        {items.map((item) => {
-          const active = isDashboardNavActive(pathname, item.href);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              title={item.label}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
-                active
-                  ? "bg-white/10 text-[#0ea5e9]"
-                  : "text-[#94a3b8] hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <DashboardIcon icon={item.icon} className="h-5 w-5" />
-            </Link>
-          );
-        })}
-      </nav>
+      <DashboardSidebarNav className="min-h-0 flex-1 overflow-y-auto px-3 py-3" />
 
-      <div className="mt-auto flex flex-col items-center gap-2">
-        {footer.map((item) => {
-          const active = isDashboardNavActive(pathname, item.href);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              title={item.label}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
-                active
-                  ? "bg-white/10 text-[#0ea5e9]"
-                  : "text-[#94a3b8] hover:bg-white/5 hover:text-white"
-              }`}
+      <div className="dash-rail__footer shrink-0 p-3">
+        {ready && workspace ? (
+          <Link href="/dashboard/settings" className="dash-rail__workspace group">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-sm font-bold text-accent-deep transition group-hover:bg-accent/15 dark:text-accent">
+              {initial ?? "?"}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="block truncate text-sm font-semibold text-ink">
+                  {workspace.domain}
+                </span>
+                <PlanBadge plan={plan} />
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-muted">
+                {email ?? "Workspace settings"}
+              </span>
+            </span>
+            <svg
+              className="h-4 w-4 shrink-0 text-muted opacity-0 transition group-hover:opacity-100"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden
             >
-              <DashboardIcon icon={item.icon} className="h-5 w-5" />
-            </Link>
-          );
-        })}
-        <Link
-          href="/dashboard/settings"
-          className="mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-[#162a22] text-[#10b981] border border-[#10b981]/25 hover:border-[#10b981]/50 hover:bg-[#1f3a30] transition-all duration-200 shadow-[0_2px_6px_rgba(0,0,0,0.2)]"
-          title="Account settings"
-        >
-          {initial ? (
-            <span className="font-display text-xs font-bold tracking-wider">{initial}</span>
-          ) : (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
             </svg>
-          )}
-        </Link>
+          </Link>
+        ) : (
+          <Link href="/dashboard/settings" className="dash-rail__workspace group">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-surface)] text-sm font-bold text-muted">
+              {initial ?? "?"}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-muted group-hover:text-ink">
+              Account settings
+            </span>
+          </Link>
+        )}
       </div>
     </aside>
   );

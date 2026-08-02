@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DashboardPageHeader, Panel, StatCard } from "@/components/dashboard/DashboardUI";
+import {
+  DashboardFilterBar,
+  DashboardFilterSelect,
+} from "@/components/dashboard/layout/DashboardToolbar";
 import { CopilotInsight } from "@/components/dashboard/CopilotInsight";
 import { ShareAuditPanel } from "@/components/dashboard/ShareAuditPanel";
 import { ShareAuditResultsCard } from "@/components/dashboard/ShareAuditResultsCard";
 import { AuditFeedbackSurvey } from "@/components/feedback/AuditFeedbackSurvey";
 import { QuickFixModal } from "@/components/dashboard/QuickFixModal";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { getStoredWorkspaceId, runAudit } from "@/lib/client/api";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { productFeatures } from "@/lib/features";
@@ -15,15 +20,29 @@ import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { trackAuditCompleted, trackEvent } from "@/lib/analytics/track";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { coalescePromptLimitMax } from "@/lib/billing/prompt-limits";
+import { publicScorePageUrl } from "@/lib/score/public-score-url";
+import { GeoAuditFixGuide } from "@/components/dashboard/geo-audit/GeoAuditFixGuide";
+import { GeoAuditScanProgress } from "@/components/dashboard/geo-audit/GeoAuditScanProgress";
+import { GeoAuditScanDelta } from "@/components/dashboard/geo-audit/GeoAuditScanDelta";
+import { GeoAuditScoreBreakdown } from "@/components/dashboard/geo-audit/GeoAuditScoreBreakdown";
+import { GeoAuditSiteSignals } from "@/components/dashboard/geo-audit/GeoAuditSiteSignals";
+import { CiteStatusCard } from "@/components/dashboard/CiteStatusCard";
+import { useCiteStatusCelebration } from "@/hooks/useCiteStatusCelebration";
+import { emptyScanDeltaSummary } from "@/lib/audit/scan-delta";
+import { getFixActionLabel } from "@/lib/geo/fixes";
+import { PLATFORMS } from "@/lib/dashboard";
+import {
+  DASHBOARD_PERIOD_OPTIONS,
+  DASHBOARD_PLATFORM_OPTIONS,
+  filterPlatformRows,
+  periodDisplayLabel,
+  type DashboardPeriod,
+  type DashboardPlatformFilter,
+} from "@/lib/dashboard/overview-filters";
+import { platformRowsFromWorkspace } from "@/lib/dashboard-data";
 
 const feature = productFeatures.find((f) => f.id === "geo-audit")!;
-
-const fallbackGaps = [
-  "Missing FAQPage schema on key landing pages",
-  "No concise answer capsule (40–60 words) above the fold",
-  "Weak entity signals on review and community sites",
-  "Competitor cited on more platforms for your top prompt",
-];
 
 export function GeoAuditPageClient() {
   const { workspace, ready, refresh } = useWorkspaceContext();
@@ -33,21 +52,48 @@ export function GeoAuditPageClient() {
   const [lastAuditId, setLastAuditId] = useState<string | null>(null);
   const [lastAuditScore, setLastAuditScore] = useState<number | null>(null);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(PROMPT_LIMIT_FREE);
+  const [userPlan, setUserPlan] = useState<"free" | "pilot" | "fleet">("free");
 
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
   const [isFixOpen, setIsFixOpen] = useState(false);
+  const [periodFilter, setPeriodFilter] = useState<DashboardPeriod>("90d");
+  const [platformFilter, setPlatformFilter] = useState<DashboardPlatformFilter>("all");
 
   function handleOpenFix(gapText: string) {
     setSelectedGap(gapText);
     setIsFixOpen(true);
   }
 
-  if (!ready || !workspace) return null;
+  const filteredPlatformRows = useMemo(() => {
+    if (!workspace) return [];
+    const rows = platformRowsFromWorkspace(workspace, PLATFORMS);
+    return filterPlatformRows(rows, platformFilter);
+  }, [workspace, platformFilter]);
 
-  const gaps = workspace.gaps.length > 0 ? workspace.gaps : fallbackGaps;
-  const geoScore = workspace.siteSignals?.geoScore ?? workspace.citationScore;
+  useCiteStatusCelebration(workspace);
+
+  if (!ready) {
+    return <div className="h-96 animate-pulse rounded-2xl bg-surface" />;
+  }
+  if (!workspace) {
+    return (
+      <DashboardNoWorkspaceEmpty description="Create a workspace to run GEO audits and see platform citation coverage." />
+    );
+  }
+
+  const gaps = workspace.gaps;
+  const scanDelta = workspace.scanDelta ?? emptyScanDeltaSummary;
+  const promptsCited =
+    workspace.promptResults?.filter((p) => p.cited).length ?? 0;
+  const promptTotal = Math.max(
+    workspace.promptResults?.length ?? workspace.promptsTracked,
+    1,
+  );
   const workspaceId =
     workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId() ?? undefined;
+
+  const platformCitedCount = filteredPlatformRows.filter((row) => row.cited).length;
+  const platformTotal = Math.max(1, filteredPlatformRows.length);
 
   async function handleRunAudit() {
     if (!workspaceId || !workspace) {
@@ -62,9 +108,12 @@ export function GeoAuditPageClient() {
     try {
       const r = await fetch("/api/billing/limits", { credentials: "include" });
       if (r.ok) {
-        const d = (await r.json()) as { prompts?: { max: number | null } };
-        limit = d?.prompts?.max ?? PROMPT_LIMIT_FREE;
+        const d = (await r.json()) as {
+          prompts?: { max: number | null; plan?: "free" | "pilot" | "fleet" };
+        };
+        limit = coalescePromptLimitMax(d?.prompts?.max);
         setPromptLimitMax(limit);
+        if (d.prompts?.plan) setUserPlan(d.prompts.plan);
       }
     } catch {
       // use default
@@ -87,7 +136,9 @@ export function GeoAuditPageClient() {
     }
 
     setAuditing(true);
-    toast.info("Running GEO audit…", { description: "This may take up to a minute." });
+    toast.info("Running GEO audit…", {
+      description: "Pilot scans can take up to 2 minutes with live browser checks.",
+    });
 
     trackEvent("audit_started", { workspaceId, domain: ws.domain, source: "geo-audit" });
 
@@ -113,14 +164,36 @@ export function GeoAuditPageClient() {
         title="GEO audit workspace"
         description={feature.description}
         action={
-          <Link
-            href="/audit"
-            className="text-sm font-semibold text-accent hover:text-accent-deep"
+          <button
+            type="button"
+            onClick={() => void handleRunAudit()}
+            disabled={auditing}
+            className="inline-flex rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-50"
           >
-            Open full audit tool →
-          </Link>
+            {auditing ? "Running…" : "Run GEO audit →"}
+          </button>
         }
       />
+
+      <DashboardFilterBar>
+        <DashboardFilterSelect
+          label="Site"
+          value={workspace.domain}
+          options={[{ value: workspace.domain, label: workspace.domain }]}
+        />
+        <DashboardFilterSelect
+          label="Period"
+          value={periodFilter}
+          options={DASHBOARD_PERIOD_OPTIONS}
+          onChange={(value) => setPeriodFilter(value as DashboardPeriod)}
+        />
+        <DashboardFilterSelect
+          label="Platforms"
+          value={platformFilter}
+          options={DASHBOARD_PLATFORM_OPTIONS}
+          onChange={(value) => setPlatformFilter(value as DashboardPlatformFilter)}
+        />
+      </DashboardFilterBar>
 
       {/* Run Audit Panel */}
       <Panel className="mb-6 border-l-4 border-l-accent">
@@ -153,14 +226,33 @@ export function GeoAuditPageClient() {
           </button>
         </div>
         {auditing && (
-          <div className="mt-4">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-              <div className="h-full animate-pulse rounded-full bg-accent" style={{ width: "60%" }} />
-            </div>
-            <p className="mt-2 text-xs text-muted">Scanning AI surfaces — this takes about 30–60 seconds…</p>
-          </div>
+          <GeoAuditScanProgress includesBrowserScans={userPlan !== "free"} />
         )}
       </Panel>
+
+      {workspace.hasRealAudit && <CiteStatusCard workspace={workspace} />}
+
+      {workspace.hasRealAudit && (
+        <Panel className="mb-6 border border-border bg-surface/50">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-ink">Public score page</p>
+              <p className="mt-1 text-sm text-muted">
+                Shareable SEO landing page for {workspace.domain}. Claim it to control
+                visibility in search.
+              </p>
+            </div>
+            <Link
+              href={publicScorePageUrl(workspace.domain)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-full border border-accent/30 bg-white px-5 py-2.5 text-sm font-semibold text-accent transition hover:bg-accent/5"
+            >
+              View public score page →
+            </Link>
+          </div>
+        </Panel>
+      )}
 
       <ShareAuditResultsCard
         visible={showShareBanner}
@@ -180,44 +272,108 @@ export function GeoAuditPageClient() {
       )}
 
       <div id="platform-coverage" className="scroll-mt-24 grid gap-4 sm:grid-cols-3">
-        <StatCard label="GEO score" value={String(geoScore)} sub="/100" />
         <StatCard
-          label="Platforms"
-          value={`${workspace.citedPlatforms}/${workspace.totalPlatforms}`}
+          label="Citation score"
+          value={workspace.hasRealAudit ? String(workspace.citationScore) : "—"}
+          sub="/100"
         />
-        <StatCard label="Gaps found" value={String(gaps.length)} />
+        <StatCard
+          label="Prompts cited"
+          value={
+            workspace.hasRealAudit ? `${promptsCited}/${promptTotal}` : "—"
+          }
+          sub="AI mentions"
+        />
+        <StatCard
+          label="Platform coverage"
+          value={
+            workspace.hasRealAudit
+              ? `${platformCitedCount}/${platformTotal}`
+              : "—"
+          }
+          sub={periodDisplayLabel(periodFilter)}
+        />
       </div>
-      {workspace.siteSignals && (
-        <Panel title="Site signals" className="mt-6">
-          <ul className="grid gap-2 text-sm sm:grid-cols-2">
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Title: {workspace.siteSignals.title ?? "Missing"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Meta description: {workspace.siteSignals.metaDescription ? "Present" : "Missing"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              JSON-LD: {workspace.siteSignals.hasJsonLd ? "Yes" : "No"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              FAQ schema: {workspace.siteSignals.hasFaqSchema ? "Yes" : "No"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Sitemap: {workspace.siteSignals.sitemapFound ? "Found" : "Not found"}
-            </li>
-            <li className="rounded-xl bg-surface px-4 py-3">
-              Word count: {workspace.siteSignals.wordCount}
-            </li>
+
+      {workspace.hasRealAudit && filteredPlatformRows.length > 0 && (
+        <Panel title="Platform coverage" className="mt-6">
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {filteredPlatformRows.map((platform) => (
+              <li
+                key={platform.name}
+                className="flex items-center justify-between rounded-xl border border-border bg-surface/50 px-4 py-3 text-sm"
+              >
+                <span className="font-medium text-ink">{platform.name}</span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                    platform.cited
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-surface text-muted"
+                  }`}
+                >
+                  {platform.cited ? "Cited" : "Not cited"}
+                </span>
+              </li>
+            ))}
           </ul>
         </Panel>
       )}
+
+      {workspace.hasRealAudit && (
+        <>
+          <GeoAuditScoreBreakdown workspace={workspace} />
+          <GeoAuditFixGuide workspace={workspace} />
+          <GeoAuditScanDelta domain={workspace.domain} scanDelta={scanDelta} />
+        </>
+      )}
+
+      {workspace.hasRealAudit && workspace.siteSignals && (
+        <GeoAuditSiteSignals signals={workspace.siteSignals} />
+      )}
       <Panel title="Priority fixes" className="mt-6" id="priority-fixes">
         <p className="mb-4 text-sm text-muted">
-          From your latest audit. Use CitePilot Insights for a plain-language
-          explanation of any gap (Pilot+, or one free preview on Free) or click Quick Fix to copy pre-generated code snippets.
+          {workspace.hasRealAudit
+            ? (
+              <>
+                From your latest live crawl. Schema and meta tags use{" "}
+                <strong className="font-semibold text-ink">Quick Fix</strong> (GEO Snippet or copy-paste).
+                Prompt and content gaps open a <strong className="font-semibold text-ink">Content guide</strong>{" "}
+                — those require publishing new copy on {workspace.domain}. Re-run the audit after deploying.{" "}
+                <Link
+                  href="/dashboard/optimizer"
+                  className="font-semibold text-accent hover:underline"
+                >
+                  Generate all fixes →
+                </Link>
+              </>
+            )
+            : "Priority fixes appear after your first GEO audit — run the scan above to populate this list."}
         </p>
         <ul className="space-y-3 text-sm text-muted">
-          {gaps.map((g) => (
+          {!workspace.hasRealAudit ? (
+            <li className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted">
+              <p>No audit yet — run a scan to see prioritized gaps.</p>
+              <button
+                type="button"
+                onClick={() => void handleRunAudit()}
+                disabled={auditing}
+                className="mt-3 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-deep disabled:opacity-50"
+              >
+                {auditing ? "Running…" : "Run GEO audit →"}
+              </button>
+            </li>
+          ) : gaps.length === 0 ? (
+            <li className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted">
+              <p>No priority gaps from your latest audit.</p>
+              <Link
+                href="/dashboard/optimizer"
+                className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+              >
+                Open Site Optimizer →
+              </Link>
+            </li>
+          ) : (
+            gaps.map((g) => (
             <li key={g} className="rounded-xl bg-surface px-4 py-3">
               <div className="flex items-start justify-between gap-3 group/item mb-1">
                 <div className="flex gap-3">
@@ -229,7 +385,7 @@ export function GeoAuditPageClient() {
                   onClick={() => handleOpenFix(g)}
                   className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 hover:border-rose-200 transition duration-150 cursor-pointer"
                 >
-                  Quick Fix ✦
+                  {getFixActionLabel(g, workspace.domain)} ✦
                 </button>
               </div>
               {workspaceId && (
@@ -244,7 +400,8 @@ export function GeoAuditPageClient() {
                 />
               )}
             </li>
-          ))}
+            ))
+          )}
         </ul>
       </Panel>
       {workspace.competitors.length > 0 && (

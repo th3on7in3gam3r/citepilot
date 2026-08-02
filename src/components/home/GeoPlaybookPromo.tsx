@@ -20,11 +20,12 @@ const PLAYBOOK_HIGHLIGHTS = [
 
 export function GeoPlaybookPromo() {
   return (
-    <Section id="geo-playbook" className="bg-background">
+    <Section id="geo-playbook" className="bg-background" ariaLabelledBy="geo-playbook-heading">
       <div className="overflow-hidden rounded-3xl border border-accent/25 bg-gradient-to-br from-surface via-white to-accent/5 shadow-sm dark:border-accent/20 dark:from-[#111] dark:via-[#111] dark:to-accent/10 dark:shadow-black/20">
         <div className="grid gap-0 lg:grid-cols-2">
           <div className="border-b border-border p-8 dark:border-[#222] sm:p-10 lg:border-b-0 lg:border-r lg:dark:border-[#222]">
             <SectionHeading
+              id="geo-playbook-heading"
               eyebrow="Free resource"
               title="The complete GEO Playbook"
               description="Authoritative guides for money prompts, RAG citations, and Perplexity footnote optimization — not a thin lead magnet."

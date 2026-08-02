@@ -1,4 +1,4 @@
-import { Panel } from "@/components/dashboard/DashboardUI";
+import { DismissibleSeoIntro } from "@/components/dashboard/DismissibleSeoIntro";
 import Link from "next/link";
 
 type GeoAuditSeoIntroProps = {
@@ -10,7 +10,7 @@ type GeoAuditSeoIntroProps = {
 export function GeoAuditSeoIntro({ section = "header" }: GeoAuditSeoIntroProps) {
   if (section === "footer") {
     return (
-      <Panel className="mt-10">
+      <DismissibleSeoIntro id="geo-audit-footer" className="mt-10">
         <div className="space-y-8 text-sm leading-relaxed text-muted">
           <section>
             <h2 className="font-display text-lg font-bold text-ink">
@@ -119,12 +119,12 @@ export function GeoAuditSeoIntro({ section = "header" }: GeoAuditSeoIntroProps) 
             </dl>
           </section>
         </div>
-      </Panel>
+      </DismissibleSeoIntro>
     );
   }
 
   return (
-    <Panel className="mb-10">
+    <DismissibleSeoIntro id="geo-audit-header" className="mb-10">
       <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
         Technical GEO audit for AI citations
       </h1>
@@ -193,6 +193,6 @@ export function GeoAuditSeoIntro({ section = "header" }: GeoAuditSeoIntroProps) 
           </p>
         </section>
       </div>
-    </Panel>
+    </DismissibleSeoIntro>
   );
 }

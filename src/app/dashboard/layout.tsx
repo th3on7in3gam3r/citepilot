@@ -1,3 +1,4 @@
+// TODO: i18n Phase 2 — dashboard strings (post-launch)
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import type { Metadata } from "next";

@@ -3,7 +3,9 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
+import { buildStartRedirect, resolveAuthRedirect } from "@/lib/auth/redirect";
 import { trackEvent } from "@/lib/analytics/track";
+import { AuthErrorAlert } from "@/components/auth/AuthErrorAlert";
 
 function GoogleIcon() {
   return (
@@ -31,12 +33,15 @@ function GoogleIcon() {
 export function GoogleSignInButton({
   label = "Continue with Google",
   callbackPath = "/dashboard",
+  callbackDomain,
   signupIntent = false,
   variant = "light",
 }: {
   label?: string;
   /** Post-auth redirect when no `from` query param is set */
   callbackPath?: string;
+  /** Pre-fill onboarding domain on /start after OAuth sign-up */
+  callbackDomain?: string;
   /** Fire signup_started when used on the sign-up page */
   signupIntent?: boolean;
   variant?: "light" | "dark";
@@ -54,11 +59,13 @@ export function GoogleSignInButton({
     setLoading(true);
     setError(null);
 
-    const from =
-      searchParams.get("from") ??
-      searchParams.get("redirect") ??
-      callbackPath;
-    const path = from.startsWith("/") ? from : "/dashboard";
+    const explicitFrom =
+      searchParams.get("from") ?? searchParams.get("redirect");
+    const fallback =
+      callbackPath === "/start" && callbackDomain?.trim()
+        ? buildStartRedirect(callbackDomain)
+        : callbackPath;
+    const path = resolveAuthRedirect(explicitFrom ?? fallback);
 
     if (signupIntent) {
       trackEvent("signup_started", { method: "google" });
@@ -71,8 +78,30 @@ export function GoogleSignInButton({
         errorCallbackURL: "/auth/sign-in?error=google",
       });
     } catch (err) {
-      console.error("Google sign-in", err);
-      setError("Google sign-in failed — try again or use email.");
+      const status =
+        typeof err === "object" &&
+        err !== null &&
+        "status" in err &&
+        typeof (err as { status?: unknown }).status === "number"
+          ? (err as { status: number }).status
+          : undefined;
+      const message =
+        err instanceof Error ? err.message.toLowerCase() : "";
+      if (status === 429 || message.includes("429") || message.includes("rate")) {
+        setError(
+          "Sign-in is temporarily rate-limited. Wait a minute and try again.",
+        );
+      } else if (
+        status === 404 ||
+        message.includes("not found") ||
+        message.includes("404")
+      ) {
+        setError(
+          "Auth service is misconfigured. Try email sign-in, or contact support.",
+        );
+      } else {
+        setError("Google sign-in failed — try again or use email.");
+      }
       setLoading(false);
     }
   }
@@ -83,12 +112,18 @@ export function GoogleSignInButton({
         type="button"
         onClick={() => void handleGoogleSignIn()}
         disabled={loading}
+        aria-busy={loading}
+        aria-describedby={error ? "google-sign-in-error" : undefined}
         className={buttonClass}
       >
         <GoogleIcon />
         {loading ? "Redirecting to Google…" : label}
       </button>
-      {error && <p className={`mt-2 text-center text-sm ${variant === "dark" ? "text-red-400" : "text-red-600"}`}>{error}</p>}
+      {error && (
+        <div className="mt-2">
+          <AuthErrorAlert id="google-sign-in-error">{error}</AuthErrorAlert>
+        </div>
+      )}
     </div>
   );
 }

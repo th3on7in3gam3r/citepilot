@@ -9,11 +9,18 @@ import {
   promptRowsForWorkspace,
 } from "@/lib/dashboard-data";
 import {
+  buildProofReportRawRows,
+  proofReportRawToCsv,
+} from "@/lib/prompts/export-data";
+import { downloadTextFile } from "@/lib/prompts/download";
+import type { HeatmapRow } from "@/lib/citations/viz-data";
+import {
   ReportBrandingHeader,
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
 import { ReportThemeStyles } from "@/components/report/ReportThemeStyles";
 import { ProofReportGetOwnCta } from "@/components/report/ProofReportGetOwnCta";
+import { ScanHistoryPanel } from "@/components/dashboard/scans/ScanHistoryPanel";
 import { defaultWorkspacePreferences } from "@/lib/settings";
 import { brandingFromPreferences, reportDocumentTitle } from "@/lib/white-label/theme";
 import { site } from "@/lib/site";
@@ -30,6 +37,7 @@ export function ProofReportPage() {
 function ProofReportInner() {
   const { workspace, ready } = useWorkspaceContext();
   const [copied, setCopied] = useState(false);
+  const [exportingRaw, setExportingRaw] = useState(false);
 
   const whiteLabel =
     workspace?.preferences?.whiteLabel ?? defaultWorkspacePreferences.whiteLabel;
@@ -88,6 +96,27 @@ function ProofReportInner() {
     window.print();
   }
 
+  async function exportRawData() {
+    const workspaceId = workspace?.workspaceId ?? workspace?.id;
+    if (!workspace || !workspaceId) return;
+    setExportingRaw(true);
+    try {
+      const res = await fetch(`/api/workspaces/${workspaceId}/citations/visualization`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        return;
+      }
+      const data = (await res.json()) as { heatmap?: { rows: HeatmapRow[] } };
+      const rows = buildProofReportRawRows(workspace, data.heatmap?.rows ?? []);
+      const csv = proofReportRawToCsv(rows);
+      const domain = workspace.domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      downloadTextFile(csv, `${domain}-proof-report-raw.csv`, "text/csv");
+    } finally {
+      setExportingRaw(false);
+    }
+  }
+
   async function copyLink() {
     const url = `${window.location.origin}/report/proof`;
     try {
@@ -127,6 +156,14 @@ function ProofReportInner() {
             </button>
             <button
               type="button"
+              onClick={() => void exportRawData()}
+              disabled={exportingRaw}
+              className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface disabled:opacity-50"
+            >
+              {exportingRaw ? "Exporting…" : "Export raw data"}
+            </button>
+            <button
+              type="button"
               onClick={exportPdf}
               className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white"
             >
@@ -136,7 +173,7 @@ function ProofReportInner() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10 print:py-6">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6 py-10 print:py-6">
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <ReportStat label="Citation score" value={`${workspace.citationScore}/100`} />
           <ReportStat label="Visibility score" value={`${workspace.visibilityScore}%`} />
@@ -345,6 +382,22 @@ function ProofReportInner() {
             </table>
           </div>
         </section>
+
+        {workspace.workspaceId || workspace.id ? (
+          <section className="mt-10 rounded-2xl border border-border bg-white p-6 shadow-sm print:shadow-none">
+            <h2 className="font-display text-lg font-bold text-ink">Scan history</h2>
+            <p className="mt-1 text-sm text-muted">
+              Audit trail proving monitoring is active — every scan with trigger, duration, and citation change.
+            </p>
+            <div className="mt-4">
+              <ScanHistoryPanel
+                workspaceId={workspace.workspaceId ?? workspace.id ?? ""}
+                compact
+              />
+            </div>
+          </section>
+        ) : null}
+
         <ProofReportGetOwnCta domainHint={workspace.domain} />
       </main>
       <div className="mx-auto max-w-5xl px-6 pb-10">

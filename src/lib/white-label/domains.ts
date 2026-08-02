@@ -1,7 +1,14 @@
+import "server-only";
 import { promises as dns } from "dns";
 import { dbGet, dbRun } from "@/lib/db";
 import { appBaseUrl } from "@/lib/stripe/config";
 import type { WorkspacePreferences } from "@/lib/settings";
+import {
+  normalizeReportDomain,
+  reportsCnameTarget,
+} from "@/lib/white-label/dns-guide";
+
+export { normalizeReportDomain, reportsCnameTarget } from "@/lib/white-label/dns-guide";
 
 type DomainRow = {
   domain: string;
@@ -9,23 +16,6 @@ type DomainRow = {
   user_id: string;
   verified_at: string;
 };
-
-export function reportsCnameTarget(): string {
-  return (
-    process.env.REPORTS_CNAME_TARGET?.trim() ||
-    process.env.NEXT_PUBLIC_REPORTS_CNAME_TARGET?.trim() ||
-    "reports.getcitepilot.com"
-  );
-}
-
-export function normalizeReportDomain(raw: string): string {
-  return raw
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "")
-    .replace(/\.$/, "");
-}
 
 export async function verifyReportDomainCname(domain: string): Promise<{
   ok: boolean;

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useToast } from "@/components/notifications/ToastProvider";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { runAudit, updateWorkspace } from "@/lib/client/api";
-import { getFixForGap, type GeoFixDefinition } from "@/lib/geo/fixes";
+import { getFixForGap, getFixActionLabel, type GeoFixDefinition } from "@/lib/geo/fixes";
 import { geoSnippetScriptTag } from "@/lib/geo/snippet";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 
@@ -53,14 +54,24 @@ export function QuickFixModal({ isOpen, onClose, gap, workspace }: QuickFixModal
   const [activeTab, setActiveTab] = useState<"snippet" | "manual" | "ai">("snippet");
   const [saving, setSaving] = useState(false);
   const [applyingFramer, setApplyingFramer] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const { refresh } = useWorkspaceContext();
   const toast = useToast();
+
+  useFocusTrap(dialogRef, isOpen, onClose);
+
+  useEffect(() => {
+    if (!isOpen || !gap || !workspace) return;
+    const nextFix = getFixForGap(gap, workspace.domain);
+    setActiveTab(nextFix.snippetCapable ? "snippet" : "manual");
+  }, [isOpen, gap, workspace]);
 
   if (!isOpen || !gap || !workspace) return null;
 
   const domain = workspace.domain;
   const fix = getFixForGap(gap, domain);
+  const actionLabel = getFixActionLabel(gap, domain);
   const workspaceId = workspace.workspaceId ?? workspace.id;
   if (!workspaceId) return null;
 
@@ -169,7 +180,13 @@ export function QuickFixModal({ isOpen, onClose, gap, workspace }: QuickFixModal
   }
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="quick-fix-title"
+    >
       <button
         type="button"
         className="absolute inset-0 bg-[#0f172a]/45 backdrop-blur-[3px]"
@@ -179,13 +196,24 @@ export function QuickFixModal({ isOpen, onClose, gap, workspace }: QuickFixModal
 
       <div className="relative flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl">
         <header className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4.5">
-          <div>
-            <span className="rounded-full border border-rose-100 bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-500">
-              Quick Fix
+          <div className="min-w-0 flex-1">
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                fix.category === "snippet"
+                  ? "border-rose-100 bg-rose-50 text-rose-500"
+                  : fix.category === "content" || fix.category === "strategy"
+                    ? "border-sky-100 bg-sky-50 text-sky-700"
+                    : "border-emerald-100 bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              {actionLabel}
             </span>
-            <h2 className="font-display mt-1 text-base font-bold leading-tight text-slate-900">
+            <h2 id="quick-fix-title" className="font-display mt-1 text-base font-bold leading-tight text-slate-900">
               {fix.title}
             </h2>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+              Gap: {gap}
+            </p>
           </div>
           <button
             type="button"
@@ -200,27 +228,29 @@ export function QuickFixModal({ isOpen, onClose, gap, workspace }: QuickFixModal
         </header>
 
         <div className="flex border-b border-slate-100 bg-slate-50/50 px-6">
-          <button
-            type="button"
-            onClick={() => setActiveTab("snippet")}
-            className={`cursor-pointer border-b-2 py-3 text-xs font-bold transition-all ${
-              activeTab === "snippet"
-                ? "border-accent text-accent"
-                : "border-transparent text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            GEO Snippet
-          </button>
+          {fix.snippetCapable && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("snippet")}
+              className={`cursor-pointer border-b-2 py-3 text-xs font-bold transition-all ${
+                activeTab === "snippet"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              GEO Snippet
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setActiveTab("manual")}
-            className={`ml-6 cursor-pointer border-b-2 py-3 text-xs font-bold transition-all ${
+            className={`${fix.snippetCapable ? "ml-6" : ""} cursor-pointer border-b-2 py-3 text-xs font-bold transition-all ${
               activeTab === "manual"
                 ? "border-accent text-accent"
                 : "border-transparent text-slate-400 hover:text-slate-600"
             }`}
           >
-            Manual Code
+            {fix.category === "content" || fix.category === "strategy" ? "Action plan" : "Manual Code"}
           </button>
           <button
             type="button"

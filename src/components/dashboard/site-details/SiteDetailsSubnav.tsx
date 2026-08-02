@@ -1,8 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import type { SiteDetailsSection, SiteDetailsSectionId } from "@/lib/site-details-sections";
-import { SITE_DETAILS_SECTIONS } from "@/lib/site-details-sections";
+import {
+  CONTENT_STUDIO_NAV_GROUPS,
+  SITE_DETAILS_SECTIONS,
+} from "@/lib/site-details-sections";
 import { SiteDetailsIcon } from "@/components/dashboard/site-details/SiteDetailsIcons";
+
+const SECTION_LOOKUP = new Map(
+  SITE_DETAILS_SECTIONS.map((section) => [section.id, section]),
+);
+
+const EXTERNAL_LINKS = [
+  { label: "Site Optimizer", href: "/dashboard/optimizer", description: "Fix plan from audit" },
+  { label: "Competitors", href: "/dashboard/competitors", description: "Citation gaps vs rivals" },
+  { label: "Analytics", href: "/dashboard/analytics", description: "Prompt & organic trends" },
+  { label: "Growth Loop", href: "/dashboard/growth-loop", description: "Daily autopilot content" },
+] as const;
 
 export function SiteDetailsSubnav({
   active,
@@ -20,12 +35,7 @@ export function SiteDetailsSubnav({
       <div className="rounded-2xl border border-border bg-card p-4 shadow-sm dark:border-[#222] dark:bg-[#111]">
         <div className="mb-5">
           <div className="flex items-center justify-between text-xs font-medium text-muted">
-            <span className="flex items-center gap-1">
-              Completion
-              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-border text-[10px]">
-                i
-              </span>
-            </span>
+            <span>Studio setup</span>
             <span className="font-semibold text-ink">{completion}%</span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface">
@@ -36,17 +46,49 @@ export function SiteDetailsSubnav({
           </div>
         </div>
 
-        <nav className="space-y-0.5">
-          {SITE_DETAILS_SECTIONS.map((section) => (
-            <SubnavItem
-              key={section.id}
-              section={section}
-              active={active === section.id}
-              completed={completedSections.has(section.id)}
-              onSelect={() => onSelect(section.id)}
-            />
+        <nav className="space-y-5" aria-label="Content Studio sections">
+          {CONTENT_STUDIO_NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.sectionIds.map((id) => {
+                  const section = SECTION_LOOKUP.get(id);
+                  if (!section) return null;
+                  return (
+                    <SubnavItem
+                      key={section.id}
+                      section={section}
+                      active={active === section.id}
+                      completed={completedSections.has(section.id)}
+                      onSelect={() => onSelect(section.id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </nav>
+
+        <div className="mt-5 border-t border-border pt-4 dark:border-[#222]">
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+            Related tools
+          </p>
+          <ul className="space-y-0.5">
+            {EXTERNAL_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="flex flex-col rounded-xl px-3 py-2 text-left transition hover:bg-surface"
+                >
+                  <span className="text-sm font-medium text-ink">{link.label}</span>
+                  <span className="text-[11px] text-muted">{link.description}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </aside>
   );

@@ -2,26 +2,28 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { AccountDeletePanel } from "@/components/dashboard/settings/AccountDeletePanel";
+import { BrowserScanUsagePanel } from "@/components/dashboard/settings/BrowserScanUsagePanel";
 import { BillingPlanPanel } from "@/components/billing/BillingPlanPanel";
 import { AutopilotSettingsPanel } from "@/components/dashboard/AutopilotSettingsPanel";
-import { EmailAlertsSettingsPanel } from "@/components/dashboard/EmailAlertsSettingsPanel";
-import { SlackAlertsPanel } from "@/components/dashboard/SlackAlertsPanel";
-import { WebhookAlertsPanel } from "@/components/dashboard/WebhookAlertsPanel";
+import { NotificationPreferencesPanel } from "@/components/dashboard/NotificationPreferencesPanel";
+import { WorkspaceManagementPanel } from "@/components/dashboard/workspaces/WorkspaceManagementPanel";
 import { SettingsToggleRow } from "@/components/dashboard/SettingsToggleRow";
 import { GooeyFilter } from "@/components/ui/liquid-toggle";
 import { FleetSettingsPanel } from "@/components/dashboard/FleetSettingsPanel";
+import { RestartProductTourLink } from "@/components/dashboard/onboarding/RestartProductTourLink";
 import { ReferralPanel } from "@/components/dashboard/ReferralPanel";
 import { WhiteLabelSettingsPanel } from "@/components/dashboard/WhiteLabelSettingsPanel";
 import { ThemeSettingsPanel } from "@/components/theme/ThemeSettingsPanel";
 import { DashboardPageHeader, Panel } from "@/components/dashboard/DashboardUI";
+import { DashboardActivationStrip } from "@/components/dashboard/layout/DashboardActivationStrip";
 import {
-  deleteWorkspace,
   getStoredWorkspaceId,
   runAudit,
   updateWorkspace,
 } from "@/lib/client/api";
-import { useRouter } from "next/navigation";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import {
@@ -31,6 +33,12 @@ import {
 } from "@/lib/onboarding";
 import { promptsFromPreferences } from "@/lib/audit/resolve-prompts";
 import { PROMPT_LIMIT_FREE } from "@/lib/billing/limits";
+import { coalescePromptLimitMax } from "@/lib/billing/prompt-limits";
+import {
+  COMPETITOR_LIMIT_FLEET,
+  COMPETITOR_LIMIT_FREE,
+  COMPETITOR_LIMIT_PILOT,
+} from "@/lib/competitors/limits";
 import {
   defaultWorkspacePreferences,
   type WorkspacePreferences,
@@ -49,8 +57,8 @@ type SettingsFormProps = {
 };
 
 export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProps) {
-  const router = useRouter();
   const toast = useToast();
+  const searchParams = useSearchParams();
   const workspaceId = workspace.workspaceId ?? workspace.id ?? getStoredWorkspaceId();
 
   const [domain, setDomain] = useState(workspace.domain);
@@ -68,8 +76,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   const [saving, setSaving] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [auditing, setAuditing] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [testDigestState, setTestDigestState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [isFleet, setIsFleet] = useState(false);
   const [isPilot, setIsPilot] = useState(false);
   const [promptLimitMax, setPromptLimitMax] = useState<number | null>(
@@ -77,12 +83,18 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
   );
   const [monitoredPromptsText, setMonitoredPromptsText] = useState("");
 
+  const competitorMax = isFleet
+    ? COMPETITOR_LIMIT_FLEET
+    : isPilot
+      ? COMPETITOR_LIMIT_PILOT
+      : COMPETITOR_LIMIT_FREE;
+
   useEffect(() => {
     void fetch("/api/billing/limits", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then(
         (d: { prompts?: { max: number | null } } | null) =>
-          setPromptLimitMax(d?.prompts?.max ?? PROMPT_LIMIT_FREE),
+          setPromptLimitMax(coalescePromptLimitMax(d?.prompts?.max)),
       )
       .catch(() => setPromptLimitMax(PROMPT_LIMIT_FREE));
   }, []);
@@ -99,6 +111,17 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         setIsPilot(false);
       });
   }, []);
+
+  useEffect(() => {
+    const slackStatus = searchParams.get("slack");
+    const alerts = searchParams.get("alerts");
+    if (slackStatus === "connected") {
+      toast.success("Slack connected — pick a channel below.");
+    }
+    if (alerts === "slack" || slackStatus === "connected") {
+      document.getElementById("notifications")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [searchParams, toast]);
 
   useEffect(() => {
     effectInit(() => {
@@ -156,78 +179,6 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       buyerQuestion,
       referral: "",
     };
-  }
-
-  async function sendTestDigest() {
-    if (!workspaceId) {
-      toast.error("No workspace selected. Refresh the page and try again.");
-      return;
-    }
-    const email = preferences.monitoringEmail.trim();
-    if (!email) {
-      toast.error("Add a monitoring email first, then save settings.");
-      return;
-    }
-    if (!isValidMonitoringEmail(email)) {
-      toast.error("Enter a valid monitoring email address.");
-      return;
-    }
-
-    const payload = { workspaceId, email };
-    if (process.env.NODE_ENV === "development") {
-      console.log("test-digest payload:", JSON.stringify(payload));
-    }
-
-    setTestDigestState("sending");
-    try {
-      const res = await fetch("/api/notifications/test-digest", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-        hint?: string;
-        warning?: string;
-        sentTo?: string;
-        usedTestFrom?: boolean;
-        correctedFrom?: boolean;
-        details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
-      };
-      const delivered = res.ok && data.ok !== false && Boolean(data.sentTo);
-      if (delivered) {
-        setTestDigestState("sent");
-        const note = data.warning ?? (data.usedTestFrom
-          ? "Sent via Resend test sender — update EMAIL_FROM in Vercel when ready."
-          : undefined);
-        toast.success(`Test digest sent to ${data.sentTo ?? email}`, {
-          description: note,
-        });
-        setTimeout(() => setTestDigestState("idle"), 4000);
-      } else {
-        setTestDigestState("error");
-        const fieldMsg = data.details?.fieldErrors
-          ? Object.entries(data.details.fieldErrors)
-              .flatMap(([field, msgs]) => msgs.map((m) => `${field}: ${m}`))
-              .join(" ")
-          : null;
-        toast.error(
-          fieldMsg ?? data.error ?? `Failed to send test email (${res.status}).`,
-          { description: data.hint },
-        );
-        setTimeout(() => setTestDigestState("idle"), 6000);
-      }
-    } catch {
-      setTestDigestState("error");
-      toast.error("Network error — could not send test email.");
-      setTimeout(() => setTestDigestState("idle"), 4000);
-    }
-  }
-
-  function isValidMonitoringEmail(value: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
   }
 
   async function savePreferences(
@@ -344,28 +295,8 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
     }
   }
 
-  async function handleDelete() {
-    if (!workspaceId) return;
-    if (
-      !window.confirm(
-        "Delete this workspace and all audits? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
-    setDeleting(true);
-    const ok = await deleteWorkspace(workspaceId);
-    setDeleting(false);
-    if (!ok) {
-      toast.error("Failed to delete workspace.");
-      return;
-    }
-    await onDeleted?.();
-    router.push("/dashboard");
-  }
-
-  const busy = saving || auditing || deleting;
-  const togglesBusy = saving || savingPrefs || auditing || deleting;
+  const busy = saving || auditing;
+  const togglesBusy = saving || savingPrefs || auditing;
   const lastUpdated = workspace.updatedAt
     ? new Date(workspace.updatedAt).toLocaleString()
     : null;
@@ -376,13 +307,50 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
       <DashboardPageHeader
         headingLevel="h2"
         title="Edit workspace settings"
-        description="Update your domain, money prompts, monitoring email, notifications, Autopilot, and white-label options."
+        description="Update your domain, money prompts, CMS integrations, monitoring email, Slack alerts, Autopilot, and white-label options."
         action={
-          lastUpdated ? (
+          !workspace.hasRealAudit ? (
+            <Link
+              href="/dashboard/geo-audit"
+              className="inline-flex rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-deep"
+            >
+              Run GEO audit →
+            </Link>
+          ) : lastUpdated ? (
             <p className="text-xs text-muted">Last updated {lastUpdated}</p>
           ) : undefined
         }
       />
+
+      {!workspace.hasRealAudit && (
+        <DashboardActivationStrip
+          title="Save prompts, then run your first audit"
+          description="Settings control what GEO Audit scans. Add money prompts below, save, then run a live citation check."
+          primaryHref="/dashboard/geo-audit"
+          primaryLabel="Run GEO audit →"
+        />
+      )}
+
+      <Panel title="Integrations" className="border-l-4 border-l-sky-400">
+        <p className="text-sm text-muted">
+          Connect Webflow, WordPress, Ghost, Shopify, or Framer to publish from
+          your content queue. Connect Slack for citation digests and alerts.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/dashboard/settings/integrations"
+            className="inline-flex rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white"
+          >
+            Manage integrations →
+          </Link>
+          <Link
+            href="/dashboard/settings#notifications"
+            className="inline-flex rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface"
+          >
+            Slack & email alerts →
+          </Link>
+        </div>
+      </Panel>
 
       <ThemeSettingsPanel />
 
@@ -519,6 +487,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
 
           <div className="mt-5">
             <p className="text-sm font-semibold text-ink">Competitors</p>
+            <p className="mt-1 text-xs text-muted">
+              Up to {competitorMax} tracked per workspace on your plan.
+            </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {competitors.map((c, i) => (
                 <span
@@ -545,7 +516,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    addTag(competitorInput, competitors, setCompetitors, 8);
+                    addTag(competitorInput, competitors, setCompetitors, competitorMax);
                     setCompetitorInput("");
                   }
                 }}
@@ -555,7 +526,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               <button
                 type="button"
                 onClick={() => {
-                  addTag(competitorInput, competitors, setCompetitors, 8);
+                  addTag(competitorInput, competitors, setCompetitors, competitorMax);
                   setCompetitorInput("");
                 }}
                 className="shrink-0 rounded-xl border border-border px-4 py-3 text-sm font-semibold text-ink hover:bg-surface"
@@ -566,7 +537,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </div>
         </Panel>
 
-        <Panel title="Alerts" className="border-l-4 border-l-mint" id="alerts">
+        <Panel title="Notifications" className="border-l-4 border-l-mint" id="notifications">
           {(isPilot || isFleet) &&
             (!preferences.monitoringEmail.trim() ||
               !preferences.whiteLabel.agencyName.trim()) && (
@@ -584,59 +555,16 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               </div>
             )}
           <p className="mb-4 text-sm text-muted">
-            Pilot and Fleet workspaces re-scan monitored prompts weekly (Mondays)
-            and can email digests or score-drop alerts when an address is set.
+            Control when and how CitePilot sends citation alerts — email, Slack,
+            and webhooks (Fleet).
           </p>
-          <label className="block text-sm font-semibold text-ink">
-            Monitoring email
-            <input
-              type="email"
-              value={preferences.monitoringEmail}
-              onChange={(e) =>
-                setPreferences((p) => ({
-                  ...p,
-                  monitoringEmail: e.target.value,
-                }))
-              }
-              placeholder="you@company.com"
-              className={inputClass}
-            />
-          </label>
-          <EmailAlertsSettingsPanel
-            embedded
-            preferences={preferences}
-            togglesBusy={togglesBusy}
-            onPreferenceChange={(next) => {
-              setPreferences(next);
-              void savePreferences(next);
-            }}
-            testDigestButton={
-              preferences.monitoringEmail.trim() ? (
-                <div className="mt-3 flex items-center gap-3">
-                  <button
-                    type="button"
-                    disabled={testDigestState === "sending"}
-                    onClick={() => void sendTestDigest()}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-ink transition hover:bg-slate-100 disabled:opacity-50"
-                  >
-                    {testDigestState === "sending"
-                      ? "Sending…"
-                      : testDigestState === "sent"
-                        ? "Sent!"
-                        : "Send test digest"}
-                  </button>
-                  <span className="text-xs text-muted">
-                    Sends a real email now to verify your address
-                  </span>
-                </div>
-              ) : undefined
-            }
-          />
           {workspaceId && (
-            <>
-              <SlackAlertsPanel workspaceId={workspaceId} />
-              <WebhookAlertsPanel workspaceId={workspaceId} />
-            </>
+            <NotificationPreferencesPanel
+              workspaceId={workspaceId}
+              onMonitoringEmailSaved={(email) =>
+                setPreferences((p) => ({ ...p, monitoringEmail: email }))
+              }
+            />
           )}
         </Panel>
 
@@ -655,34 +583,38 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
         {isFleet && workspaceId && (
           <FleetSettingsPanel
             workspaceId={workspaceId}
-            onPromptsImported={(prompts) =>
-              setMonitoredPromptsText(prompts.join("\n"))
-            }
+            domain={domain}
+            existingPrompts={promptsFromPreferences(preferences, buyerQuestion)}
+            onPromptsImported={() => {
+              void onSaved();
+            }}
           />
         )}
+      </form>
 
-        {(isPilot || isFleet) && workspaceId && (
-          <Panel title="White Label">
-            <p className="mb-4 text-sm text-muted">
-              Brand proof reports, share links, and weekly digest emails with your agency
-              identity. Fleet unlocks logo upload, colors, custom report domains, and email
-              branding.
-            </p>
-            <WhiteLabelSettingsPanel
-              workspaceId={workspaceId}
-              preferences={preferences}
-              isFleet={isFleet}
-              isPilot={isPilot}
-              togglesBusy={savingPrefs}
-              onPreferencesChange={(next, toast) => {
-                setPreferences(next);
-                void savePreferences(next, toast);
-              }}
-              onPreferencesDraft={setPreferences}
-            />
-          </Panel>
-        )}
+      {(isPilot || isFleet) && workspaceId && (
+        <Panel title="White Label" className="mt-6">
+          <p className="mb-4 text-sm text-muted">
+            Brand proof reports, share links, and weekly digest emails with your agency
+            identity. Fleet unlocks logo upload, colors, custom report domains, and email
+            branding.
+          </p>
+          <WhiteLabelSettingsPanel
+            workspaceId={workspaceId}
+            preferences={preferences}
+            isFleet={isFleet}
+            isPilot={isPilot}
+            togglesBusy={savingPrefs}
+            onPreferencesChange={(next, toastMsg) => {
+              setPreferences(next);
+              void savePreferences(next, toastMsg);
+            }}
+            onPreferencesDraft={setPreferences}
+          />
+        </Panel>
+      )}
 
+      <div className="mt-6 space-y-6">
         <Panel title="Workspace actions">
           <p className="mb-4 text-sm text-muted">
             Saves domain, profile, prompts, monitoring email, and white-label text
@@ -690,8 +622,9 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button
-              type="submit"
+              type="button"
               disabled={busy}
+              onClick={() => void persist(false)}
               className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-deep disabled:opacity-60"
             >
               {saving && !auditing ? "Saving…" : "Save changes"}
@@ -705,10 +638,10 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
               {auditing ? "Running audit…" : "Save & re-run audit"}
             </button>
             <Link
-              href="/audit"
+              href="/dashboard/geo-audit"
               className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-ink transition hover:bg-surface"
             >
-              Open audit tool
+              Open GEO audit
             </Link>
             <Link
               href="/start?full=1"
@@ -728,29 +661,29 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
           <p className="text-sm text-muted">
             Signed in with Neon Auth. Sign out to switch accounts or use a shared computer.
           </p>
+          <RestartProductTourLink />
           <div className="mt-4">
             <SignOutButton className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-60" />
           </div>
         </Panel>
 
+        <AccountDeletePanel />
+
         {isPilot && <ReferralPanel />}
 
+        {workspaceId && <BrowserScanUsagePanel workspaceId={workspaceId} />}
+
         <BillingPlanPanel />
-        <Panel title="Danger zone" className="border-l-4 border-l-red-500">
-          <p className="text-sm text-muted">
-            Permanently remove this workspace, audits, and snapshots from your local
-            database.
-          </p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleDelete}
-            className="mt-4 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
-          >
-            {deleting ? "Deleting…" : "Delete workspace"}
-          </button>
-        </Panel>
-      </form>
+
+        {workspaceId && (
+          <WorkspaceManagementPanel
+            workspaceId={workspaceId}
+            domain={domain}
+            onChanged={() => void onSaved()}
+            onDeleted={() => void onDeleted?.()}
+          />
+        )}
+      </div>
     </>
   );
 }

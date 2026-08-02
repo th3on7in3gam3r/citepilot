@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FeatureGate } from "@/components/billing/FeatureGate";
 import { useBilling } from "@/contexts/BillingContext";
@@ -11,13 +12,20 @@ type SlackChannel = {
   isPrivate: boolean;
 };
 
-export function SlackAlertsPanel({ workspaceId }: { workspaceId: string }) {
+type SlackAlertsPanelProps = {
+  workspaceId: string;
+  /** When true, omit outer card chrome (for Integrations page grid). */
+  embedded?: boolean;
+};
+
+export function SlackAlertsPanel({ workspaceId, embedded = false }: SlackAlertsPanelProps) {
   const { isPaid, ready } = useBilling();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [savingChannel, setSavingChannel] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [configured, setConfigured] = useState(true);
   const [teamName, setTeamName] = useState<string | null>(null);
   const [channelId, setChannelId] = useState("");
   const [channels, setChannels] = useState<SlackChannel[]>([]);
@@ -31,9 +39,9 @@ export function SlackAlertsPanel({ workspaceId }: { workspaceId: string }) {
       );
       const data = (await res.json()) as {
         connected?: boolean;
+        configured?: boolean;
         teamName?: string;
         channelId?: string;
-        channelName?: string;
         channels?: SlackChannel[];
         error?: string;
       };
@@ -41,6 +49,7 @@ export function SlackAlertsPanel({ workspaceId }: { workspaceId: string }) {
         toast.error(data.error ?? "Failed to load Slack");
         return;
       }
+      setConfigured(data.configured !== false);
       setConnected(Boolean(data.connected));
       setTeamName(data.teamName ?? null);
       setChannelId(data.channelId ?? "");
@@ -62,6 +71,14 @@ export function SlackAlertsPanel({ workspaceId }: { workspaceId: string }) {
         { credentials: "include" },
       );
       const data = (await res.json()) as { url?: string; error?: string };
+      if (res.status === 503) {
+        setConfigured(false);
+        toast.error(
+          data.error ??
+            "Slack is not configured on this server yet. Add SLACK_CLIENT_ID and SLACK_CLIENT_SECRET to your environment.",
+        );
+        return;
+      }
       if (!res.ok || !data.url) {
         toast.error(data.error ?? "Slack OAuth unavailable");
         return;
@@ -121,7 +138,7 @@ export function SlackAlertsPanel({ workspaceId }: { workspaceId: string }) {
 
   if (!isPaid) {
     return (
-      <div className="mt-6">
+      <div className={embedded ? "" : "mt-6"}>
         <FeatureGate
           feature="slack_alerts"
           title="Slack alerts"
@@ -137,16 +154,22 @@ export function SlackAlertsPanel({ workspaceId }: { workspaceId: string }) {
     );
   }
 
+  const shellClass = embedded
+    ? ""
+    : "mt-6 rounded-xl border border-border bg-surface/50 p-4";
+
   return (
-    <div className="mt-6 rounded-xl border border-border bg-surface/50 p-4">
+    <div className={shellClass}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Slack</h3>
-          <p className="mt-1 text-xs text-muted">
-            Connect your workspace to receive citation digests and change alerts in Slack.
+          {!embedded && <h3 className="text-sm font-semibold text-ink">Slack</h3>}
+          <p className={`text-xs text-muted ${embedded ? "" : "mt-1"}`}>
+            {connected
+              ? "Choose which channel receives citation digests and change alerts."
+              : "No email needed — click Connect Slack to sign in with your Slack account and authorize CitePilot."}
           </p>
         </div>
-        {!connected && (
+        {!connected && configured && (
           <button
             type="button"
             disabled={connecting || loading}
@@ -157,6 +180,36 @@ export function SlackAlertsPanel({ workspaceId }: { workspaceId: string }) {
           </button>
         )}
       </div>
+
+      {!connected && !loading && (
+        <ol className="mt-3 list-decimal space-y-1 pl-4 text-xs text-muted">
+          <li>Click <strong className="font-semibold text-ink">Connect Slack</strong>.</li>
+          <li>Sign in to Slack and approve access for your workspace.</li>
+          <li>Return here and pick the channel for alerts.</li>
+        </ol>
+      )}
+
+      {!connected && !loading && (
+        <p className="mt-3 text-xs text-muted">
+          Email alerts use the{" "}
+          <Link
+            href="/dashboard/settings#notifications"
+            className="font-semibold text-accent hover:underline"
+          >
+            monitoring email
+          </Link>{" "}
+          in Notifications — not your Slack login.
+        </p>
+      )}
+
+      {!configured && !loading && (
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+          Slack OAuth is not set up on this deployment. An admin needs{" "}
+          <code className="text-[11px]">SLACK_CLIENT_ID</code> and{" "}
+          <code className="text-[11px]">SLACK_CLIENT_SECRET</code> in the server
+          environment.
+        </p>
+      )}
 
       {loading && (
         <p className="mt-3 text-xs text-muted">Loading Slack status…</p>

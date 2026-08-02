@@ -135,7 +135,9 @@ function fieldSlugs(config: WebflowConfig): {
   };
 }
 
-export async function getWebflowConnectionStatus(): Promise<{
+export async function getWebflowConnectionStatus(
+  config?: WebflowConfig | null,
+): Promise<{
   configured: boolean;
   connected: boolean;
   collectionName?: string;
@@ -143,24 +145,41 @@ export async function getWebflowConnectionStatus(): Promise<{
   sitePreviewUrl?: string;
   detail?: string;
 }> {
-  const config = getWebflowConfig();
-  if (!config) {
+  const resolved = config ?? getWebflowConfig();
+  if (!resolved) {
     return { configured: false, connected: false, detail: "Not configured" };
   }
 
-  return {
-    configured: true,
-    connected: true,
-    sitePreviewUrl: config.sitePreviewUrl,
-    detail: `Ready — maps to ${config.fieldName}, ${config.fieldSlug}, ${config.fieldBody}`,
-  };
+  try {
+    const { testWebflowConnection } = await import("@/lib/cms/webflow");
+    const checked = await testWebflowConnection({
+      apiKey: resolved.apiKey,
+      siteId: resolved.siteId,
+      collectionId: resolved.collectionId,
+    });
+    return {
+      configured: true,
+      connected: true,
+      siteName: checked.remoteDefaults.siteName,
+      collectionName: checked.remoteDefaults.collectionName,
+      sitePreviewUrl: checked.remoteDefaults.sitePreviewUrl,
+      detail: checked.detail,
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      connected: false,
+      detail: error instanceof Error ? error.message : "Webflow API check failed",
+    };
+  }
 }
 
 export async function publishPostToWebflow(
   input: WebflowPublishInput,
   existingItemId?: string | null,
+  configOverride?: WebflowConfig | null,
 ): Promise<WebflowPublishResult> {
-  const config = getWebflowConfig();
+  const config = configOverride ?? getWebflowConfig();
   if (!config) {
     throw new WebflowApiError(
       "Webflow is not configured (WEBFLOW_API_KEY, WEBFLOW_SITE_ID, WEBFLOW_COLLECTION_ID)",

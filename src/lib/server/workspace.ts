@@ -20,6 +20,8 @@ import {
   emptyScanDeltaSummary,
 } from "@/lib/audit/scan-delta";
 import { userHasPilotAccess } from "@/lib/billing/access";
+import { requireWorkspaceAccess } from "@/lib/auth/workspace-access";
+import { listWorkspaceIdsForMember } from "@/lib/server/workspace-members";
 import { getContentStrategy } from "@/lib/content-strategy/store";
 import { normalizeDomain } from "@/lib/audit/site-analyzer";
 import {
@@ -27,6 +29,8 @@ import {
   mergePreferences,
   parsePreferences,
 } from "@/lib/settings";
+import { createDefaultNotificationPreferences } from "@/lib/notifications/preferences-store";
+import { emitStudioOpsEvent } from "@/lib/studio-ops";
 
 type WorkspaceRow = {
   id: string;
@@ -55,10 +59,14 @@ function parseStringArray(raw: string | null, fallback: string[] = []): string[]
   }
 }
 
-function canAccessWorkspace(row: WorkspaceRow, userId: string | null): boolean {
+async function canAccessWorkspace(
+  row: WorkspaceRow,
+  userId: string | null,
+): Promise<boolean> {
   if (!userId) return true;
   if (!row.user_id) return true;
-  return row.user_id === userId;
+  if (row.user_id === userId) return true;
+  return (await requireWorkspaceAccess(userId, row.id, "viewer")) != null;
 }
 
 function rowToPayload(
@@ -298,6 +306,17 @@ export async function createWorkspace(
     ],
   );
 
+  if (userId) {
+    await createDefaultNotificationPreferences({ workspaceId: id, userId });
+  }
+
+  emitStudioOpsEvent("workspace.created", {
+    workspaceId: id,
+    userId,
+    domain,
+    businessType: answers.businessType,
+  });
+
   const row = await dbGet<WorkspaceRow>(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
@@ -313,7 +332,7 @@ export async function getWorkspaceById(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
   );
-  if (!row || !canAccessWorkspace(row, userId)) return null;
+  if (!row || !(await canAccessWorkspace(row, userId))) return null;
   const latestAudit = await getLatestAuditForWorkspace(id);
   return rowToPayload(row, latestAudit);
 }
@@ -327,7 +346,8 @@ export async function updateWorkspace(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
   );
-  if (!row || !canAccessWorkspace(row, userId)) return null;
+  if (!row) return null;
+  if (!(await requireWorkspaceAccess(userId, id, "editor"))) return null;
   const existing = rowToPayload(
     row,
     await getLatestAuditForWorkspace(id),
@@ -392,13 +412,35 @@ export async function listWorkspacesForUser(
   userId: string,
   limit = 100,
 ): Promise<WorkspacePayload[]> {
-  const rows = await dbAll<WorkspaceRow>(
+  const memberIds = await listWorkspaceIdsForMember(userId);
+  const ownedRows = await dbAll<WorkspaceRow>(
     `SELECT * FROM workspaces
-     WHERE user_id = ?
+     WHERE user_id = ? AND archived_at IS NULL
      ORDER BY updated_at DESC
      LIMIT ?`,
     [userId, limit],
   );
+
+  let memberRows: WorkspaceRow[] = [];
+  if (memberIds.length > 0) {
+    const placeholders = memberIds.map(() => "?").join(", ");
+    memberRows = await dbAll<WorkspaceRow>(
+      `SELECT * FROM workspaces
+       WHERE id IN (${placeholders}) AND archived_at IS NULL
+       ORDER BY updated_at DESC`,
+      memberIds,
+    );
+  }
+
+  const seen = new Set<string>();
+  const rows: WorkspaceRow[] = [];
+  for (const row of [...ownedRows, ...memberRows]) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    rows.push(row);
+    if (rows.length >= limit) break;
+  }
+
   return Promise.all(
     rows.map(async (row) => {
       const latestAudit = await getLatestAuditForWorkspace(row.id);
@@ -482,6 +524,8 @@ export async function getCitationSnapshots(
 
 /** Delete all rows that reference a workspace, in FK-safe order. */
 export async function deleteWorkspaceDependents(id: string): Promise<void> {
+  await dbRun(`DELETE FROM notification_preferences WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM workspace_members WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM cron_dispatch_log WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM cms_publications WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM cms_connections WHERE workspace_id = ?`, [id]);
@@ -494,6 +538,7 @@ export async function deleteWorkspaceDependents(id: string): Promise<void> {
   await dbRun(`DELETE FROM backlink_network WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM backlink_profiles WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM platform_citation_checks WHERE workspace_id = ?`, [id]);
+  await dbRun(`DELETE FROM browser_scan_usage WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM audit_shares WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM citation_snapshots WHERE workspace_id = ?`, [id]);
   await dbRun(`DELETE FROM workspace_content_strategies WHERE workspace_id = ?`, [
@@ -511,7 +556,8 @@ export async function deleteWorkspace(
     `SELECT * FROM workspaces WHERE id = ?`,
     [id],
   );
-  if (!row || !canAccessWorkspace(row, userId)) return false;
+  if (!row) return false;
+  if (!(await requireWorkspaceAccess(userId, id, "owner"))) return false;
 
   return adminDeleteWorkspace(id);
 }

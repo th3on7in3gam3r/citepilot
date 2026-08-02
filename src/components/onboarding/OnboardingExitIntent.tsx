@@ -1,19 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 export const ONBOARDING_EXIT_EMAIL_KEY = "citepilot_onboarding_email";
 
 export function OnboardingExitIntent({
   active,
   completed,
+  step = 0,
 }: {
   active: boolean;
   completed: boolean;
+  step?: number;
 }) {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(dialogRef, visible && !completed && !saved, () => setVisible(false));
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -25,7 +31,7 @@ export function OnboardingExitIntent({
   }, []);
 
   useEffect(() => {
-    if (!active || completed || saved) return;
+    if (!active || completed || saved || step < 1) return;
 
     const onMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 8) setVisible(true);
@@ -33,7 +39,7 @@ export function OnboardingExitIntent({
 
     document.addEventListener("mouseleave", onMouseLeave);
     return () => document.removeEventListener("mouseleave", onMouseLeave);
-  }, [active, completed, saved]);
+  }, [active, completed, saved, step]);
 
   const saveEmail = useCallback(() => {
     const trimmed = email.trim();
@@ -47,9 +53,11 @@ export function OnboardingExitIntent({
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-[pricing-price-in_0.28s_ease-out] rounded-2xl border border-border bg-white p-4 shadow-xl sm:left-auto sm:right-5"
+      ref={dialogRef}
+      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-[pricing-price-in_0.28s_ease-out] rounded-2xl border border-border bg-white p-4 shadow-xl lg:left-6 lg:right-[calc(50%+1.5rem)]"
       role="dialog"
-      aria-label="Save your spot"
+      aria-modal="true"
+      aria-labelledby="onboarding-exit-title"
     >
       <button
         type="button"
@@ -59,15 +67,22 @@ export function OnboardingExitIntent({
       >
         ×
       </button>
-      <p className="pr-6 text-sm font-semibold text-ink">
+      <p id="onboarding-exit-title" className="pr-6 text-sm font-semibold text-ink">
         Save your spot — enter your email to get your audit results sent to you.
       </p>
       <div className="mt-3 flex gap-2">
+        <label htmlFor="onboarding-exit-email" className="sr-only">
+          Email address
+        </label>
         <input
+          id="onboarding-exit-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@company.com"
+          required
+          aria-required="true"
+          autoComplete="email"
           className="min-w-0 flex-1 rounded-full border border-border px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
           onKeyDown={(e) => e.key === "Enter" && saveEmail()}
         />

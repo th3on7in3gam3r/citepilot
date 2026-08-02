@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = site.url.replace(/\/$/, "");
+  const base = site.wwwUrl.replace(/\/$/, "");
 
   const disallowList = [
     "/admin",
@@ -20,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
       // Default rule — all crawlers allowed except private paths
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/score/"],
         disallow: disallowList,
       },
       // --- AI crawlers explicitly welcomed ---
@@ -44,6 +44,10 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: "cohere-ai", allow: "/" },
       // Bing / Microsoft Copilot
       { userAgent: "bingbot", allow: "/" },
+      // Common Crawl / ByteDance / Amazon
+      { userAgent: "CCBot", allow: "/" },
+      { userAgent: "Bytespider", allow: "/" },
+      { userAgent: "Amazonbot", allow: "/" },
     ],
     sitemap: `${base}/sitemap.xml`,
   };

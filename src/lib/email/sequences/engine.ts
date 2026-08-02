@@ -232,6 +232,7 @@ export async function triggerPostAuditSequence(input: {
   total: number;
   gaps: string[];
   shareUrl?: string;
+  scorePageUrl?: string;
 }): Promise<void> {
   if (input.email) {
     const { cacheUserEmail } = await import("@/lib/email/recipient");
@@ -252,6 +253,7 @@ export async function triggerPostAuditSequence(input: {
       topGap,
       gapFixType: classifyGapFixType(topGap),
       shareUrl: input.shareUrl,
+      scorePageUrl: input.scorePageUrl,
     },
   });
 }
@@ -279,4 +281,23 @@ export async function triggerChurnPrevention(
   }
   if (await hasEmailBeenSent(userId, "churn_prevention", 1)) return;
   await triggerEmailSequence({ sequence: "churn_prevention", userId });
+}
+
+/** Product Hunt signup welcome — replaces free_onboarding email 1. */
+export async function triggerProductHuntWelcome(
+  userId: string,
+  email?: string | null,
+  userName?: string | null,
+): Promise<void> {
+  if (email) {
+    const { cacheUserEmail } = await import("@/lib/email/recipient");
+    await cacheUserEmail(userId, email);
+  }
+  await cancelPendingQueue(userId, "free_onboarding");
+  if (await hasEmailBeenSent(userId, "ph_welcome", 1)) return;
+  await triggerEmailSequence({
+    sequence: "ph_welcome",
+    userId,
+    data: { userName: userName ?? undefined },
+  });
 }

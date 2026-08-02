@@ -10,6 +10,8 @@ import { Container } from "@/components/ui/Container";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 
+export const revalidate = 3600;
+
 const title = "CitePilot Chrome Extension — AI Citation Checker";
 const description =
   "Free Chrome extension: see if any website is cited on ChatGPT and Perplexity while you browse. Green badge when AI search data exists.";
@@ -31,7 +33,7 @@ export default function ChromeExtensionPage() {
     <>
       <ChromeExtensionInstallJsonLd />
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <MarketingDarkHero
           eyebrow="Free Chrome extension"
           title="See AI citations for any site you visit"

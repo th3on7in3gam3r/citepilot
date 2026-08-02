@@ -17,10 +17,16 @@ import {
 } from "@/lib/alerts/slack-blocks";
 import { postSlackMessage } from "@/lib/alerts/slack-client";
 import {
+  buildAuditCompletedPayload,
   buildCitationChangePayload,
   deliverWebhook,
 } from "@/lib/alerts/webhook";
 import { type ScoreDropThresholdPercent } from "@/lib/settings";
+import {
+  getNotificationPreferences,
+  isDigestDueNow,
+  webhookEventEnabled,
+} from "@/lib/notifications/preferences-store";
 import { getWorkspaceById } from "@/lib/server/workspace";
 
 function citationRate(audit: AuditPayload): number {
@@ -60,6 +66,11 @@ export async function dispatchCitationChangeAlerts(input: {
   const ws = await getWorkspaceById(input.workspaceId, input.userId);
   if (!ws) return;
 
+  const notifPrefs = await getNotificationPreferences(
+    input.workspaceId,
+    input.userId,
+  );
+
   const delta = buildDeltaFromAudits(
     input.audit,
     input.previousAudit,
@@ -88,7 +99,7 @@ export async function dispatchCitationChangeAlerts(input: {
   ];
 
   for (const item of changes) {
-    if (slack?.slack_channel_id) {
+    if (slack?.slack_channel_id && notifPrefs.slackDropAlerts) {
       const { blocks, text } = buildCitationChangeBlocks({
         domain: input.audit.domain,
         prompt: item.prompt,
@@ -116,7 +127,9 @@ export async function dispatchCitationChangeAlerts(input: {
     }
 
     for (const endpoint of webhooks) {
+      if (!webhookEventEnabled(notifPrefs, "citation.change_detected")) continue;
       const payload = buildCitationChangePayload({
+        workspaceId: input.workspaceId,
         domain: input.audit.domain,
         prompt: item.prompt,
         platform,
@@ -134,12 +147,57 @@ export async function dispatchCitationChangeAlerts(input: {
   }
 }
 
+export async function dispatchAuditCompletedWebhooks(input: {
+  workspaceId: string;
+  userId: string;
+  audit: AuditPayload;
+  previousAudit: AuditPayload | null;
+}): Promise<void> {
+  if (!(await userHasFleetAccess(input.userId))) return;
+
+  const notifPrefs = await getNotificationPreferences(
+    input.workspaceId,
+    input.userId,
+  );
+  if (!webhookEventEnabled(notifPrefs, "audit.completed")) return;
+
+  const webhooks = await listWebhookEndpoints(input.workspaceId, input.userId);
+  if (webhooks.length === 0) return;
+
+  const payload = buildAuditCompletedPayload({
+    workspaceId: input.workspaceId,
+    domain: input.audit.domain,
+    auditId: input.audit.id,
+    score: input.audit.score,
+    cited: input.audit.cited,
+    total: input.audit.total,
+    previousScore: input.previousAudit?.score ?? null,
+  });
+
+  for (const endpoint of webhooks) {
+    await deliverWebhook({
+      endpoint,
+      payload,
+      userId: input.userId,
+      workspaceId: input.workspaceId,
+    });
+  }
+}
+
 export async function dispatchWeeklySlackDigest(input: {
   workspaceId: string;
   userId: string;
   audit: AuditPayload;
   previousAudit: AuditPayload | null;
 }): Promise<{ ok: boolean; error?: string }> {
+  const notifPrefs = await getNotificationPreferences(
+    input.workspaceId,
+    input.userId,
+  );
+  if (!notifPrefs.slackWeekly) {
+    return { ok: false, error: "slack_weekly_disabled" };
+  }
+
   const slack = await getSlackConnection(input.workspaceId, input.userId);
   if (!slack?.slack_channel_id) {
     return { ok: false, error: "not_connected" };

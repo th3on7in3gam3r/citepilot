@@ -12,12 +12,14 @@ export function PricingTierActions({
   cta,
   variant,
   billingInterval = "monthly",
+  abVariant,
 }: {
   tierName: string;
   href: string;
   cta: string;
   variant: "accent" | "primary" | "dark";
   billingInterval?: BillingInterval;
+  abVariant?: string;
 }) {
   const [signedIn, setSignedIn] = useState(false);
 
@@ -44,6 +46,8 @@ export function PricingTierActions({
         signedIn={signedIn}
         plan="pilot"
         billingInterval={billingInterval}
+        source="pricing_page"
+        abVariant={abVariant}
       >
         {signedIn ? "Subscribe to Pilot" : "Sign in to subscribe"}
       </PilotCheckoutButton>
@@ -58,6 +62,8 @@ export function PricingTierActions({
         signedIn={signedIn}
         plan="fleet"
         billingInterval={billingInterval}
+        source="pricing_page"
+        abVariant={abVariant}
       >
         {signedIn ? "Subscribe to Fleet" : "Sign in to subscribe"}
       </PilotCheckoutButton>

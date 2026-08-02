@@ -27,15 +27,25 @@ type CmsProviderStatus = {
   detail?: string;
 };
 
+type CmsFormProvider = Exclude<CmsProvider, "webflow">;
+
 type ProviderForms = {
   wordpress: {
     siteUrl: string;
     username: string;
     appPassword: string;
   };
+  signaldesk: {
+    siteUrl: string;
+    apiKey: string;
+  };
   ghost: {
     siteUrl: string;
     adminApiKey: string;
+  };
+  hashnode: {
+    accessToken: string;
+    publicationId: string;
   };
   shopify: {
     shopDomain: string;
@@ -52,8 +62,11 @@ type ProviderForms = {
 };
 
 const providerLabels: Record<CmsProvider, string> = {
+  webflow: "Webflow",
   wordpress: "WordPress",
+  signaldesk: "SignalDesk",
   ghost: "Ghost",
+  hashnode: "Hashnode",
   shopify: "Shopify",
   framer: "Framer",
 };
@@ -65,9 +78,17 @@ function emptyForms(): ProviderForms {
       username: "",
       appPassword: "",
     },
+    signaldesk: {
+      siteUrl: "",
+      apiKey: "",
+    },
     ghost: {
       siteUrl: "",
       adminApiKey: "",
+    },
+    hashnode: {
+      accessToken: "",
+      publicationId: "",
     },
     shopify: {
       shopDomain: "",
@@ -148,11 +169,18 @@ export function CmsConnectionsPanel({
   const [webflow, setWebflow] = useState<WebflowStatus | null>(null);
   const [providers, setProviders] = useState<CmsProviderStatus[]>([]);
   const [forms, setForms] = useState<ProviderForms>(emptyForms);
-  const [saving, setSaving] = useState<CmsProvider | null>(null);
-  const [removing, setRemoving] = useState<CmsProvider | null>(null);
+  const [saving, setSaving] = useState<CmsFormProvider | null>(null);
+  const [removing, setRemoving] = useState<CmsFormProvider | null>(null);
+  const [signaldeskWebhook, setSignaldeskWebhook] = useState<{
+    webhookUrl: string;
+    webhookSecret: string;
+  } | null>(null);
   const load = useCallback(async () => {
     const [webflowRes, cmsRes] = await Promise.all([
-      fetch("/api/content/webflow/status", { credentials: "include" }),
+      fetch(
+        `/api/content/webflow/status?workspaceId=${encodeURIComponent(workspaceId)}`,
+        { credentials: "include" },
+      ),
       fetch(`/api/content/cms?workspaceId=${encodeURIComponent(workspaceId)}`, {
         credentials: "include",
       }),
@@ -186,7 +214,7 @@ export function CmsConnectionsPanel({
     (webflow?.configured && webflow.connected) || providers.some((provider) => provider.connected),
   );
 
-  function updateForm<P extends CmsProvider>(
+  function updateForm<P extends CmsFormProvider>(
     provider: P,
     key: keyof ProviderForms[P],
     value: string,
@@ -200,7 +228,7 @@ export function CmsConnectionsPanel({
     }));
   }
 
-  async function saveProvider(provider: CmsProvider) {
+  async function saveProvider(provider: CmsFormProvider) {
     setSaving(provider);
 
     try {
@@ -213,13 +241,32 @@ export function CmsConnectionsPanel({
           ...forms[provider],
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        webhookUrl?: string;
+        webhookSecret?: string;
+        webhookHint?: string;
+      };
       if (!res.ok) {
         toast.error(data.error ?? `Could not connect ${providerLabels[provider]}`);
         return;
       }
 
       toast.success(`${providerLabels[provider]} connected.`);
+      if (
+        provider === "signaldesk" &&
+        data.webhookUrl &&
+        data.webhookSecret
+      ) {
+        setSignaldeskWebhook({
+          webhookUrl: data.webhookUrl,
+          webhookSecret: data.webhookSecret,
+        });
+        toast.info(
+          data.webhookHint ??
+            "Paste the webhook URL and secret into Signal Desk Settings.",
+        );
+      }
       await load();
       onChanged?.();
     } catch {
@@ -229,7 +276,7 @@ export function CmsConnectionsPanel({
     }
   }
 
-  async function disconnectProvider(provider: CmsProvider) {
+  async function disconnectProvider(provider: CmsFormProvider) {
     setRemoving(provider);
 
     try {
@@ -270,7 +317,7 @@ export function CmsConnectionsPanel({
       <FeatureGate
         feature="cms_publish"
         title="CMS publishing"
-        description="Connect WordPress, Webflow, Ghost, Shopify, or Framer and push generated articles live in one click."
+        description="Connect WordPress, Webflow, Ghost, Hashnode, Shopify, or Framer and push generated articles live in one click."
         cta="Upgrade to Pilot →"
         highlights={[
           "Workspace-level CMS credentials",
@@ -300,7 +347,7 @@ export function CmsConnectionsPanel({
           <h3 className="font-display text-lg font-bold text-ink">New here?</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             Connect a CMS only if this workspace already has a real site on
-            WordPress, Ghost, Shopify, Framer, or Webflow. If you do not have one of
+            WordPress, Ghost, Hashnode, Shopify, Framer, or Webflow. If you do not have one of
             those yet, skip this section for now and keep generating drafts inside
             CitePilot.
           </p>
@@ -327,6 +374,10 @@ export function CmsConnectionsPanel({
             <li>
               <span className="font-semibold text-ink">Ghost:</span> site URL, Admin
               API key
+            </li>
+            <li>
+              <span className="font-semibold text-ink">Hashnode:</span> personal access
+              token, publication ID
             </li>
             <li>
               <span className="font-semibold text-ink">Shopify:</span> shop domain,
@@ -387,7 +438,7 @@ export function CmsConnectionsPanel({
             <div>
               <h3 className="font-display font-bold text-ink">Webflow</h3>
               <p className="mt-1 text-sm text-muted">
-                Existing env-based publishing for the site-wide blog collection.
+                Connect per workspace with API key, site, and collection.
               </p>
             </div>
             <span
@@ -397,9 +448,15 @@ export function CmsConnectionsPanel({
                   : "bg-surface text-muted"
               }`}
             >
-              {webflow?.configured && webflow.connected ? "Connected" : "Env setup"}
+              {webflow?.configured && webflow.connected ? "Connected" : "Not connected"}
             </span>
           </div>
+          <Link
+            href="/dashboard/settings/integrations"
+            className="mt-4 inline-flex rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface"
+          >
+            Manage in Integrations →
+          </Link>
           {webflow?.detail && (
             <p className="mt-3 text-sm text-muted">
               {webflow.siteName ? `${webflow.siteName} · ` : ""}
@@ -445,6 +502,49 @@ export function CmsConnectionsPanel({
         </ProviderCard>
 
         <ProviderCard
+          title="SignalDesk"
+          status={providerMap.get("signaldesk")}
+          saving={saving === "signaldesk"}
+          removing={removing === "signaldesk"}
+          onSave={() => void saveProvider("signaldesk")}
+          onRemove={() => void disconnectProvider("signaldesk")}
+          note="Publish citation-ready dispatches to your Signal Desk newsroom."
+        >
+          <div className="grid gap-3">
+            <Field
+              label="Site URL"
+              value={forms.signaldesk.siteUrl}
+              onChange={(value) => updateForm("signaldesk", "siteUrl", value)}
+              placeholder="https://www.signaldeskblog.com"
+              help="Your deployed Signal Desk origin — not a private laptop URL unless testing locally."
+            />
+            <Field
+              label="API key"
+              type="password"
+              value={forms.signaldesk.apiKey}
+              onChange={(value) => updateForm("signaldesk", "apiKey", value)}
+              placeholder="sd_live_…"
+              help="Generate in Signal Desk → Studio → Settings. Sent as Authorization: Bearer."
+            />
+            {signaldeskWebhook ? (
+              <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs space-y-2">
+                <p className="font-medium">
+                  Paste into Signal Desk → Settings → Publish webhook
+                </p>
+                <p className="break-all">
+                  <span className="text-muted">URL: </span>
+                  {signaldeskWebhook.webhookUrl}
+                </p>
+                <p className="break-all">
+                  <span className="text-muted">Secret: </span>
+                  {signaldeskWebhook.webhookSecret}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </ProviderCard>
+
+        <ProviderCard
           title="Ghost"
           status={providerMap.get("ghost")}
           saving={saving === "ghost"}
@@ -473,21 +573,60 @@ export function CmsConnectionsPanel({
         </ProviderCard>
 
         <ProviderCard
+          title="Hashnode"
+          status={providerMap.get("hashnode")}
+          saving={saving === "hashnode"}
+          removing={removing === "hashnode"}
+          onSave={() => void saveProvider("hashnode")}
+          onRemove={() => void disconnectProvider("hashnode")}
+          note="Requires Hashnode Pro (Dashboard → Billing). Free blogs can still be created, but API publish needs Pro."
+        >
+          <div className="grid gap-3">
+            <Field
+              label="Personal access token"
+              type="password"
+              value={forms.hashnode.accessToken}
+              onChange={(value) => updateForm("hashnode", "accessToken", value)}
+              placeholder="hn_..."
+              help="Generate at hashnode.com/settings/developer → Generate New Token."
+            />
+            <Field
+              label="Publication ID"
+              value={forms.hashnode.publicationId}
+              onChange={(value) => updateForm("hashnode", "publicationId", value)}
+              placeholder="66778899abcdef123456789"
+              help="Paste your dashboard URL or the 24-character ID from hashnode.com/dashboards/{id}. Requires Hashnode Pro for API access."
+            />
+          </div>
+        </ProviderCard>
+
+        <ProviderCard
           title="Shopify"
           status={providerMap.get("shopify")}
           saving={saving === "shopify"}
           removing={removing === "shopify"}
           onSave={() => void saveProvider("shopify")}
           onRemove={() => void disconnectProvider("shopify")}
-          note="Best for stores that already use Shopify's built-in blog."
+          note="Publishes to Shopify’s built-in blog (no products required). Use a Partner development store to test for free."
         >
           <div className="grid gap-3">
+            <div className="rounded-xl border border-border bg-surface/60 px-4 py-3 text-xs leading-relaxed text-muted">
+              <p className="font-semibold text-ink">Setup checklist</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-4">
+                <li>Create a free store at partners.shopify.com (development store is fine).</li>
+                <li>In Shopify admin: Settings → Apps → Develop apps → Create app.</li>
+                <li>Enable Admin API scopes: <span className="font-semibold text-ink">read_content</span> and{" "}
+                  <span className="font-semibold text-ink">write_content</span>.
+                </li>
+                <li>Install the app, then copy the Admin API access token (<span className="font-semibold text-ink">shpat_…</span>).</li>
+              </ol>
+            </div>
             <Field
               label="Shop domain"
               value={forms.shopify.shopDomain}
               onChange={(value) => updateForm("shopify", "shopDomain", value)}
               placeholder="store-name.myshopify.com"
-              help="Use the .myshopify.com admin domain for the store."
+              help="Use the .myshopify.com admin domain (not your custom storefront URL)."
             />
             <Field
               label="Admin access token"
@@ -495,7 +634,7 @@ export function CmsConnectionsPanel({
               value={forms.shopify.accessToken}
               onChange={(value) => updateForm("shopify", "accessToken", value)}
               placeholder="shpat_..."
-              help="The token needs permission to create and update blog articles."
+              help="From your custom app after install. Needs read_content + write_content."
             />
           </div>
         </ProviderCard>

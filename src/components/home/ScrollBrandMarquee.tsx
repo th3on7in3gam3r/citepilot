@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { Container } from "@/components/ui/Container";
 import { scrollBrands } from "@/lib/brands";
 import { useScrollSection } from "@/hooks/useScrollSection";
+import { useTranslations } from "next-intl";
 
 /** Icon width + horizontal gap between brands — gap-12 = 48px, item w-[7.5rem] = 120px */
 const ITEM_STEP = 168;
@@ -11,6 +12,7 @@ const ITEM_STEP = 168;
 const HALF_ITEM = ITEM_STEP / 2;
 
 export function ScrollBrandMarquee() {
+  const t = useTranslations("platforms");
   const sectionRef = useRef<HTMLElement>(null);
   const progress = useScrollSection(sectionRef);
 
@@ -31,17 +33,17 @@ export function ScrollBrandMarquee() {
       ref={sectionRef}
       className="relative bg-background"
       style={{ height: "125vh" }}
-      aria-label="Platforms and ecosystems"
+      aria-labelledby="platforms-heading"
     >
       <div className="sticky top-16 border-y border-border bg-background">
         <Container className="flex flex-col items-center py-16 md:py-20 lg:py-24">
           <div className="mb-10 text-center md:mb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-              Platforms &amp; ecosystems
+              {t("eyebrow")}
             </p>
-            <p className="font-display mt-2 text-xl font-bold text-ink md:text-2xl">
-              Monitor citations across AI platforms
-            </p>
+            <h2 id="platforms-heading" className="font-display mt-2 text-xl font-bold text-ink md:text-2xl">
+              {t("title")}
+            </h2>
           </div>
 
           <div className="relative w-full overflow-hidden px-2 py-8 md:py-10">
@@ -60,9 +62,11 @@ export function ScrollBrandMarquee() {
                     className={`flex w-[7.5rem] shrink-0 flex-col items-center transition-all duration-500 md:w-[8.5rem] ${
                       isActive ? "scale-110 opacity-100" : "scale-90 opacity-35"
                     }`}
+                    aria-label={`${brand.name}${isActive ? " (selected)" : ""}`}
                   >
                     <div
                       className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl border-2 text-lg font-bold transition-all duration-500 md:h-20 md:w-20 md:text-xl"
+                      aria-hidden
                       style={{
                         borderColor: isActive ? brand.color : "var(--color-border)",
                         backgroundColor: isActive ? `${brand.color}15` : "white",

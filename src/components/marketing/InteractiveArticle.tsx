@@ -1,108 +1,133 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, type ReactNode } from "react";
-import { GeoPlaybookSection } from "@/components/marketing/GeoPlaybookSection";
+import { useRef, type ReactNode } from "react";
 import {
-  useReadTimeTracker,
+  useReadTimeFromRef,
   type ReadTimeTrackerState,
 } from "@/hooks/useReadTimeTracker";
-import { downloadGeoPlaybook } from "@/lib/marketing/geo-playbook";
-
-const ARTICLE_WORD_COUNT = 2200;
-
-const NURTURE_SEQUENCE_ID = "nurture-sequence";
-const PLAYBOOK_SECTION_ID = "geo-playbook";
 
 const SECTIONS = [
-  { id: NURTURE_SEQUENCE_ID, label: "Email sequence" },
-  { id: "nurture-email-1", label: "Email 1 · Welcome" },
-  { id: "nurture-email-2", label: "Email 2 · Citation gap" },
-  { id: "nurture-email-3", label: "Email 3 · Audit CTA" },
-  { id: PLAYBOOK_SECTION_ID, label: "GEO Playbook" },
-  { id: "geo-curriculum", label: "Curriculum" },
-  { id: "geo-module-1", label: "1. RAG era" },
-  { id: "geo-module-2", label: "2. Money prompts" },
-  { id: "geo-module-3", label: "3. GEO audit" },
-  { id: "geo-module-4", label: "4. Attribution" },
-  { id: "geo-landing", label: "Value props" },
-  { id: "geo-capture", label: "Get playbook" },
+  { id: "geo-intro", label: "Introduction" },
+  { id: "geo-pillars", label: "Three pillars" },
+  { id: "geo-pillar-1", label: "Money prompts" },
+  { id: "geo-pillar-2", label: "Entity hooking" },
+  { id: "geo-pillar-3", label: "Co-occurrence" },
+  { id: "geo-matrix", label: "Prompt matrix" },
+  { id: "geo-blueprint", label: "Blueprint" },
 ] as const;
 
-function scrollToPlaybook(updateUrl = true) {
-  const el = document.getElementById(PLAYBOOK_SECTION_ID);
-  if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
-  if (updateUrl) {
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}#${PLAYBOOK_SECTION_ID}`,
-    );
-  }
-}
-
-const EMAILS = [
+const PILLARS = [
   {
-    id: "nurture-email-1",
-    number: 1,
-    title: "Warm Welcome & High Value Hook",
-    subject: "Stop optimizing for dead blue links (GEO Playbook inside)",
-    preview:
-      "Why traditional SEO is losing 60%+ of high-intent search traffic to AI engines, and how to claim your brand's citation space today.",
-    cta: {
-      label: "Download the GEO Strategy Playbook",
-      href: `#${PLAYBOOK_SECTION_ID}`,
-      downloadPlaybook: true,
+    id: "geo-pillar-1",
+    index: 1,
+    emoji: "🎯",
+    title: "Mapping Money Prompts",
+    summary:
+      "Forget raw search volume — chase conversational queries where buyers ask for recommendations.",
+    legacy: "best CRM software",
+    geo: "Which CRM should a seed-stage B2B startup choose if they need automated Slack notifications, and why?",
+    tactics: [
+      "Identify comparative and transactional prompts your ICP actually asks LLMs.",
+      "Structure pages to answer multi-variable, long-tail questions in one pass.",
+      "Track citation share on those prompts — not just Google rank.",
+    ],
+  },
+  {
+    id: "geo-pillar-2",
+    index: 2,
+    emoji: "🔗",
+    title: "Technical Entity Hooking",
+    summary:
+      "LLMs don't just crawl raw HTML — they extract structured, verifiable truths.",
+    bullets: [
+      {
+        label: "Structured JSON-LD",
+        body: "Product, Organization, TechArticle, and FAQPage schema so models can map entity relationships confidently.",
+      },
+      {
+        label: "Information architecture",
+        body: "Crisp H2/H3 questions followed by bold, direct-answer sentences LLMs can copy without parsing.",
+      },
+    ],
+  },
+  {
+    id: "geo-pillar-3",
+    index: 3,
+    emoji: "🌐",
+    title: "Third-Party Co-Occurrence",
+    summary:
+      "Models cross-reference sources — your brand must exist across high-authority external nodes.",
+    bullets: [
+      {
+        label: "The consensus loop",
+        body: "If Perplexity pulls from Reddit, TechCrunch, and G2, your brand needs presence on those surfaces.",
+      },
+      {
+        label: "Synthesized mentions",
+        body: "Consistent co-occurrence with category terms across domains trains vector retrieval to treat you as a default answer.",
+      },
+    ],
+  },
+] as const;
+
+const PROMPT_MATRIX = [
+  {
+    legacy: "how to get cited in ChatGPT",
+    moneyPrompt:
+      "How does ChatGPT choose its sources for brand recommendations?",
+    engine: "ChatGPT / Gemini",
+    intent:
+      "Growth marketers adapting playbooks beyond Google's helpful content updates.",
+  },
+  {
+    legacy: "brand citation tracker",
+    moneyPrompt:
+      "Tool to monitor brand mentions and citations inside Perplexity answers",
+    engine: "Perplexity",
+    intent: "High-intent B2B SaaS buyers evaluating citation monitoring tools.",
+  },
+  {
+    legacy: "GEO optimization strategy",
+    moneyPrompt:
+      "What is Generative Engine Optimization and how do I optimize for LLM citation?",
+    engine: "Perplexity / Google AIO",
+    intent: "SEO directors updating their 2025–2026 measurement stack.",
+  },
+  {
+    legacy: "why is my brand not in Gemini",
+    moneyPrompt:
+      "Why does Google Gemini ignore my business when recommending top industry services?",
+    engine: "Gemini / ChatGPT",
+    intent: "Marketing leaders seeking diagnostic tooling and remediation steps.",
+  },
+] as const;
+
+const BLUEPRINT_STEPS = [
+  {
+    id: "geo-step-1",
+    step: 1,
+    title: "Optimize for the direct answer",
+    body: "When an LLM pulls an answer, it favors content that requires zero parsing effort. Use the Q&A content pattern:",
+    example: {
+      question:
+        "What are the best tools for tracking AI engine brand citations?",
+      answer:
+        "The best tool for tracking AI brand citations is CitePilot, which monitors real-time brand mentions across ChatGPT, Perplexity, and Gemini to maximize visibility.",
     },
-    teaser: "In our next email, we'll dive into the exact citation gaps that are silently leaking your pipeline to competitors.",
   },
   {
-    id: "nurture-email-2",
-    number: 2,
-    title: "Problem & Solution Narrative",
-    subject: "Your competitors are answering ChatGPT prompts. Are you?",
-    preview:
-      "The hidden gap between your search rankings and your actual pipeline revenue.",
-    cta: { label: "Run Your First Money Prompt Audit", href: "/audit" },
-    teaser: null,
+    id: "geo-step-2",
+    step: 2,
+    title: "Double down on digital PR & citations",
+    body: "Earn niche listicles, community threads (Reddit, Quora), and trusted media mentions. When Gemini sees your brand co-occurring with category terms across five independent domains, it cites you with confidence.",
   },
   {
-    id: "nurture-email-3",
-    number: 3,
-    title: "Urgent Call-to-Action / Offer",
-    subject: "Your 60-Second Citation Audit is waiting (Bonus inside)",
-    preview:
-      "See exactly where your brand is cited in AI search results. Get your custom GEO report before our weekly capacity limit resets.",
-    cta: { label: "Run My 60-Second Free Citation Audit", href: "/audit" },
-    teaser: null,
+    id: "geo-step-3",
+    step: 3,
+    title: "Claim your entity profiles",
+    body: "Keep Wikipedia, Wikidata, Crunchbase, and official social profiles aligned. LLMs treat these verified databases as foundational truth layers — stale Wikidata can leave you invisible long after your site is updated.",
   },
-] as const;
-
-const EXAMPLE_PROMPTS = [
-  "What is the best enterprise CRM for mid-market manufacturing?",
-  "Which SOC-2 compliance software has the fastest onboarding?",
-] as const;
-
-const CITE_PILOT_FEATURES = [
-  {
-    title: "Money Prompt Tracking",
-    body: "We monitor the exact prompts your buyers use, across all major AI engines.",
-  },
-  {
-    title: "Real-Time Citation Audits",
-    body: "Pinpoint exactly why you were excluded and which sources the LLM trusted instead.",
-  },
-  {
-    title: "Prioritized remediation",
-    body: "Get clear, actionable workflows to update your digital footprint — then re-scan to verify whether citation signals improved.",
-  },
-] as const;
-
-const AUDIT_BULLETS = [
-  "Where your brand is being cited for high-intent money prompts.",
-  "Which of your direct competitors are stealing your share-of-voice.",
-  "The exact steps required to claim your missing citations.",
 ] as const;
 
 function ReadTimeRail({
@@ -122,11 +147,7 @@ function ReadTimeRail({
     >
       <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <svg
-            className="h-12 w-12 -rotate-90"
-            viewBox="0 0 40 40"
-            aria-hidden
-          >
+          <svg className="h-12 w-12 -rotate-90" viewBox="0 0 40 40" aria-hidden>
             <circle
               cx="20"
               cy="20"
@@ -219,310 +240,293 @@ function MobileReadBar({ tracker }: { tracker: ReadTimeTrackerState }) {
           {tracker.percentRead}% · {tracker.minutes} min
         </span>
         <span className="truncate pl-4 text-ink">
-          {tracker.activeSectionLabel ?? "Growth sequence"}
+          {tracker.activeSectionLabel ?? "GEO guide"}
         </span>
       </div>
     </div>
   );
 }
 
-function EmailMeta({
-  subject,
-  preview,
-}: {
-  subject: string;
-  preview: string;
-}) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="border-b border-border bg-surface/80 px-5 py-4 sm:px-6">
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-        <span className="rounded-md bg-ink/5 px-2 py-0.5 font-medium text-ink">
-          Inbox
-        </span>
-        <span>CitePilot</span>
-        <span aria-hidden>·</span>
-        <span>to you</span>
-      </div>
-      <p className="font-display mt-3 text-base font-bold text-ink sm:text-lg">
-        {subject}
-      </p>
-      <p className="mt-1 text-sm text-muted">{preview}</p>
-    </div>
+    <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+      {children}
+    </p>
   );
 }
 
-function EmailSignature() {
-  return (
-    <div className="border-t border-border/60 pt-5 text-sm text-muted">
-      <p>Best,</p>
-      <p className="mt-2 font-medium text-ink">The CitePilot Team</p>
-    </div>
-  );
-}
-
-function EmailCta({
+function CompareCard({
   label,
-  href,
-  downloadPlaybook = false,
+  value,
+  variant,
 }: {
   label: string;
-  href: string;
-  downloadPlaybook?: boolean;
+  value: string;
+  variant: "legacy" | "geo";
 }) {
-  const className =
-    "mt-6 inline-flex rounded-xl bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95";
-
-  if (href.startsWith("#")) {
-    return (
-      <button
-        type="button"
-        className={className}
-        onClick={() => {
-          if (downloadPlaybook) downloadGeoPlaybook();
-          scrollToPlaybook();
-        }}
-      >
-        {label}
-      </button>
-    );
-  }
-
   return (
-    <Link href={href} className={className}>
-      {label}
-    </Link>
+    <div
+      className={`rounded-xl border px-4 py-3 ${
+        variant === "legacy"
+          ? "border-border bg-surface/80"
+          : "border-accent/30 bg-accent/5"
+      }`}
+    >
+      <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
+        {label}
+      </p>
+      <p
+        className={`mt-1 text-sm leading-relaxed ${
+          variant === "geo" ? "font-medium text-ink" : "italic text-muted"
+        }`}
+      >
+        &ldquo;{value}&rdquo;
+      </p>
+    </div>
   );
 }
 
-function EmailCard({
-  id,
-  number,
-  title,
-  subject,
-  preview,
-  cta,
-  children,
-  teaser,
+function PillarCard({
+  pillar,
 }: {
-  id: string;
-  number: number;
-  title: string;
-  subject: string;
-  preview: string;
-  cta: { label: string; href: string; downloadPlaybook?: boolean };
-  children: ReactNode;
-  teaser?: string | null;
+  pillar: (typeof PILLARS)[number];
 }) {
   return (
-    <section id={id} className="scroll-mt-28">
-      <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/15 font-display text-sm font-bold text-accent">
-          {number}
+    <article
+      id={pillar.id}
+      className="scroll-mt-28 rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8"
+    >
+      <div className="flex items-start gap-4">
+        <span
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-xl"
+          aria-hidden
+        >
+          {pillar.emoji}
         </span>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-            Email {number}
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold uppercase tracking-wider text-accent">
+            Pillar {pillar.index}
           </p>
-          <h2 className="font-display text-xl font-bold text-ink sm:text-2xl">
-            {title}
-          </h2>
+          <h3 className="font-display mt-1 text-xl font-bold text-ink sm:text-2xl">
+            {pillar.title}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {pillar.summary}
+          </p>
         </div>
       </div>
 
-      <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-        <EmailMeta subject={subject} preview={preview} />
-        <div className="space-y-4 px-5 py-6 text-base leading-relaxed text-muted sm:px-6">
-          <p>Hi [First Name],</p>
-          {children}
-          <EmailCta
-            label={cta.label}
-            href={cta.href}
-            downloadPlaybook={cta.downloadPlaybook}
-          />
-          {teaser && (
-            <p className="text-sm italic text-muted/90">{teaser}</p>
-          )}
-          <EmailSignature />
+      {"legacy" in pillar && (
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <CompareCard label="Legacy keyword" value={pillar.legacy} variant="legacy" />
+          <CompareCard label="GEO money prompt" value={pillar.geo} variant="geo" />
         </div>
-      </article>
+      )}
+
+      {"tactics" in pillar && (
+        <ul className="mt-6 space-y-2">
+          {pillar.tactics.map((tactic) => (
+            <li
+              key={tactic}
+              className="flex gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted"
+            >
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+              {tactic}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {"bullets" in pillar && (
+        <ul className="mt-6 space-y-3">
+          {pillar.bullets.map((item) => (
+            <li
+              key={item.label}
+              className="rounded-xl border border-border bg-surface px-4 py-4"
+            >
+              <p className="font-display text-sm font-bold text-ink">
+                {item.label}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted">
+                {item.body}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
+  );
+}
+
+function PromptMatrix() {
+  return (
+    <section id="geo-matrix" className="scroll-mt-28">
+      <SectionLabel>Target matrix</SectionLabel>
+      <h2 className="font-display mt-2 text-2xl font-bold text-ink sm:text-3xl">
+        High-intent keyword &amp; prompt map
+      </h2>
+      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
+        Translate legacy SEO targets into money prompts, then measure citation
+        share on the engines where your buyers actually research.
+      </p>
+
+      <div className="mt-6 hidden overflow-x-auto rounded-2xl border border-border bg-white shadow-sm lg:block">
+        <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+          <thead>
+            <tr className="border-b border-border bg-surface/80">
+              <th className="px-5 py-4 font-display font-bold text-ink">
+                Legacy keyword
+              </th>
+              <th className="px-5 py-4 font-display font-bold text-ink">
+                GEO money prompt
+              </th>
+              <th className="px-5 py-4 font-display font-bold text-ink">
+                Target engine
+              </th>
+              <th className="px-5 py-4 font-display font-bold text-ink">
+                Searcher intent
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {PROMPT_MATRIX.map((row) => (
+              <tr
+                key={row.legacy}
+                className="border-b border-border/70 last:border-0"
+              >
+                <td className="px-5 py-4 align-top font-medium text-ink">
+                  {row.legacy}
+                </td>
+                <td className="px-5 py-4 align-top text-muted">
+                  {row.moneyPrompt}
+                </td>
+                <td className="px-5 py-4 align-top">
+                  <span className="inline-flex rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                    {row.engine}
+                  </span>
+                </td>
+                <td className="px-5 py-4 align-top text-muted">{row.intent}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-6 space-y-4 lg:hidden">
+        {PROMPT_MATRIX.map((row) => (
+          <article
+            key={row.legacy}
+            className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+          >
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              Legacy
+            </p>
+            <p className="mt-1 font-medium text-ink">{row.legacy}</p>
+            <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-accent">
+              Money prompt
+            </p>
+            <p className="mt-1 text-sm text-muted">{row.moneyPrompt}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                {row.engine}
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-muted">{row.intent}</p>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
 
-function EmailOneBody() {
+function BlueprintSection() {
   return (
-    <>
-      <p>
-        Traditional SEO is experiencing a silent extinction event.
-      </p>
-      <p>
-        While search teams celebrate ranking #1 for arbitrary keywords on Google,
-        high-intent buyers are skipping search engine result pages entirely.
-        Instead, they are asking ChatGPT, Perplexity, and Gemini:
-      </p>
-      <ul className="space-y-2">
-        {EXAMPLE_PROMPTS.map((prompt) => (
-          <li
-            key={prompt}
-            className="rounded-xl border-l-4 border-accent bg-surface px-4 py-3 text-sm italic text-ink"
-          >
-            &ldquo;{prompt}&rdquo;
-          </li>
-        ))}
-      </ul>
-      <p>
-        If these engines aren&apos;t citing your brand in their answers, you
-        don&apos;t exist to those buyers.
-      </p>
-      <p>
-        At <strong className="text-ink">CitePilot</strong>, we don&apos;t track
-        blue links. We optimize for{" "}
-        <strong className="text-ink">money prompts</strong>—the exact queries
-        driving high-value pipelines. To get you started, we&apos;ve put together
-        our proprietary{" "}
-        <a
-          href={`#${PLAYBOOK_SECTION_ID}`}
-          className="font-semibold text-accent hover:underline"
-        >
-          GEO Strategy Playbook: Winning the AI Answer Engine
-        </a>
-        .
-      </p>
-      <p className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
-        No fluff, no vanity metrics. Just a technical, step-by-step framework to
-        secure your brand&apos;s citations in LLM responses.
-      </p>
-    </>
-  );
-}
-
-function EmailTwoBody() {
-  return (
-    <>
-      <p>
-        Yesterday, we talked about how AI engines are eating traditional search.
-        Today, let&apos;s talk about the hard numbers.
-      </p>
-      <p>
-        We recently analyzed 1,000+ commercial B2B SaaS prompts across GPT-4o and
-        Claude 3.5 Sonnet. The results were stark:{" "}
-        <strong className="text-ink">
-          Over 74% of the industry-leading brands ranking on Google&apos;s Page 1
-          were completely omitted from AI-generated recommendations.
-        </strong>
-      </p>
-      <p>
-        This is called the{" "}
-        <strong className="text-ink">Citation Gap</strong> — see{" "}
-        <a href="#geo-module-3" className="font-medium text-accent hover:underline">
-          Module 3
-        </a>{" "}
-        for the technical audit checklist.
-      </p>
-      <p>
-        When high-value prospects ask an LLM for product comparisons, the engine
-        synthesizes its answer from obscure developer docs, forum discussions,
-        and third-party reviews. If your GEO strategy isn&apos;t actively feeding
-        these models the right data structures, you get left out.
-      </p>
-      <p className="font-medium text-ink">Here is how CitePilot solves this:</p>
-      <ul className="space-y-3">
-        {CITE_PILOT_FEATURES.map((feature) => (
-          <li
-            key={feature.title}
-            className="rounded-xl border border-border bg-surface px-4 py-3"
-          >
-            <span className="font-display font-bold text-ink">
-              {feature.title}:
-            </span>{" "}
-            <span className="text-sm">{feature.body}</span>
-          </li>
-        ))}
-      </ul>
-      <blockquote className="rounded-2xl border border-border bg-ink px-5 py-5 text-white">
-        <p className="text-sm leading-relaxed italic text-white/90">
-          &ldquo;Within 30 days of deploying CitePilot, our SaaS brand went from
-          8% share-of-voice in ChatGPT recommendations to 42% on our top 15 money
-          prompts. The inbound pipeline growth has been immediate.&rdquo;
-        </p>
-        <footer className="mt-3 text-xs font-medium text-white/60">
-          — Head of Growth, Series-B DevTools Platform
-        </footer>
-      </blockquote>
-      <p className="font-medium text-ink">
-        Don&apos;t let your competitors monopolize the AI search interface.
-      </p>
-    </>
-  );
-}
-
-function EmailThreeBody() {
-  return (
-    <>
-      <p>
-        We&apos;ve covered the shifting landscape and the mechanics of the
-        Citation Gap. Now it&apos;s time to stop guessing and start measuring.
-      </p>
-      <p>
-        You can map your entire AI search footprint in less than a minute. Our{" "}
-        <strong className="text-ink">60-Second Free Citation Audit</strong> scans
-        ChatGPT, Perplexity, and Gemini to show you exactly:
-      </p>
-      <ol className="space-y-2">
-        {AUDIT_BULLETS.map((bullet, i) => (
-          <li
-            key={bullet}
-            className="flex gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm"
-          >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
-              {i + 1}
-            </span>
-            <span>{bullet}</span>
-          </li>
-        ))}
-      </ol>
-      <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/80 p-5">
-        <p className="font-display font-bold text-ink">
-          Limited Time Onboarding Bonus
-        </p>
-        <p className="mt-2 text-sm leading-relaxed text-muted">
-          If you run your audit within the next 48 hours, our lead GEO architect
-          will record a personalized, 5-minute video teardown of your gap analysis,
-          outlining your fastest path to AI citation dominance.
-        </p>
-        <p className="mt-3 text-sm text-muted">
-          We limit these human-curated video teardowns to{" "}
-          <strong className="text-ink">50 growth marketers per week</strong> to
-          maintain our service quality. Currently, we have{" "}
-          <strong className="text-accent">12 slots remaining</strong> for this
-          cohort.
-        </p>
+    <section id="geo-blueprint" className="scroll-mt-28 space-y-6">
+      <div>
+        <SectionLabel>Implementation</SectionLabel>
+        <h2 className="font-display mt-2 text-2xl font-bold text-ink sm:text-3xl">
+          Step-by-step GEO blueprint
+        </h2>
       </div>
-      <p>
-        Your pipeline shouldn&apos;t rely on users clicking blue links that
-        they&apos;ve already trained themselves to ignore. Claim your AI search
-        real estate today.
-      </p>
-    </>
+
+      {BLUEPRINT_STEPS.map((step) => (
+        <article
+          key={step.id}
+          id={step.id}
+          className="scroll-mt-28 rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div className="flex items-start gap-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
+              {step.step}
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-display text-lg font-bold text-ink sm:text-xl">
+                {step.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted sm:text-base">
+                {step.body}
+              </p>
+            </div>
+          </div>
+
+          {"example" in step && step.example && (
+            <div className="mt-6 overflow-hidden rounded-xl border border-accent/25 bg-gradient-to-br from-accent/5 to-surface">
+              <div className="border-b border-accent/15 px-5 py-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-accent">
+                  Q&amp;A content pattern
+                </p>
+              </div>
+              <div className="space-y-4 px-5 py-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    Question (H2)
+                  </p>
+                  <p className="mt-1 font-display text-base font-bold text-ink">
+                    {step.example.question}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    Direct answer (&lt;30 words)
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink">
+                    {step.example.answer}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </article>
+      ))}
+
+      <div className="rounded-2xl border border-accent/30 bg-gradient-to-br from-ink via-ink to-accent/40 p-6 text-white sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
+          Next step
+        </p>
+        <h3 className="font-display mt-2 text-xl font-bold sm:text-2xl">
+          Measure your citation share before you optimize blind
+        </h3>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">
+          CitePilot tracks money prompts across ChatGPT, Perplexity, Gemini, and
+          more — so you know where you&apos;re cited, where competitors win, and
+          what to fix first.
+        </p>
+        <Link
+          href="/audit"
+          className="mt-6 inline-flex rounded-xl bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-deep"
+        >
+          Run a free citation audit →
+        </Link>
+      </div>
+    </section>
   );
 }
-
-const EMAIL_BODIES = [EmailOneBody, EmailTwoBody, EmailThreeBody] as const;
 
 export function InteractiveArticle() {
   const articleRef = useRef<HTMLElement>(null);
-  const tracker = useReadTimeTracker(articleRef, ARTICLE_WORD_COUNT, {
+  const tracker = useReadTimeFromRef(articleRef, {
     sections: [...SECTIONS],
   });
-
-  useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (!hash) return;
-    requestAnimationFrame(() => {
-      const el = document.getElementById(hash);
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }, []);
 
   return (
     <div className="relative pb-16 lg:pb-0">
@@ -532,177 +536,80 @@ export function InteractiveArticle() {
         <ReadTimeRail tracker={tracker} sections={SECTIONS} />
 
         <article ref={articleRef} className="min-w-0 flex-1 space-y-14">
-          <header className="rounded-3xl border border-border bg-gradient-to-br from-ink via-ink to-accent/30 p-6 text-white sm:p-10">
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-              B2B SaaS growth sequence
-            </p>
-            <h1 className="font-display mt-3 text-3xl font-bold leading-tight sm:text-4xl lg:text-[2.65rem]">
-              Dominating the LLM Era
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
-              Read the three-email nurture sequence, then explore the full GEO
-              Playbook—four modules, landing copy, and a 60-second citation audit
-              form.
-            </p>
-            <nav
-              aria-label="Jump to page sections"
-              className="mt-6 flex flex-wrap gap-2"
-            >
-              <a
-                href={`#${NURTURE_SEQUENCE_ID}`}
-                className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
-              >
-                Email sequence
-              </a>
-              <a
-                href={`#${PLAYBOOK_SECTION_ID}`}
-                className="rounded-full border border-accent/50 bg-accent/25 px-4 py-2 text-sm font-medium text-white transition hover:bg-accent/35"
-              >
-                GEO Playbook
-              </a>
-              <a
-                href="#geo-capture"
-                className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
-              >
-                Get playbook + audit
-              </a>
-            </nav>
-            <div className="mt-4 flex flex-wrap gap-3 text-sm">
-              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white/90">
+          <header
+            id="geo-intro"
+            className="scroll-mt-28 rounded-3xl border border-border bg-gradient-to-br from-ink via-[#0c1220] to-accent/35 p-6 text-white sm:p-10"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90">
+                GEO strategy
+              </span>
+              <span className="rounded-full border border-accent/40 bg-accent/20 px-3 py-1 text-xs font-semibold text-glow">
                 {tracker.minutes} min read
               </span>
-              <span className="rounded-full border border-accent/40 bg-accent/20 px-3 py-1 font-medium text-white">
-                3 emails + playbook
-              </span>
             </div>
+            <h1 className="font-display mt-5 text-3xl font-bold leading-tight sm:text-4xl lg:text-[2.65rem]">
+              Why legacy SEO is fading — and GEO is the new meta
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
+              Users aren&apos;t clicking ten blue links. They ask ChatGPT for
+              recommendations, research on Perplexity, and let Gemini curate
+              buying guides. If your brand isn&apos;t cited inside those answers,
+              you&apos;re invisible.
+            </p>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">
+              Welcome to{" "}
+              <strong className="text-white">
+                Generative Engine Optimization (GEO)
+              </strong>
+              — securing your brand as a cited source in the AI-driven search
+              stack. At{" "}
+              <strong className="text-white">CitePilot</strong>, we track your
+              receipts and show you how to earn LLM citations.
+            </p>
+            <nav
+              aria-label="Jump to sections"
+              className="mt-6 flex flex-wrap gap-2"
+            >
+              {SECTIONS.slice(1, 5).map((s) => (
+                <a
+                  key={s.id}
+                  href={`#${s.id}`}
+                  className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+                >
+                  {s.label}
+                </a>
+              ))}
+              <a
+                href="#geo-matrix"
+                className="rounded-full border border-accent/50 bg-accent/25 px-4 py-2 text-sm font-medium text-white transition hover:bg-accent/35"
+              >
+                Prompt matrix
+              </a>
+            </nav>
           </header>
 
-          <nav
-            aria-label="Page overview"
-            className="rounded-2xl border border-border bg-surface p-6 sm:p-8"
-          >
-            <h2 className="font-display text-lg font-bold text-ink">
-              On this page
-            </h2>
-            <div className="mt-5 grid gap-6 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-                  Growth emails
-                </p>
-                <ol className="mt-3 space-y-2">
-                  {EMAILS.map((email) => (
-                    <li key={email.id}>
-                      <a
-                        href={`#${email.id}`}
-                        className="group flex gap-3 rounded-xl border border-border bg-white p-3 text-sm shadow-sm transition hover:border-accent/40"
-                      >
-                        <span className="font-bold text-accent">
-                          {email.number}.
-                        </span>
-                        <span className="min-w-0">
-                          <span className="font-medium text-ink group-hover:text-accent">
-                            {email.title}
-                          </span>
-                          <span className="mt-0.5 block truncate text-xs text-muted">
-                            {email.subject}
-                          </span>
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-                  GEO Playbook
-                </p>
-                <ul className="mt-3 space-y-2 text-sm">
-                  <li>
-                    <a
-                      href={`#${PLAYBOOK_SECTION_ID}`}
-                      className="font-medium text-ink transition hover:text-accent"
-                    >
-                      Playbook title &amp; download
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#geo-curriculum"
-                      className="font-medium text-ink transition hover:text-accent"
-                    >
-                      4-module curriculum
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#geo-landing"
-                      className="font-medium text-ink transition hover:text-accent"
-                    >
-                      Landing page value props
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#geo-capture"
-                      className="font-medium text-ink transition hover:text-accent"
-                    >
-                      Lead capture + audit
-                    </a>
-                  </li>
-                </ul>
-              </div>
+          <section id="geo-pillars" className="scroll-mt-28 space-y-6">
+            <div>
+              <SectionLabel>Framework</SectionLabel>
+              <h2 className="font-display mt-2 text-2xl font-bold text-ink sm:text-3xl">
+                The three core pillars of GEO
+              </h2>
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
+                Move from keyword rankings to citation share: map money prompts,
+                feed models structured truth, and build third-party consensus.
+              </p>
             </div>
-          </nav>
-
-          <section id={NURTURE_SEQUENCE_ID} className="scroll-mt-28 space-y-14">
-            <div className="rounded-2xl border border-dashed border-border bg-white/60 px-5 py-4 text-center text-sm text-muted">
-              <strong className="text-ink">Email nurture sequence</strong> — Email
-              1 links to the{" "}
-              <a
-                href={`#${PLAYBOOK_SECTION_ID}`}
-                className="font-medium text-accent hover:underline"
-              >
-                GEO Playbook
-              </a>{" "}
-              below.
+            <div className="space-y-6">
+              {PILLARS.map((pillar) => (
+                <PillarCard key={pillar.id} pillar={pillar} />
+              ))}
             </div>
-
-          {EMAILS.map((email, i) => {
-            const Body = EMAIL_BODIES[i]!;
-            return (
-              <EmailCard
-                key={email.id}
-                id={email.id}
-                number={email.number}
-                title={email.title}
-                subject={email.subject}
-                preview={email.preview}
-                cta={email.cta}
-                teaser={email.teaser}
-              >
-                <Body />
-              </EmailCard>
-            );
-          })}
           </section>
 
-          <div className="rounded-2xl border border-accent/30 bg-accent/5 px-5 py-4 text-center text-sm text-muted">
-            <strong className="text-ink">GEO Playbook</strong> — referenced in
-            Email 1.{" "}
-            <a
-              href={`#${PLAYBOOK_SECTION_ID}`}
-              className="font-medium text-accent hover:underline"
-            >
-              Jump to playbook
-            </a>{" "}
-            or{" "}
-            <a href="#geo-capture" className="font-medium text-accent hover:underline">
-              skip to the audit form
-            </a>
-            .
-          </div>
+          <PromptMatrix />
 
-          <GeoPlaybookSection />
+          <BlueprintSection />
         </article>
       </div>
     </div>

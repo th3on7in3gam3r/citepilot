@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { apiUserId, requireApiUser } from "@/lib/auth/api";
 import { WORKSPACE_COOKIE } from "@/lib/constants";
+import { updateWorkspaceManagement } from "@/lib/server/workspace-management";
 import {
   deleteWorkspace,
   enrichSnapshotWithBacklinks,
   getWorkspaceById,
   toSnapshot,
+  updateWorkspace,
 } from "@/lib/server/workspace";
 import { withApiLogging } from "@/lib/observability/api-log";
 
@@ -50,9 +52,31 @@ export const PATCH = withApiLogging(async function PATCH(request: Request, { par
     const userId = apiUserId(user);
 
     const { id } = await params;
-    const body = await request.json();
-    const { updateWorkspace } = await import("@/lib/server/workspace");
-    const workspace = await updateWorkspace(id, body, userId);
+    const body = (await request.json()) as Record<string, unknown>;
+
+    if (
+      body.displayName !== undefined ||
+      body.status !== undefined ||
+      body.archived !== undefined ||
+      body.restore !== undefined
+    ) {
+      await updateWorkspaceManagement(id, userId!, {
+        displayName:
+          typeof body.displayName === "string" ? body.displayName : undefined,
+        status:
+          body.status === "active" || body.status === "paused"
+            ? body.status
+            : undefined,
+        archived: body.archived === true,
+        restore: body.restore === true,
+      });
+    }
+
+    const workspace = await updateWorkspace(
+      id,
+      body as Parameters<typeof updateWorkspace>[1],
+      userId,
+    );
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }

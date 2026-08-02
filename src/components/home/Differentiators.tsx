@@ -4,8 +4,9 @@ import { differentiators } from "@/lib/content";
 
 export function Differentiators() {
   return (
-    <Section className="bg-background">
+    <Section className="bg-background" ariaLabelledBy="differentiators-heading">
       <SectionHeading
+        id="differentiators-heading"
         eyebrow="Why CitePilot"
         title="Monitor. Fix. Prove. — not monitor-only."
         align="center"

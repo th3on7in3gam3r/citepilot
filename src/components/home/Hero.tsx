@@ -1,48 +1,55 @@
 import { Container } from "@/components/ui/Container";
 import { HeroProductBanner } from "@/components/home/HeroProductBanner";
+import { HeroCta } from "@/components/home/HeroCta";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
-export function Hero() {
+export async function Hero() {
+  const t = await getTranslations("hero");
+
   return (
-    <section className="hero-premium relative overflow-hidden">
+    <section
+      className="hero-premium marketing-hero-viewport relative overflow-hidden"
+      aria-labelledby="hero-heading"
+    >
       <div className="hero-premium-grid" aria-hidden />
       <div className="hero-premium-orb hero-premium-orb--cyan" aria-hidden />
       <div className="hero-premium-orb hero-premium-orb--mint" aria-hidden />
 
-      <Container className="relative z-10 px-4 pt-[5.25rem] pb-10 sm:pt-24 sm:pb-12 md:pt-28 md:pb-14">
-        <header className="hero-rise mx-auto max-w-3xl text-center lg:max-w-4xl">
-          <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.02em] text-foreground dark:text-white sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.5rem]">
-            Track when ChatGPT, Perplexity, and Google AI cite you
-            <span className="mt-1 inline-block text-shimmer sm:mt-1.5">
-              then close the gap weekly
-            </span>
-          </h1>
+      <Container className="relative z-10 flex min-h-[inherit] flex-col justify-center px-4 pt-[4.75rem] pb-8 sm:pt-20 sm:pb-10 lg:pt-[5.25rem] lg:pb-12">
+        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10 xl:gap-12">
+          <header className="hero-rise mx-auto max-w-xl text-center lg:mx-0 lg:max-w-none lg:text-left">
+            <p className="marketing-eyebrow">{t("brand")}</p>
 
-          <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted dark:text-white/60 sm:mt-5 sm:text-lg">
-            Free citation audit in ~60 seconds. Weekly monitoring on Pilot.
-          </p>
-
-          <div className="mt-7 flex flex-col items-center sm:mt-8">
-            <Link
-              href="/audit"
-              className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-[#7b93f0] via-[#6b8cff] to-accent px-8 py-3.5 text-base font-bold text-white shadow-[0_4px_20px_rgba(14,165,233,0.3)] transition hover:scale-[1.02] hover:shadow-[0_6px_24px_rgba(14,165,233,0.35)] dark:shadow-[0_4px_24px_rgba(14,165,233,0.25)] dark:hover:shadow-[0_6px_28px_rgba(14,165,233,0.3)] sm:w-auto sm:min-w-[15rem]"
+            <h1
+              id="hero-heading"
+              className="mt-3 font-display text-[1.875rem] font-bold leading-[1.08] tracking-[-0.025em] text-foreground dark:text-white sm:mt-3.5 sm:text-[2.5rem] md:text-[2.875rem] lg:text-[3rem] xl:text-[3.25rem]"
             >
-              Start free audit
-            </Link>
-            <p className="mt-3 text-xs text-muted dark:text-white/40">
-              No credit card ·{" "}
-              <Link
-                href="/tools/citation-checker"
-                className="text-muted underline decoration-border underline-offset-2 hover:text-ink dark:text-white/55 dark:decoration-white/20 dark:hover:text-white/75"
-              >
-                Or try one prompt
-              </Link>
-            </p>
-          </div>
-        </header>
+              {t("headline")}{" "}
+              <span className="text-shimmer">{t("headlineAccent")}</span>
+            </h1>
 
-        <div className="hero-rise hero-rise-delay-2 mt-10 hidden sm:mt-12 sm:block md:mt-14">
-          <HeroProductBanner />
+            <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted dark:text-white/60 sm:mt-5 lg:mx-0 lg:max-w-sm lg:text-[1.0625rem]">
+              {t("subheadline")}
+            </p>
+
+            <div className="mt-6 flex flex-col items-center sm:mt-7 lg:items-start">
+              <HeroCta />
+              <p className="mt-2.5 text-xs text-muted dark:text-white/50">
+                {t("noCard")}{" "}
+                <Link
+                  href="/tools/citation-checker"
+                  className="text-muted underline decoration-border underline-offset-2 hover:text-ink dark:text-white/50 dark:decoration-white/20 dark:hover:text-white/75"
+                >
+                  {t("tryOnePrompt")}
+                </Link>
+              </p>
+            </div>
+          </header>
+
+          <div className="hero-rise hero-rise-delay-2 min-w-0">
+            <HeroProductBanner />
+          </div>
         </div>
       </Container>
     </section>

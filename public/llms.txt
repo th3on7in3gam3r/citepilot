@@ -1,0 +1,22 @@
+# CitePilot
+> B2B generative engine optimization platform — audit, track, and optimize brand citations in ChatGPT, Perplexity, Gemini, and Google AI Overviews.
+
+## About
+CitePilot is an AI citation tracking tool and GEO platform for marketing teams and agencies. Run free citation audits, monitor money prompts weekly, and close competitor citation gaps with proof reports.
+
+## Key pages
+- [Home](https://www.getcitepilot.com/): GEO platform overview and free citation audit
+- [Product](https://www.getcitepilot.com/product): Features, workflow, and dashboard tour
+- [Pricing](https://www.getcitepilot.com/pricing): Free audit, Pilot monitoring, and agency tiers
+- [Citation audit](https://www.getcitepilot.com/audit): Full multi-engine citation audit — no account required
+- [Citation checker](https://www.getcitepilot.com/tools/citation-checker): One-prompt instant citation verdict
+- [GEO Playbook](https://www.getcitepilot.com/tools/geo-playbook): Interactive GEO checklist and guide
+- [Agencies](https://www.getcitepilot.com/agency): White-label GEO audits and client reporting
+- [vs Semrush](https://www.getcitepilot.com/compare/semrush): CitePilot vs Semrush for AI search
+- [vs Ahrefs](https://www.getcitepilot.com/compare/ahrefs): CitePilot vs Ahrefs for AI citations
+- [AI visibility](https://www.getcitepilot.com/ai-visibility): AI search visibility strategy hub
+- [ChatGPT prompts](https://www.getcitepilot.com/chatgpt-prompts): Money prompts for citation tracking
+
+## Contact
+- Email: hello@getcitepilot.com
+- Website: https://www.getcitepilot.com

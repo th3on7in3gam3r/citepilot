@@ -193,10 +193,10 @@ export function GeoGuideArticle({ emailGate }: { emailGate?: React.ReactNode }) 
                   Download playbook (.md)
                 </button>
                 <Link
-                  href="/audit"
+                  href="/start"
                   className="inline-flex rounded-xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
                 >
-                  Run free citation audit
+                  Start free workspace setup
                 </Link>
                 <a
                   href="#geo-checklist"

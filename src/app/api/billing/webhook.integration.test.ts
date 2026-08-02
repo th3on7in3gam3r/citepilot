@@ -58,9 +58,15 @@ describe("POST /api/billing/webhook", () => {
       customer: "cus_1",
       id: "sub_1",
       metadata: { userId: "user-42" },
-      items: { data: [{ price: { id: "price_pilot" } }] },
-      current_period_end: Math.floor(Date.now() / 1000) + 3600,
-    } as Stripe.Subscription;
+      items: {
+        data: [
+          {
+            price: { id: "price_pilot" },
+            current_period_end: Math.floor(Date.now() / 1000) + 3600,
+          },
+        ],
+      },
+    } as unknown as Stripe.Subscription;
 
     constructEvent.mockReturnValue({
       type: "checkout.session.completed",

@@ -13,6 +13,8 @@ import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: clampSeoTitle(productLanding.shortTitle),
   description: clampMetaDescription(productLanding.description),
@@ -33,7 +35,7 @@ export default function ProductPage() {
   return (
     <>
       <Header light overlay />
-      <main className="bg-[#04060c]">
+      <main id="main-content" tabIndex={-1} className="bg-[#04060c]">
         <MarketingDarkHero
           eyebrow="Product"
           title="Citation intelligence built for GEO teams"
@@ -61,7 +63,7 @@ export default function ProductPage() {
           </div>
         </MarketingDarkHero>
 
-        <ProductTransparencySection variant="dark" showFaqs />
+        <ProductTransparencySection onDarkCanvas showFaqs />
         <FeatureSuite />
         <Pillars />
         <StickyProductShowcase />

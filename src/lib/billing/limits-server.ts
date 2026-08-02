@@ -4,6 +4,7 @@ import {
   isPilotPlan,
   type BillingPlan,
 } from "@/lib/billing/types";
+import { userHasFleetOverride } from "@/lib/billing/fleet-override";
 import {
   WORKSPACE_LIMIT_FREE,
   WORKSPACE_LIMIT_PILOT,
@@ -13,9 +14,13 @@ import {
   buildPromptLimits,
   type PromptLimits,
 } from "@/lib/billing/prompt-limits";
-import { countWorkspacesForUser } from "@/lib/server/workspace";
+import {
+  buildCompetitorLimits,
+  type CompetitorLimits,
+} from "@/lib/competitors/limits";
+import { countActiveWorkspacesForUser } from "@/lib/server/workspace-management";
 
-export type { WorkspaceLimits, PromptLimits };
+export type { WorkspaceLimits, PromptLimits, CompetitorLimits };
 
 export function planForUser(
   billing: Awaited<ReturnType<typeof getBillingByUserId>>,
@@ -25,6 +30,16 @@ export function planForUser(
   return "free";
 }
 
+/** Billing plan including temporary Fleet QA override for allowlisted session emails. */
+export async function getEffectivePlanForUser(
+  userId: string | null,
+): Promise<BillingPlan> {
+  if (!userId) return "free";
+  if (await userHasFleetOverride(userId)) return "fleet";
+  const billing = await getBillingByUserId(userId);
+  return planForUser(billing);
+}
+
 export async function getPromptLimitsForUser(
   userId: string | null,
   promptCount = 0,
@@ -32,8 +47,19 @@ export async function getPromptLimitsForUser(
   if (!userId) {
     return buildPromptLimits("free", promptCount);
   }
-  const billing = await getBillingByUserId(userId);
-  return buildPromptLimits(planForUser(billing), promptCount);
+  const plan = await getEffectivePlanForUser(userId);
+  return buildPromptLimits(plan, promptCount);
+}
+
+export async function getCompetitorLimitsForUser(
+  userId: string | null,
+  competitorCount = 0,
+): Promise<CompetitorLimits> {
+  if (!userId) {
+    return buildCompetitorLimits("free", competitorCount);
+  }
+  const plan = await getEffectivePlanForUser(userId);
+  return buildCompetitorLimits(plan, competitorCount);
 }
 
 export async function getWorkspaceLimitsForUser(
@@ -48,12 +74,12 @@ export async function getWorkspaceLimitsForUser(
     };
   }
 
-  const [count, billing] = await Promise.all([
-    countWorkspacesForUser(userId),
-    getBillingByUserId(userId),
+  const [count, plan] = await Promise.all([
+    countActiveWorkspacesForUser(userId),
+    getEffectivePlanForUser(userId),
   ]);
 
-  if (isFleetPlan(billing)) {
+  if (plan === "fleet") {
     return {
       plan: "fleet",
       max: null,
@@ -62,7 +88,7 @@ export async function getWorkspaceLimitsForUser(
     };
   }
 
-  if (isPilotPlan(billing)) {
+  if (plan === "pilot") {
     return {
       plan: "pilot",
       max: WORKSPACE_LIMIT_PILOT,

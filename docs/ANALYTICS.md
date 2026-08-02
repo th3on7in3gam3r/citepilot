@@ -2,6 +2,20 @@
 
 Set `NEXT_PUBLIC_POSTHOG_KEY` for the browser SDK and `POSTHOG_KEY` (same `phc_…` value) for server routes. Optionally `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` for Plausible. These `NEXT_PUBLIC_*` analytics vars are intentionally public, like Stripe publishable keys.
 
+## A/B tests (PostHog feature flags)
+
+Create multivariate flags in **PostHog → Feature flags** (not in code). The app reads variants client-side and bootstraps SSR where noted.
+
+| Flag | Surfaces | Primary conversion |
+|------|-----------|-------------------|
+| `hero-cta-text` | Home hero CTA | `audit_started` (with `from: hero`) after `hero_cta_clicked` |
+| `pricing-page-layout` | `/pricing` plan cards | `checkout_started` (includes `variant`) |
+| `onboarding-prompt-suggestions` | `/start` buyer question step | `first_scan_completed` |
+
+**Guardrails:** All flag checks default to `control` if PostHog is unavailable. Server helpers live in `src/lib/posthog-server.ts`; client hook in `src/hooks/useFeatureFlagVariant.ts`.
+
+**Reading results:** PostHog → Feature Flags → [flag] → Results. Wait for p &lt; 0.05 and ≥100 conversions per variant before calling a winner; then hardcode the winner and remove the flag check.
+
 ## Core funnel (optimize with data, not guesses)
 
 Track conversion in PostHog **Insights → Funnels** (or Live events):

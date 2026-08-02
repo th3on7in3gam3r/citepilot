@@ -1,8 +1,8 @@
-import { isValidRecipientEmail } from "@/lib/email/send";
+export type TestDigestType = "weekly_digest" | "drop_alert";
 
 export type TestDigestRequest = {
+  type: TestDigestType;
   workspaceId: string;
-  email?: string;
 };
 
 type FieldErrors = Record<string, string[]>;
@@ -14,9 +14,26 @@ function flattenFieldErrors(errors: FieldErrors) {
   };
 }
 
+const VALID_TYPES: TestDigestType[] = ["weekly_digest", "drop_alert"];
+
+export function formatValidationErrorMessage(
+  details: ReturnType<typeof flattenFieldErrors>,
+): string {
+  const fieldMsgs = Object.entries(details.fieldErrors).flatMap(([field, msgs]) =>
+    msgs.map((m) => (field === "_form" ? m : `${field}: ${m}`)),
+  );
+  if (fieldMsgs.length > 0) return fieldMsgs.join(" ");
+  return details.formErrors.join(" ") || "Validation failed";
+}
+
 export function parseTestDigestRequest(
   body: unknown,
-): { success: true; data: TestDigestRequest } | { success: false; error: { flatten: () => ReturnType<typeof flattenFieldErrors> } } {
+):
+  | { success: true; data: TestDigestRequest }
+  | {
+      success: false;
+      error: { flatten: () => ReturnType<typeof flattenFieldErrors> };
+    } {
   if (body === null || typeof body !== "object" || Array.isArray(body)) {
     return {
       success: false,
@@ -43,18 +60,19 @@ export function parseTestDigestRequest(
     errors.workspaceId = ["workspaceId is required"];
   }
 
-  let email: string | undefined;
-  if (raw.email !== undefined && raw.email !== null) {
-    if (typeof raw.email !== "string") {
-      errors.email = ["email must be a string"];
-    } else {
-      email = raw.email.trim();
-      if (!email) {
-        errors.email = ["email cannot be empty when provided"];
-      } else if (!isValidRecipientEmail(email)) {
-        errors.email = [`Invalid email address: ${email}`];
-      }
-    }
+  const typeRaw =
+    typeof raw.type === "string"
+      ? raw.type.trim()
+      : raw.type != null
+        ? String(raw.type).trim()
+        : "";
+
+  if (!typeRaw) {
+    errors.type = ['type is required — use "weekly_digest" or "drop_alert"'];
+  } else if (!VALID_TYPES.includes(typeRaw as TestDigestType)) {
+    errors.type = [
+      `type must be one of: ${VALID_TYPES.map((t) => `"${t}"`).join(", ")}`,
+    ];
   }
 
   if (Object.keys(errors).length > 0) {
@@ -66,6 +84,9 @@ export function parseTestDigestRequest(
 
   return {
     success: true,
-    data: { workspaceId, email },
+    data: {
+      type: typeRaw as TestDigestType,
+      workspaceId,
+    },
   };
 }

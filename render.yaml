@@ -1,0 +1,206 @@
+# CitePilot — Render Blueprint
+# Docs: https://render.com/docs/blueprint-spec
+#
+# After first deploy:
+# 1. Set all sync:false env vars in the Dashboard (or Blueprint sync).
+# 2. Attach custom domain getcitepilot.com (www redirects to apex) — see DEPLOY.md
+# 3. NEXT_PUBLIC_APP_URL=https://getcitepilot.com (Blueprint sets this)
+# 4. Neon Auth: NEON_AUTH_BASE_URL is set in Blueprint from Console Auth URL (…/auth);
+#    trusted origins: https://getcitepilot.com, https://www.getcitepilot.com, onrender URL
+#    Keep NEON_AUTH_COOKIE_SECRET in Dashboard only (do not rotate casually).
+# 5. Stripe / Resend / GSC callbacks at https://getcitepilot.com
+#    Set SERPER_API_KEY (or SERPAPI/TAVILY) for Backlinks discovery; GOOGLE_CLIENT_* for GSC.
+# 6. Cron jobs: APP_URL=https://getcitepilot.com with Authorization: Bearer $CRON_SECRET.
+
+services:
+  - type: web
+    name: citepilot
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: npm install --production=false && npx playwright install chromium && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://getcitepilot.com
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_POOLED
+        sync: false
+      - key: DATABASE_URL_DIRECT
+        sync: false
+      # Public Auth API URL (not a secret). Keep in sync with Neon Console → Auth → Configuration.
+      - key: NEON_AUTH_BASE_URL
+        value: https://ep-delicate-lab-atd81pa3.neonauth.c-9.us-east-1.aws.neon.tech/neondb/auth
+      - key: NEON_AUTH_COOKIE_SECRET
+        sync: false
+      - key: CMS_ENCRYPTION_KEY
+        sync: false
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: HEALTH_SECRET
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: PERPLEXITY_API_KEY
+        sync: false
+      # Web search for Backlinks / Discussions (set at least one)
+      - key: SERPER_API_KEY
+        sync: false
+      - key: SERPAPI_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      # Google Search Console OAuth
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_AUDIT_MODE
+        value: live
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: STUDIO_OPS_URL
+        sync: false
+      - key: STUDIO_OPS_WEBHOOK_SECRET
+        sync: false
+
+  # Cron jobs (UTC). Each is a separate Render cron service (~$1/mo min).
+  # APP_URL should match NEXT_PUBLIC_APP_URL / RENDER_EXTERNAL_URL of the web service.
+  - type: cron
+    name: citepilot-email-sequences
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 10 * * *"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/email-sequences"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: cron
+    name: citepilot-scheduled-scans
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 11 * * *"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/scheduled-scans"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: cron
+    name: citepilot-weekly-rescan
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 12 * * 1"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/weekly-rescan"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: cron
+    name: citepilot-weekly-digest
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 14 * * *"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/weekly-digest"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: cron
+    name: citepilot-weekly-ops-report
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 15 * * 1"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/weekly-ops-report"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: cron
+    name: citepilot-account-deletion
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 3 * * *"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/account-deletion"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: cron
+    name: citepilot-uptime-checks
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 9 * * *"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/uptime-checks"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: cron
+    name: citepilot-money-prompt-recheck
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "0 3 * * *"
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/money-prompt-recheck"'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
