@@ -4,6 +4,7 @@ import {
   GROWTH_STACK,
   aiCmoAppHref,
   kerygmaAppHref,
+  moneyGapHomeUrl,
   signalDeskHomeUrl,
   signalDeskPublishUrl,
 } from "@/lib/growth-stack";
@@ -12,6 +13,7 @@ const cards = [
   { key: "kerygma" as const, border: "border-accent/25 hover:border-accent/50" },
   { key: "aiCmo" as const, border: "border-white/10 hover:border-white/25" },
   { key: "aegis" as const, border: "border-mint/20 hover:border-mint/40" },
+  { key: "moneyGap" as const, border: "border-accent/20 hover:border-accent/45" },
 ];
 
 export function GrowthStackPromo() {
@@ -34,10 +36,11 @@ export function GrowthStackPromo() {
           >
             Bible Funland Studios
           </a>{" "}
-          help you create campaigns, run social on autopilot, and ship secure code.
+          help you create campaigns, close revenue leaks, run social on autopilot,
+          and ship secure code.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map(({ key, border }) => {
             const product = GROWTH_STACK[key];
             const href =
@@ -45,7 +48,9 @@ export function GrowthStackPromo() {
                 ? kerygmaAppHref("growth-stack-promo", "sister-card")
                 : key === "aiCmo"
                   ? aiCmoAppHref()
-                  : GROWTH_STACK.aegis.href;
+                  : key === "moneyGap"
+                    ? moneyGapHomeUrl("growth-stack-promo", "sister-card")
+                    : GROWTH_STACK.aegis.href;
             return (
               <Link
                 key={key}

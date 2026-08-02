@@ -7,6 +7,7 @@ import {
   GROWTH_STACK,
   aiCmoAppHref,
   kerygmaAppHref,
+  moneyGapHomeUrl,
   signalDeskHomeUrl,
   BIBLEFUNLAND_STUDIOS_URL,
 } from "@/lib/growth-stack";
@@ -107,6 +108,10 @@ export async function Footer() {
     },
     { label: GROWTH_STACK.aiCmo.name, href: aiCmoAppHref() },
     { label: GROWTH_STACK.aegis.name, href: GROWTH_STACK.aegis.href },
+    {
+      label: GROWTH_STACK.moneyGap.name,
+      href: moneyGapHomeUrl("footer", "growth-stack"),
+    },
     {
       label: "Signal Desk (publish desk)",
       href: signalDeskHomeUrl("footer", "publish-desk"),

@@ -243,9 +243,12 @@ export function FleetAgencyOverview() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const openWorkspace = useCallback(
-    async (id: string) => {
-      await switchWorkspace(id);
+    (id: string) => {
+      // Navigate immediately so `?site=` owns selection; switch in parallel.
+      // Awaiting the fetch first let stale refresh() responses win and bounce
+      // the UI back to the previously active workspace.
       router.push(fleetWorkspaceDashboardHref(id));
+      void switchWorkspace(id);
     },
     [router, switchWorkspace],
   );
