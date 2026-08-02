@@ -1,11 +1,20 @@
 export const CMS_PROVIDERS = [
+  "webflow",
   "wordpress",
   "ghost",
+  "hashnode",
   "shopify",
   "framer",
+  "signaldesk",
 ] as const;
 
 export type CmsProvider = (typeof CMS_PROVIDERS)[number];
+
+export type WebflowCredentials = {
+  apiKey: string;
+  siteId: string;
+  collectionId: string;
+};
 
 export type WordPressCredentials = {
   siteUrl: string;
@@ -16,6 +25,11 @@ export type WordPressCredentials = {
 export type GhostCredentials = {
   siteUrl: string;
   adminApiKey: string;
+};
+
+export type HashnodeCredentials = {
+  accessToken: string;
+  publicationId: string;
 };
 
 export type ShopifyCredentials = {
@@ -32,24 +46,50 @@ export type FramerCredentials = {
   summaryFieldId?: string;
 };
 
+/** Signal Desk — WordPress-compatible GEO newsroom ingest (Bearer API key). */
+export type SignalDeskCredentials = {
+  siteUrl: string;
+  apiKey: string;
+  /** Stored on connect for inbound post.published verification. */
+  webhookSecret?: string;
+};
+
 export type CmsCredentialsByProvider = {
+  webflow: WebflowCredentials;
   wordpress: WordPressCredentials;
   ghost: GhostCredentials;
+  hashnode: HashnodeCredentials;
   shopify: ShopifyCredentials;
   framer: FramerCredentials;
+  signaldesk: SignalDeskCredentials;
 };
 
 export type CmsRemoteDefaultsByProvider = {
-  wordpress: Record<string, never>;
-  ghost: Record<string, never>;
+  webflow: {
+    siteName: string;
+    collectionName: string;
+    sitePreviewUrl?: string;
+    fieldName?: string;
+    fieldSlug?: string;
+    fieldBody?: string;
+    maskedApiKey?: string;
+  };
+  wordpress: { maskedAppPassword?: string };
+  ghost: { maskedAdminApiKey?: string };
+  hashnode: { maskedAccessToken?: string };
   shopify: {
     blogId: string;
     blogTitle: string;
     blogHandle: string;
+    shopName?: string;
+    maskedAccessToken?: string;
   };
   framer: {
     collectionName: string;
+    snippetInstalled?: boolean;
+    maskedApiKey?: string;
   };
+  signaldesk: { maskedApiKey?: string; webhookUrl?: string };
 };
 
 export type CmsConnectionRow = {
@@ -107,4 +147,8 @@ export type CmsConnectionSummary = {
   displayName?: string;
   siteUrl?: string;
   detail?: string;
+  status?: "connected" | "error" | "disconnected";
+  maskedSecret?: string;
+  lastPublishTitle?: string;
+  lastPublishAt?: string;
 };

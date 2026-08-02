@@ -9,6 +9,7 @@ export function defaultSiteSignals(geoScore = 0): SiteSignals {
     title: null,
     metaDescription: null,
     h1: null,
+    bodyExcerpt: null,
     wordCount: 0,
     hasJsonLd: false,
     hasFaqSchema: false,
@@ -18,7 +19,21 @@ export function defaultSiteSignals(geoScore = 0): SiteSignals {
     sitemapFound: false,
     fetchOk: false,
     geoScore,
+    deepCrawl: null,
   };
+}
+
+function parseDeepCrawl(raw: unknown): SiteSignals["deepCrawl"] {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  const pagesCrawled =
+    typeof obj.pagesCrawled === "number" ? obj.pagesCrawled : null;
+  const maxPages = typeof obj.maxPages === "number" ? obj.maxPages : null;
+  if (pagesCrawled == null || maxPages == null) return null;
+  const urls = Array.isArray(obj.urls)
+    ? obj.urls.filter((u): u is string => typeof u === "string")
+    : [];
+  return { pagesCrawled, maxPages, urls };
 }
 
 export function parseSiteSignals(
@@ -33,6 +48,10 @@ export function parseSiteSignals(
   return {
     ...base,
     ...partial,
+    deepCrawl:
+      partial.deepCrawl === undefined
+        ? base.deepCrawl
+        : parseDeepCrawl(partial.deepCrawl),
     geoScore:
       typeof partial.geoScore === "number" ? partial.geoScore : fallbackScore,
   };
@@ -60,7 +79,19 @@ export function parsePlatforms(
 export function parsePromptResults(
   raw: string | number | null | undefined,
 ): PromptResult[] {
-  return parseJsonArray<PromptResult>(raw);
+  return parseJsonArray<PromptResult>(raw)
+    .filter(
+      (row): row is PromptResult =>
+        row != null &&
+        typeof row === "object" &&
+        typeof row.prompt === "string" &&
+        typeof row.cited === "boolean",
+    )
+    .map((row) => ({
+      prompt: row.prompt,
+      cited: row.cited,
+      reason: typeof row.reason === "string" ? row.reason : "",
+    }));
 }
 
 export function parseGaps(raw: string | number | null | undefined): string[] {

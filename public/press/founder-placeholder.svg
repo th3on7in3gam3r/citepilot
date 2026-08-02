@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none" role="img" aria-label="Founder photo placeholder">
+  <rect width="160" height="160" rx="80" fill="#0f172a"/>
+  <circle cx="80" cy="80" r="78" stroke="#0ea5e9" stroke-width="2" stroke-opacity="0.35"/>
+  <text x="80" y="92" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="48" font-weight="700" fill="#38bdf8">CP</text>
+</svg>

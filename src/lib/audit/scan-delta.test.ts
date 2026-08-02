@@ -61,6 +61,21 @@ describe("buildScanDeltaSummary", () => {
     expect(summary.chips).toEqual([]);
   });
 
+  it("tolerates malformed gap arrays", () => {
+    const previous = audit({
+      id: "prev",
+      gaps: undefined as unknown as string[],
+    });
+    const current = audit({
+      id: "curr",
+      gaps: [null, "new gap", 42] as unknown as string[],
+    });
+
+    expect(() =>
+      buildScanDeltaSummary({ current, previous }),
+    ).not.toThrow();
+  });
+
   it("detects lost citations and new gaps", () => {
     const previous = audit({
       id: "prev",
@@ -87,5 +102,21 @@ describe("buildScanDeltaSummary", () => {
     expect(summary.newGaps).toBe(1);
     expect(summary.chips).toContain("−1 prompt cited");
     expect(summary.chips).toContain("+1 gap");
+    expect(summary.detail?.newGapLabels).toEqual(["new gap"]);
+    expect(summary.detail?.fullyUnchanged).toBe(false);
+  });
+
+  it("marks fully unchanged scans in detail", () => {
+    const previous = audit({ id: "prev", score: 45, cited: 2, gaps: ["gap a"] });
+    const current = audit({
+      id: "curr",
+      score: 45,
+      cited: 2,
+      gaps: ["gap a"],
+    });
+
+    const summary = buildScanDeltaSummary({ current, previous });
+    expect(summary.detail?.fullyUnchanged).toBe(true);
+    expect(summary.chips).toEqual([]);
   });
 });

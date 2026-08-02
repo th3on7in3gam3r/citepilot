@@ -33,19 +33,12 @@ export function isSectionComplete(
       const services = ctx.googleServices;
       if (!services) return false;
       return (
-        services.analytics || services["my-business"] || services["search-console"]
+        services.analytics || services["search-console"]
       );
     }
     case "targeting":
       return (
         workspace.buyerQuestion?.trim().length > 5 && workspace.audiences.length > 0
-      );
-    case "competitors":
-      return workspace.competitors.length > 0;
-    case "keywords":
-      return (
-        (workspace.preferences?.monitoredPrompts?.length ?? 0) > 0 ||
-        workspace.promptsTracked > 1
       );
     case "working-files":
       return workspace.contentDrafts > 0 || Boolean(ctx.hasGeneratedPost);

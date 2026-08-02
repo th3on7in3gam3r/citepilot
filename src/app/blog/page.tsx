@@ -1,93 +1,95 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { Container } from "@/components/ui/Container";
-import { getAllPosts } from "@/lib/blog";
-import { clampMetaDescription } from "@/lib/seo/meta";
 import {
-  AUDIENCE_LABELS,
-  CONTENT_TYPE_LABELS,
-  EDITORIAL_PILLARS,
-} from "@/lib/content-strategy";
+  BlogCategoryGrid,
+  BlogPillarChips,
+} from "@/components/blog/BlogCategoryGrid";
+import { BlogHero } from "@/components/blog/BlogHero";
+import { BlogLayout } from "@/components/blog/BlogLayout";
+import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
+import { BlogPostCard } from "@/components/blog/BlogPostCard";
+import { BlogSearch } from "@/components/blog/BlogSearch";
+import { Container } from "@/components/ui/Container";
+import {
+  countPostsByPillar,
+  getAllPostSummaries,
+  getPillarsForCategoryGrid,
+} from "@/lib/blog";
+import { site } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "GEO, SEO & AI Citation Guides",
   description:
     "SEO, GEO, and AI citation playbooks for founders, agencies, and SaaS teams — from CitePilot.",
+  alternates: { canonical: `${site.url}/blog` },
 };
 
 export default async function BlogIndexPage() {
-  const posts = await getAllPosts();
+  const posts = await getAllPostSummaries();
+  const counts = countPostsByPillar(posts);
+  const gridPillars = getPillarsForCategoryGrid(posts);
+  const featured = posts[0];
+  const topicCount = gridPillars.length;
 
   return (
-    <>
-      <Header />
-      <main className="bg-cream pt-24 pb-16">
-        <Container>
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-            CitePilot editorial
-          </p>
-          <h1 className="font-display mt-2 max-w-2xl text-4xl font-bold text-ink md:text-5xl">
-            SEO &amp; AI visibility, explained like a mentor — not a content farm
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-muted">
-            Practical guides on Google rankings, LLM citations, technical SEO, and
-            agency growth. Built for extractability in ChatGPT and clarity in search.
-          </p>
+    <BlogLayout>
+      <BlogHero
+        eyebrow="CitePilot editorial"
+        title="GEO & SEO guides for teams who measure citations"
+        description="Practical playbooks on Google rankings, LLM citations, and technical SEO — written for clarity in search and AI answers."
+        stats={[
+          { value: String(posts.length), label: posts.length === 1 ? "guide" : "guides" },
+          ...(topicCount > 0
+            ? [{ value: String(topicCount), label: topicCount === 1 ? "topic" : "topics" }]
+            : []),
+        ]}
+      />
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {EDITORIAL_PILLARS.map((p) => (
-              <div
-                key={p.id}
-                className="rounded-xl border border-border bg-white px-4 py-3 text-sm"
-              >
-                <p className="font-semibold text-ink">{p.title}</p>
-                <p className="mt-1 text-xs text-muted">{p.description}</p>
-              </div>
-            ))}
-          </div>
+      <Container className="pb-16 pt-10 md:pb-24 md:pt-12">
+        {featured && (
+          <section aria-labelledby="featured-heading">
+            <h2 id="featured-heading" className="sr-only">
+              Featured article
+            </h2>
+            <BlogPostCard post={featured} featured />
+          </section>
+        )}
 
-          <div className="mt-14 space-y-6">
-            {posts.map((post) => (
-              <article
-                key={post.slug}
-                className="rounded-2xl border border-border bg-white p-6 shadow-sm transition hover:border-accent/40"
-              >
-                <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className="rounded-full bg-accent/10 px-3 py-1 text-accent">
-                    {EDITORIAL_PILLARS.find((p) => p.id === post.pillar)?.title ??
-                      post.pillar}
-                  </span>
-                  <span className="rounded-full bg-surface px-3 py-1 text-muted">
-                    {AUDIENCE_LABELS[post.audience]}
-                  </span>
-                  <span className="rounded-full bg-surface px-3 py-1 text-muted">
-                    {CONTENT_TYPE_LABELS[post.contentType]}
-                  </span>
-                </div>
-                <h2 className="font-display mt-4 text-2xl font-bold text-ink">
-                  <Link href={`/blog/${post.slug}`} className="hover:text-accent">
-                    {post.title}
-                  </Link>
-                </h2>
-                <p className="mt-2 text-muted">
-                  {clampMetaDescription(post.description)}
-                </p>
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="mt-4 inline-block text-sm font-semibold text-accent"
-                >
-                  Read article →
-                </Link>
-              </article>
-            ))}
-          </div>
-        </Container>
-      </main>
-      <Footer />
-    </>
+        <div className={featured ? "mt-10" : ""}>
+          <BlogPillarChips />
+        </div>
+
+        {posts.length > 1 ? (
+          <section className="mt-12" aria-labelledby="articles-heading">
+            <BlogSearch
+              posts={posts}
+              featuredSlug={featured?.slug}
+              totalCount={posts.length - (featured ? 1 : 0)}
+            />
+          </section>
+        ) : (
+          !featured && (
+            <p className="mt-12 text-center text-white/50">
+              New guides publishing soon.
+            </p>
+          )
+        )}
+
+        {gridPillars.length > 0 ? (
+          <BlogCategoryGrid pillars={gridPillars} counts={counts} />
+        ) : (
+          posts.length > 0 && (
+            <p className="mt-16 text-center text-sm text-white/40">
+              More topic sections unlock as we publish additional guides.
+            </p>
+          )
+        )}
+
+        <div className="mt-16 md:mt-20">
+          <BlogNewsletterSignup variant="card" />
+        </div>
+      </Container>
+    </BlogLayout>
   );
 }

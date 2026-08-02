@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth, isNeonAuthEnabled } from "@/lib/auth/server";
-import { ADMIN_COOKIE, checkAdminAccess } from "@/lib/admin-auth";
+import { auth, getRealSessionUser, isNeonAuthEnabled } from "@/lib/auth/server";
+import { checkAdminEmailAccess, isAdminApiPublic } from "@/lib/admin-auth";
 import { corsHeaders, isAllowedCorsOrigin } from "@/lib/cors";
 import { isDashboardSeoHubPath } from "@/lib/dashboard-seo-hubs";
+import { isCrawlerUserAgent } from "@/lib/crawler-ua";
+import { intlMiddleware, shouldRunIntl } from "@/lib/i18n/intl-proxy";
+import { isNonLocalizedRootPath } from "@/lib/i18n/intl-paths";
+import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
+import { routing } from "@/i18n/routing";
+import { enforceTwoFactorAccess } from "@/lib/security/fleet-2fa";
 
 const dashboardAuthProxy =
   isNeonAuthEnabled() && auth
@@ -43,67 +49,153 @@ function withApiCorsHeaders(
   return response;
 }
 
-async function handleProxy(request: NextRequest): Promise<NextResponse> {
-  const { pathname } = request.nextUrl;
-  const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
+const PRIMARY_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "getcitepilot.com",
+  "www.getcitepilot.com",
+]);
 
-  const admin = checkAdminAccess(
-    pathname,
-    request.cookies.get(ADMIN_COOKIE)?.value,
-  );
-  if (admin.protected && !admin.allowed) {
-    if (pathname.startsWith("/api/admin")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const login = new URL("/admin/login", request.url);
-    login.searchParams.set("from", pathname);
-    return NextResponse.redirect(login);
-  }
+function hostFromRequest(request: NextRequest): string {
+  return request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? "";
+}
 
-  if (
-    dashboardAuthProxy &&
-    (hasOAuthVerifier || pathname === "/dashboard" || pathname.startsWith("/dashboard/"))
-  ) {
-    // OAuth verifier must not land on sign-in; exchange only runs on protected routes.
-    if (
-      hasOAuthVerifier &&
-      (pathname.startsWith("/auth/sign-in") || pathname.startsWith("/auth/sign-up"))
-    ) {
-      const dashboard = new URL("/dashboard", request.url);
-      request.nextUrl.searchParams.forEach((value, key) => {
-        dashboard.searchParams.set(key, value);
-      });
-      return NextResponse.redirect(dashboard);
-    }
-    // Let crawlers and signed-out visitors read server-rendered hub SEO copy.
-    if (
-      request.method === "GET" &&
-      !hasOAuthVerifier &&
-      isDashboardSeoHubPath(pathname)
-    ) {
+function isPrimaryHost(host: string): boolean {
+  if (!host) return true;
+  if (PRIMARY_HOSTS.has(host)) return true;
+  if (host.endsWith(".vercel.app")) return true;
+  if (host.endsWith(".onrender.com")) return true;
+  return false;
+}
+
+async function handleShortReportPath(request: NextRequest): Promise<NextResponse | null> {
+  const shortMatch = request.nextUrl.pathname.match(/^\/r\/([^/]+)/);
+  if (!shortMatch) return null;
+
+  const token = shortMatch[1];
+  const host = hostFromRequest(request);
+
+  if (!isPrimaryHost(host)) {
+    try {
+      const verifyUrl = new URL("/api/white-label/resolve-host", request.url);
+      verifyUrl.searchParams.set("host", host);
+      const res = await fetch(verifyUrl.toString(), { cache: "no-store" });
+      if (!res.ok) return NextResponse.next();
+      const json = (await res.json()) as { verified?: boolean };
+      if (!json.verified) {
+        return NextResponse.json(
+          { error: "Custom report domain is not verified for this host." },
+          { status: 404 },
+        );
+      }
+    } catch {
       return NextResponse.next();
     }
-    return dashboardAuthProxy(request);
   }
 
-  return NextResponse.next();
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = `/report/proof/${token}`;
+  return NextResponse.rewrite(rewriteUrl);
 }
 
 export async function proxy(request: NextRequest) {
   const corsResponse = resolveApiCors(request);
   if (corsResponse) return corsResponse;
 
-  const response = await handleProxy(request);
-  return withApiCorsHeaders(request, response);
+  const shortReport = await handleShortReportPath(request);
+  if (shortReport) return withApiCorsHeaders(request, shortReport);
+
+  const { pathname } = request.nextUrl;
+  const hasOAuthVerifier = request.nextUrl.searchParams.has(OAUTH_VERIFIER_PARAM);
+
+  const sessionUser = await getRealSessionUser(request);
+  const twoFactorBlock = await enforceTwoFactorAccess(
+    request,
+    pathname,
+    sessionUser?.id,
+  );
+  if (twoFactorBlock) {
+    return withApiCorsHeaders(request, twoFactorBlock);
+  }
+
+  const admin = await checkAdminEmailAccess(pathname, sessionUser?.email);
+  if (admin.protected && !admin.allowed && !isAdminApiPublic(pathname)) {
+    if (pathname.startsWith("/api/admin")) {
+      return NextResponse.json({ error: "Not Found" }, { status: 404 });
+    }
+    if (pathname.startsWith("/admin")) {
+      if (!sessionUser?.email) {
+        const signIn = new URL("/auth/sign-in", request.url);
+        signIn.searchParams.set("from", pathname);
+        return NextResponse.redirect(signIn);
+      }
+      return NextResponse.next();
+    }
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
+  if (
+    dashboardAuthProxy &&
+    (hasOAuthVerifier || pathname === "/dashboard" || pathname.startsWith("/dashboard/"))
+  ) {
+    if (
+      hasOAuthVerifier &&
+      (pathname.startsWith("/auth/sign-in") ||
+        pathname.startsWith("/auth/sign-up") ||
+        pathname === "/start")
+    ) {
+      // Complete OAuth session exchange on /dashboard (protected + tested path),
+      // then send new users back to onboarding when they have no workspace.
+      const dashboard = new URL("/dashboard", request.url);
+      request.nextUrl.searchParams.forEach((value, key) => {
+        dashboard.searchParams.set(key, value);
+      });
+      if (pathname === "/start") {
+        dashboard.searchParams.set("from", "/start");
+      }
+      return NextResponse.redirect(dashboard);
+    }
+    // SEO hubs stay crawlable for bots only — human browsers always run
+    // Neon Auth middleware so session cookies match API requireApiUser.
+    if (
+      request.method === "GET" &&
+      !hasOAuthVerifier &&
+      isDashboardSeoHubPath(pathname) &&
+      isCrawlerUserAgent(request.headers.get("user-agent"))
+    ) {
+      return NextResponse.next();
+    }
+    return dashboardAuthProxy(request);
+  }
+
+  if (shouldRunIntl(pathname)) {
+    return withApiCorsHeaders(request, intlMiddleware(request));
+  }
+
+  if (isNonLocalizedRootPath(pathname)) {
+    const response = NextResponse.next();
+    // App routes outside [locale] are English-only — keep nav/switcher on EN.
+    response.cookies.set(LOCALE_COOKIE_NAME, routing.defaultLocale, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    return withApiCorsHeaders(request, response);
+  }
+
+  return withApiCorsHeaders(request, NextResponse.next());
 }
 
 export const config = {
   matcher: [
     "/api/:path*",
+    "/admin",
     "/admin/:path*",
     "/dashboard",
     "/dashboard/:path*",
     "/auth/sign-in",
     "/auth/sign-up",
+    "/r/:path*",
+    "/((?!api|dashboard|auth|admin|geo|report|_next|_vercel|.*\\..*).*)",
   ],
 };

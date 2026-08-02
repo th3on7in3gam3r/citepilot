@@ -13,7 +13,11 @@ export function CitationDashboardMock({
   const bodyPad = compact ? "p-3 sm:p-3.5" : "p-5";
 
   return (
-    <div className={shell}>
+    <div
+      className={shell}
+      role="img"
+      aria-label="Sample citation analysis dashboard for brightlayer.io"
+    >
       <div
         className={`flex items-center gap-2 border-b border-white/[0.08] bg-[#070b14] ${chromePad}`}
       >
@@ -37,7 +41,7 @@ export function CitationDashboardMock({
           <div className="min-w-0">
             <p className={`text-white/45 ${compact ? "text-[10px]" : "text-xs"}`}>Domain</p>
             <p className={`truncate font-semibold tracking-tight text-white ${compact ? "text-sm" : ""}`}>
-              acme.com
+              brightlayer.io
             </p>
           </div>
           {!compact && (
@@ -109,7 +113,7 @@ export function CitationDashboardMock({
                   className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-xs"
                 >
                   <span className="text-white/70">{p.name}</span>
-                  <span className={p.on ? "font-semibold text-mint" : "text-white/30"}>
+                  <span className={p.on ? "font-semibold text-mint" : "text-white/50"}>
                     {p.on ? "Cited" : "Missing"}
                   </span>
                 </div>
@@ -131,7 +135,7 @@ export function CitationDashboardMock({
                 className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-medium ${
                   p.on
                     ? "border-mint/25 bg-mint/10 text-mint"
-                    : "border-white/[0.06] bg-white/[0.03] text-white/40"
+                    : "border-white/10 bg-white/[0.04] text-white/55"
                 }`}
               >
                 <span

@@ -6,7 +6,8 @@ import type {
 } from "@/lib/content-strategy";
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
-import type { BlogPost } from "./types";
+import { parseCoverImageMeta } from "./cover-meta";
+import { DEFAULT_BLOG_AUTHOR, type BlogPost } from "./types";
 
 export type BlogPostRow = {
   id: string;
@@ -26,6 +27,8 @@ export type BlogPostRow = {
   webflow_item_id: string | null;
   webflow_published_at: string | null;
   webflow_live_url: string | null;
+  cover_image_url: string | null;
+  cover_image_alt: string | null;
 };
 
 export type SaveBlogPostInput = {
@@ -67,6 +70,8 @@ export function parseMarkdownMeta(markdown: string): {
   description?: string;
   title?: string;
   tldr?: string;
+  coverImageUrl?: string;
+  coverImageAlt?: string;
 } {
   const seoTitle = markdown.match(/<!--\s*seo-title:\s*(.+?)\s*-->/)?.[1]?.trim();
   const description = markdown
@@ -77,12 +82,62 @@ export function parseMarkdownMeta(markdown: string): {
     /(?:^|\n)(?:#{1,6}\s+)?(?:\*\*)?(?:TL;DR|Quick Summary)(?:\*\*)?[:\s—-]+\s*([\s\S]+?)(?=\n\n|\n#)/i,
   );
   const tldr = tldrMatch?.[1]?.replace(/\*\*/g, "").trim();
-  return { seoTitle, description, title, tldr };
+  const cover = parseCoverImageMeta(markdown);
+  return { seoTitle, description, title, tldr, ...cover };
+}
+
+function resolveRowCover(row: {
+  cover_image_url?: string | null;
+  cover_image_alt?: string | null;
+  markdown?: string | null;
+}): {
+  coverImageUrl?: string;
+  coverImageAlt?: string;
+} {
+  if (row.cover_image_url) {
+    return {
+      coverImageUrl: row.cover_image_url,
+      ...(row.cover_image_alt ? { coverImageAlt: row.cover_image_alt } : {}),
+    };
+  }
+  if (row.markdown?.trim()) {
+    return parseCoverImageMeta(row.markdown);
+  }
+  return {};
 }
 
 function estimateReadingMinutes(markdown: string): number {
   const words = markdown.split(/\s+/).filter(Boolean).length;
   return Math.max(3, Math.round(words / 200));
+}
+
+const BLOG_SUMMARY_COLUMNS = `
+  slug, title, description, pillar, audience, content_type,
+  published_at, seo_title, tldr, reading_minutes,
+  cover_image_url, cover_image_alt
+`.replace(/\s+/g, " ");
+
+export type BlogPostSummaryRow = {
+  slug: string;
+  title: string;
+  description: string;
+  pillar: string;
+  audience: string;
+  content_type: string;
+  published_at: string;
+  seo_title: string;
+  tldr: string;
+  reading_minutes: number;
+  cover_image_url: string | null;
+  cover_image_alt: string | null;
+};
+
+export async function listGeneratedPostSummaries(): Promise<BlogPostSummaryRow[]> {
+  return dbAll<BlogPostSummaryRow>(
+    `SELECT ${BLOG_SUMMARY_COLUMNS}
+     FROM blog_posts
+     ORDER BY published_at DESC, created_at DESC`,
+  );
 }
 
 export async function listGeneratedPosts(): Promise<BlogPostRow[]> {
@@ -126,6 +181,7 @@ export async function saveGeneratedPost(
 ): Promise<BlogPostRow> {
   const id = randomUUID();
   const now = new Date().toISOString();
+  const cover = parseCoverImageMeta(input.markdown);
   const row: BlogPostRow = {
     id,
     slug: input.slug,
@@ -144,13 +200,16 @@ export async function saveGeneratedPost(
     webflow_item_id: null,
     webflow_published_at: null,
     webflow_live_url: null,
+    cover_image_url: cover.coverImageUrl ?? null,
+    cover_image_alt: cover.coverImageAlt ?? null,
   };
 
   await dbRun(
     `INSERT INTO blog_posts (
       id, slug, title, description, pillar, audience, content_type,
-      published_at, seo_title, tldr, markdown, reading_minutes, workspace_id, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      published_at, seo_title, tldr, markdown, reading_minutes, workspace_id, created_at,
+      cover_image_url, cover_image_alt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.id,
       row.slug,
@@ -166,6 +225,8 @@ export async function saveGeneratedPost(
       row.reading_minutes,
       row.workspace_id,
       row.created_at,
+      row.cover_image_url,
+      row.cover_image_alt,
     ],
   );
 
@@ -192,6 +253,71 @@ export async function markBlogPostWebflowPublish(
   );
 }
 
+export type UpdateBlogPostInput = {
+  title?: string;
+  description?: string;
+  markdown?: string;
+  seoTitle?: string;
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+};
+
+export async function updateBlogPost(
+  slug: string,
+  input: UpdateBlogPostInput,
+): Promise<void> {
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+
+  if (input.title !== undefined) {
+    setClauses.push("title = ?");
+    params.push(input.title.trim());
+  }
+  if (input.description !== undefined) {
+    setClauses.push("description = ?");
+    params.push(clampMetaDescription(input.description));
+  }
+  if (input.seoTitle !== undefined) {
+    setClauses.push("seo_title = ?");
+    params.push(clampSeoTitle(input.seoTitle));
+  }
+  if (input.markdown !== undefined) {
+    setClauses.push("markdown = ?");
+    params.push(input.markdown);
+    setClauses.push("reading_minutes = ?");
+    params.push(estimateReadingMinutes(input.markdown));
+    const cover = parseCoverImageMeta(input.markdown);
+    if (cover.coverImageUrl) {
+      setClauses.push("cover_image_url = ?");
+      params.push(cover.coverImageUrl);
+    }
+    if (cover.coverImageAlt) {
+      setClauses.push("cover_image_alt = ?");
+      params.push(cover.coverImageAlt);
+    }
+  }
+  if (input.coverImageUrl !== undefined) {
+    setClauses.push("cover_image_url = ?");
+    params.push(input.coverImageUrl);
+  }
+  if (input.coverImageAlt !== undefined) {
+    setClauses.push("cover_image_alt = ?");
+    params.push(input.coverImageAlt);
+  }
+
+  if (setClauses.length === 0) return;
+  params.push(slug);
+  await dbRun(
+    `UPDATE blog_posts SET ${setClauses.join(", ")} WHERE slug = ?`,
+    params,
+  );
+}
+
+export async function deleteBlogPost(slug: string): Promise<void> {
+  await dbRun(`DELETE FROM blog_posts WHERE slug = ?`, [slug]);
+}
+
+
 /** Keep one row per slug — prefer Webflow-published, then newest. */
 export function dedupeBlogPostsBySlug(rows: BlogPostRow[]): BlogPostRow[] {
   const bySlug = new Map<string, BlogPostRow>();
@@ -215,7 +341,8 @@ export function dedupeBlogPostsBySlug(rows: BlogPostRow[]): BlogPostRow[] {
   );
 }
 
-export function rowToBlogPost(row: BlogPostRow): BlogPost {
+export function rowToBlogPostSummary(row: BlogPostSummaryRow): BlogPost {
+  const cover = resolveRowCover(row);
   return {
     slug: row.slug,
     title: row.title,
@@ -223,6 +350,29 @@ export function rowToBlogPost(row: BlogPostRow): BlogPost {
     pillar: row.pillar as EditorialPillarId,
     audience: row.audience as AudienceSegment,
     contentType: row.content_type as ContentType,
+    author: DEFAULT_BLOG_AUTHOR,
+    publishedAt: row.published_at,
+    readingMinutes: row.reading_minutes,
+    seoTitle: row.seo_title,
+    tldr: row.tldr,
+    sections: [],
+    faqs: [],
+    takeaways: [],
+    source: "generated",
+    ...cover,
+  };
+}
+
+export function rowToBlogPost(row: BlogPostRow): BlogPost {
+  const cover = resolveRowCover(row);
+  return {
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    pillar: row.pillar as EditorialPillarId,
+    audience: row.audience as AudienceSegment,
+    contentType: row.content_type as ContentType,
+    author: DEFAULT_BLOG_AUTHOR,
     publishedAt: row.published_at,
     readingMinutes: row.reading_minutes,
     seoTitle: row.seo_title,
@@ -232,6 +382,7 @@ export function rowToBlogPost(row: BlogPostRow): BlogPost {
     takeaways: [],
     markdown: row.markdown,
     source: "generated",
+    ...cover,
   };
 }
 

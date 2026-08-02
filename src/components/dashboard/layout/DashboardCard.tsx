@@ -10,6 +10,7 @@ export function DashboardCard({
   dataStatus,
   children,
   className = "",
+  accent = "none",
 }: {
   title?: string;
   action?: string;
@@ -17,16 +18,30 @@ export function DashboardCard({
   dataStatus?: DataStatus;
   children: ReactNode;
   className?: string;
+  accent?: "default" | "blue" | "amber" | "mint" | "none";
 }) {
+  const accentColors: Record<string, string> = {
+    default: "from-[#0ea5e9] via-[#22d3ee] to-[#10b981]",
+    blue: "from-[#0ea5e9] to-[#6366f1]",
+    amber: "from-[#f59e0b] to-[#fb923c]",
+    mint: "from-[#10b981] to-[#22d3ee]",
+    none: "",
+  };
+
   return (
-    <section
-      className={`rounded-2xl border border-[#e8edf3] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] ${className}`}
-    >
+    <section className={`dash-content-card overflow-hidden transition-shadow duration-200 hover:shadow-md ${className}`}>
+      {accent !== "none" && (
+        <div
+          className={`h-[3px] bg-gradient-to-r ${accentColors[accent]}`}
+          aria-hidden
+        />
+      )}
+
       {(title || action || dataStatus) && (
-        <header className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-5 py-4">
+        <header className="flex items-center justify-between gap-3 border-b border-[var(--dashboard-sidebar-border)] px-5 py-4">
           <div className="flex min-w-0 items-center gap-2">
             {title ? (
-              <h2 className="truncate text-sm font-semibold text-[#0f172a]">{title}</h2>
+              <h2 className="truncate text-sm font-semibold text-ink">{title}</h2>
             ) : (
               <span />
             )}
@@ -35,12 +50,12 @@ export function DashboardCard({
           {action && actionHref ? (
             <Link
               href={actionHref}
-              className="text-xs font-medium text-[#64748b] transition hover:text-[#0f172a]"
+              className="shrink-0 text-xs font-semibold text-accent transition-colors hover:text-accent-deep"
             >
-              {action}
+              {action} →
             </Link>
           ) : action ? (
-            <span className="text-xs font-medium text-[#64748b]">{action}</span>
+            <span className="text-xs font-medium text-muted">{action}</span>
           ) : null}
         </header>
       )}

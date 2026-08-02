@@ -799,5 +799,35 @@ export const geoGuideNavSections = [
   { id: "geo-seven-day", label: "7-day plan" },
   { id: "geo-checklist", label: "Checklist" },
   { id: "geo-faq", label: "FAQ" },
-  { id: "geo-capture", label: "Get audit" },
+  { id: "geo-capture", label: "Get PDF" },
 ] as const;
+
+/** 42 interactive checklist items: core checklist + 7-day tasks + Perplexity actions */
+export function buildFullPlaybookChecklist(): GeoChecklistItem[] {
+  const items: GeoChecklistItem[] = [...geoImplementationChecklist];
+
+  for (const day of geoSevenDayPlan) {
+    day.tasks.forEach((task, taskIndex) => {
+      items.push({
+        id: `chk-day${day.day}-${taskIndex}`,
+        category: `Day ${day.day}: ${day.title}`,
+        label: task.length > 72 ? `${task.slice(0, 69)}…` : task,
+        detail: task,
+      });
+    });
+  }
+
+  for (const step of perplexityCitationPlaybook.steps) {
+    const action = step.actions[0];
+    if (action) {
+      items.push({
+        id: `chk-${step.id}`,
+        category: "Perplexity playbook",
+        label: step.title,
+        detail: action,
+      });
+    }
+  }
+
+  return items.slice(0, 42);
+}

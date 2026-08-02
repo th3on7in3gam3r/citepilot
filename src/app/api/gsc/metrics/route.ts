@@ -5,10 +5,11 @@ import { deleteGscConnection } from "@/lib/gsc/store";
 import { isGscConfigured } from "@/lib/gsc/config";
 import { getWorkspaceById } from "@/lib/server/workspace";
 import { captureServerException } from "@/lib/observability/sentry";
+import { withApiLogging } from "@/lib/observability/api-log";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export const GET = withApiLogging(async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get("workspaceId")?.trim();
@@ -55,9 +56,9 @@ export async function GET(request: Request) {
       { status: 200 },
     );
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withApiLogging(async function DELETE(request: Request) {
   try {
     const user = await requireApiUser(request);
     if (user instanceof NextResponse) return user;
@@ -81,4 +82,4 @@ export async function DELETE(request: Request) {
     console.error("DELETE /api/gsc/metrics", error);
     return NextResponse.json({ error: "Could not disconnect GSC" }, { status: 500 });
   }
-}
+});

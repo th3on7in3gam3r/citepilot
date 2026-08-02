@@ -145,7 +145,7 @@ function StickyTabNav({ activeId }: { activeId: string | null }) {
   );
 }
 
-export function GeoGuideArticle() {
+export function GeoGuideArticle({ emailGate }: { emailGate?: React.ReactNode }) {
   const articleRef = useRef<HTMLElement>(null);
   const tracker = useReadTimeFromRef(articleRef, {
     sections: [...geoGuideNavSections],
@@ -193,10 +193,10 @@ export function GeoGuideArticle() {
                   Download playbook (.md)
                 </button>
                 <Link
-                  href="/audit"
+                  href="/start"
                   className="inline-flex rounded-xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
                 >
-                  Run free citation audit
+                  Start free workspace setup
                 </Link>
                 <a
                   href="#geo-checklist"
@@ -207,7 +207,7 @@ export function GeoGuideArticle() {
               </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {[
-                  { stat: "6", label: "Deep-dive modules" },
+                  { stat: "42", label: "Checklist items" },
                   { stat: "5", label: "GEO frameworks" },
                   { stat: "7", label: "Day rollout plan" },
                 ].map((item) => (
@@ -342,6 +342,7 @@ export function GeoGuideArticle() {
             <GeoGuideFaq />
           </section>
 
+          {emailGate}
           <GeoGuideCapture />
         </article>
       </div>

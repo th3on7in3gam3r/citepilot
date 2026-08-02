@@ -1,18 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArticleQueuePanel } from "@/components/dashboard/ArticleQueuePanel";
+import { BlogManagerPanel } from "@/components/dashboard/BlogManagerPanel";
 import { CmsConnectionsPanel } from "@/components/dashboard/CmsConnectionsPanel";
 import { GenerateArticlePanel } from "@/components/dashboard/GenerateArticlePanel";
-import { CompetitorAnalysisGrid } from "@/components/dashboard/competitors/CompetitorAnalysisGrid";
+import { ContentStudioWorkflowBanner } from "@/components/dashboard/content/ContentStudioWorkflowBanner";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 import { DomainInfoSection } from "@/components/dashboard/site-details/DomainInfoSection";
 import { GoogleDataSection } from "@/components/dashboard/site-details/GoogleDataSection";
-import { KeywordsSection } from "@/components/dashboard/site-details/KeywordsSection";
 import { SiteDetailsFooter } from "@/components/dashboard/site-details/SiteDetailsShared";
 import { SiteDetailsSubnav } from "@/components/dashboard/site-details/SiteDetailsSubnav";
+import { useBilling } from "@/contexts/BillingContext";
+import { useUpgradeModalOptional } from "@/contexts/UpgradeModalContext";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { buildContentCalendar } from "@/lib/dashboard-data";
 import type { ContentCalendarItem } from "@/lib/dashboard-data";
 import { buildWeeklyEditorialMix } from "@/lib/content-strategy";
@@ -26,7 +30,11 @@ import type { SiteDetailsSectionId } from "@/lib/site-details-sections";
 import { SITE_DETAILS_SECTIONS } from "@/lib/site-details-sections";
 import type { WorkspaceSnapshot } from "@/lib/dashboard";
 import type { WorkspaceSnapshotResponse } from "@/lib/api-types";
+import { contentStudioLegacyRedirect } from "@/lib/content-studio";
 import { effectInit } from "@/lib/react/effect-init";
+import { productFeatures } from "@/lib/features";
+
+const contentFeature = productFeatures.find((f) => f.id === "content")!;
 
 const VALID_SECTIONS = new Set<SiteDetailsSectionId>(
   SITE_DETAILS_SECTIONS.map((s) => s.id),
@@ -35,17 +43,27 @@ const VALID_SECTIONS = new Set<SiteDetailsSectionId>(
 export function SiteDetailsModule() {
   const router = useRouter();
   const { workspace, ready, applyWorkspace, refresh } = useWorkspaceContext();
+  const { isPaid, ready: billingReady } = useBilling();
+  const upgradeModal = useUpgradeModalOptional();
   const searchParams = useSearchParams();
-  const [active, setActive] = useState<SiteDetailsSectionId>("domain-info");
+  const [active, setActive] = useState<SiteDetailsSectionId>("generate");
   const [queueRefreshKey, setQueueRefreshKey] = useState(0);
   const [completionCtx, setCompletionCtx] = useState<SiteDetailsCompletionContext>({});
 
   useEffect(() => {
     const section = searchParams.get("section");
-    if (section && VALID_SECTIONS.has(section as SiteDetailsSectionId)) {
-      setActive(section as SiteDetailsSectionId);
+    const legacy = contentStudioLegacyRedirect(section);
+    if (legacy) {
+      router.replace(legacy);
+      return;
     }
-  }, [searchParams]);
+    if (section && VALID_SECTIONS.has(section as SiteDetailsSectionId)) {
+      const t = setTimeout(() => {
+        setActive(section as SiteDetailsSectionId);
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [searchParams, router]);
 
   const section = SITE_DETAILS_SECTIONS.find((s) => s.id === active)!;
   const workspaceId = workspace?.workspaceId ?? workspace?.id ?? "";
@@ -107,19 +125,60 @@ export function SiteDetailsModule() {
     [router],
   );
 
+  const focusGenerateSection = useCallback(() => {
+    if (billingReady && !isPaid) {
+      upgradeModal?.openUpgradeModal({
+        feature: "article_generation",
+        title: "AI article generation",
+        description:
+          "Pilot and Fleet unlock citation-ready article drafts from your money prompts and GEO gaps.",
+        plan: "pilot",
+        unlocks: [
+          "Generate articles from uncited money prompts",
+          "Queue drafts for CMS publish",
+          "Briefs tied to Site Optimizer gaps",
+        ],
+      });
+      return;
+    }
+    goToSection("generate");
+    requestAnimationFrame(() => {
+      document
+        .getElementById("content-studio-generate")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const topic = document.getElementById("gen-topic") as HTMLInputElement | null;
+      topic?.focus();
+    });
+  }, [billingReady, goToSection, isPaid, upgradeModal]);
+
   const advanceSection = useCallback(() => {
     const idx = SITE_DETAILS_SECTIONS.findIndex((s) => s.id === active);
     const next = SITE_DETAILS_SECTIONS[idx + 1];
     if (next) goToSection(next.id);
   }, [active, goToSection]);
 
+  const handleSelectOpportunity = useCallback(
+    (params: { topic: string; angle?: string; format?: string; pillar?: string }) => {
+      const search = new URLSearchParams();
+      search.set("section", "generate");
+      if (params.topic) search.set("topic", params.topic);
+      if (params.angle) search.set("angle", params.angle);
+      if (params.format) search.set("format", params.format);
+      if (params.pillar) search.set("pillar", params.pillar);
+
+      setActive("generate");
+      router.replace(`/dashboard/content?${search.toString()}`, { scroll: false });
+    },
+    [router],
+  );
+
   if (!ready) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-12 rounded-2xl bg-white" />
+        <div className="h-12 rounded-2xl bg-card" />
         <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
-          <div className="h-96 rounded-2xl bg-white" />
-          <div className="h-96 rounded-2xl bg-white" />
+          <div className="h-96 rounded-2xl bg-card" />
+          <div className="h-96 rounded-2xl bg-card" />
         </div>
       </div>
     );
@@ -127,18 +186,7 @@ export function SiteDetailsModule() {
 
   if (!workspaceId) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#e2e8f0] bg-white p-12 text-center">
-        <p className="font-display text-xl font-bold text-[#0f172a]">No site yet</p>
-        <p className="mt-2 text-sm text-[#64748b]">
-          Complete onboarding to configure your site details and content workspace.
-        </p>
-        <Link
-          href="/start"
-          className="mt-6 inline-flex rounded-full bg-[#0ea5e9] px-6 py-3 text-sm font-semibold text-white"
-        >
-          Start setup →
-        </Link>
-      </div>
+      <DashboardNoWorkspaceEmpty description="Complete setup to configure site details, content targeting, and your editorial workspace." />
     );
   }
 
@@ -150,6 +198,25 @@ export function SiteDetailsModule() {
 
   return (
     <div className="-mx-4 flex min-h-[calc(100dvh-8rem)] flex-col md:-mx-6 lg:-mx-8">
+      <div className="px-4 md:px-6 lg:px-8">
+        <DashboardPageHeader
+          headingLevel="h2"
+          title="Content Studio"
+          description={contentFeature.description}
+          action={
+            <button
+              type="button"
+              onClick={focusGenerateSection}
+              className={dashPrimaryCta}
+            >
+              {billingReady && !isPaid
+                ? "Upgrade to generate →"
+                : "Generate article →"}
+            </button>
+          }
+        />
+        <ContentStudioWorkflowBanner onGenerateClick={focusGenerateSection} />
+      </div>
       <div className="flex flex-1 flex-col gap-5 px-4 md:px-6 lg:flex-row lg:px-8">
         <SiteDetailsSubnav
           active={active}
@@ -159,12 +226,15 @@ export function SiteDetailsModule() {
         />
 
         <div className="min-w-0 flex-1">
-          <div className="rounded-2xl border border-[#e8edf3] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
-            <header className="border-b border-[#eef2f6] px-6 py-5">
-              <h2 className="font-display text-xl font-bold text-[#0f172a]">
+          <div
+            id={active === "generate" ? "content-studio-generate" : undefined}
+            className="scroll-mt-24 rounded-2xl border border-border bg-card shadow-sm dark:border-[#222] dark:bg-[#111]"
+          >
+            <header className="border-b border-border px-6 py-5 dark:border-[#222]">
+              <h2 className="font-display text-xl font-bold text-ink">
                 {section.label}
               </h2>
-              <p className="mt-1 text-sm text-[#64748b]">{section.description}</p>
+              <p className="mt-1 text-sm text-muted">{section.description}</p>
             </header>
 
             <div className="px-6 py-6">
@@ -179,6 +249,7 @@ export function SiteDetailsModule() {
                   void refreshCompletionCtx(workspaceId);
                 }}
                 onContinue={advanceSection}
+                onSelectOpportunity={handleSelectOpportunity}
               />
             </div>
           </div>
@@ -196,6 +267,7 @@ function SectionBody({
   onSaved,
   onGenerated,
   onContinue,
+  onSelectOpportunity,
 }: {
   section: SiteDetailsSectionId;
   workspace: WorkspaceSnapshot;
@@ -204,6 +276,12 @@ function SectionBody({
   onSaved: (updated?: WorkspaceSnapshotResponse) => void;
   onGenerated: () => void;
   onContinue: () => void;
+  onSelectOpportunity: (params: {
+    topic: string;
+    angle?: string;
+    format?: string;
+    pillar?: string;
+  }) => void;
 }) {
   switch (section) {
     case "domain-info":
@@ -216,7 +294,13 @@ function SectionBody({
         />
       );
     case "pages":
-      return <PagesSection onContinue={onContinue} workspace={workspace} />;
+      return (
+        <PagesSection
+          onContinue={onContinue}
+          workspace={workspace}
+          onSelectOpportunity={onSelectOpportunity}
+        />
+      );
     case "google-data":
       return (
         <GoogleDataSection
@@ -235,30 +319,13 @@ function SectionBody({
           mode="targeting"
         />
       );
-    case "competitors":
-      return (
-        <div className="space-y-8">
-          <CompetitorAnalysisGrid workspace={workspace} />
-          <div className="border-t border-[#eef2f6] pt-8">
-            <p className="mb-4 text-sm font-semibold text-[#0f172a]">Tracked competitors</p>
-            <DomainInfoSection
-              workspace={workspace}
-              workspaceId={workspaceId}
-              onSaved={onSaved}
-              onContinue={onContinue}
-              mode="competitors"
-            />
-          </div>
-        </div>
-      );
-    case "keywords":
-      return <KeywordsSection workspace={workspace} onContinue={onContinue} />;
     case "working-files":
       return (
         <div className="space-y-6">
           <div className="-mx-2">
             <ArticleQueuePanel workspaceId={workspaceId} refreshKey={queueRefreshKey} />
           </div>
+          <BlogManagerPanel workspaceId={workspaceId} />
           <SiteDetailsFooter
             showSave={false}
             continueLabel="Continue"
@@ -269,7 +336,11 @@ function SectionBody({
     case "generate":
       return (
         <div className="space-y-6">
-          <GenerateArticlePanel workspaceId={workspaceId} onGenerated={onGenerated} />
+          <GenerateArticlePanel
+            workspaceId={workspaceId}
+            workspace={workspace}
+            onGenerated={onGenerated}
+          />
           <SiteDetailsFooter
             showSave={false}
             continueLabel="Continue"
@@ -296,9 +367,16 @@ function SectionBody({
 function PagesSection({
   workspace,
   onContinue,
+  onSelectOpportunity,
 }: {
   workspace: WorkspaceSnapshot;
   onContinue: () => void;
+  onSelectOpportunity: (params: {
+    topic: string;
+    angle?: string;
+    format?: string;
+    pillar?: string;
+  }) => void;
 }) {
   const persistedStrategy =
     workspace.contentStrategy && workspace.contentStrategy.length > 0
@@ -307,34 +385,68 @@ function PagesSection({
   const calendar: ContentCalendarItem[] =
     persistedStrategy ?? buildContentCalendar(workspace);
   const editorialWeek = buildWeeklyEditorialMix();
+  const primaryKeyword = workspace.buyerQuestion || "your primary keyword";
 
   return (
     <div className="space-y-8">
       <section>
-        <h3 className="text-sm font-semibold text-[#0f172a]">CitePilot editorial mix</h3>
-        <p className="mt-1 text-sm text-[#64748b]">
+        <h3 className="text-sm font-semibold text-ink">CitePilot editorial mix</h3>
+        <p className="mt-1 text-sm text-muted">
           Template cadence for your site blog — 3–5 posts/week across GEO pillars.
         </p>
         <ul className="mt-4 divide-y divide-[#eef2f6] text-sm">
           {editorialWeek.map((slot) => (
-            <li key={slot.day} className="flex flex-col gap-1 py-3 sm:flex-row sm:justify-between">
+            <li key={slot.day} className="flex flex-col gap-1 py-3 sm:flex-row sm:justify-between sm:items-center">
               <div>
-                <span className="font-semibold text-[#0f172a]">{slot.day}</span>
-                <span className="text-[#64748b]"> · {slot.pillarTitle}</span>
+                <span className="font-semibold text-ink">{slot.day}</span>
+                <span className="text-muted"> · {slot.pillarTitle}</span>
               </div>
-              <span className="text-xs font-medium text-[#0ea5e9]">{slot.contentType}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-[#0ea5e9] bg-[#0ea5e9]/5 border border-[#0ea5e9]/10 px-2 py-0.5 rounded-md">
+                  {slot.contentType}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onSelectOpportunity({
+                      topic: slot.topicTemplate.replace("[primary keyword]", primaryKeyword),
+                      format: slot.contentType,
+                      pillar: slot.pillarId,
+                    })
+                  }
+                  className="px-2.5 py-1 text-[11px] font-bold text-[#0ea5e9] bg-[#0ea5e9]/5 hover:bg-[#0ea5e9]/10 border border-[#0ea5e9]/20 hover:border-[#0ea5e9]/30 rounded-lg transition-all duration-150 cursor-pointer shadow-sm hover:shadow"
+                >
+                  Use Template ✦
+                </button>
+              </div>
             </li>
           ))}
         </ul>
       </section>
       <section>
-        <h3 className="text-sm font-semibold text-[#0f172a]">30-day content calendar</h3>
+        <h3 className="text-sm font-semibold text-ink">30-day content calendar</h3>
         <ul className="mt-4 divide-y divide-[#eef2f6]">
           {calendar.map((c) => (
-            <li key={c.week} className="py-4 first:pt-0">
-              <p className="text-xs font-semibold text-[#64748b]">{c.week}</p>
-              <p className="font-medium text-[#0f172a]">{c.topic}</p>
-              <p className="mt-1 text-xs text-[#64748b]">{c.rationale}</p>
+            <li key={c.week} className="py-4 first:pt-0 flex flex-col justify-between sm:flex-row sm:items-center gap-3">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted">{c.week}</p>
+                <p className="font-medium text-ink">{c.topic}</p>
+                <p className="mt-1 text-xs text-muted">{c.rationale}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  onSelectOpportunity({
+                    topic: c.topic,
+                    angle: `Rationale: ${c.rationale}`,
+                    format: c.format.toLowerCase() === "pillar" ? "pillar" : c.format.toLowerCase() === "comparison" ? "comparison" : "tutorial",
+                    pillar: "geo",
+                  })
+                }
+                className="shrink-0 self-start sm:self-center px-3.5 py-1.5 text-xs font-bold text-white bg-[#0f172a] hover:bg-[#1e293b] border border-[#0f172a] rounded-full transition-all duration-150 cursor-pointer shadow-sm hover:shadow"
+              >
+                Generate Article ✦
+              </button>
             </li>
           ))}
         </ul>
