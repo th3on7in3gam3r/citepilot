@@ -39,7 +39,7 @@ function TestimonialCard({
     <article
       className={`shrink-0 rounded-2xl px-6 py-5 ${
         dark
-          ? "glass"
+          ? "glass-dark"
           : "glass-light border border-border"
       }`}
       style={{ width: CARD_WIDTH }}

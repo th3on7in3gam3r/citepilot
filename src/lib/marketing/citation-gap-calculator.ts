@@ -111,6 +111,5 @@ export function estimateCitationGap(input: {
 export const citationGapFormulaExplanation = [
   "We compare your self-reported platform count (0–8) to an industry-average citation rate benchmark.",
   "Missed AI discovery = monthly traffic × AI search share × your gap vs the category average.",
-  "90-day lift projection assumes closing ~45% of the gap with weekly GEO monitoring and content fixes.",
-  "Competitor domain adds a small pressure modifier — run a free audit for live citation data.",
+  "Competitor domain adds a small pressure modifier — start workspace setup for live citation data.",
 ] as const;

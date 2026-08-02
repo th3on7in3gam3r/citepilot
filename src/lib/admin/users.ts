@@ -1,5 +1,4 @@
 import { dbAll, dbGet, dbRun } from "@/lib/db";
-import { deleteWorkspaceDependents } from "@/lib/server/workspace";
 
 export async function getAdminUserDetail(userId: string) {
   const billing = await dbGet<{
@@ -52,26 +51,8 @@ export async function getAdminUserDetail(userId: string) {
 }
 
 export async function hardDeleteUser(userId: string): Promise<boolean> {
-  const workspaces = await dbAll<{ id: string }>(
-    `SELECT id FROM workspaces WHERE user_id = ?`,
-    [userId],
-  );
-  for (const ws of workspaces) {
-    await deleteWorkspaceDependents(ws.id);
-    await dbRun(`DELETE FROM workspaces WHERE id = ?`, [ws.id]);
-  }
-
-  await dbRun(`DELETE FROM billing_accounts WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM user_referrals WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM user_onboarding WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM referral_attributions WHERE referred_user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM email_unsubscribes WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM email_sent WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM email_sequence_queue WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM slack_connections WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM webhook_endpoints WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM fleet_api_keys WHERE user_id = ?`, [userId]);
-  await dbRun(`DELETE FROM cancel_survey_responses WHERE user_id = ?`, [userId]);
-
+  const { purgeUserData } = await import("@/lib/account/purge");
+  await purgeUserData(userId);
+  await dbRun(`DELETE FROM user_accounts WHERE user_id = ?`, [userId]);
   return true;
 }

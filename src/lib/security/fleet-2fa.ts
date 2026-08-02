@@ -50,35 +50,44 @@ export async function enforceTwoFactorAccess(
 ): Promise<NextResponse | null> {
   if (!userId || isTwoFactorExemptPath(pathname)) return null;
 
-  const totpEnabled = await isTotpEnabledForUser(userId);
-  if (totpEnabled && !(await isTwoFactorVerified(userId, request))) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        {
-          error: "Two-factor verification required",
-          code: "TWO_FACTOR_REQUIRED",
-          verifyUrl: "/auth/2fa",
-        },
-        { status: 403 },
-      );
-    }
-    const from = `${pathname}${request.nextUrl.search}`;
-    const url = new URL("/auth/2fa", request.url);
-    url.searchParams.set("from", from);
-    return NextResponse.redirect(url);
-  }
-
-  if (
-    pathname.startsWith("/dashboard") &&
-    !pathname.startsWith("/dashboard/settings/security")
-  ) {
-    const mustSetup = await userMustSetup2faForWorkspace(userId, request);
-    if (mustSetup) {
-      const url = new URL("/dashboard/settings/security", request.url);
-      url.searchParams.set("require2fa", "1");
+  try {
+    const totpEnabled = await isTotpEnabledForUser(userId);
+    if (totpEnabled && !(await isTwoFactorVerified(userId, request))) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          {
+            error: "Two-factor verification required",
+            code: "TWO_FACTOR_REQUIRED",
+            verifyUrl: "/auth/2fa",
+          },
+          { status: 403 },
+        );
+      }
+      const from = `${pathname}${request.nextUrl.search}`;
+      const url = new URL("/auth/2fa", request.url);
+      url.searchParams.set("from", from);
       return NextResponse.redirect(url);
     }
-  }
 
-  return null;
+    if (
+      pathname.startsWith("/dashboard") &&
+      !pathname.startsWith("/dashboard/settings/security")
+    ) {
+      const mustSetup = await userMustSetup2faForWorkspace(userId, request);
+      if (mustSetup) {
+        const url = new URL("/dashboard/settings/security", request.url);
+        url.searchParams.set("require2fa", "1");
+        return NextResponse.redirect(url);
+      }
+    }
+
+    return null;
+  } catch (error) {
+    // DB outages must not 500 marketing (or any) routes via the proxy.
+    console.error(
+      "[2fa] enforceTwoFactorAccess failed",
+      error instanceof Error ? error.message : "unknown",
+    );
+    return null;
+  }
 }

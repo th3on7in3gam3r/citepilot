@@ -6,8 +6,7 @@ import {
   runCitationAudit,
 } from "@/lib/audit/run-audit";
 import { applyPromptLimit } from "@/lib/billing/prompt-limits";
-import { getBillingByUserId } from "@/lib/billing/store";
-import { planForUser } from "@/lib/billing/limits-server";
+import { getEffectivePlanForUser } from "@/lib/billing/limits-server";
 import { apiErrorResponse } from "@/lib/fleet/api-error";
 import { FLEET_AUDIT_TRIGGER_LIMIT_PER_HOUR } from "@/lib/fleet/constants";
 import {
@@ -98,8 +97,7 @@ export const POST = withApiLogging(async function POST(request: Request, { param
       );
     }
 
-    const billing = await getBillingByUserId(auth.userId);
-    const plan = planForUser(billing);
+    const plan = await getEffectivePlanForUser(auth.userId);
     const prompts = resolveMonitoredPrompts({
       monitoredPrompts: promptsFromPreferences(
         workspace.preferences,

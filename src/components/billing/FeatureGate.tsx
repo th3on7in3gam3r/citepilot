@@ -113,6 +113,10 @@ export function FeatureGate({
           <p className={`mt-2 text-muted ${compact ? "text-xs" : "text-sm"} leading-relaxed`}>
             {description}
           </p>
+          <p className={`mt-2 font-medium text-ink/70 ${compact ? "text-[11px]" : "text-xs"}`}>
+            Included on {plan === "fleet" ? "Fleet" : "Pilot"} — free accounts see this preview
+            until you upgrade.
+          </p>
           {highlights.length > 0 && (
             <ul className={`mt-3 space-y-1.5 ${compact ? "text-xs" : "text-sm"} text-ink/80`}>
               {highlights.map((item) => (

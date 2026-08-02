@@ -99,7 +99,11 @@ export function BlogNewsletterSignup({
           <button
             type="submit"
             disabled={status === "loading"}
-            className="shrink-0 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-60"
+            className={`shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60 ${
+              card
+                ? "btn-marketing-primary"
+                : "bg-accent hover:bg-accent-deep"
+            }`}
           >
             {status === "loading" ? "Joining…" : "Subscribe"}
           </button>

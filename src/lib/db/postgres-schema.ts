@@ -253,7 +253,10 @@ CREATE TABLE IF NOT EXISTS user_onboarding (
   dismissed_at TEXT,
   shared_proof INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
-  onboarding_completed_at TEXT
+  onboarding_completed_at TEXT,
+  signup_source TEXT,
+  signup_campaign TEXT,
+  signup_medium TEXT
 );
 
 CREATE TABLE IF NOT EXISTS user_totp (
@@ -268,6 +271,47 @@ CREATE TABLE IF NOT EXISTS user_totp (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS user_accounts (
+  user_id TEXT PRIMARY KEY,
+  email TEXT,
+  deletion_status TEXT NOT NULL DEFAULT 'active',
+  deleted_at TEXT,
+  deletion_requested_at TEXT,
+  cancellation_token TEXT,
+  cancellation_token_expires_at TEXT,
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  previous_plan TEXT,
+  previous_billing_status TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_accounts_cancellation_token ON user_accounts(cancellation_token) WHERE cancellation_token IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS account_export_jobs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'processing',
+  export_data TEXT,
+  error_message TEXT,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  completed_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_export_jobs_user ON account_export_jobs(user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS compliance_log (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  metadata TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_compliance_log_user ON compliance_log(user_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS user_referrals (
   user_id TEXT PRIMARY KEY,
@@ -507,4 +551,151 @@ CREATE TABLE IF NOT EXISTS domain_score_profiles (
 
 CREATE INDEX IF NOT EXISTS idx_domain_score_profiles_public ON domain_score_profiles(is_public);
 CREATE INDEX IF NOT EXISTS idx_audit_domain ON audit_runs(domain);
+
+CREATE TABLE IF NOT EXISTS scan_jobs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  trigger TEXT NOT NULL DEFAULT 'bulk',
+  status TEXT NOT NULL DEFAULT 'queued',
+  total INTEGER NOT NULL DEFAULT 0,
+  completed INTEGER NOT NULL DEFAULT 0,
+  failed INTEGER NOT NULL DEFAULT 0,
+  skipped INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS scan_job_items (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL REFERENCES scan_jobs(id),
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  status TEXT NOT NULL DEFAULT 'queued',
+  error TEXT,
+  audit_id TEXT REFERENCES audit_runs(id),
+  duration_ms INTEGER,
+  started_at TEXT,
+  completed_at TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_scan_jobs_user ON scan_jobs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scan_jobs_status ON scan_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_scan_job_items_job ON scan_job_items(job_id);
+CREATE INDEX IF NOT EXISTS idx_scan_job_items_workspace ON scan_job_items(workspace_id, status);
+
+ALTER TABLE audit_runs ADD COLUMN IF NOT EXISTS duration_ms INTEGER;
+ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS next_scan_at TEXT;
+
+ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS probe_notes TEXT;
+ALTER TABLE platform_citation_checks ADD COLUMN IF NOT EXISTS scan_unavailable INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS browser_scan_usage (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  platform TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  success INTEGER NOT NULL DEFAULT 1,
+  cost_cents INTEGER NOT NULL DEFAULT 8,
+  scanned_at TEXT NOT NULL,
+  notes TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_browser_scan_usage_workspace_day ON browser_scan_usage(workspace_id, scanned_at);
+
+CREATE TABLE IF NOT EXISTS uptime_monitors (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  name TEXT NOT NULL,
+  monitor_type TEXT NOT NULL,
+  url TEXT NOT NULL,
+  method TEXT NOT NULL DEFAULT 'GET',
+  interval_seconds INTEGER NOT NULL DEFAULT 300,
+  timeout_ms INTEGER NOT NULL DEFAULT 10000,
+  expected_status_min INTEGER NOT NULL DEFAULT 200,
+  expected_status_max INTEGER NOT NULL DEFAULT 399,
+  keyword TEXT,
+  keyword_present INTEGER NOT NULL DEFAULT 1,
+  port INTEGER,
+  cron_job_name TEXT,
+  ssl_warn_days INTEGER NOT NULL DEFAULT 14,
+  auth_type TEXT NOT NULL DEFAULT 'none',
+  auth_config_encrypted TEXT,
+  headers_json TEXT NOT NULL DEFAULT '{}',
+  enabled INTEGER NOT NULL DEFAULT 1,
+  last_status TEXT NOT NULL DEFAULT 'unknown',
+  last_checked_at TEXT,
+  last_latency_ms INTEGER,
+  last_error TEXT,
+  consecutive_failures INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_uptime_monitors_user ON uptime_monitors(user_id);
+CREATE INDEX IF NOT EXISTS idx_uptime_monitors_workspace ON uptime_monitors(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_uptime_monitors_due ON uptime_monitors(enabled, last_checked_at);
+
+CREATE TABLE IF NOT EXISTS uptime_check_results (
+  id TEXT PRIMARY KEY,
+  monitor_id TEXT NOT NULL REFERENCES uptime_monitors(id),
+  status TEXT NOT NULL,
+  latency_ms INTEGER,
+  status_code INTEGER,
+  message TEXT,
+  metadata TEXT NOT NULL DEFAULT '{}',
+  checked_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_uptime_results_monitor ON uptime_check_results(monitor_id, checked_at DESC);
+
+CREATE TABLE IF NOT EXISTS money_prompts (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  user_id TEXT NOT NULL,
+  query TEXT NOT NULL,
+  intent TEXT NOT NULL,
+  prompt_text TEXT NOT NULL,
+  target_engines TEXT NOT NULL DEFAULT '["chatgpt","perplexity","gemini","google-ai-overview"]',
+  money_score INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'draft',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_money_prompts_workspace ON money_prompts(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_money_prompts_status ON money_prompts(status);
+CREATE INDEX IF NOT EXISTS idx_money_prompts_workspace_status ON money_prompts(workspace_id, status);
+
+CREATE TABLE IF NOT EXISTS money_prompt_checks (
+  id TEXT PRIMARY KEY,
+  prompt_id TEXT NOT NULL REFERENCES money_prompts(id) ON DELETE CASCADE,
+  engine TEXT NOT NULL,
+  brand_cited INTEGER NOT NULL DEFAULT 0,
+  competitors_cited TEXT NOT NULL DEFAULT '[]',
+  raw_response TEXT,
+  checked_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_money_prompt_checks_prompt ON money_prompt_checks(prompt_id);
+
+CREATE TABLE IF NOT EXISTS citation_gaps (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+  user_id TEXT NOT NULL,
+  money_prompt_id TEXT REFERENCES money_prompts(id) ON DELETE SET NULL,
+  query TEXT NOT NULL,
+  engine TEXT NOT NULL,
+  brand_cited INTEGER NOT NULL DEFAULT 0,
+  competitors_cited TEXT NOT NULL DEFAULT '[]',
+  gap_reason TEXT,
+  suggested_fix TEXT,
+  priority INTEGER NOT NULL DEFAULT 3,
+  status TEXT NOT NULL DEFAULT 'open',
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_citation_gaps_workspace ON citation_gaps(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_citation_gaps_priority ON citation_gaps(priority);
+CREATE INDEX IF NOT EXISTS idx_citation_gaps_workspace_status ON citation_gaps(workspace_id, status);
 `;

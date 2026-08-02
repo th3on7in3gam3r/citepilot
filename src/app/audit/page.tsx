@@ -12,6 +12,8 @@ import { site } from "@/lib/site";
 import { MainContent } from "@/components/layout/MainContent";
 import type { Metadata } from "next";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: clampSeoTitle(auditLanding.shortTitle),
   description: clampMetaDescription(auditLanding.description),
@@ -154,7 +156,7 @@ export default function AuditPage() {
           </Container>
         </div>
 
-        <ProductTransparencySection variant="light" />
+        <ProductTransparencySection />
       </MainContent>
       <Footer />
     </>

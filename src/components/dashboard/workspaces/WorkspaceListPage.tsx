@@ -7,6 +7,8 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import type { WorkspaceListItem } from "@/hooks/useWorkspace";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { DashboardPageSkeleton } from "@/components/dashboard/layout/DashboardPageSkeleton";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardUI";
+import { dashPrimaryCta } from "@/lib/dashboard/surface-classes";
 
 type SortKey = "domain" | "citationScore" | "promptCount" | "lastScanAt" | "status";
 type SortDir = "asc" | "desc";
@@ -155,27 +157,27 @@ export function WorkspaceListPage() {
     </button>
   );
 
+  const limitsHint =
+    limits &&
+    (limits.max == null
+      ? `${limits.count} workspaces — Unlimited`
+      : `${limits.count} of ${limits.max} workspaces used`);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="font-display text-xl font-bold text-ink">Workspaces</h2>
-          {limits && (
-            <p className="mt-1 text-sm text-muted">
-              {limits.max == null
-                ? `${limits.count} workspaces — Unlimited`
-                : `${limits.count} of ${limits.max} workspaces used`}
-            </p>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={openWizard}
-          className="rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink/90"
-        >
-          + Add workspace
-        </button>
-      </div>
+      <DashboardPageHeader
+        headingLevel="h2"
+        title="Workspaces"
+        description={
+          limitsHint ??
+          "Manage client domains, bulk scans, and citation exports across your portfolio."
+        }
+        action={
+          <button type="button" onClick={openWizard} className={dashPrimaryCta}>
+            Add workspace →
+          </button>
+        }
+      />
 
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
@@ -230,10 +232,13 @@ export function WorkspaceListPage() {
           <tbody className="divide-y divide-border">
             {pageRows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-muted">
-                  No workspaces yet.{" "}
-                  <button type="button" onClick={openWizard} className="font-semibold text-accent">
-                    Add one
+                <td colSpan={7} className="px-4 py-12 text-center">
+                  <p className="font-display text-base font-bold text-ink">No workspaces yet</p>
+                  <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
+                    Add a client domain to start tracking AI citations.
+                  </p>
+                  <button type="button" onClick={openWizard} className={`${dashPrimaryCta} mt-4`}>
+                    Add workspace →
                   </button>
                 </td>
               </tr>
@@ -277,13 +282,24 @@ export function WorkspaceListPage() {
                   </span>
                 </td>
                 <td className="px-3 py-3">
-                  <Link
-                    href="/dashboard/settings"
-                    onClick={() => void switchWorkspace(row.id)}
-                    className="text-xs font-semibold text-accent hover:underline"
-                  >
-                    Settings
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {!row.hasRealAudit && (
+                      <Link
+                        href="/dashboard/geo-audit"
+                        onClick={() => void switchWorkspace(row.id)}
+                        className="text-xs font-semibold text-accent hover:underline"
+                      >
+                        Run scan
+                      </Link>
+                    )}
+                    <Link
+                      href="/dashboard/settings"
+                      onClick={() => void switchWorkspace(row.id)}
+                      className="text-xs font-semibold text-muted hover:text-accent hover:underline"
+                    >
+                      Settings
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}

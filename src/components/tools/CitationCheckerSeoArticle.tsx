@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function CitationCheckerSeoArticle() {
   return (
-    <article className="prose prose-invert mx-auto mt-16 max-w-3xl prose-headings:font-display prose-headings:font-bold prose-a:text-glow">
+    <article className="prose mx-auto mt-16 max-w-3xl prose-headings:font-display prose-headings:font-bold prose-a:text-accent">
       <h2>What is AI citation checking?</h2>
       <p>
         AI citation checking measures whether large language models and answer engines
@@ -43,7 +43,7 @@ export function CitationCheckerSeoArticle() {
       </p>
       <p>
         Ready for the full picture?{" "}
-        <Link href="/audit">Run a free 10-prompt audit</Link> or{" "}
+        <Link href="/start">Start your free workspace setup</Link> or{" "}
         <Link href="/pricing">upgrade to Pilot</Link> to monitor twenty-five prompts
         every week with citation trend alerts.
       </p>

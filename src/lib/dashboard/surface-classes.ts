@@ -33,3 +33,11 @@ export const authInputClass =
   "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-[#333] dark:bg-[#0a0a0a]";
 
 export const authLabelClass = "block text-sm font-semibold text-foreground/80";
+
+/** Primary pill CTA — matches dashboard shell activation pattern. */
+export const dashPrimaryCta =
+  "inline-flex items-center justify-center rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-deep disabled:cursor-not-allowed disabled:opacity-60";
+
+/** Secondary pill CTA for dashboard page headers and empty states. */
+export const dashSecondaryCta =
+  "inline-flex items-center justify-center rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-accent/40 disabled:opacity-60";

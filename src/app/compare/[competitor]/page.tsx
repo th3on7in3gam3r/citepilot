@@ -10,6 +10,8 @@ import { site } from "@/lib/site";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+export const revalidate = 86400;
+
 type Props = { params: Promise<{ competitor: string }> };
 
 function normalizeSlug(raw: string): string {

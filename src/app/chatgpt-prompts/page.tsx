@@ -7,6 +7,8 @@ import { chatgptPromptsLanding } from "@/lib/marketing/chatgpt-prompts-landing";
 import { clampMetaDescription } from "@/lib/seo/meta";
 import { site } from "@/lib/site";
 
+export const revalidate = 3600;
+
 const pageUrl = `${site.url.replace(/\/$/, "")}${chatgptPromptsLanding.path}`;
 
 export const metadata: Metadata = {

@@ -71,7 +71,7 @@ export type WorkspaceListResponse = {
     status?: "active" | "paused";
     archivedAt?: string | null;
     scoreDeltaWeek?: number | null;
-    workspace: WorkspaceSnapshotResponse;
+    workspace?: WorkspaceSnapshotResponse;
   }[];
   limits: WorkspaceLimits;
 };
@@ -89,8 +89,13 @@ export async function fetchDefaultWorkspace(): Promise<{
 } | null> {
   const list = await fetchWorkspacesList();
   const first = list?.workspaces[0];
-  if (!first) return null;
-  return { id: first.id, workspace: first.workspace };
+  if (!first?.id) return null;
+  if (first.workspace) {
+    return { id: first.id, workspace: first.workspace };
+  }
+  const full = await fetchWorkspace(first.id);
+  if (!full) return null;
+  return { id: first.id, workspace: full };
 }
 
 export async function createClientWorkspace(input: {
@@ -124,6 +129,9 @@ export async function createClientWorkspace(input: {
     limits?: WorkspaceLimits;
     error?: string;
   };
+  if (res.status === 401) {
+    return { error: "Sign in required" };
+  }
   if (!res.ok) {
     return { error: data.error ?? "Could not create workspace" };
   }
@@ -184,6 +192,11 @@ export async function runAudit(input: {
     body: JSON.stringify(input),
   });
   if (!res.ok) {
+    if (res.status === 504) {
+      throw new Error(
+        "Audit timed out before finishing. Refresh Overview in a minute — partial results may have saved. Try fewer prompts if it keeps failing.",
+      );
+    }
     const err = (await res.json().catch(() => ({}))) as {
       error?: string;
       code?: string;

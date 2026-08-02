@@ -40,13 +40,6 @@ export function isSectionComplete(
       return (
         workspace.buyerQuestion?.trim().length > 5 && workspace.audiences.length > 0
       );
-    case "competitors":
-      return workspace.competitors.length > 0;
-    case "keywords":
-      return (
-        (workspace.preferences?.monitoredPrompts?.length ?? 0) > 0 ||
-        workspace.promptsTracked > 1
-      );
     case "working-files":
       return workspace.contentDrafts > 0 || Boolean(ctx.hasGeneratedPost);
     case "generate":

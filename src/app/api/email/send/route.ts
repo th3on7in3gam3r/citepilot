@@ -15,6 +15,9 @@ const VALID_SEQUENCES: EmailSequenceName[] = [
   "post_audit",
   "pilot_retention",
   "churn_prevention",
+  "ph_prelaunch",
+  "ph_launch_day",
+  "ph_welcome",
 ];
 
 /** POST /api/email/send — trigger a sequence email (cron / internal). */

@@ -19,7 +19,21 @@ export function defaultSiteSignals(geoScore = 0): SiteSignals {
     sitemapFound: false,
     fetchOk: false,
     geoScore,
+    deepCrawl: null,
   };
+}
+
+function parseDeepCrawl(raw: unknown): SiteSignals["deepCrawl"] {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  const pagesCrawled =
+    typeof obj.pagesCrawled === "number" ? obj.pagesCrawled : null;
+  const maxPages = typeof obj.maxPages === "number" ? obj.maxPages : null;
+  if (pagesCrawled == null || maxPages == null) return null;
+  const urls = Array.isArray(obj.urls)
+    ? obj.urls.filter((u): u is string => typeof u === "string")
+    : [];
+  return { pagesCrawled, maxPages, urls };
 }
 
 export function parseSiteSignals(
@@ -34,6 +48,10 @@ export function parseSiteSignals(
   return {
     ...base,
     ...partial,
+    deepCrawl:
+      partial.deepCrawl === undefined
+        ? base.deepCrawl
+        : parseDeepCrawl(partial.deepCrawl),
     geoScore:
       typeof partial.geoScore === "number" ? partial.geoScore : fallbackScore,
   };

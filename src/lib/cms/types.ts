@@ -2,8 +2,10 @@ export const CMS_PROVIDERS = [
   "webflow",
   "wordpress",
   "ghost",
+  "hashnode",
   "shopify",
   "framer",
+  "signaldesk",
 ] as const;
 
 export type CmsProvider = (typeof CMS_PROVIDERS)[number];
@@ -25,6 +27,11 @@ export type GhostCredentials = {
   adminApiKey: string;
 };
 
+export type HashnodeCredentials = {
+  accessToken: string;
+  publicationId: string;
+};
+
 export type ShopifyCredentials = {
   shopDomain: string;
   accessToken: string;
@@ -39,12 +46,22 @@ export type FramerCredentials = {
   summaryFieldId?: string;
 };
 
+/** Signal Desk — WordPress-compatible GEO newsroom ingest (Bearer API key). */
+export type SignalDeskCredentials = {
+  siteUrl: string;
+  apiKey: string;
+  /** Stored on connect for inbound post.published verification. */
+  webhookSecret?: string;
+};
+
 export type CmsCredentialsByProvider = {
   webflow: WebflowCredentials;
   wordpress: WordPressCredentials;
   ghost: GhostCredentials;
+  hashnode: HashnodeCredentials;
   shopify: ShopifyCredentials;
   framer: FramerCredentials;
+  signaldesk: SignalDeskCredentials;
 };
 
 export type CmsRemoteDefaultsByProvider = {
@@ -59,10 +76,12 @@ export type CmsRemoteDefaultsByProvider = {
   };
   wordpress: { maskedAppPassword?: string };
   ghost: { maskedAdminApiKey?: string };
+  hashnode: { maskedAccessToken?: string };
   shopify: {
     blogId: string;
     blogTitle: string;
     blogHandle: string;
+    shopName?: string;
     maskedAccessToken?: string;
   };
   framer: {
@@ -70,6 +89,7 @@ export type CmsRemoteDefaultsByProvider = {
     snippetInstalled?: boolean;
     maskedApiKey?: string;
   };
+  signaldesk: { maskedApiKey?: string; webhookUrl?: string };
 };
 
 export type CmsConnectionRow = {

@@ -74,7 +74,7 @@ function buildSteps(workspaceLimitLabel: string, onComplete: () => void | Promis
           void Promise.resolve(onComplete()).finally(() => {
             tourDriver.destroy();
             window.location.href =
-              "/dashboard/content?section=keywords&tour=focus-prompt";
+              "/dashboard/content?section=targeting&tour=focus-prompt";
           });
         },
         onCloseClick: (_element, _step, { driver: tourDriver }) => {

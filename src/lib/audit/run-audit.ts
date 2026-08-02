@@ -22,6 +22,11 @@ import {
   normalizeDomain,
   promptOverlap,
 } from "@/lib/audit/site-analyzer";
+import {
+  deepCrawlSite,
+  maxPagesForPlan,
+  mergeHomepageAndDeepCrawl,
+} from "@/lib/audit/deep-crawl";
 import { parsePreferences } from "@/lib/settings";
 import { regenerateContentStrategyForAudit } from "@/lib/content-strategy/regenerate";
 import {
@@ -86,7 +91,8 @@ export async function runCitationAudit(input: {
   workspaceId?: string | null;
   competitors?: string[];
   plan?: BillingPlan;
-  trigger?: "manual" | "scheduled";
+  trigger?: "manual" | "scheduled" | "bulk" | "api";
+  startedAtMs?: number;
 }): Promise<AuditPayload> {
   const domain = normalizeDomain(input.domain);
   const prompts = input.prompts.map((p) => p.trim()).filter(Boolean);
@@ -97,12 +103,26 @@ export async function runCitationAudit(input: {
       ? await loadGeoSnippetFixes(input.workspaceId)
       : [];
 
-  const [signals, checks] = await Promise.all([
-    analyzeSite(domain, {
+  const sitePromise = (async (): Promise<SiteSignals> => {
+    const homepage = await analyzeSite(domain, {
       workspaceId: input.workspaceId ?? undefined,
       geoSnippetFixes,
+    });
+    const maxPages = maxPagesForPlan(plan);
+    if (maxPages == null) return homepage;
+    const crawl = await deepCrawlSite(domain, { maxPages });
+    if (!crawl || crawl.pages.length === 0) return homepage;
+    return mergeHomepageAndDeepCrawl(homepage, crawl);
+  })();
+
+  const [signals, checks] = await Promise.all([
+    sitePromise,
+    runLivePlatformProbes({
+      domain,
+      prompts,
+      plan,
+      workspaceId: input.workspaceId ?? null,
     }),
-    runLivePlatformProbes({ domain, prompts, plan }),
   ]);
 
   const platforms = buildPlatformPresence(checks, signals, prompts.length);
@@ -135,7 +155,15 @@ export async function runCitationAudit(input: {
     createdAt: new Date().toISOString(),
   };
 
-  await persistAudit(payload, prompts, checks, input.trigger ?? "manual");
+  const durationMs =
+    input.startedAtMs != null ? Date.now() - input.startedAtMs : null;
+  await persistAudit(
+    payload,
+    prompts,
+    checks,
+    input.trigger ?? "manual",
+    durationMs,
+  );
   return payload;
 }
 
@@ -143,13 +171,14 @@ async function persistAudit(
   audit: AuditPayload,
   prompts: string[],
   platformChecks: PlatformProbeResult[],
-  trigger: "manual" | "scheduled",
+  trigger: "manual" | "scheduled" | "bulk" | "api",
+  durationMs: number | null,
 ): Promise<void> {
   await dbRun(
     `INSERT INTO audit_runs (
       id, workspace_id, domain, prompts, score, cited_count, total_prompts,
-      platforms, gaps, site_signals, prompt_results, mode, trigger, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      platforms, gaps, site_signals, prompt_results, mode, trigger, duration_ms, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       audit.id,
       audit.workspaceId,
@@ -164,6 +193,7 @@ async function persistAudit(
       JSON.stringify(audit.promptResults),
       audit.mode,
       trigger,
+      durationMs,
       audit.createdAt,
     ],
   );
@@ -222,6 +252,19 @@ export async function getLatestAuditByDomain(
   );
   if (!row) return null;
   return rowToAudit(row);
+}
+
+export async function getRecentAuditsForDomain(
+  domain: string,
+  limit = 2,
+): Promise<AuditPayload[]> {
+  const normalized = normalizeDomain(domain);
+  if (!normalized) return [];
+  const rows = await dbAll<Record<string, string | number | null>>(
+    `SELECT * FROM audit_runs WHERE domain = ? ORDER BY created_at DESC LIMIT ?`,
+    [normalized, limit],
+  );
+  return rows.map(rowToAudit);
 }
 
 export async function getRecentAuditsForWorkspace(

@@ -32,9 +32,7 @@ export function SectionHeading({
   return (
     <div className={`max-w-2xl ${alignClass} ${className}`}>
       {eyebrow && (
-        <p className="text-sm font-semibold uppercase tracking-widest text-accent">
-          {eyebrow}
-        </p>
+        <p className="marketing-eyebrow">{eyebrow}</p>
       )}
       <Heading id={headingId} className={headingClass}>
         {title}
