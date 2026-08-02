@@ -12,6 +12,8 @@ import {
   pressJournalistFaqs,
   pressKeyFacts,
   pressLogoAssets,
+  pressMediaInquiryMailto,
+  pressMediaTopics,
   pressOneLiner,
   pressScreenshots,
   pressShortParagraph,
@@ -213,7 +215,18 @@ export function PressPageContent() {
                 <p className="mt-4 text-sm text-white/55">
                   Available for: <span className="text-white/80">{founder.availableFor}</span>
                 </p>
-                <div className="mt-4 flex flex-wrap gap-3">
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-white/65">
+                  {pressMediaTopics.map((topic) => (
+                    <li key={topic}>{topic}</li>
+                  ))}
+                </ul>
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <a
+                    href={pressMediaInquiryMailto()}
+                    className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-white transition hover:bg-accent-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    Book podcast / interview
+                  </a>
                   <Link
                     href={founder.twitter}
                     target="_blank"

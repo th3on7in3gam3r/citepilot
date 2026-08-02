@@ -29,7 +29,7 @@ describe("getRecognitionItems", () => {
     const items = getRecognitionItems("https://www.producthunt.com");
     expect(items.some((i) => i.kind === "product_hunt")).toBe(false);
     expect(items.map((i) => i.kind)).toEqual(
-      expect.arrayContaining(["press", "listing_cta"]),
+      expect.arrayContaining(["press", "listing_cta", "media_inquiry"]),
     );
   });
 
@@ -40,5 +40,13 @@ describe("getRecognitionItems", () => {
     expect(ph?.href).toBe(listing);
     expect(items.some((i) => i.href === "/press")).toBe(true);
     expect(items.some((i) => i.kind === "listing_cta")).toBe(true);
+  });
+
+  it("always includes a media_inquiry mailto for podcasts / interviews", () => {
+    const items = getRecognitionItems("https://www.producthunt.com");
+    const media = items.find((i) => i.kind === "media_inquiry");
+    expect(media).toBeDefined();
+    expect(media?.href.startsWith("mailto:")).toBe(true);
+    expect(media?.href).toContain("podcast");
   });
 });
