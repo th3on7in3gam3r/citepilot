@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { validatePilotPromoCode } from "@/lib/stripe/promo";
-import { isStripeConfigured } from "@/lib/stripe/config";
+import { campaignCode, campaignMessage } from "@/lib/campaign/config";
+import { PH_PROMO_CODE } from "@/lib/launch/config";
 import { withApiLogging } from "@/lib/observability/api-log";
+import { isStripeConfigured } from "@/lib/stripe/config";
+import { validatePilotPromoCode } from "@/lib/stripe/promo";
 
 export const runtime = "nodejs";
 
@@ -13,13 +15,26 @@ export const GET = withApiLogging(async function GET(request: Request) {
   }
 
   if (!isStripeConfigured()) {
+    const upper = code.toUpperCase();
+    const seasonal = campaignCode();
+    if (upper === PH_PROMO_CODE) {
+      return NextResponse.json({
+        valid: true,
+        code: upper,
+        message: `✓ ${PH_PROMO_CODE} applied — 30% off for 3 months`,
+      });
+    }
+    if (seasonal && upper === seasonal) {
+      return NextResponse.json({
+        valid: true,
+        code: upper,
+        message: `✓ ${upper} — ${campaignMessage()}`,
+      });
+    }
     return NextResponse.json({
-      valid: code.toUpperCase() === "PRODUCTHUNT30",
-      code: code.toUpperCase(),
-      message:
-        code.toUpperCase() === "PRODUCTHUNT30"
-          ? "✓ PRODUCTHUNT30 applied — 30% off for 3 months"
-          : "Stripe not configured",
+      valid: false,
+      code: upper,
+      message: "Stripe not configured",
     });
   }
 

@@ -1,4 +1,5 @@
-import { PH_PROMO_CODE, PH_PROMO_LABEL } from "@/lib/launch/config";
+import { campaignCode, campaignMessage } from "@/lib/campaign/config";
+import { PH_PROMO_CODE } from "@/lib/launch/config";
 import { getStripe } from "@/lib/stripe/server";
 
 export type PromoValidation = {
@@ -24,6 +25,25 @@ export async function lookupStripePromotionCode(
   return list.data[0]?.id ?? null;
 }
 
+function softValidWithoutStripe(normalized: string): PromoValidation | null {
+  if (normalized === PH_PROMO_CODE) {
+    return {
+      valid: true,
+      code: normalized,
+      message: `✓ ${PH_PROMO_CODE} applied — 30% off for 3 months`,
+    };
+  }
+  const seasonal = campaignCode();
+  if (seasonal && normalized === seasonal) {
+    return {
+      valid: true,
+      code: normalized,
+      message: `✓ ${normalized} — ${campaignMessage()}`,
+    };
+  }
+  return null;
+}
+
 export async function validatePilotPromoCode(code: string): Promise<PromoValidation> {
   const normalized = code.trim().toUpperCase();
   if (!normalized) {
@@ -36,10 +56,13 @@ export async function validatePilotPromoCode(code: string): Promise<PromoValidat
       return { valid: false, code: normalized, message: "Invalid or expired promo code" };
     }
 
+    const seasonal = campaignCode();
     const label =
       normalized === PH_PROMO_CODE
         ? `✓ ${PH_PROMO_CODE} applied — 30% off for 3 months`
-        : `✓ ${normalized} applied — ${PH_PROMO_LABEL}`;
+        : seasonal && normalized === seasonal
+          ? `✓ ${normalized} — ${campaignMessage()}`
+          : `✓ ${normalized} applied`;
 
     return {
       valid: true,
@@ -49,6 +72,8 @@ export async function validatePilotPromoCode(code: string): Promise<PromoValidat
     };
   } catch (err) {
     console.error("validatePilotPromoCode", err);
+    const soft = softValidWithoutStripe(normalized);
+    if (soft) return soft;
     return { valid: false, code: normalized, message: "Could not validate promo code" };
   }
 }
