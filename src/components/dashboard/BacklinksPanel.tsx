@@ -59,7 +59,6 @@ export function BacklinksPanel() {
 
       try {
         const q = new URLSearchParams({ workspaceId });
-        if (opts?.refresh) q.set("refresh", "0");
         const res = await fetch(`/api/backlinks?${q}`, { credentials: "include" });
         const json = (await res.json()) as BacklinkDashboard & { error?: string };
         if (!res.ok) {
@@ -246,14 +245,15 @@ export function BacklinksPanel() {
         />
       )}
 
-      {!data?.searchConfigured && (
+      {data != null && data.searchConfigured === false && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          <p className="font-semibold">Web search not configured</p>
+          <p className="font-semibold">Referring-page discovery unavailable</p>
           <p className="mt-1 text-amber-900">
-            Add <code className="text-xs">SERPER_API_KEY</code>,{" "}
+            Web search is not configured on this host. Competitors from Settings
+            still appear as peer targets. Operators: set{" "}
+            <code className="text-xs">SERPER_API_KEY</code>,{" "}
             <code className="text-xs">SERPAPI_API_KEY</code>, or{" "}
-            <code className="text-xs">TAVILY_API_KEY</code> to discover referring
-            pages. Competitors from Settings still appear as peer targets.
+            <code className="text-xs">TAVILY_API_KEY</code> on the server.
           </p>
         </div>
       )}
@@ -285,8 +285,9 @@ export function BacklinksPanel() {
               </div>
               <p className="mt-3 text-sm text-muted">
                 {profile?.referringCount ?? 0} referring pages found
-                {profile?.openPageRank != null
-                  ? ` · Open PageRank ${profile.openPageRank.toFixed(1)}`
+                {profile?.openPageRank != null &&
+                Number.isFinite(Number(profile.openPageRank))
+                  ? ` · Open PageRank ${Number(profile.openPageRank).toFixed(1)}`
                   : data?.openPageRankConfigured
                     ? ""
                     : " · add OPEN_PAGERANK_API_KEY for third-party DR"}

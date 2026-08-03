@@ -7,6 +7,7 @@ const CLIENT_NAMESPACES = [
   "platforms",
   "pricing",
   "features",
+  "hero",
 ] as const;
 
 /** Strip server-only namespaces to shrink the RSC payload in root layout. */

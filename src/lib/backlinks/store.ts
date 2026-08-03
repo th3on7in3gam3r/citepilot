@@ -285,9 +285,10 @@ async function loadProfile(
 
   return {
     domain: row.domain,
-    domainRating: row.domain_rating,
-    openPageRank: row.open_pagerank,
-    referringCount: row.referring_count,
+    domainRating: Number(row.domain_rating) || 0,
+    openPageRank:
+      row.open_pagerank == null ? null : Number(row.open_pagerank),
+    referringCount: Number(row.referring_count) || 0,
     discoveredAt: row.discovered_at,
     sources: sourceRows.map(mapSource),
     stale: profileIsStale(row.discovered_at),
@@ -446,7 +447,7 @@ export async function getBacklinkDashboard(input: {
 
   let profile = await loadProfile(input.workspaceId, input.domain);
   if (
-    input.autoRefresh !== false &&
+    input.autoRefresh === true &&
     profile.stale &&
     (profile.sources.length === 0 || profile.discoveredAt === null)
   ) {

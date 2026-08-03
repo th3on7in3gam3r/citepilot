@@ -22,7 +22,9 @@ export const GET = withApiLogging(async function GET(request: Request) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const autoRefresh = searchParams.get("refresh") !== "0";
+  // Opt-in only — never run Serper/Tavily discovery on a plain dashboard load
+  // (empty/stale profiles used to block the page until search APIs finished or timed out).
+  const autoRefresh = searchParams.get("refresh") === "1";
   const dashboard = await getBacklinkDashboard({
     workspaceId,
     userId,
