@@ -38,7 +38,7 @@
     "otplib": "^13.4.1",
     "pg": "^8.22.0",
     "playwright": "^1.61.1",
-    "posthog-js": "^1.383.3",
+    "posthog-js": "^1.409.2",
     "posthog-node": "^5.38.0",
     "prismjs": "^1.30.0",
     "qrcode": "^1.5.4",
