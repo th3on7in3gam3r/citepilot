@@ -27,11 +27,20 @@ export async function wasCronDispatched(
   workspaceId: string | null,
   periodKey: string,
 ): Promise<boolean> {
-  const row = await dbGet<{ status: string }>(
-    `SELECT status FROM cron_dispatch_log
-     WHERE job_name = ? AND workspace_id IS ? AND period_key = ? AND status = 'sent'`,
-    [jobName, workspaceId, periodKey],
-  );
+  // Postgres rejects `workspace_id IS $n` (IS only works with NULL/TRUE/FALSE).
+  // SQLite treats IS as null-safe equality — use portable NULL vs value branches.
+  const row =
+    workspaceId == null
+      ? await dbGet<{ status: string }>(
+          `SELECT status FROM cron_dispatch_log
+           WHERE job_name = ? AND workspace_id IS NULL AND period_key = ? AND status = 'sent'`,
+          [jobName, periodKey],
+        )
+      : await dbGet<{ status: string }>(
+          `SELECT status FROM cron_dispatch_log
+           WHERE job_name = ? AND workspace_id = ? AND period_key = ? AND status = 'sent'`,
+          [jobName, workspaceId, periodKey],
+        );
   return Boolean(row);
 }
 
