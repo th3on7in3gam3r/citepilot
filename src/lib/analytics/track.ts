@@ -48,7 +48,10 @@ export type AnalyticsEvent =
   | "first_scan_completed"
   | "ph_launch_page_visited"
   | "ph_launch_cta_clicked"
-  | "ph_launch_signup_completed";
+  | "ph_launch_signup_completed"
+  | "assistant_opened"
+  | "assistant_message_sent"
+  | "assistant_lead_drafted";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 

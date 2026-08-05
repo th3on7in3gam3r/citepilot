@@ -35,6 +35,12 @@ export const SUBSCRIBE_RATE_LIMIT_PER_HOUR = 1;
 /** Consulting inquiry submissions per IP per hour. */
 export const CONSULTING_RATE_LIMIT_PER_HOUR = 3;
 
+/** Public marketing site assistant chat turns per IP per hour. */
+export const ASSISTANT_CHAT_RATE_LIMIT_PER_HOUR = 20;
+
+/** Public marketing site assistant lead drafts per IP per hour. */
+export const ASSISTANT_LEAD_RATE_LIMIT_PER_HOUR = 3;
+
 /** Prompt CSV imports per user per hour. */
 export const PROMPT_IMPORT_RATE_LIMIT_PER_HOUR = 3;
 

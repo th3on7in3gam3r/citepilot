@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
+import { SiteAssistantWidget } from "@/components/marketing/SiteAssistantWidget";
 import { ReferralRefCapture } from "@/components/referrals/ReferralRefCapture";
 import { ProductHuntUtmCapture } from "@/components/launch/ProductHuntUtmCapture";
 import { BadgeRefCapture } from "@/components/widget/BadgeRefCapture";
@@ -127,6 +128,7 @@ export default async function RootLayout({
         <AppProviders>
           <NextIntlClientProvider locale={locale} messages={messages}>
             {children}
+            <SiteAssistantWidget />
           </NextIntlClientProvider>
         </AppProviders>
         <CookieConsentBanner />

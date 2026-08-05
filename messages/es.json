@@ -343,5 +343,27 @@
     "agencyDescription": "Espacios de clientes ilimitados, informes white-label y prueba de citas para agencias que implementan servicios GEO en ChatGPT y Perplexity.",
     "consultingTitle": "Consultoría GEO — estrategia, sprints de rescate, desk de agencia",
     "consultingDescription": "Consultoría GEO de alto contacto para marcas y agencias. Envía una solicitud para revisión humana — sesiones de estrategia, sprints de rescate de citas y revisiones de desk."
+  },
+  "assistant": {
+    "launcherLabel": "Preguntar a CitePilot",
+    "title": "Asistente CitePilot",
+    "subtitle": "FAQ y calificación ligera — los borradores van al equipo para revisión humana.",
+    "placeholder": "Pregunta por precios, auditorías o GEO…",
+    "send": "Enviar",
+    "close": "Cerrar",
+    "open": "Abrir asistente",
+    "thinking": "Pensando…",
+    "error": "Algo falló. Inténtalo de nuevo o escribe a hello@getcitepilot.com.",
+    "emptyHint": "Pregunta sobre planes, auditorías gratis o consulting.",
+    "leadTitle": "Deja un borrador para el equipo",
+    "leadHint": "Revisión humana — nada se publica automáticamente en un CRM.",
+    "leadName": "Nombre",
+    "leadEmail": "Correo",
+    "leadCompany": "Empresa o sitio (opcional)",
+    "leadIntent": "¿Qué buscas?",
+    "leadSubmit": "Enviar borrador",
+    "leadSuccess": "Gracias — borrador recibido para revisión humana.",
+    "leadError": "No se pudo guardar. Escribe a hello@getcitepilot.com.",
+    "talkToTeam": "Hablar con el equipo"
   }
 }

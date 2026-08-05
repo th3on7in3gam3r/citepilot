@@ -343,5 +343,27 @@
     "agencyDescription": "Espaces clients illimités, rapports white-label et preuve de citations pour agences déployant des services GEO sur ChatGPT et Perplexity.",
     "consultingTitle": "Conseil GEO — stratégie, sprints de sauvetage, revue desk agence",
     "consultingDescription": "Conseil GEO intensif pour marques et agences. Envoyez une demande pour revue humaine — sessions stratégie, sprints de sauvetage des citations et revues desk."
+  },
+  "assistant": {
+    "launcherLabel": "Demander à CitePilot",
+    "title": "Assistant CitePilot",
+    "subtitle": "FAQ et qualification légère — les brouillons vont à l’équipe pour revue humaine.",
+    "placeholder": "Questions sur les tarifs, audits ou GEO…",
+    "send": "Envoyer",
+    "close": "Fermer",
+    "open": "Ouvrir l’assistant",
+    "thinking": "Réflexion…",
+    "error": "Une erreur est survenue. Réessayez ou écrivez à hello@getcitepilot.com.",
+    "emptyHint": "Posez une question sur les offres, l’audit gratuit ou le consulting.",
+    "leadTitle": "Laisser un brouillon pour l’équipe",
+    "leadHint": "Revue humaine — rien n’est publié automatiquement dans un CRM.",
+    "leadName": "Nom",
+    "leadEmail": "E-mail",
+    "leadCompany": "Entreprise ou site (optionnel)",
+    "leadIntent": "Que recherchez-vous ?",
+    "leadSubmit": "Envoyer le brouillon",
+    "leadSuccess": "Merci — brouillon reçu pour revue humaine.",
+    "leadError": "Impossible d’enregistrer. Écrivez à hello@getcitepilot.com.",
+    "talkToTeam": "Parler à l’équipe"
   }
 }

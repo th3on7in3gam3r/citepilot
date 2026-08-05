@@ -1107,6 +1107,21 @@ function migrateSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_citation_gaps_workspace ON citation_gaps(workspace_id);
     CREATE INDEX IF NOT EXISTS idx_citation_gaps_priority ON citation_gaps(priority);
     CREATE INDEX IF NOT EXISTS idx_citation_gaps_workspace_status ON citation_gaps(workspace_id, status);
+
+    CREATE TABLE IF NOT EXISTS assistant_lead_drafts (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      company TEXT,
+      intent TEXT NOT NULL,
+      transcript TEXT,
+      locale TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_assistant_lead_drafts_status ON assistant_lead_drafts(status);
+    CREATE INDEX IF NOT EXISTS idx_assistant_lead_drafts_created ON assistant_lead_drafts(created_at);
   `);
 }
 

@@ -343,5 +343,27 @@
     "agencyDescription": "Unlimited client workspaces, white-label audit reports, and citation proof for agencies shipping GEO services on ChatGPT and Perplexity.",
     "consultingTitle": "GEO consulting — strategy, rescue sprints, agency desk review",
     "consultingDescription": "High-touch GEO consulting for brands and agencies. Submit an inquiry for human review — strategy sessions, citation rescue sprints, and agency desk reviews."
+  },
+  "assistant": {
+    "launcherLabel": "Ask CitePilot",
+    "title": "CitePilot assistant",
+    "subtitle": "FAQs and light lead help — drafts go to our team for human review.",
+    "placeholder": "Ask about pricing, audits, or GEO…",
+    "send": "Send",
+    "close": "Close",
+    "open": "Open assistant",
+    "thinking": "Thinking…",
+    "error": "Something went wrong. Try again or email hello@getcitepilot.com.",
+    "emptyHint": "Ask anything about CitePilot plans, free audits, or consulting.",
+    "leadTitle": "Leave a draft for our team",
+    "leadHint": "We will review manually — nothing auto-publishes to a CRM.",
+    "leadName": "Name",
+    "leadEmail": "Email",
+    "leadCompany": "Company or site (optional)",
+    "leadIntent": "What are you looking for?",
+    "leadSubmit": "Submit draft",
+    "leadSuccess": "Thanks — draft received for human review.",
+    "leadError": "Could not save your draft. Email hello@getcitepilot.com.",
+    "talkToTeam": "Talk to the team"
   }
 }
