@@ -1,32 +1,43 @@
 /** Env-gated seasonal / urgency campaign (off by default — draft/human review). */
 
+/**
+ * Bracket access so Next.js does not inline these at build time.
+ * Dot access (`process.env.CAMPAIGN_ENABLED`) can bake "" into the server
+ * bundle when the var was unset during `next build`, so later Render env
+ * updates would never take effect until another rebuild.
+ */
+function campaignEnv(name: string): string | undefined {
+  const raw = process.env[name];
+  return typeof raw === "string" ? raw : undefined;
+}
+
 export function isCampaignEnabled(): boolean {
-  const raw = process.env.CAMPAIGN_ENABLED?.trim().toLowerCase();
+  const raw = campaignEnv("CAMPAIGN_ENABLED")?.trim().toLowerCase();
   return raw === "true" || raw === "1";
 }
 
 export function campaignCode(): string | null {
-  const code = process.env.CAMPAIGN_CODE?.trim().toUpperCase();
+  const code = campaignEnv("CAMPAIGN_CODE")?.trim().toUpperCase();
   return code || null;
 }
 
 export function campaignLabel(): string {
   return (
-    process.env.CAMPAIGN_LABEL?.trim() ||
+    campaignEnv("CAMPAIGN_LABEL")?.trim() ||
     "Limited-time Pilot offer"
   );
 }
 
 export function campaignMessage(): string {
   return (
-    process.env.CAMPAIGN_MESSAGE?.trim() ||
+    campaignEnv("CAMPAIGN_MESSAGE")?.trim() ||
     campaignLabel()
   );
 }
 
 /** Parse CAMPAIGN_ENDS_AT ISO date; null if missing/invalid. */
 export function campaignEndsAt(): Date | null {
-  const raw = process.env.CAMPAIGN_ENDS_AT?.trim();
+  const raw = campaignEnv("CAMPAIGN_ENDS_AT")?.trim();
   if (!raw) return null;
   const parsed = new Date(raw);
   if (Number.isNaN(parsed.getTime())) return null;

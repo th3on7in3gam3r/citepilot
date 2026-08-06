@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CampaignPromoBar } from "@/components/marketing/CampaignPromoBar";
+import { CampaignPromoSlot } from "@/components/marketing/CampaignPromoSlot";
 import { PricingFaqAccordion } from "@/components/pricing/PricingFaqAccordion";
 import { PricingPlanCards } from "@/components/pricing/PricingPlanCards";
 import { PricingSeoIntro } from "@/components/pricing/PricingSeoIntro";
@@ -10,7 +10,6 @@ import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { PricingJsonLd } from "@/components/marketing/PricingJsonLd";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
-import { getCampaignSnapshot } from "@/lib/campaign/config";
 import { pricingPageFaqItems } from "@/lib/marketing/site-faq";
 import { localeAlternates } from "@/lib/i18n/metadata";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
@@ -39,7 +38,6 @@ export default async function PricingPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("pricingPage");
-  const campaign = getCampaignSnapshot();
 
   return (
     <>
@@ -120,7 +118,7 @@ export default async function PricingPage({ params }: Props) {
             <h2 id="pricing-tiers" className="marketing-section-title text-center">
               {t("tiersTitle")}
             </h2>
-            <CampaignPromoBar campaign={campaign} />
+            <CampaignPromoSlot />
             <PricingPlanCards />
           </section>
 
