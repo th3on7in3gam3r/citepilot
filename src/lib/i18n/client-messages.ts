@@ -9,6 +9,7 @@ const CLIENT_NAMESPACES = [
   "features",
   "hero",
   "assistant",
+  "consulting",
 ] as const;
 
 /** Strip server-only namespaces to shrink the RSC payload in root layout. */

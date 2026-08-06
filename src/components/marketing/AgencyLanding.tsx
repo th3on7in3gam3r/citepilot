@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Link as LocaleLink } from "@/i18n/navigation";
 import { PricingTierActions } from "@/components/billing/PricingTierActions";
+import { ConsultingInquiryForm } from "@/components/marketing/ConsultingInquiryForm";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
 import { TestimonialAvatar } from "@/components/ui/TestimonialAvatar";
 import { Container } from "@/components/ui/Container";
@@ -255,14 +255,40 @@ export async function AgencyLanding() {
                 <li key={feature}>{feature}</li>
               ))}
             </ul>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <PricingTierActions
                 tierName="Fleet"
                 href={agencyPricing.href}
                 cta={t("pricingCta")}
                 variant="dark"
               />
+              <a
+                href="#agency-inquiry"
+                className="inline-flex rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white/85 transition hover:border-white/50"
+              >
+                {t("pricingTalkCta")}
+              </a>
             </div>
+          </div>
+        </section>
+
+        {/* On-page inquiry — capture without leaving for /consulting */}
+        <section
+          id="agency-inquiry"
+          className="marketing-section-gap mx-auto max-w-xl scroll-mt-28"
+          aria-labelledby="agency-inquiry-title"
+        >
+          <h2
+            id="agency-inquiry-title"
+            className="marketing-section-title marketing-section-title-on-dark text-center"
+          >
+            {t("inquiryTitle")}
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-center text-sm text-white/55 md:text-base">
+            {t("inquirySub")}
+          </p>
+          <div className="mt-8">
+            <ConsultingInquiryForm initialPackage="agency-desk" />
           </div>
         </section>
 
@@ -285,6 +311,14 @@ export async function AgencyLanding() {
               </div>
             ))}
           </dl>
+          <p className="mt-6 text-center text-sm text-white/50">
+            <a
+              href="#agency-inquiry"
+              className="font-semibold text-accent hover:underline"
+            >
+              {t("faqContactHint")}
+            </a>
+          </p>
         </section>
 
         {/* Footer CTA */}
@@ -302,12 +336,12 @@ export async function AgencyLanding() {
             >
               {t("footerCtaPrimary")}
             </Link>
-            <LocaleLink
-              href="/consulting"
+            <a
+              href="#agency-inquiry"
               className="inline-flex w-full rounded-full border border-white/25 px-8 py-3.5 text-sm font-semibold text-white/85 transition hover:border-white/50 sm:w-auto"
             >
               {t("footerCtaSecondary")}
-            </LocaleLink>
+            </a>
           </div>
         </section>
       </Container>

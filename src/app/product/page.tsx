@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { FreeToolsSection } from "@/components/marketing/FreeToolsSection";
 import { MarketingDarkHero } from "@/components/marketing/MarketingDarkHero";
+import { ProductInterestCapture } from "@/components/marketing/ProductInterestCapture";
 import { ProductTransparencySection } from "@/components/marketing/ProductTransparencySection";
 import { Container } from "@/components/ui/Container";
 import { productLanding } from "@/lib/marketing/product-landing";
@@ -84,6 +85,11 @@ export default function ProductPage() {
             >
               Run citation audit →
             </Link>
+            <p className="mx-auto mt-8 max-w-md text-xs text-white/45">
+              Not ready to audit? Leave your email — we&apos;ll send product updates
+              (no spam).
+            </p>
+            <ProductInterestCapture />
           </Container>
         </section>
       </main>

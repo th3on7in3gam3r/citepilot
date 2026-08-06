@@ -84,7 +84,7 @@ export const agencyFaqs = [
   },
   {
     q: "Can I white-label the dashboard itself, not just reports?",
-    a: "Fleet white-labels audit share links and proof PDF exports with your agency name and logo. Full dashboard white-label is available on request for multi-seat agency accounts — email hello@getcitepilot.com.",
+    a: "Fleet white-labels audit share links and proof PDF exports with your agency name and logo. Full dashboard white-label is available on request for multi-seat agency accounts — use the inquiry form on the agency page.",
   },
   {
     q: "Is there a setup fee?",
@@ -92,11 +92,11 @@ export const agencyFaqs = [
   },
   {
     q: "Can I get invoiced instead of credit card billing?",
-    a: "Annual Fleet billing via invoice is available for agencies on 12-month terms. Contact hello@getcitepilot.com with your company details and seat count.",
+    a: "Annual Fleet billing via invoice is available for agencies on 12-month terms. Use the agency page inquiry form with your company details and seat count.",
   },
   {
     q: "Do you have an agency partner program?",
-    a: "We're building a partner tier with co-marketing and referral credits for agencies reselling GEO audits. Join the waitlist by emailing hello@getcitepilot.com with \"Agency partner\" in the subject.",
+    a: "We're building a partner tier with co-marketing and referral credits for agencies reselling GEO audits. Use the agency page inquiry form and mention \"Agency partner\" in your message.",
   },
 ] as const;
 
@@ -104,7 +104,7 @@ export const agencyFooterCta = {
   headline: "Ready to add GEO to your agency services?",
   primary: { label: "Start Fleet free trial", href: "/start?plan=fleet" },
   secondary: {
-    label: "Book a demo",
-    href: "/consulting",
+    label: "Talk to us",
+    href: "#agency-inquiry",
   },
 } as const;

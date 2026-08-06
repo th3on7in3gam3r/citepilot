@@ -51,7 +51,8 @@ export type AnalyticsEvent =
   | "ph_launch_signup_completed"
   | "assistant_opened"
   | "assistant_message_sent"
-  | "assistant_lead_drafted";
+  | "assistant_lead_drafted"
+  | "product_waitlist_submitted";
 
 type TrackProps = Record<string, string | number | boolean | undefined>;
 
