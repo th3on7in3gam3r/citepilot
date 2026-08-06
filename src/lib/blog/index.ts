@@ -1,7 +1,9 @@
 import type { BlogPost } from "./types";
 import { getCitedByChatgptPost } from "./posts/get-cited-by-chatgpt";
+import { dedupeBlogPostsByTitle } from "./dedupe";
 import { purgeRemovedBlogPosts } from "./purge";
 import { isRemovedBlogSlug } from "./removed-slugs";
+import { resolvePublicCover } from "./stock-covers";
 import {
   getGeneratedPostBySlug,
   listGeneratedPostSummaries,
@@ -18,13 +20,34 @@ function isPublicPost(post: BlogPost): boolean {
   return !isRemovedBlogSlug(post.slug);
 }
 
+function withPublicCover(post: BlogPost): BlogPost {
+  const cover = resolvePublicCover({
+    slug: post.slug,
+    pillar: post.pillar,
+    coverImageUrl: post.coverImageUrl,
+    coverImageAlt: post.coverImageAlt,
+  });
+  return {
+    ...post,
+    coverImageUrl: cover.coverImageUrl,
+    coverImageAlt: cover.coverImageAlt,
+  };
+}
+
+function finalizePublicPosts(posts: BlogPost[]): BlogPost[] {
+  return dedupeBlogPostsByTitle(
+    posts
+      .filter(isPublicPost)
+      .map(withPublicCover)
+      .sort(
+        (a, b) =>
+          new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+      ),
+  );
+}
+
 function staticPublicPosts(): BlogPost[] {
-  return staticPosts
-    .filter(isPublicPost)
-    .sort(
-      (a, b) =>
-        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-    );
+  return finalizePublicPosts(staticPosts);
 }
 
 function logBlogDbFallback(context: string, error: unknown): void {
@@ -41,12 +64,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
       ...staticPosts,
       ...generated.filter((p) => !staticSlugs.has(p.slug)),
     ];
-    return merged
-      .filter(isPublicPost)
-      .sort(
-        (a, b) =>
-          new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-      );
+    return finalizePublicPosts(merged);
   } catch (error) {
     logBlogDbFallback("getAllPosts", error);
     return staticPublicPosts();
@@ -73,12 +91,7 @@ export async function getAllPostSummaries(): Promise<BlogPost[]> {
       ...staticSummaries,
       ...generated.filter((p) => !staticSlugs.has(p.slug)),
     ];
-    return merged
-      .filter(isPublicPost)
-      .sort(
-        (a, b) =>
-          new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-      );
+    return finalizePublicPosts(merged);
   } catch (error) {
     logBlogDbFallback("getAllPostSummaries", error);
     return staticPublicPosts().map(
@@ -97,12 +110,13 @@ export async function getPostBySlug(
 ): Promise<BlogPost | undefined> {
   if (isRemovedBlogSlug(slug)) return undefined;
   const staticPost = staticPosts.find((p) => p.slug === slug);
-  if (staticPost) return staticPost;
+  if (staticPost) return withPublicCover(staticPost);
 
   try {
     await purgeRemovedBlogPosts();
     const row = await getGeneratedPostBySlug(slug);
-    return row ? rowToBlogPost(row) : undefined;
+    if (!row) return undefined;
+    return withPublicCover(rowToBlogPost(row));
   } catch (error) {
     logBlogDbFallback(`getPostBySlug(${slug})`, error);
     return undefined;
@@ -130,4 +144,4 @@ export {
   pillarHref,
 } from "./utils";
 export type { BlogAuthor, BlogPost, BlogSection } from "./types";
-export { DEFAULT_BLOG_AUTHOR } from "./types";
+export { DEFAULT_BLOG_AUTHOR, getBlogAuthor } from "./types";

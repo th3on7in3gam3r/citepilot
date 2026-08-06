@@ -110,8 +110,8 @@ export function BlogPostCover({
 
 export function BlogArticleCta() {
   return (
-    <aside className="rounded-2xl border border-accent/35 bg-gradient-to-br from-accent/20 via-accent/10 to-white/[0.04] p-8 text-center shadow-[0_0_40px_rgba(14,165,233,0.12)] md:p-10">
-      <p className="font-display text-xl font-bold text-white md:text-2xl">
+    <aside className="rounded-2xl border border-accent/35 bg-gradient-to-br from-accent/15 via-accent/10 to-surface p-8 text-center shadow-sm dark:from-accent/20 dark:via-accent/10 dark:to-white/[0.04] dark:shadow-[0_0_40px_rgba(14,165,233,0.12)] md:p-10">
+      <p className="font-display text-xl font-bold text-foreground md:text-2xl dark:text-white">
         See where you stand in AI search — run a free citation audit
       </p>
       <Link

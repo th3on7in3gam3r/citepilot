@@ -10,6 +10,20 @@ export const DEFAULT_BLOG_AUTHOR: BlogAuthor = {
   role: "GEO & SEO team",
 };
 
+/** Prefer founder name when configured so the blog feels authored by a person. */
+export function getBlogAuthor(): BlogAuthor {
+  const founder =
+    process.env.NEXT_PUBLIC_FOUNDER_NAME?.trim() ||
+    process.env.FOUNDER_NAME?.trim();
+  if (founder) {
+    return {
+      name: founder,
+      role: "Founder, CitePilot",
+    };
+  }
+  return DEFAULT_BLOG_AUTHOR;
+}
+
 export type BlogPost = {
   slug: string;
   title: string;

@@ -7,7 +7,8 @@ import type {
 import { dbAll, dbGet, dbRun } from "@/lib/db";
 import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 import { parseCoverImageMeta } from "./cover-meta";
-import { DEFAULT_BLOG_AUTHOR, type BlogPost } from "./types";
+import { normalizeBlogTitle } from "./dedupe";
+import { getBlogAuthor, type BlogPost } from "./types";
 
 export type BlogPostRow = {
   id: string;
@@ -63,6 +64,21 @@ export async function ensureUniqueSlug(base: string): Promise<string> {
     slug = `${slugify(base).slice(0, 70)}-${n}`;
   }
   return slug;
+}
+
+/** Return an existing slug if a post with the same normalized title already exists. */
+export async function findSlugByNormalizedTitle(
+  title: string,
+): Promise<string | null> {
+  const key = normalizeBlogTitle(title);
+  if (!key) return null;
+  const rows = await dbAll<{ slug: string; title: string }>(
+    `SELECT slug, title FROM blog_posts`,
+  );
+  for (const row of rows) {
+    if (normalizeBlogTitle(row.title) === key) return row.slug;
+  }
+  return null;
 }
 
 export function parseMarkdownMeta(markdown: string): {
@@ -350,7 +366,7 @@ export function rowToBlogPostSummary(row: BlogPostSummaryRow): BlogPost {
     pillar: row.pillar as EditorialPillarId,
     audience: row.audience as AudienceSegment,
     contentType: row.content_type as ContentType,
-    author: DEFAULT_BLOG_AUTHOR,
+    author: getBlogAuthor(),
     publishedAt: row.published_at,
     readingMinutes: row.reading_minutes,
     seoTitle: row.seo_title,
@@ -372,7 +388,7 @@ export function rowToBlogPost(row: BlogPostRow): BlogPost {
     pillar: row.pillar as EditorialPillarId,
     audience: row.audience as AudienceSegment,
     contentType: row.content_type as ContentType,
-    author: DEFAULT_BLOG_AUTHOR,
+    author: getBlogAuthor(),
     publishedAt: row.published_at,
     readingMinutes: row.reading_minutes,
     seoTitle: row.seo_title,
@@ -405,9 +421,44 @@ export async function buildPostFromMarkdown(
   );
   const seoTitle = clampSeoTitle(parsed.seoTitle ?? meta.metaTitle);
   const tldr = parsed.tldr ?? description.slice(0, 280);
-  const slug = await ensureUniqueSlug(title);
+  const existingSlug = await findSlugByNormalizedTitle(title);
   const readingMinutes = estimateReadingMinutes(markdown);
 
+  if (existingSlug) {
+    await updateBlogPost(existingSlug, {
+      title,
+      description,
+      seoTitle,
+      markdown,
+      ...(parsed.coverImageUrl
+        ? {
+            coverImageUrl: parsed.coverImageUrl,
+            coverImageAlt: parsed.coverImageAlt ?? null,
+          }
+        : {}),
+    });
+    // Keep tldr / pillar refreshed for regenerations of the same headline.
+    await dbRun(
+      `UPDATE blog_posts SET tldr = ?, pillar = ?, audience = ?, content_type = ?, reading_minutes = ?, published_at = ?
+       WHERE slug = ?`,
+      [
+        tldr,
+        meta.pillar,
+        meta.audience,
+        meta.contentType,
+        readingMinutes,
+        new Date().toISOString(),
+        existingSlug,
+      ],
+    );
+    const updated = await getGeneratedPostBySlug(existingSlug);
+    if (!updated) {
+      throw new Error(`Failed to refresh existing blog post ${existingSlug}`);
+    }
+    return { post: rowToBlogPost(updated), row: updated };
+  }
+
+  const slug = await ensureUniqueSlug(title);
   const row = await saveGeneratedPost({
     slug,
     title,
