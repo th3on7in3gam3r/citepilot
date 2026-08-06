@@ -1,0 +1,13 @@
+---
+description: Always commit and push directly to main — no feature PRs
+alwaysApply: true
+---
+
+# Ship on main (no PRs)
+
+When the user asks to commit, push, or ship work:
+
+1. Commit on **`main`** and **`git push origin main`**.
+2. Do **not** open pull requests or ask to use a feature branch for shipping, unless they explicitly request a PR for that task.
+3. Do **not** create `feat/*` branches for normal product work; stay on `main` (or checkout `main`, pull, commit, push).
+4. Merging an already-open PR into main is fine when they ask to merge that PR — then continue on `main` afterward.
