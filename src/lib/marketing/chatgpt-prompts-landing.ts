@@ -2,8 +2,8 @@
 
 export const chatgptPromptsLanding = {
   path: "/chatgpt-prompts",
-  title: "How CitePilot Tracks & Optimizes ChatGPT Money Prompts",
-  shortTitle: "ChatGPT Money Prompts",
+  title: "ChatGPT Money Prompts: Track Citations",
+  shortTitle: "ChatGPT Money Prompts: Track Citations",
   description:
     "See how the CitePilot workspace discovers buyer prompts, baselines ChatGPT citations, prioritizes gaps, and ships weekly optimizations with proof.",
   dateModified: "2026-06-03",

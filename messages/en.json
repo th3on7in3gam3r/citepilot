@@ -339,13 +339,13 @@
     "selectOffer": "Inquire about this package"
   },
   "metadata": {
-    "homeTitle": "CitePilot | Generative Engine Optimization (GEO) Platform",
+    "homeTitle": "AI Citation Tracking & GEO Platform | CitePilot",
     "homeDescription": "CitePilot is the top B2B platform to audit, track, and optimize brand citations on ChatGPT and Perplexity, offering the best alternatives to manual GEO.",
     "pricingTitle": "GEO and AI citation monitoring pricing",
     "pricingDescription": "Start free. Scale when citations move. Compare Free, Pilot, and Fleet plans for GEO citation monitoring across ChatGPT, Perplexity, and Google AI.",
-    "agencyTitle": "GEO for agencies — Fleet plan",
+    "agencyTitle": "GEO for Agencies: White-Label Fleet Plan",
     "agencyDescription": "Unlimited client workspaces, white-label audit reports, and citation proof for agencies shipping GEO services on ChatGPT and Perplexity.",
-    "consultingTitle": "GEO consulting — strategy, rescue sprints, agency desk review",
+    "consultingTitle": "GEO Consulting — Strategy & Rescue Sprints",
     "consultingDescription": "High-touch GEO consulting for brands and agencies. Submit an inquiry for human review — strategy sessions, citation rescue sprints, and agency desk reviews."
   },
   "assistant": {

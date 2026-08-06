@@ -2,8 +2,8 @@
 
 export const auditLanding = {
   path: "/audit",
-  title: "Free AI Citation Audit in 60 Seconds",
-  shortTitle: "Free AI Citation Audit",
+  title: "Free AI Citation Audit — ChatGPT & More",
+  shortTitle: "Free AI Citation Audit — ChatGPT & More",
   description:
     "Run a free 60-second AI citation audit. CitePilot diagnoses ChatGPT, Perplexity & Google AI Overviews, scores GEO readiness, and maps money-prompt citation gaps.",
 } as const;

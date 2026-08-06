@@ -11,18 +11,18 @@ import { Container } from "@/components/ui/Container";
 import { geoPlaybook } from "@/lib/marketing/geo-playbook";
 import { geoPlaybookTool as toolMeta } from "@/lib/marketing/tools-pages";
 import { site } from "@/lib/site";
-import { clampMetaDescription } from "@/lib/seo/meta";
+import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 
 export const revalidate = 3600;
 
 const pageUrl = `${site.url.replace(/\/$/, "")}${geoPlaybook.path}`;
 
 export const metadata: Metadata = {
-  title: geoPlaybook.shortTitle,
+  title: clampSeoTitle(geoPlaybook.shortTitle),
   description: clampMetaDescription(geoPlaybook.description),
   alternates: { canonical: geoPlaybook.path },
   openGraph: {
-    title: geoPlaybook.title,
+    title: clampSeoTitle(geoPlaybook.title),
     description: clampMetaDescription(geoPlaybook.description),
     url: pageUrl,
     type: "article",

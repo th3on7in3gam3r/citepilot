@@ -15,13 +15,15 @@ import {
   getPillarsForCategoryGrid,
 } from "@/lib/blog";
 import { site } from "@/lib/site";
+import { clampMetaDescription, clampSeoTitle } from "@/lib/seo/meta";
 
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "GEO, SEO & AI Citation Guides",
-  description:
+  title: clampSeoTitle("GEO & AI Citation Guides for Growth Teams"),
+  description: clampMetaDescription(
     "SEO, GEO, and AI citation playbooks for founders, agencies, and SaaS teams — from CitePilot.",
+  ),
   alternates: { canonical: `${site.url}/blog` },
 };
 

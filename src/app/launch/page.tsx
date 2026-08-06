@@ -7,7 +7,7 @@ import { site } from "@/lib/site";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: clampSeoTitle("Product Hunt Launch — CitePilot"),
+  title: clampSeoTitle("Product Hunt Launch: AI Citation Tracking"),
   description: clampMetaDescription(
     "Finally know if ChatGPT cites your brand. Free citation audit in 60 seconds. Product Hunt exclusive: 30% off Pilot.",
   ),

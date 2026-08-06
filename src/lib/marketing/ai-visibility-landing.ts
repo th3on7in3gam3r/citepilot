@@ -2,8 +2,8 @@
 
 export const aiVisibilityLanding = {
   path: "/ai-visibility",
-  title: "AI Visibility Service: Metrics, AEO vs GEO & Schema Automation",
-  shortTitle: "AI Visibility Service",
+  title: "AI Visibility Tracking & GEO Schema Fixes",
+  shortTitle: "AI Visibility Tracking & GEO Schema Fixes",
   description:
     "Map citation score, Share of Model, and platform presence. Compare AEO vs GEO principles and deploy JSON-LD schema through CitePilot's automated audit-to-publish loop.",
   dateModified: "2026-06-03",

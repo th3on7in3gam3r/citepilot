@@ -21,7 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "metadata" });
 
   return {
-    title: t("homeTitle"),
+    // Absolute — skip layout ` · CitePilot` template (avoids double brand / over-length SERP).
+    title: { absolute: t("homeTitle") },
     description: clampMetaDescription(t("homeDescription")),
     alternates: localeAlternates("/"),
     openGraph: {

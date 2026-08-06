@@ -122,8 +122,8 @@ export function downloadGeoPlaybook(): void {
 export const geoPlaybook = {
   path: "/tools/geo-playbook",
   title:
-    "The Complete GEO Playbook: Money Prompts, RAG Citations & Share of Model",
-  shortTitle: "GEO Playbook — Complete Guide",
+    "GEO Playbook: Citations, RAG & Share of Model",
+  shortTitle: "GEO Playbook: Citations & Share of Model",
   description:
     "Interactive GEO guide: RAG citation stack, ACE & CITE frameworks, money prompts, technical audit checklist, 7-day rollout, and Share of Model measurement.",
   datePublished: "2026-06-02",

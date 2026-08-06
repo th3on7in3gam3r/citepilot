@@ -19,8 +19,8 @@ export type MarketingToolMeta = {
 export const citationCheckerTool: MarketingToolMeta = {
   id: "citation-checker",
   path: "/tools/citation-checker",
-  title: "AI Citation Checker — Is Your Brand Cited on ChatGPT?",
-  shortTitle: "AI Citation Checker",
+  title: "AI Citation Checker for ChatGPT Brands",
+  shortTitle: "AI Citation Checker for ChatGPT Brands",
   h1: "AI Citation Checker — Is Your Brand Cited on ChatGPT?",
   description:
     "Free AI citation checker: enter your domain and one buyer question to see if ChatGPT, Perplexity, and other AI engines cite your brand — instant results, no account.",
@@ -31,8 +31,8 @@ export const citationCheckerTool: MarketingToolMeta = {
 export const citationGapCalculatorTool: MarketingToolMeta = {
   id: "citation-gap-calculator",
   path: "/tools/citation-gap-calculator",
-  title: "Citation Gap Calculator — Estimate Your AI Search Opportunity",
-  shortTitle: "Citation Gap Calculator",
+  title: "Citation Gap Calculator for AI Search ROI",
+  shortTitle: "Citation Gap Calculator for AI Search ROI",
   h1: "Citation Gap Calculator — Estimate Your AI Search Opportunity",
   description:
     "Estimate monthly AI-driven discovery you're missing, citation gap vs your industry, and projected GEO lift — then run a free audit for real citation data.",
@@ -42,8 +42,8 @@ export const citationGapCalculatorTool: MarketingToolMeta = {
 export const geoPlaybookTool: MarketingToolMeta = {
   id: "geo-playbook",
   path: "/tools/geo-playbook",
-  title: "The GEO Playbook — Complete Generative Engine Optimization Guide",
-  shortTitle: "GEO Playbook",
+  title: "GEO Playbook: Citations & Share of Model",
+  shortTitle: "GEO Playbook: Citations & Share of Model",
   h1: "The GEO Playbook",
   description:
     "Interactive GEO playbook with 42-item checklist, frameworks, Perplexity citation guide, 7-day rollout, and weekly GEO tips — free from CitePilot.",

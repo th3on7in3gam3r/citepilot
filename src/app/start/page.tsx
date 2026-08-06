@@ -13,7 +13,7 @@ import { site } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Start GEO & AI Citation Analysis",
+  title: "Start Free GEO & AI Citation Analysis",
   description:
     "Start your free GEO citation analysis in minutes. Add your domain, money prompts, and competitors — get audited on ChatGPT, Perplexity & AI Overviews.",
   alternates: { canonical: `${site.url}/start` },
