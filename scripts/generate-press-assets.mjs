@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Export Product Hunt OG images to static PNGs under public/press/.
+ * Export Product Hunt / press OG images to static PNGs under public/press/.
  *
- * Start the dev server first, then:
+ * Start the app first, then:
  *   node scripts/generate-press-assets.mjs
  *
- * Or point at production:
+ * Or point at a running host:
  *   BASE_URL=https://getcitepilot.com node scripts/generate-press-assets.mjs
  */
 import { mkdir, writeFile } from "node:fs/promises";
@@ -23,7 +23,7 @@ const base =
 
 const assets = [
   { url: `${base}/api/og/ph-thumbnail`, file: "ph-thumbnail.png" },
-  ...Array.from({ length: 5 }, (_, i) => ({
+  ...Array.from({ length: 7 }, (_, i) => ({
     url: `${base}/api/og/ph-gallery/${i + 1}`,
     file: `ph-gallery-${i + 1}.png`,
   })),
@@ -35,7 +35,7 @@ async function fetchPng(url) {
     throw new Error(`${url} → ${res.status} ${res.statusText}`);
   }
   const type = res.headers.get("content-type") ?? "";
-  if (!type.includes("image")) {
+  if (!type.includes("image") && !type.includes("octet-stream")) {
     throw new Error(`${url} did not return an image (${type})`);
   }
   return Buffer.from(await res.arrayBuffer());

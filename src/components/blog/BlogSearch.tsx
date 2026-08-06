@@ -21,7 +21,7 @@ type PostSummary = Pick<
 function SearchIcon() {
   return (
     <svg
-      className="h-4 w-4 text-white/35"
+      className="h-4 w-4 text-muted dark:text-white/35"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -75,7 +75,7 @@ export function BlogSearch({
           </h2>
         </div>
         {!query.trim() && countLabel > 0 && (
-          <p className="text-sm text-white/45">
+          <p className="text-sm text-muted dark:text-white/45">
             {countLabel} article{countLabel === 1 ? "" : "s"}
           </p>
         )}
@@ -91,17 +91,17 @@ export function BlogSearch({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by title, topic, or author…"
-          className="w-full rounded-xl border border-white/12 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white outline-none placeholder:text-white/30 transition focus:border-accent/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-accent/20"
+          className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-4 text-sm text-foreground outline-none placeholder:text-muted transition focus:border-accent/50 focus:bg-card focus:ring-1 focus:ring-accent/20 dark:border-white/12 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:bg-white/[0.06]"
         />
       </label>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {listPosts.length === 0 ? (
-          <div className="col-span-full rounded-2xl border border-dashed border-white/12 px-6 py-14 text-center">
-            <p className="font-display text-lg font-bold text-white">
+          <div className="col-span-full rounded-2xl border border-dashed border-border px-6 py-14 text-center dark:border-white/12">
+            <p className="font-display text-lg font-bold text-foreground dark:text-white">
               No articles match &ldquo;{query}&rdquo;
             </p>
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-muted dark:text-white/45">
               Try a different keyword or browse by topic above.
             </p>
           </div>

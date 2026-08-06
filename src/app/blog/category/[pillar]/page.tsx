@@ -58,7 +58,7 @@ export default async function BlogCategoryPage({ params }: Props) {
       >
         <Link
           href="/blog"
-          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/50 transition hover:text-glow"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted transition hover:text-accent dark:text-white/50 dark:hover:text-glow"
         >
           <span aria-hidden>←</span> All articles
         </Link>
@@ -76,23 +76,23 @@ export default async function BlogCategoryPage({ params }: Props) {
               Articles in this topic
             </h2>
             {posts.length > 0 && (
-              <p className="text-sm text-white/45">
+              <p className="text-sm text-muted dark:text-white/45">
                 {posts.length} article{posts.length === 1 ? "" : "s"}
               </p>
             )}
           </div>
 
           {posts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/12 px-6 py-14 text-center">
-              <p className="font-display text-lg font-bold text-white">
+            <div className="rounded-2xl border border-dashed border-border px-6 py-14 text-center dark:border-white/12">
+              <p className="font-display text-lg font-bold text-foreground dark:text-white">
                 No articles in this topic yet
               </p>
-              <p className="mt-2 text-sm text-white/50">
+              <p className="mt-2 text-sm text-muted dark:text-white/50">
                 We&apos;re publishing more on {pillar.title.toLowerCase()} soon.
               </p>
               <Link
                 href="/blog"
-                className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-glow transition hover:text-white"
+                className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-deep transition hover:text-accent dark:text-glow dark:hover:text-white"
               >
                 Browse all articles <span aria-hidden>→</span>
               </Link>

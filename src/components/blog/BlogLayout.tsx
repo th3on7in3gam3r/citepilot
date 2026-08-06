@@ -5,8 +5,8 @@ import type { ReactNode } from "react";
 export function BlogLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <Header light overlay darkHero />
-      <main id="main-content" tabIndex={-1} className="blog-surface">
+      <Header light overlay />
+      <main id="main-content" tabIndex={-1} className="blog-surface min-h-screen">
         {children}
       </main>
       <Footer />

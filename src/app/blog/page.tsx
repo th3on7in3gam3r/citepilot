@@ -72,7 +72,7 @@ export default async function BlogIndexPage() {
           </section>
         ) : (
           !featured && (
-            <p className="mt-12 text-center text-white/50">
+            <p className="mt-12 text-center text-muted dark:text-white/50">
               New guides publishing soon.
             </p>
           )
@@ -82,7 +82,7 @@ export default async function BlogIndexPage() {
           <BlogCategoryGrid pillars={gridPillars} counts={counts} />
         ) : (
           posts.length > 0 && (
-            <p className="mt-16 text-center text-sm text-white/40">
+            <p className="mt-16 text-center text-sm text-muted dark:text-white/40">
               More topic sections unlock as we publish additional guides.
             </p>
           )

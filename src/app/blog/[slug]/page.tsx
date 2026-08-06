@@ -1,14 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArticleBody } from "@/components/blog/ArticleBody";
 import { ArticleJsonLd } from "@/components/blog/ArticleJsonLd";
 import { ArticleReadingProgress } from "@/components/blog/ArticleReadingProgress";
 import { BlogArticleCta } from "@/components/blog/BlogPostCover";
 import { BlogLayout } from "@/components/blog/BlogLayout";
 import { BlogNewsletterSignup } from "@/components/blog/BlogNewsletterSignup";
-import { BlogPostMeta } from "@/components/blog/BlogPostMeta";
-import { MarkdownArticle } from "@/components/blog/MarkdownArticle";
+import { ThemeAwareArticle } from "@/components/blog/ThemeAwareArticle";
+import { ThemeAwareBlogPostMeta } from "@/components/blog/ThemeAwareBlogPostMeta";
 import { Container } from "@/components/ui/Container";
 import { getPostBySlug, getAllSlugs } from "@/lib/blog";
 import { blogPostImageUrl } from "@/lib/blog/covers";
@@ -81,7 +80,7 @@ export default async function BlogPostPage({ params }: Props) {
         <Container className="px-4 pb-16 pt-28 md:pt-32">
           <Link
             href="/blog"
-            className="text-sm font-medium text-glow transition hover:text-white"
+            className="text-sm font-medium text-accent-deep transition hover:text-accent dark:text-glow dark:hover:text-white"
           >
             ← Blog
           </Link>
@@ -91,27 +90,23 @@ export default async function BlogPostPage({ params }: Props) {
               {pillar && (
                 <Link
                   href={pillarHref(post.pillar)}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/70 transition hover:border-accent/40 hover:text-glow"
+                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold text-muted transition hover:border-accent/40 hover:text-accent dark:border-white/15 dark:bg-white/5 dark:text-white/70 dark:hover:text-glow"
                 >
                   {pillar.title}
                 </Link>
               )}
             </div>
-            <BlogPostMeta post={post} />
-            <h1 className="content-page-title mt-4 text-white">
+            <ThemeAwareBlogPostMeta post={post} />
+            <h1 className="content-page-title mt-4 text-foreground dark:text-white">
               {post.title}
             </h1>
-            <p className="content-page-lead mt-4 text-white/60">
+            <p className="content-page-lead mt-4 text-muted dark:text-white/60">
               {description}
             </p>
           </header>
 
           <div id="blog-article-content" className="mt-10">
-            {post.markdown ? (
-              <MarkdownArticle markdown={post.markdown} dark />
-            ) : (
-              <ArticleBody post={post} dark />
-            )}
+            <ThemeAwareArticle post={post} />
           </div>
 
           <div className="mx-auto mt-12 max-w-3xl space-y-8">

@@ -5,7 +5,7 @@ import {
   phImageResponse,
 } from "@/lib/og/ph-shared";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 type SlideConfig = {
   headline: string;
@@ -54,9 +54,9 @@ const SLIDES: Record<string, SlideConfig> = {
 function MockPanel({ type }: { type: SlideConfig["mock"] }) {
   if (type === "heatmap") {
     const cells = [
-      ["✓", "—", "✓", "✓"],
-      ["—", "✓", "—", "✓"],
-      ["✓", "✓", "✓", "—"],
+      ["Y", "-", "Y", "Y"],
+      ["-", "Y", "-", "Y"],
+      ["Y", "Y", "Y", "-"],
     ];
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 24 }}>
@@ -70,16 +70,16 @@ function MockPanel({ type }: { type: SlideConfig["mock"] }) {
                   height: 48,
                   borderRadius: 8,
                   background:
-                    cell === "✓" ? "rgba(16,185,129,0.35)" : "rgba(255,255,255,0.08)",
+                    cell === "Y" ? "rgba(16,185,129,0.35)" : "rgba(255,255,255,0.08)",
                   border: "1px solid rgba(255,255,255,0.15)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 22,
-                  color: cell === "✓" ? "#10b981" : "rgba(255,255,255,0.35)",
+                  color: cell === "Y" ? "#10b981" : "rgba(255,255,255,0.35)",
                 }}
               >
-                {cell}
+                {cell === "Y" ? "Yes" : "-"}
               </div>
             ))}
           </div>
@@ -154,6 +154,7 @@ function MockPanel({ type }: { type: SlideConfig["mock"] }) {
                 borderRadius: 999,
                 background: "rgba(255,255,255,0.1)",
                 overflow: "hidden",
+                display: "flex",
               }}
             >
               <div
@@ -267,64 +268,71 @@ export async function GET(
 
   const isHook = slide === "1";
 
-  return phImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          padding: isHook ? "72px 80px" : "56px 64px",
-          background: BRAND_GRADIENT,
-          color: "white",
-          fontFamily: "Inter",
-          position: "relative",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 900 }}>
-          <p
-            style={{
-              fontSize: isHook ? 64 : 44,
-              fontWeight: 800,
-              lineHeight: 1.1,
-              margin: 0,
-              letterSpacing: -1,
-            }}
-          >
-            {config.headline}
-          </p>
-          {config.sub && (
-            <p style={{ fontSize: 32, color: "rgba(255,255,255,0.75)", margin: 0 }}>
-              {config.sub}
-            </p>
-          )}
-          {config.caption && (
-            <p style={{ fontSize: 24, color: "#10b981", margin: 0, fontWeight: 600 }}>
-              {config.caption}
-            </p>
-          )}
-          {config.mock && <MockPanel type={config.mock} />}
-        </div>
-
+  try {
+    return await phImageResponse(
+      (
         <div
           style={{
+            width: "100%",
+            height: "100%",
             display: "flex",
-            alignItems: "center",
+            flexDirection: "column",
             justifyContent: "space-between",
+            padding: isHook ? "72px 80px" : "56px 64px",
+            background: BRAND_GRADIENT,
+            color: "white",
+            fontFamily: "Inter, sans-serif",
+            position: "relative",
           }}
         >
-          <span style={{ fontSize: 22, color: "rgba(255,255,255,0.55)" }}>
-            getcitepilot.com
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <CitePilotLogoMark size={48} />
-            <span style={{ fontSize: 28, fontWeight: 800 }}>CitePilot</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 900 }}>
+            <p
+              style={{
+                fontSize: isHook ? 64 : 44,
+                fontWeight: 800,
+                lineHeight: 1.1,
+                margin: 0,
+                letterSpacing: -1,
+              }}
+            >
+              {config.headline}
+            </p>
+            {config.sub && (
+              <p style={{ fontSize: 32, color: "rgba(255,255,255,0.75)", margin: 0 }}>
+                {config.sub}
+              </p>
+            )}
+            {config.caption && (
+              <p style={{ fontSize: 24, color: "#10b981", margin: 0, fontWeight: 600 }}>
+                {config.caption}
+              </p>
+            )}
+            {config.mock && <MockPanel type={config.mock} />}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <span style={{ fontSize: 22, color: "rgba(255,255,255,0.55)" }}>
+              getcitepilot.com
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <CitePilotLogoMark size={48} />
+              <span style={{ fontSize: 28, fontWeight: 800 }}>CitePilot</span>
+            </div>
           </div>
         </div>
-      </div>
-    ),
-    PH_GALLERY_SIZE,
-  );
+      ),
+      PH_GALLERY_SIZE,
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "OG image render failed";
+    console.error("[og/ph-gallery]", slide, message);
+    return new Response(message, { status: 500 });
+  }
 }

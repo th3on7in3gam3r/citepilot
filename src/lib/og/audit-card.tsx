@@ -3,12 +3,20 @@ import type { AuditOgData } from "@/lib/audit/share";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-const INTER_FONT = fetch(
-  "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff",
-).then((res) => res.arrayBuffer());
+async function loadInterFont(): Promise<ArrayBuffer | null> {
+  try {
+    const res = await fetch(
+      new URL("./fonts/Inter-Bold.woff", import.meta.url),
+    );
+    if (!res.ok) return null;
+    return await res.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
 
 export async function renderAuditOgImage(data: AuditOgData) {
-  const inter = await INTER_FONT;
+  const inter = await loadInterFont();
 
   const platformGrid = data.platforms.slice(0, 8).map((p) => {
     const short = p.name.replace(/ AI| Overviews/gi, "").slice(0, 12);
@@ -27,7 +35,7 @@ export async function renderAuditOgImage(data: AuditOgData) {
           padding: "56px 64px",
           background: "linear-gradient(145deg, #04060c 0%, #0c1512 40%, #0a1628 100%)",
           color: "#f8fafc",
-          fontFamily: "Inter",
+          fontFamily: "Inter, sans-serif",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -122,7 +130,18 @@ export async function renderAuditOgImage(data: AuditOgData) {
     ),
     {
       ...OG_SIZE,
-      fonts: [{ name: "Inter", data: inter, style: "normal", weight: 700 }],
+      ...(inter
+        ? {
+            fonts: [
+              {
+                name: "Inter",
+                data: inter,
+                style: "normal" as const,
+                weight: 700,
+              },
+            ],
+          }
+        : {}),
     },
   );
 }

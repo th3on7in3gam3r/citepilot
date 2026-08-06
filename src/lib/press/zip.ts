@@ -60,6 +60,11 @@ export async function buildScreenshotsZip(): Promise<Uint8Array> {
   const base = siteBase();
 
   for (const shot of pressScreenshots) {
+    const fromPublic = await readPublicFile(shot.image);
+    if (fromPublic) {
+      files[shot.filename] = fromPublic;
+      continue;
+    }
     const png = await fetchBinary(`${base}${shot.image}`);
     if (png) {
       files[shot.filename] = png;

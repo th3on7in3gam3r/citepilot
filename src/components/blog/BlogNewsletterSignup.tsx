@@ -44,27 +44,29 @@ export function BlogNewsletterSignup({
     <div
       className={
         card
-          ? "rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/10 to-white/[0.04] p-6 md:p-8"
+          ? "rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/10 to-surface p-6 md:p-8 dark:to-white/[0.04]"
           : ""
       }
     >
       <p
         className={`text-xs font-semibold uppercase tracking-wider ${
-          card ? "text-glow" : "text-accent"
+          card ? "text-accent-deep dark:text-glow" : "text-accent"
         }`}
       >
         Weekly GEO brief
       </p>
       <h2
         className={`font-display mt-2 font-bold ${
-          card ? "text-xl text-white md:text-2xl" : "text-lg text-ink"
+          card
+            ? "text-xl text-foreground md:text-2xl dark:text-white"
+            : "text-lg text-ink"
         }`}
       >
         Get the weekly GEO brief
       </h2>
       <p
         className={`mt-2 text-sm leading-relaxed ${
-          card ? "text-white/55" : "text-muted"
+          card ? "text-muted dark:text-white/55" : "text-muted"
         }`}
       >
         Citation trends, prompt patterns, and one actionable fix — free, no
@@ -92,7 +94,7 @@ export function BlogNewsletterSignup({
             onChange={(e) => setEmail(e.target.value)}
             className={`min-w-0 flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-accent ${
               card
-                ? "border-white/15 bg-white/5 text-white placeholder:text-white/30"
+                ? "border-border bg-background text-foreground placeholder:text-muted dark:border-white/15 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
                 : "border-border bg-white text-ink"
             }`}
           />

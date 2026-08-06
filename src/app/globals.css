@@ -479,7 +479,8 @@ html:not(.dark) .hero-premium-orb {
 }
 
 .blog-surface {
-  background-color: var(--hero-bg);
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 .blog-section-eyebrow {
@@ -487,6 +488,10 @@ html:not(.dark) .hero-premium-orb {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--color-accent-deep);
+}
+
+.dark .blog-section-eyebrow {
   color: var(--color-glow);
 }
 
@@ -496,7 +501,7 @@ html:not(.dark) .hero-premium-orb {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
-  color: #ffffff;
+  color: var(--foreground);
 }
 
 @media (min-width: 768px) {

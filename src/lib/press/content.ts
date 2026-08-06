@@ -63,37 +63,37 @@ export const pressScreenshots: PressScreenshot[] = [
   {
     id: "heatmap",
     caption: "Citation heatmap — see every prompt × platform at a glance",
-    image: "/api/og/ph-gallery/2",
+    image: "/press/ph-gallery-2.png",
     filename: "citepilot-screenshot-heatmap.png",
   },
   {
     id: "proof-report",
     caption: "Proof report — share citation lift with clients in one link",
-    image: "/api/og/ph-gallery/5",
+    image: "/press/ph-gallery-5.png",
     filename: "citepilot-screenshot-proof-report.png",
   },
   {
     id: "action-plan",
     caption: "Weekly action plan — ranked fixes, not vague scores",
-    image: "/api/og/ph-gallery/3",
+    image: "/press/ph-gallery-3.png",
     filename: "citepilot-screenshot-action-plan.png",
   },
   {
     id: "competitor-sov",
     caption: "Competitor share of voice — see who AI recommends instead of you",
-    image: "/api/og/ph-gallery/4",
+    image: "/press/ph-gallery-4.png",
     filename: "citepilot-screenshot-competitor-sov.png",
   },
   {
     id: "prompt-tracking",
     caption: "Prompt tracking — monitor money prompts across AI engines",
-    image: "/api/og/ph-gallery/6",
+    image: "/press/ph-gallery-6.png",
     filename: "citepilot-screenshot-prompt-tracking.png",
   },
   {
     id: "weekly-digest",
     caption: "Weekly digest email — citation changes delivered to your inbox",
-    image: "/api/og/ph-gallery/7",
+    image: "/press/ph-gallery-7.png",
     filename: "citepilot-screenshot-weekly-digest.png",
   },
 ];

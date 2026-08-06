@@ -5,7 +5,7 @@ import {
   phImageResponse,
 } from "@/lib/og/ph-shared";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET() {
   return phImageResponse(
