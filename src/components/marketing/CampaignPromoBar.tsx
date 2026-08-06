@@ -93,8 +93,14 @@ export function CampaignPromoBar({ campaign = null }: Props) {
       <p className="font-semibold">{headline}</p>
       {promoCode ? (
         <p className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-100/70">
-          Code <code className="font-bold">{promoCode}</code> applies at Pilot
-          checkout (monthly).
+          Code <code className="font-bold">{promoCode}</code> applies to Pilot{" "}
+          <span className="font-semibold">monthly</span> only — not annual
+          (annual already includes Save 20%).
+        </p>
+      ) : campaign?.active ? (
+        <p className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-100/70">
+          Promo applies to Pilot <span className="font-semibold">monthly</span>{" "}
+          only — not annual (annual already includes Save 20%).
         </p>
       ) : null}
       {campaign?.active && endsLabel ? (
