@@ -4,7 +4,6 @@ import { redirectHomeAfterSignOut } from "@/lib/i18n/locale-cookie";
 import { useEffect, useState } from "react";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { useToast } from "@/components/notifications/ToastProvider";
-import { authClient } from "@/lib/auth/client";
 
 type Step = "idle" | "warning" | "confirm" | "verify";
 
@@ -89,9 +88,13 @@ export function AccountDeletePanel() {
         return;
       }
       try {
-        await authClient.signOut();
+        await fetch("/api/auth/sign-out", {
+          method: "POST",
+          credentials: "include",
+          signal: AbortSignal.timeout(8000),
+        });
       } catch {
-        /* ignore */
+        /* ignore — account already deleted */
       }
       redirectHomeAfterSignOut("deleted=1");
     } finally {

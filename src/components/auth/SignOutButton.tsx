@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import posthog from "posthog-js";
-import { authClient } from "@/lib/auth/client";
 import { redirectHomeAfterSignOut } from "@/lib/i18n/locale-cookie";
 
 export function SignOutButton({ className }: { className?: string }) {
@@ -11,7 +10,13 @@ export function SignOutButton({ className }: { className?: string }) {
   async function handleSignOut() {
     setLoading(true);
     try {
-      await authClient.signOut();
+      // Prefer the dedicated route (clears cookies even if Neon Auth is down).
+      // Do not hang forever on a broken NEON_AUTH_BASE_URL.
+      await fetch("/api/auth/sign-out", {
+        method: "POST",
+        credentials: "include",
+        signal: AbortSignal.timeout(8000),
+      });
     } catch (error) {
       console.error("Sign out failed", error);
     }
@@ -26,7 +31,7 @@ export function SignOutButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={handleSignOut}
+      onClick={() => void handleSignOut()}
       disabled={loading}
       className={
         className ??
