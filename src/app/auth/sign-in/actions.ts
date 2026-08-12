@@ -2,6 +2,7 @@
 
 import { auth, getRealSessionUser } from "@/lib/auth/server";
 import { resolveAuthRedirect } from "@/lib/auth/redirect";
+import { mapAuthSignInError } from "@/lib/auth/user-facing-errors";
 import { redirect } from "next/navigation";
 import { isTotpEnabledForUser } from "@/lib/security/totp-store";
 import { isTwoFactorVerified } from "@/lib/security/totp-session";
@@ -23,7 +24,9 @@ export async function signInWithEmail(
   });
 
   if (error) {
-    return { error: error.message ?? "Sign in failed" };
+    return {
+      error: mapAuthSignInError(error, error.message ?? "Sign in failed"),
+    };
   }
 
   const destination = resolveAuthRedirect(formData.get("from") as string | null);

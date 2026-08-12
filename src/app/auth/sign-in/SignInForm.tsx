@@ -44,7 +44,9 @@ export function SignInForm() {
       {oauthError && (
         <div className="mb-4">
           <AuthErrorAlert id="sign-in-oauth-error">
-            Google sign-in was canceled or failed. Try again or use email below.
+            Google sign-in was canceled or failed. If this keeps happening, auth
+            may be temporarily unavailable due to a provider quota — try again
+            later or use email below.
           </AuthErrorAlert>
         </div>
       )}

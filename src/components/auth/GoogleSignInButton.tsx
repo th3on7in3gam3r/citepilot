@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { buildStartRedirect, resolveAuthRedirect } from "@/lib/auth/redirect";
+import { mapAuthSignInError } from "@/lib/auth/user-facing-errors";
 import { trackEvent } from "@/lib/analytics/track";
 import { AuthErrorAlert } from "@/components/auth/AuthErrorAlert";
 
@@ -78,30 +79,9 @@ export function GoogleSignInButton({
         errorCallbackURL: "/auth/sign-in?error=google",
       });
     } catch (err) {
-      const status =
-        typeof err === "object" &&
-        err !== null &&
-        "status" in err &&
-        typeof (err as { status?: unknown }).status === "number"
-          ? (err as { status: number }).status
-          : undefined;
-      const message =
-        err instanceof Error ? err.message.toLowerCase() : "";
-      if (status === 429 || message.includes("429") || message.includes("rate")) {
-        setError(
-          "Sign-in is temporarily rate-limited. Wait a minute and try again.",
-        );
-      } else if (
-        status === 404 ||
-        message.includes("not found") ||
-        message.includes("404")
-      ) {
-        setError(
-          "Auth service is misconfigured. Try email sign-in, or contact support.",
-        );
-      } else {
-        setError("Google sign-in failed — try again or use email.");
-      }
+      setError(
+        mapAuthSignInError(err, "Google sign-in failed — try again or use email."),
+      );
       setLoading(false);
     }
   }

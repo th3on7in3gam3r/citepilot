@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { auth } from "@/lib/auth/server";
 import { passwordMeetsRequirements } from "@/lib/auth/password-requirements";
+import { mapAuthSignInError } from "@/lib/auth/user-facing-errors";
 import { claimReferralForUser } from "@/lib/referrals/process";
 import { REFERRAL_COOKIE } from "@/lib/referrals/constants";
 import { ensureUserReferral } from "@/lib/referrals/store";
@@ -60,7 +61,9 @@ export async function signUpWithEmail(
   });
 
   if (error) {
-    return { error: error.message ?? "Could not create account" };
+    return {
+      error: mapAuthSignInError(error, error.message ?? "Could not create account"),
+    };
   }
 
   const userId = data?.user?.id;
