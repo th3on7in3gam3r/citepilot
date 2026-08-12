@@ -344,7 +344,7 @@ export function SettingsForm({ workspace, onSaved, onDeleted }: SettingsFormProp
             Manage integrations →
           </Link>
           <Link
-            href="/dashboard/settings#notifications"
+            href="/dashboard/settings/notifications"
             className="inline-flex rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:bg-surface"
           >
             Slack & email alerts →

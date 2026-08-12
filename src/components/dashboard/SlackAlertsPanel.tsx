@@ -193,7 +193,7 @@ export function SlackAlertsPanel({ workspaceId, embedded = false }: SlackAlertsP
         <p className="mt-3 text-xs text-muted">
           Email alerts use the{" "}
           <Link
-            href="/dashboard/settings#notifications"
+            href="/dashboard/settings/notifications"
             className="font-semibold text-accent hover:underline"
           >
             monitoring email

@@ -1,11 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardNoWorkspaceEmpty } from "@/components/dashboard/layout/DashboardNoWorkspaceEmpty";
 import { SettingsForm } from "@/components/dashboard/SettingsForm";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 export function SettingsPageClient() {
+  const router = useRouter();
   const { workspace, ready, refresh, applyWorkspace } = useWorkspaceContext();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash === "#notifications") {
+      router.replace("/dashboard/settings/notifications");
+    }
+  }, [router]);
 
   if (!ready) {
     return (

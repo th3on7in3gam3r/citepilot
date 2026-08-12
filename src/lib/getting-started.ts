@@ -35,7 +35,7 @@ export const gettingStartedSteps: GettingStartedStep[] = [
     id: "alerts",
     title: "Set up email alerts",
     description: "Get notified when citations move or competitors gain share.",
-    href: "/dashboard/settings#notifications",
+    href: "/dashboard/settings/notifications",
   },
   {
     id: "share",

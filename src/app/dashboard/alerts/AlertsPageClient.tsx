@@ -116,7 +116,7 @@ export function AlertsPageClient() {
         title="Alerts"
         description="Timeline of Slack, webhook, and email alerts sent for your monitored prompts."
         action={
-          <Link href="/dashboard/settings#notifications" className={dashPrimaryCta}>
+          <Link href="/dashboard/settings/notifications" className={dashPrimaryCta}>
             Notification settings →
           </Link>
         }
@@ -128,7 +128,7 @@ export function AlertsPageClient() {
           description="Citation drops, competitor gains, and webhook deliveries show up here once you run scans and connect notification channels."
           primaryHref="/dashboard/geo-audit"
           primaryLabel="Run GEO audit →"
-          secondaryHref="/dashboard/settings#notifications"
+          secondaryHref="/dashboard/settings/notifications"
           secondaryLabel="Notification settings"
         />
       )}
@@ -204,7 +204,7 @@ export function AlertsPageClient() {
                 Run GEO audit →
               </Link>
               <Link
-                href="/dashboard/settings#notifications"
+                href="/dashboard/settings/notifications"
                 className="inline-flex rounded-full border border-border bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:border-accent/40"
               >
                 Connect notifications

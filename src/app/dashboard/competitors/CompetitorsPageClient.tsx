@@ -237,7 +237,7 @@ export function CompetitorsPageClient() {
           <p className="text-sm text-muted">
             Alerts fire when a competitor gains a citation you lost, citation rate surges
             &gt;10% week-over-week, or new domains appear on your money prompts. Manage in{" "}
-            <Link href="/dashboard/settings#notifications" className="font-semibold text-accent hover:underline">
+            <Link href="/dashboard/settings/notifications" className="font-semibold text-accent hover:underline">
               Settings → Notifications
             </Link>
             .

@@ -189,7 +189,7 @@ export function DashboardTopBar({
             </button>
 
             <Link
-              href="/dashboard/settings#notifications"
+              href="/dashboard/settings/notifications"
               className="dash-icon-btn"
               aria-label="Notification settings"
               title="Citation alerts & notification settings"
