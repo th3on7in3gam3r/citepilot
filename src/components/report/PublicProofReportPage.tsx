@@ -12,6 +12,7 @@ import {
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
 import { ReportThemeStyles } from "@/components/report/ReportThemeStyles";
+import { CitationReadyPostCta } from "@/components/report/CitationReadyPostCta";
 import { ProofReportGetOwnCta } from "@/components/report/ProofReportGetOwnCta";
 import { trackEvent } from "@/lib/analytics/track";
 import { reportDocumentTitle } from "@/lib/white-label/theme";
@@ -249,6 +250,22 @@ export function PublicProofReportPage({ token }: { token: string }) {
             ))}
           </ol>
         </section>
+
+        {audit.gaps.length > 0 && (
+          <CitationReadyPostCta
+            brand={audit.domain}
+            topic={
+              audit.promptResults.find((row) => !row.cited)?.prompt ??
+              audit.gaps[0]
+            }
+            gapSummary={
+              audit.gaps.length > 1
+                ? `${audit.gaps[0]}; ${audit.gaps[1]}`
+                : audit.gaps[0]
+            }
+            surface="public_proof_report"
+          />
+        )}
 
         {audit.promptResults.length > 0 && (
           <section className="mt-6 rounded-2xl border border-border bg-white p-6 shadow-sm print:shadow-none">

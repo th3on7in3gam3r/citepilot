@@ -19,6 +19,7 @@ import {
   ReportPoweredByFooter,
 } from "@/components/report/ReportBrandingHeader";
 import { ReportThemeStyles } from "@/components/report/ReportThemeStyles";
+import { CitationReadyPostCta } from "@/components/report/CitationReadyPostCta";
 import { ProofReportGetOwnCta } from "@/components/report/ProofReportGetOwnCta";
 import { ScanHistoryPanel } from "@/components/dashboard/scans/ScanHistoryPanel";
 import { defaultWorkspacePreferences } from "@/lib/settings";
@@ -244,6 +245,19 @@ function ProofReportInner() {
             </div>
           </div>
         </section>
+
+        {workspace.gaps.length > 0 && (
+          <CitationReadyPostCta
+            brand={workspace.domain}
+            topic={
+              workspace.buyerQuestion ||
+              rows.find((row) => row.cited === false)?.prompt ||
+              workspace.gaps[0]
+            }
+            gapSummary={workspace.gaps[0]}
+            surface="proof_report"
+          />
+        )}
 
         {benchmark.available && benchmark.brands.length > 0 && (
           <section className="mt-6 rounded-2xl border border-border bg-white p-6 shadow-sm print:shadow-none">

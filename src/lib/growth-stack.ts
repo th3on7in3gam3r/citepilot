@@ -157,3 +157,41 @@ export function signalDeskPublishUrl(
   });
 }
 
+const SIGNAL_DESK_GAP_PARAM_MAX = 200;
+
+function truncateGapParam(value: string, max = SIGNAL_DESK_GAP_PARAM_MAX): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max - 1)}…`;
+}
+
+export type SignalDeskGapPostOpts = {
+  brand: string;
+  topic?: string;
+  gapSummary: string;
+  /** UTM content slot; defaults to proof-report. */
+  content?: string;
+};
+
+/**
+ * Deep link to SignalDesk Blog signup with gap context for a citation-ready post.
+ * Params `topic` / `brand` / `gap_summary` / `source` are emitted for draft pre-fill
+ * when SignalDesk supports inbound handling (follow-up on that product).
+ */
+export function signalDeskGapPostUrl(opts: SignalDeskGapPostOpts): string {
+  const params = new URLSearchParams({
+    source: "citepilot",
+    brand: truncateGapParam(opts.brand),
+    gap_summary: truncateGapParam(opts.gapSummary),
+  });
+  if (opts.topic?.trim()) {
+    params.set("topic", truncateGapParam(opts.topic));
+  }
+  return withUtm(`${signalDeskPublicOrigin()}/signup?${params.toString()}`, {
+    source: "citepilot",
+    campaign: "citepilot-gap-cta",
+    medium: "referral",
+    content: opts.content ?? "proof-report",
+  });
+}
+
