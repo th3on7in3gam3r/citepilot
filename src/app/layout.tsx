@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
+import { PulseSpaPageviews } from "@/components/analytics/PulseSpaPageviews";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
 import { SiteAssistantWidget } from "@/components/marketing/SiteAssistantWidget";
 import { ReferralRefCapture } from "@/components/referrals/ReferralRefCapture";
@@ -112,6 +113,13 @@ export default async function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script dangerouslySetInnerHTML={{ __html: extensionConsoleNoiseScript }} />
+        <script
+          defer
+          src="https://pulse-5o1m.onrender.com/pulse.js"
+          data-site="site_msxqryf2"
+          data-host="https://pulse-5o1m.onrender.com"
+        />
+        <link rel="preconnect" href="https://pulse-5o1m.onrender.com" />
         <link rel="preconnect" href="https://plausible.io" />
         <link rel="preconnect" href="https://us.i.posthog.com" />
         <link rel="preconnect" href="https://us-assets.i.posthog.com" />
@@ -121,6 +129,7 @@ export default async function RootLayout({
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <SkipToContent />
+        <PulseSpaPageviews />
         <AnalyticsScripts />
         <ReferralRefCapture />
         <ProductHuntUtmCapture />
